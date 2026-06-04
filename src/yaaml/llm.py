@@ -1,4 +1,11 @@
-"""LLM wrappers for YAAML — memory formulation and consolidation."""
+"""LLM wrappers for YAAML — memory formulation and consolidation.
+
+Provider is inferred from the model name:
+  - "claude-*"            → Anthropic (requires ANTHROPIC_API_KEY)
+  - "gpt-*" / "o1-*" / "o3-*" / "o4-*"  → OpenAI (requires OPENAI_API_KEY)
+
+If the model name is ambiguous, ANTHROPIC_API_KEY is tried first.
+"""
 
 import json
 import logging
@@ -6,21 +13,41 @@ import os
 from typing import Any
 
 import anthropic
+import openai
 
 from .config import Config
 from .parsers import ParsedTurn, truncate_tool_content
 
 logger = logging.getLogger(__name__)
 
-_client: anthropic.AsyncAnthropic | None = None
+_anthropic_client: anthropic.AsyncAnthropic | None = None
+_openai_client: openai.AsyncOpenAI | None = None
 
 
-def _get_client() -> anthropic.AsyncAnthropic:
-    global _client
-    if _client is None:
-        api_key = os.environ.get("ANTHROPIC_API_KEY")
-        _client = anthropic.AsyncAnthropic(api_key=api_key)
-    return _client
+def _get_anthropic_client() -> anthropic.AsyncAnthropic:
+    global _anthropic_client
+    if _anthropic_client is None:
+        _anthropic_client = anthropic.AsyncAnthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+    return _anthropic_client
+
+
+def _get_openai_client() -> openai.AsyncOpenAI:
+    global _openai_client
+    if _openai_client is None:
+        _openai_client = openai.AsyncOpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+    return _openai_client
+
+
+def _detect_provider(model: str) -> str:
+    """Infer provider from model name; fall back to whichever API key is present."""
+    if model.startswith("claude-"):
+        return "anthropic"
+    if model.startswith(("gpt-", "o1-", "o3-", "o4-")):
+        return "openai"
+    # Ambiguous name: prefer Anthropic if its key is available
+    if os.environ.get("ANTHROPIC_API_KEY"):
+        return "anthropic"
+    return "openai"
 
 
 def _turn_to_text(turn: ParsedTurn, truncation_limit: int) -> str:
@@ -43,26 +70,40 @@ def _build_turns_text(turns: list[ParsedTurn], config: Config) -> str:
 
 
 async def _call_llm(prompt: str, model: str) -> str:
-    """Single LLM call; raises on failure."""
-    client = _get_client()
-    response = await client.messages.create(
+    """Single LLM call routed to Anthropic or OpenAI; raises on failure."""
+    provider = _detect_provider(model)
+
+    if provider == "openai":
+        client = _get_openai_client()
+        response = await client.chat.completions.create(
+            model=model,
+            max_tokens=4096,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        text = response.choices[0].message.content
+        if text is None:
+            raise ValueError("OpenAI returned empty content")
+        return text
+
+    # Anthropic
+    ac = _get_anthropic_client()
+    a_response = await ac.messages.create(
         model=model,
         max_tokens=4096,
         messages=[{"role": "user", "content": prompt}],
     )
     from anthropic.types import TextBlock
 
-    if not response.content:
-        raise ValueError("LLM returned an empty response")
-    block = response.content[0]
+    if not a_response.content:
+        raise ValueError("Anthropic returned an empty response")
+    block = a_response.content[0]
     if not isinstance(block, TextBlock):
-        raise ValueError(f"Unexpected content block type: {type(block)}")
+        raise ValueError(f"Unexpected Anthropic content block type: {type(block)}")
     return block.text
 
 
 def _parse_title_body(text: str, max_length: int) -> tuple[str, str]:
     """Extract title and body from a JSON response block."""
-    # Try to find a JSON block
     start = text.find("{")
     end = text.rfind("}") + 1
     if start != -1 and end > start:

@@ -35,11 +35,12 @@ def _utcnow() -> str:
 
 
 def _check_api_key() -> None:
-    """Warn if ANTHROPIC_API_KEY is not set."""
-    if not os.environ.get("ANTHROPIC_API_KEY"):
+    """Warn if neither ANTHROPIC_API_KEY nor OPENAI_API_KEY is set."""
+    has_key = os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("OPENAI_API_KEY")
+    if not has_key:
         console.print(
-            "[yellow]Warning:[/yellow] ANTHROPIC_API_KEY is not set. "
-            "Memory creation and consolidation will fail until it is exported."
+            "[yellow]Warning:[/yellow] Neither ANTHROPIC_API_KEY nor OPENAI_API_KEY is set. "
+            "Memory creation and consolidation require one of these to be exported."
         )
 
 
@@ -113,11 +114,12 @@ def init() -> None:
         "Ingest existing Claude Code / Codex transcripts and create memories now?",
         default=True,
     ):
-        has_key = bool(os.environ.get("ANTHROPIC_API_KEY"))
+        has_key = bool(os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("OPENAI_API_KEY"))
         if not has_key:
             console.print(
-                "[yellow]ANTHROPIC_API_KEY not set — transcripts will be stored but "
-                "memories will not be created until the key is available.[/yellow]"
+                "[yellow]No LLM API key found — transcripts will be stored but "
+                "memories will not be created until ANTHROPIC_API_KEY or "
+                "OPENAI_API_KEY is exported.[/yellow]"
             )
 
         from .embeddings import EmbeddingStore

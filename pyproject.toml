@@ -8,6 +8,7 @@ version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
     "anthropic>=0.40",
+    "openai>=1.0",
     "chromadb>=0.5",
     "watchdog>=4.0",
     "typer>=0.12",

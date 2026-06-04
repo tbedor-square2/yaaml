@@ -44,7 +44,7 @@ Each observed unit is a "turn pair": one user message + the subsequent assistant
 
 **Cursor model**: The daemon tracks its read position in each JSONL file via a `file_cursors` table in SQLite: `(file_path TEXT PRIMARY KEY, last_byte_offset INTEGER, last_processed_at TIMESTAMP)`. On each filesystem change event, the daemon reads only bytes from the stored offset to EOF, then updates the cursor. This ensures no lines are re-processed after daemon restarts and handles multiple concurrent sessions naturally — each file has its own independent cursor.
 
-**Turn boundary detection**: Boundaries are identified by JSONL content pattern, not by timeout. A turn is complete when an assistant message line appears whose `content` array contains only `text` blocks (no `tool_use` blocks), after any number of tool_use/tool_result cycles. The `Stop` hook (opt-in, configured by `yaaml init`) sends a lightweight `{session_id, timestamp}` signal to the daemon's Unix socket as a secondary confirmation — it does not pipe turn content, since the daemon already has the JSONL. The hook is useful for edge cases where a turn ends with no assistant text (e.g., pure tool sequences).
+**Turn boundary detection**: Boundaries are identified by JSONL content pattern. A turn is complete when an assistant message line appears whose `content` array contains only `text` blocks (no `tool_use` blocks), after any number of tool_use/tool_result cycles. File watching is the primary and sufficient mechanism for both Claude Code and Codex — no hook configuration required. For Claude Code, the optional `Stop` hook (fires after message sending, configured by `yaaml init`) can send a lightweight `{session_id, timestamp}` flush signal to the daemon's Unix socket for edge cases (e.g., turns ending with no assistant text). It does not pipe turn content.
 
 Turn content stored per line: timestamp, role, text content, tool name + truncated output (for tool calls). Tool call content is stored at full fidelity in the raw transcript table but **truncated to a fixed character limit (default: 500 chars per tool call) at memory formulation time** — the stored transcript is never modified.
 
@@ -72,7 +72,7 @@ Turn content stored per line: timestamp, role, text content, tool name + truncat
 
 **1.5 Consolidation**
 - After the dark period timer fires, a consolidation job runs asynchronously.
-- DBSCAN clustering on memory embeddings identifies overlapping memories.
+- DBSCAN clustering on memory embeddings identifies overlapping memories. Similarity threshold: 0.92 cosine similarity (conservative — avoids over-merging distinct coding decisions that share surface similarity).
 - An LLM merges clustered memories into a single consolidated memory.
 - Original memories are marked inactive (soft delete) with lineage references preserved.
 
@@ -174,6 +174,7 @@ Installed by `yaaml init` into `~/.claude/skills/` (or equivalent per-agent skil
 - `yaaml recall [--query "..."]` — run recall and write the recall file.
 - `yaaml daemon` — start the background worker.
 - `yaaml status` — show memory count, last creation timestamp, last recall timestamp.
+- `yaaml memories list` — list active memories with IDs, titles, and timestamps.
 - `yaaml path` — print current recall file path.
 
 ---
@@ -227,5 +228,4 @@ All configuration lives in `~/.yaaml/config.toml` (user-level) with optional pro
 5. **Schema migration**: What is the upgrade story for the SQLite schema and ChromaDB collections between YAAML versions? Options: (a) Alembic-style versioned migrations in SQLite; (b) version field in DB with migration scripts; (c) nuke-and-reindex on schema change (acceptable since source transcripts are preserved).
 
 ### Memory Quality
-6. **Consolidation aggressiveness**: Elroy's DBSCAN clusters at 0.85 cosine similarity. For coding memories, two memories like "user prefers TypeScript for frontend" and "user prefers TypeScript for scripts" are superficially similar but distinct. Options: (a) raise threshold to ~0.92 (more conservative), (b) keep 0.85 but add an LLM confirmation step before merging, (c) keep Elroy's default and accept some over-merging. What's the right tradeoff?
-7. **Memory management CLI**: Should YAAML provide `yaaml memories list` and `yaaml memories delete <id>` commands for users to inspect and prune individual memories? If a memory is deleted, does that trigger re-consolidation of related memories, or just mark it inactive and leave the rest alone?
+6. **Memory management CLI**: `yaaml memories list` to inspect active memories is desirable. Delete is out of scope for v1 — deferred.

@@ -9,7 +9,7 @@ YAAML is a memory layer for AI coding agents (Claude Code, Codex, etc.) that ope
 - **File-first recall**: Recalled memories are materialized as a file. The agent reads the file as it would any project file — no synthetic context injection, no polluted conversation history.
 - **Async everything**: Memory creation and recall triggering happen in background processes, not in the hot path of an agent turn.
 - **Agent-agnostic interface**: The file boundary makes YAAML usable by any agent that can read files (Claude Code, Codex, Cursor, etc.) without requiring SDK-level integration.
-- **Passive observation**: YAAML observes agent activity (conversations, tool calls, file edits) to build memories without the agent needing to call memory APIs explicitly.
+- **Passive observation**: YAAML observes agent activity by watching native transcript files on disk — no per-project hook configuration required for basic operation.
 - **User-global, project-weighted**: Memories are stored globally per user but recall is weighted toward the current project context.
 
 ---
@@ -22,7 +22,6 @@ Elroy (the reference implementation) uses:
 - **Recall mechanism**: Two-stage gate (heuristics → LLM classifier) → vector search → inject as synthetic TOOL messages into the context window
 - **Consolidation**: DBSCAN clustering on embeddings; merges similar memories via LLM; runs every M new memories (default: 5)
 - **File backing (optional)**: Syncs memories to Markdown files for Obsidian integration
-- **Recall types**: Fast (formatted text in tool call) vs. reflective (LLM-generated first-person reflection)
 
 YAAML borrows the storage and creation architecture from Elroy but replaces the context injection step with file-based materialization.
 
@@ -33,66 +32,75 @@ YAAML borrows the storage and creation architecture from Elroy but replaces the 
 ### 1. Memory Creation
 
 **1.1 Observation Input**
-- YAAML must be able to observe agent conversation turns (user messages + assistant responses).
-- YAAML must support multiple observation sources (Claude Code conversation logs, Codex interaction logs, generic stdin/stdout).
-- Each observed unit is a "turn" consisting of: timestamp, role (user/assistant/tool), content, session_id, project_id.
-- Tool calls (file reads, bash commands, etc.) are included in turn content but **truncated** to avoid bloating memory context. Truncation limit and strategy are TBD (see Open Questions).
-- A turn pair is one user message + the subsequent assistant response (including any interleaved tool calls).
+
+YAAML observes agent conversations by watching native transcript files written by the agent runtime:
+
+- **Claude Code**: Append-only JSONL files at `~/.claude/projects/<encoded-path>/<session-id>.jsonl`. Each line is a JSON object with `type`, `message.content` (may include tool_use and tool_result blocks), `uuid`, `timestamp`, `cwd`, `gitBranch`.
+- **Codex CLI**: Append-only JSONL files at `~/.codex/sessions/`. Similar structure with lifecycle hook events.
+
+The daemon watches both directories via filesystem events (inotify on Linux, FSEvents on macOS) for new lines appended to any session file. No per-project hook configuration is required for observation.
+
+Each observed unit is a "turn pair": one user message + the subsequent assistant response, including all interleaved tool calls and tool results. Turn boundaries are detected via:
+1. **Primary**: A Claude Code `Stop` hook that sends a lightweight "turn complete" signal to the daemon (piped via the YAAML observation interface). This is opt-in and improves reliability.
+2. **Fallback**: Daemon detects turn boundary by observing an assistant message with no new JSONL lines appended for a short timeout (default: 3 seconds).
+
+Turn content stored per line: timestamp, role, text content, tool name + truncated output (for tool calls). Tool call content is stored at full fidelity in the raw transcript table but **truncated to a fixed character limit (default: 500 chars per tool call) at memory formulation time** — the stored transcript is never modified.
 
 **1.2 Creation Trigger**
 - Memory creation is triggered automatically after a configurable number of observed turn pairs (default: 10).
 - Memory creation may also be triggered manually via CLI or API.
 - Creation runs asynchronously — it must not block the agent's response generation.
-- **Consolidation trigger**: Consolidation runs after a configurable "dark period" — a fixed duration with no new observed messages (default: 5 minutes). Each new message resets the timer. This models end-of-conversation consolidation rather than count-based triggering.
+- **Consolidation trigger**: Consolidation runs after a configurable "dark period" — a fixed duration with no new observed messages (default: 5 minutes). Each new message resets the timer.
 
 **1.3 Memory Formulation**
 - A fast LLM call summarizes recent conversation turns into a titled memory.
 - Memory title: concise, includes date when time-relevant (ISO 8601 format).
 - Memory body: plain prose summary, max ~12,000 characters.
 - Memory should capture facts, decisions, user preferences, and project state — not raw transcript.
-- **Context scoping**: The memory formulation uses all turns since the last memory was created (unbounded window). For very long sessions this may produce large prompts; see Open Questions on truncation strategy.
+- **Context scoping**: Memory formulation uses all turns since the last memory was created.
+- **Max context window**: A configurable token cap (default: 32,000 tokens) limits the input to the summarization model. When the window since the last memory exceeds this cap, turns are processed oldest-to-newest in overlapping chunks, producing multiple memories if needed.
+- **Backlog ingestion**: On first daemon startup, the user is prompted (via CLI) whether to ingest existing transcript history. If yes, YAAML processes all existing JSONL files in the agent home directories. This is a one-time operation.
 
 **1.4 Memory Storage**
-- Memories are persisted to a local SQLite database (portable, no external services required by default).
-- Each memory record stores: id, title, body, source turn range, created_at, updated_at, is_active, **session_id**, **project_id**, **turn_ids[]** (lineage back to source turns).
-- Memories are **user-global** — scoped to the user, not to a single project or session. Project and session metadata are stored as attributes for filtering and recall weighting.
-- Vector embeddings (for semantic search) are stored in ChromaDB (local persistent instance by default).
+- Memories are persisted to a local SQLite database at `~/.yaaml/yaaml.db` (user-global).
+- Each memory record stores: id, title, body, source_turn_ids[], created_at, updated_at, is_active, session_id, project_id.
+- **Project ID** is the absolute path of the working directory (`cwd`) at the time of the conversation, normalized (resolved symlinks, trailing slash stripped).
+- Vector embeddings are stored in ChromaDB at `~/.yaaml/chroma` (user-global).
 - Embedding model is configurable (default: `text-embedding-3-small` or local equivalent).
 
 **1.5 Consolidation**
-- After the dark period timer fires (default: 5 min of inactivity), a consolidation job runs asynchronously.
+- After the dark period timer fires, a consolidation job runs asynchronously.
 - DBSCAN clustering on memory embeddings identifies overlapping memories.
 - An LLM merges clustered memories into a single consolidated memory.
-- Original memories are marked inactive (soft delete), not physically removed.
-- Consolidated memory preserves lineage: references to all source memory ids.
+- Original memories are marked inactive (soft delete) with lineage references preserved.
 
 ---
 
 ### 2. Memory Recall
 
 **2.1 Recall Trigger**
-- Recall is triggered **on every agent turn**, asynchronously and best-effort (does not block the turn).
-- A recall classifier (heuristics + optional LLM gate) may determine whether a recall is useful given recent context, to avoid unnecessary writes.
+- Recall is triggered on every agent turn, asynchronously and best-effort.
+- **Deduplication**: The daemon tracks which memory IDs are currently materialized in the recall file. If the top-N results for a new turn are identical to the current recall file contents, no rewrite occurs. Memories are only re-added to the recall file if they drop out and then become relevant again.
+- A recall classifier (heuristics + optional LLM gate, configurable) may skip recall entirely when recent context is too short to generate a meaningful query.
 
 **2.2 Recall Query**
 - Recall uses vector similarity search against stored memory embeddings.
 - Query is derived from recent context (last N turns) embedded as a single vector.
-- Configurable result limit (default: top 5 memories by similarity).
-- Configurable similarity distance threshold (default: L2 ≤ 1.4, matching Elroy).
-- Already-expired or inactive memories are excluded.
-- **Project weighting**: Memories tagged with the current project_id are boosted in ranking relative to memories from other projects. Exact weighting strategy is TBD (see Open Questions).
+- Result limit: top 4–5 memories by score (configurable, default: 5).
+- Similarity distance threshold: L2 ≤ 1.4 (configurable, matching Elroy default).
+- Inactive memories excluded.
+- **Project weighting**: After the initial vector search retrieves top-K candidates (default K=20), memories whose `project_id` matches the current working directory have their similarity score multiplied by a configurable boost factor (default: 1.3×). Results are then re-sorted and trimmed to the result limit. This is a simple post-hoc reranking step — no separate ChromaDB query required.
 
 **2.3 Recall Output File**
-- Retrieved memories are written to a well-known file on disk (the "recall file").
-- Default location: `.yaaml/recall.md` (relative to the project root or working directory).
-- Format: Markdown, with one memory per section. Each section includes: memory title (as heading), body, timestamp, and originating project (if different from current).
-- The recall file is overwritten on each recall run (not appended), so it always reflects current relevance.
-- A metadata block at the top of the file records: query timestamp, number of memories retrieved, query source.
-- **Persistence**: The recall file is preserved between sessions — it is not cleared on daemon startup. It is only overwritten when a new recall run completes.
+- Retrieved memories are written to `.yaaml/recall.md` relative to the current working directory.
+- Format: Markdown. Each memory is one section: title (heading), body, timestamp, originating project (if different from current).
+- The recall file is overwritten on each recall run.
+- Metadata block at top: query timestamp, memory count, query source.
+- **Persistence**: Recall file is preserved between sessions. Cleared only when a new recall run produces results.
 
 **2.4 Agent Discovery of Recall File**
-- The primary mechanism for surfacing the recall file to the agent is a **Claude Code skill** that the agent can invoke. The skill reads the recall file and returns its contents directly. See §5 (Skills).
-- Secondary: a CLI flag `yaaml path` that prints the current recall file path.
+- Primary: a `yaaml-recall` Claude Code skill installed by `yaaml init`. See §5.
+- Secondary: `yaaml path` CLI command prints the recall file path.
 - YAAML provides a CLI command to emit a ready-made `CLAUDE.md` snippet.
 
 ---
@@ -100,126 +108,130 @@ YAAML borrows the storage and creation architecture from Elroy but replaces the 
 ### 3. Session and Transcript Model
 
 **3.1 Session Metadata**
-- A "session" corresponds to a single continuous agent invocation (e.g., one `claude` process run).
-- Sessions are not the primary unit of memory organization — memories are user-global. However, session_id is stored on all turns and memories for lineage and debugging.
-- Each session record stores: id, started_at, ended_at (nullable), project_id, agent_type.
+- A session corresponds to a single JSONL file in the agent's transcript directory.
+- Session record stores: id, agent_type (claude-code/codex), project_id, transcript_file_path, started_at, last_seen_at.
+- Memories reference source session IDs and turn ranges for full lineage.
 
-**3.2 Transcript Access**
-- YAAML retains raw turn data (with truncated tool call content) for the lifetime of the database.
-- A **transcript skill** allows the agent to read back the exact stored transcript for a session or time range. See §5 (Skills).
-- Transcript access is read-only via the skill; raw turns are not modified after ingestion.
+**3.2 Raw Transcript Table**
+- All observed turns are stored verbatim (pre-truncation) in a `turns` table: id, session_id, role, content_json, observed_at.
+- Tool call content is stored at full fidelity here; truncation is applied only at memory formulation time.
+
+**3.3 Transcript Skill**
+- A `yaaml-transcript` Claude Code skill (installed by `yaaml init`) allows the agent to read back the stored transcript for a session or time range.
+- Default scope when called with no args: current session (matched by `cwd` + recent timestamp).
+- See §5 for skill details.
 
 ---
 
 ### 4. Async Architecture
 
 **4.1 Background Workers**
-- Memory creation, embedding indexing, consolidation, and recall all run in background worker processes or threads, separate from any agent process.
-- Workers are started by a long-running YAAML daemon or invoked on-demand by a CLI command.
+- Memory creation, embedding indexing, consolidation, and recall all run in background worker processes or threads.
+- Workers are managed by a long-running YAAML daemon (`yaaml daemon`).
 
 **4.2 Observation Interface**
-- YAAML exposes a lightweight input interface (stdin pipe, local HTTP endpoint, or Unix socket) through which conversation turns can be submitted for processing.
-- This avoids YAAML needing to parse proprietary agent log formats.
+- Daemon watches `~/.claude/projects/` and `~/.codex/sessions/` via filesystem events.
+- Also accepts turns pushed via a lightweight local interface (Unix socket or HTTP) for the optional Stop hook integration.
 
 **4.3 Durability**
-- Background tasks that fail (LLM errors, embedding errors) are retried with exponential backoff.
+- Failed tasks (LLM errors, embedding errors) are retried with exponential backoff.
 - Task state survives daemon restarts (tracked in SQLite).
 
 ---
 
 ### 5. Skills
 
-YAAML ships two Claude Code skills (invocable via `/skill-name` in Claude Code):
+Installed by `yaaml init` into `~/.claude/skills/` (or equivalent per-agent skill directory).
 
-**5.1 Recall Skill (`yaaml-recall`)**
-- Reads the current `.yaaml/recall.md` file and surfaces it to the agent.
-- If the recall file does not exist or is empty, the skill returns a message indicating no memories are available yet.
-- Intended to be invoked at session start (e.g., via `CLAUDE.md` instruction or `UserPromptSubmit` hook).
+**5.1 `yaaml-recall`**
+- Reads `.yaaml/recall.md` in the current working directory and returns its contents.
+- If the file does not exist or is empty, returns a message indicating no memories are available.
+- Intended to be invoked at session start via a `CLAUDE.md` instruction or `UserPromptSubmit` hook.
 
-**5.2 Transcript Skill (`yaaml-transcript`)**
-- Accepts optional args: session id, date range, or project id.
-- Returns the stored raw turn transcript for the specified scope.
-- Useful for the agent to reconstruct prior context from a previous session.
+**5.2 `yaaml-transcript`**
+- Accepts optional args: `--session <id>`, `--since <ISO date>`, `--project <path>`.
+- Default (no args): returns the transcript for the current session (matched by cwd + recent activity).
+- Returns formatted Markdown of stored turns including tool calls.
 
 ---
 
 ### 6. Integration Points
 
 **6.1 Claude Code**
-- A Claude Code hook configuration (for `CLAUDE.md` or `settings.json`) automatically:
-  - Pipes each completed conversation turn to the YAAML observation interface.
-  - Triggers a recall run at session start and writes the recall file before the first agent turn.
+- **Passive** (required): Daemon watches `~/.claude/projects/` for new JSONL entries. No configuration needed.
+- **Active** (optional, improves turn boundary detection): A `Stop` hook in `settings.json` pipes a turn-complete signal to the daemon's Unix socket. `yaaml init` emits the hook config snippet.
 
-**6.2 Codex**
-- A similar integration for OpenAI Codex (or `codex` CLI), using Codex's equivalent hook mechanism.
+**6.2 Codex CLI**
+- **Passive**: Daemon watches `~/.codex/sessions/` for new JSONL entries.
+- **Active**: Codex lifecycle hooks (if available) can pipe turn-complete signals similarly to Claude Code's Stop hook.
 
 **6.3 Generic CLI**
+- `yaaml init` — install skills, emit CLAUDE.md snippet, configure Stop hook, prompt backlog ingestion.
 - `yaaml ingest <file>` — ingest a plain-text or JSON conversation log.
-- `yaaml recall [--query "..."]` — run recall and write the recall file (optionally with an explicit query string instead of deriving from recent context).
+- `yaaml recall [--query "..."]` — run recall and write the recall file.
 - `yaaml daemon` — start the background worker.
 - `yaaml status` — show memory count, last creation timestamp, last recall timestamp.
-- `yaaml path` — print the current recall file path.
+- `yaaml path` — print current recall file path.
 
 ---
 
 ### 7. Configuration
 
-All configuration lives in `.yaaml/config.toml` (project-level) or `~/.yaaml/config.toml` (user-level, lower precedence).
+All configuration lives in `~/.yaaml/config.toml` (user-level) with optional project overrides in `.yaaml/config.toml`.
 
 | Key | Default | Description |
 |-----|---------|-------------|
 | `turns_between_memory` | `10` | Turn pairs before auto-creating a memory |
 | `consolidation_dark_period_seconds` | `300` | Inactivity seconds before consolidation runs |
+| `turn_boundary_timeout_seconds` | `3` | Fallback timeout to detect turn completion from JSONL |
 | `recall_result_limit` | `5` | Max memories returned per recall query |
+| `recall_candidate_pool` | `20` | Candidates fetched before project reranking |
 | `recall_distance_threshold` | `1.4` | L2 distance cutoff for vector search |
-| `recall_project_weight_boost` | TBD | Score multiplier for current-project memories |
+| `recall_project_boost` | `1.3` | Score multiplier for current-project memories |
 | `recall_file_path` | `.yaaml/recall.md` | Where recalled memories are written |
-| `db_path` | `~/.yaaml/yaaml.db` | SQLite database path (user-global) |
-| `chroma_path` | `~/.yaaml/chroma` | ChromaDB persistence path (user-global) |
+| `db_path` | `~/.yaaml/yaaml.db` | SQLite database path |
+| `chroma_path` | `~/.yaaml/chroma` | ChromaDB persistence path |
 | `embedding_model` | `text-embedding-3-small` | Embedding model identifier |
 | `summary_model` | `claude-haiku-4-5-20251001` | Fast model for memory formulation |
 | `consolidation_model` | `claude-haiku-4-5-20251001` | Model for consolidation |
 | `max_memory_length` | `12000` | Max characters per memory body |
-| `tool_call_truncation_chars` | TBD | Max chars per tool call in turn content |
+| `max_formulation_tokens` | `32000` | Token cap for memory formulation input |
+| `tool_call_truncation_chars` | `500` | Max chars per tool call at formulation time |
 | `recall_classifier_enabled` | `true` | Gate recall with heuristics/LLM classifier |
 
 ---
 
 ## Non-Functional Requirements
 
-- **Latency**: Async operations must not add measurable latency to the agent's primary execution. The recall file write should complete in under 2 seconds for typical memory stores (<1000 memories).
-- **Portability**: Default storage (SQLite + ChromaDB local) requires no external services. Users must be able to run YAAML on a laptop with no network access (using a local embedding model as fallback).
-- **Privacy**: All data stays local by default. LLM calls for summarization/embedding go to configurable endpoints; users can point to local models.
-- **Idempotency**: Re-running `yaaml recall` with the same context produces the same recall file (deterministic given fixed embeddings).
-- **Observability**: YAAML logs memory creation, recall, and consolidation events to `~/.yaaml/yaaml.log`.
+- **Latency**: Async operations must not add measurable latency to the agent's primary execution. Recall file write should complete within 2 seconds for <1000 memories.
+- **Portability**: Default storage (SQLite + ChromaDB local) requires no external services. Local embedding model fallback supported.
+- **Privacy**: All data stays local by default. LLM/embedding endpoints are configurable.
+- **Idempotency**: Re-running `yaaml recall` with the same context produces the same recall file.
+- **Observability**: Events logged to `~/.yaaml/yaaml.log`.
 
 ---
 
 ## Open Questions
 
 ### Memory Creation
-1. **Tool call truncation**: What is the truncation limit and strategy for tool call content included in turns? Options: (a) fixed character cap (e.g., 500 chars) per tool call, (b) include only tool name + first line of output, (c) LLM-summarize long tool outputs before storing. Does truncation apply at ingestion time (stored truncated) or only at memory formulation time?
-2. **Large context window for memory formulation**: When everything since the last memory is used, long sessions could generate very large prompts. Is there a hard cap on input tokens to the summarization model? If so, how is the window trimmed (oldest-first drop, or summarize-the-summary)?
+1. **Turn boundary detection fallback**: When the Stop hook is not configured, the 3-second timeout fallback is fragile for slow tool calls. Should the daemon instead look for the pattern of an assistant message following tool_result lines in the JSONL, rather than relying on a timeout?
+2. **Formulation chunking**: When the context window since the last memory exceeds `max_formulation_tokens`, the oldest-to-newest chunking may produce redundant memories. Should the chunking strategy use a sliding window with overlap, or produce one memory per chunk?
+3. **Project ID normalization edge cases**: Using `cwd` as project_id works for terminal-based agents but breaks for agents running inside containers or remote environments where paths differ between runs. Is this a v1 concern?
 
 ### Recall
-3. **Project weighting mechanism**: How is "project" identified for weighting purposes? Options: (a) git remote URL, (b) working directory path hash, (c) user-assigned project name in config. And how is the weight boost implemented — reranking after vector search, or a hybrid score?
-4. **Per-turn recall performance**: Recall runs on every agent turn. For users with many memories (>1000), this could become slow. Is there a minimum interval between recall runs (e.g., no more than once per 30s)?
-5. **Should recall include Agenda/reminder-style memories** (like Elroy's `trigger_context` items), or only general factual memories?
-
-### Skills
-6. **Skill distribution and installation**: How are the YAAML skills (`yaaml-recall`, `yaaml-transcript`) packaged and installed into Claude Code? Options: (a) shipped as files in the YAAML repo that users copy to `~/.claude/skills/`, (b) auto-installed by `yaaml init`, (c) emitted by a CLI command. What is the canonical install path?
-7. **Transcript skill scope**: When the transcript skill is invoked with no args, what is the default scope — current session only, last N sessions, or all sessions for the current project?
+4. **Project boost calibration**: The proposed 1.3× reranking boost is a guess. Is there a principled way to set this, or should it default to off (1.0×) until tuned?
+5. **Recall on very first turn**: No context exists yet for embedding. Should the first-turn recall query use just the working directory path as a text query (e.g., embed the string `"/home/user/myproject"`)? Or skip recall entirely?
 
 ### Integration
-8. **How does YAAML observe Claude Code conversations?** Claude Code does not expose a public streaming API for conversation turns. Options: (a) parse transcript files from `~/.claude/projects/`, (b) use a `PostToolUse` or `Stop` hook to pipe the turn, (c) require the user to manually instrument their `CLAUDE.md`. Which is the intended mechanism?
-9. **Should YAAML emit a Claude Code MCP server** so the agent can call `yaaml_recall(query)` as a tool and get memories inline? This would give more query flexibility but reintroduces context injection.
+6. **Stop hook schema**: The `Stop` hook in Claude Code receives the full conversation context. Does YAAML need the hook to pipe the full turn, or just a signal (session_id + timestamp) so the daemon knows when to batch the JSONL lines it's already watching?
+7. **Codex active hooks**: Does the Codex CLI have a lifecycle hook equivalent to Claude Code's `Stop` hook that fires after a complete agent turn? If not, is the 3-second fallback sufficient for Codex?
+8. **MCP server**: Should YAAML also expose a Claude Code MCP server so the agent can call `yaaml_recall(query)` as a tool for on-demand recall with an explicit query? This reintroduces some context injection but complements the file-based approach for targeted lookups.
 
 ### Architecture
-10. **Should the daemon be always-on or invoked per-session?** An always-on daemon simplifies real-time observation (especially for the dark-period consolidation timer) but adds system overhead. Per-session invocation is simpler but misses cross-session background consolidation.
-11. **What is the migration/upgrade story for the SQLite schema and ChromaDB collections?** Elroy doesn't document this well; YAAML should.
-12. **Is there a web UI or Obsidian integration like Elroy's?** Out of scope for v1, or a priority?
+9. **Always-on daemon vs. per-session**: The dark-period consolidation timer strongly implies always-on. Is there an acceptable per-session alternative, or is always-on a hard requirement?
+10. **Schema migration**: What is the upgrade story for the SQLite schema and ChromaDB collections between YAAML versions?
+11. **Multiple concurrent agent processes**: If two Claude Code sessions in different projects are running simultaneously, the daemon must fan out recall writes to two different `.yaaml/recall.md` files. Is there any concern about daemon resource usage scaling with concurrent sessions?
 
 ### Memory Quality
-13. **How do we evaluate memory quality?** What signals indicate a memory is useful vs. noise? Elroy doesn't have explicit quality metrics — should YAAML?
-14. **Should YAAML support explicit user feedback on memories** (e.g., "this memory is wrong", "delete this") via a CLI, and how does that feed back into the creation/consolidation pipeline?
-15. **Should consolidation be more aggressive (merge everything above a threshold) or conservative (only merge near-duplicates)?** Elroy's DBSCAN threshold (0.85 cosine similarity) may be too aggressive for coding-specific memories where two superficially similar memories can record distinct decisions.
+12. **Consolidation aggressiveness**: Elroy's DBSCAN threshold (0.85 cosine similarity) may be too aggressive for coding memories where two superficially similar memories record distinct decisions. Should the default be more conservative?
+13. **User feedback on memories**: Should `yaaml status` or a separate `yaaml memories` command allow the user to view and delete individual memories? How does deletion feed back into consolidation (re-run, or just mark inactive)?

@@ -3,6 +3,7 @@
 import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 
 @dataclass
@@ -24,7 +25,7 @@ class Config:
     recall_classifier_enabled: bool = True
 
 
-def _load_toml_file(path: Path) -> dict:
+def _load_toml_file(path: Path) -> dict[str, Any]:
     """Load a TOML file, returning empty dict if it doesn't exist."""
     if not path.exists():
         return {}
@@ -32,13 +33,13 @@ def _load_toml_file(path: Path) -> dict:
         return tomllib.load(f)
 
 
-def _apply_dict_to_config(config: Config, data: dict) -> None:
+def _apply_dict_to_config(config: Config, data: dict[str, Any]) -> None:
     """Apply a dict of config values to a Config instance."""
     for key, value in data.items():
         if hasattr(config, key):
             # Handle Path fields
             if key in ("db_path", "chroma_path"):
-                value = Path(value).expanduser()
+                value = Path(str(value)).expanduser()
             setattr(config, key, value)
 
 

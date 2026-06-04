@@ -1,10 +1,12 @@
 """YAAML daemon — ties together watcher, memory, recall, and consolidation."""
 
 import asyncio
+import contextlib
 import logging
 import logging.handlers
 import os
 import signal
+import sqlite3
 from pathlib import Path
 
 from .config import Config
@@ -52,7 +54,7 @@ class YAAMLDaemon:
 
     def __init__(self, config: Config) -> None:
         self._config = config
-        self._consolidation_task: asyncio.Task | None = None
+        self._consolidation_task: asyncio.Task[None] | None = None
 
     async def run(self) -> None:
         """Initialize everything and run forever."""
@@ -80,16 +82,14 @@ class YAAMLDaemon:
         # Set up graceful shutdown on SIGINT / SIGTERM
         loop = asyncio.get_event_loop()
 
-        def _handle_signal():
+        def _handle_signal() -> None:
             logger.info("Shutdown signal received.")
             for task in asyncio.all_tasks(loop):
                 task.cancel()
 
         for sig in (signal.SIGINT, signal.SIGTERM):
-            try:
+            with contextlib.suppress(NotImplementedError, RuntimeError):
                 loop.add_signal_handler(sig, _handle_signal)
-            except (NotImplementedError, RuntimeError):
-                pass  # Windows / non-main thread
 
         async def on_turn(turn: ParsedTurn) -> None:
             await memory_manager.on_turn(turn)
@@ -109,14 +109,12 @@ class YAAMLDaemon:
         except asyncio.CancelledError:
             logger.info("Watcher cancelled — daemon shutting down.")
 
-    def _reset_consolidation_timer(
-        self, consolidation_manager: ConsolidationManager
-    ) -> None:
+    def _reset_consolidation_timer(self, consolidation_manager: ConsolidationManager) -> None:
         """Cancel existing timer and start a new dark-period countdown."""
         if self._consolidation_task and not self._consolidation_task.done():
             self._consolidation_task.cancel()
 
-        async def _fire():
+        async def _fire() -> None:
             try:
                 await asyncio.sleep(self._config.consolidation_dark_period_seconds)
                 logger.info("Dark period elapsed — running consolidation.")
@@ -130,7 +128,7 @@ class YAAMLDaemon:
 
     async def _process_backlog(
         self,
-        db,
+        db: sqlite3.Connection,
         watcher: FileWatcher,
     ) -> None:
         """Find JSONL files that haven't been processed yet and ingest them."""

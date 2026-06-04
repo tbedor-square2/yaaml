@@ -1,8 +1,9 @@
 """Parsers for Claude Code and Codex JSONL transcript files."""
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 
 def normalize_project_id(cwd: str) -> str:
@@ -40,7 +41,7 @@ class ParsedTurn:
     git_branch: str | None
     user_content: str
     assistant_content: str
-    tool_calls: list[dict]  # [{name, input_summary, output_summary}]
+    tool_calls: list[dict[str, Any]]  # [{name, input_summary, output_summary}]
     started_at: str  # ISO
     completed_at: str  # ISO
     is_aborted: bool = False
@@ -72,8 +73,8 @@ class ClaudeCodeParser:
         self._project_id: str | None = None
         self._git_branch: str | None = None
         self._current_user_content: str = ""
-        self._current_tool_calls: list[dict] = []
-        self._pending_tool_inputs: dict[str, dict] = {}  # id -> {name, input}
+        self._current_tool_calls: list[dict[str, Any]] = []
+        self._pending_tool_inputs: dict[str, dict[str, Any]] = {}  # id -> {name, input}
         self._turn_started_at: str | None = None
         self._in_turn: bool = False
         self._first_line_seen: bool = False
@@ -134,14 +135,24 @@ class ClaudeCodeParser:
             if isinstance(content, dict):
                 role = content.get("role", "")
                 if role == "user":
-                    # Extract text from content array or direct string
                     raw_content = content.get("content", "")
-                    user_text = self._extract_text(raw_content)
-                    self._current_user_content = user_text
-                    self._turn_started_at = obj.get("timestamp", "")
-                    self._in_turn = True
-                    self._current_tool_calls = []
-                    self._pending_tool_inputs = {}
+                    # Detect if this is a tool_result message (not a fresh user turn)
+                    is_tool_result = isinstance(raw_content, list) and any(
+                        isinstance(item, dict) and item.get("type") == "tool_result"
+                        for item in raw_content
+                    )
+
+                    if is_tool_result:
+                        # Only process tool results — don't reset turn state
+                        self._extract_text(raw_content)
+                    else:
+                        # Fresh user turn — extract text and reset turn state
+                        user_text = self._extract_text(raw_content)
+                        self._current_user_content = user_text
+                        self._turn_started_at = obj.get("timestamp", "")
+                        self._in_turn = True
+                        self._current_tool_calls = []
+                        self._pending_tool_inputs = {}
 
                     # Build session meta if not done yet
                     if self._project_id and self.session_meta is None:
@@ -217,7 +228,7 @@ class ClaudeCodeParser:
 
         return None
 
-    def _extract_text(self, content) -> str:
+    def _extract_text(self, content: Any) -> str:
         """Extract text from various content formats."""
         if isinstance(content, str):
             return content
@@ -233,7 +244,8 @@ class ClaudeCodeParser:
                         result_content = item.get("content", "")
                         if isinstance(result_content, list):
                             result_text = " ".join(
-                                r.get("text", "") for r in result_content
+                                r.get("text", "")
+                                for r in result_content
                                 if isinstance(r, dict) and r.get("type") == "text"
                             )
                         else:
@@ -241,11 +253,13 @@ class ClaudeCodeParser:
 
                         if tool_use_id and tool_use_id in self._pending_tool_inputs:
                             pending = self._pending_tool_inputs.pop(tool_use_id)
-                            self._current_tool_calls.append({
-                                "name": pending["name"],
-                                "input_summary": truncate_tool_content(pending["input"], 500),
-                                "output_summary": truncate_tool_content(result_text, 500),
-                            })
+                            self._current_tool_calls.append(
+                                {
+                                    "name": pending["name"],
+                                    "input_summary": truncate_tool_content(pending["input"], 500),
+                                    "output_summary": truncate_tool_content(result_text, 500),
+                                }
+                            )
                 elif isinstance(item, str):
                     parts.append(item)
             return "\n".join(p for p in parts if p)
@@ -270,8 +284,8 @@ class CodexParser:
         self._turn_started_at: str | None = None
         self._user_content: str = ""
         self._assistant_parts: list[str] = []
-        self._tool_calls: list[dict] = []
-        self._pending_tool: dict | None = None
+        self._tool_calls: list[dict[str, Any]] = []
+        self._pending_tool: dict[str, Any] | None = None
         self._first_line_seen: bool = False
 
     def feed(self, line: str) -> ParsedTurn | None:
@@ -322,7 +336,7 @@ class CodexParser:
             # Skip unknown / malformed event types gracefully
             return None
 
-    def _handle_event(self, obj: dict, msg_type: str) -> ParsedTurn | None:
+    def _handle_event(self, obj: dict[str, Any], msg_type: str) -> ParsedTurn | None:
         """Handle a Codex event object."""
 
         # UserMessage event — starts a new turn
@@ -330,7 +344,8 @@ class CodexParser:
             content = obj.get("content", "") or obj.get("message", "")
             if isinstance(content, list):
                 content = " ".join(
-                    c.get("text", "") for c in content
+                    c.get("text", "")
+                    for c in content
                     if isinstance(c, dict) and c.get("type") == "text"
                 )
             self._user_content = str(content)
@@ -367,11 +382,13 @@ class CodexParser:
         if msg_type in ("EventMsg/ToolResult", "EventMsg/FunctionResult"):
             result = obj.get("output", obj.get("result", ""))
             if self._pending_tool:
-                self._tool_calls.append({
-                    "name": self._pending_tool["name"],
-                    "input_summary": truncate_tool_content(self._pending_tool["input"], 500),
-                    "output_summary": truncate_tool_content(str(result), 500),
-                })
+                self._tool_calls.append(
+                    {
+                        "name": self._pending_tool["name"],
+                        "input_summary": truncate_tool_content(self._pending_tool["input"], 500),
+                        "output_summary": truncate_tool_content(str(result), 500),
+                    }
+                )
                 self._pending_tool = None
             return None
 

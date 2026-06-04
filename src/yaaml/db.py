@@ -68,14 +68,17 @@ CREATE TABLE IF NOT EXISTS recall_state (
 """
 
 MIGRATIONS: list[tuple[int, list[str]]] = [
-    (1, [
-        CREATE_SCHEMA_VERSION,
-        CREATE_SESSIONS,
-        CREATE_TURNS,
-        CREATE_MEMORIES,
-        CREATE_FILE_CURSORS,
-        CREATE_RECALL_STATE,
-    ]),
+    (
+        1,
+        [
+            CREATE_SCHEMA_VERSION,
+            CREATE_SESSIONS,
+            CREATE_TURNS,
+            CREATE_MEMORIES,
+            CREATE_FILE_CURSORS,
+            CREATE_RECALL_STATE,
+        ],
+    ),
 ]
 
 
@@ -86,7 +89,7 @@ def _get_schema_version(conn: sqlite3.Connection) -> int:
         row = cursor.fetchone()
         if row is None:
             return 0
-        return row[0]
+        return int(row[0])
     except sqlite3.OperationalError:
         return 0
 

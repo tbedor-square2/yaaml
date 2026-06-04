@@ -4,8 +4,8 @@ import json
 import logging
 import sqlite3
 import uuid
-from datetime import datetime, timezone
-from typing import TYPE_CHECKING
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from sklearn.cluster import DBSCAN
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 def _utcnow() -> str:
-    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
 
 class ConsolidationManager:
@@ -78,7 +78,7 @@ class ConsolidationManager:
 
         # Group IDs by cluster label (exclude noise label -1)
         clusters: dict[int, list[str]] = {}
-        for label, memory_id in zip(labels, ids):
+        for label, memory_id in zip(labels, ids, strict=False):
             if label == -1:
                 continue
             clusters.setdefault(label, []).append(memory_id)
@@ -89,7 +89,7 @@ class ConsolidationManager:
 
         logger.info("Found %d clusters to consolidate.", len(clusters))
 
-        for cluster_label, cluster_ids in clusters.items():
+        for _cluster_label, cluster_ids in clusters.items():
             await self._consolidate_cluster(cluster_ids, llm_module)
 
         logger.info("Consolidation pass complete.")
@@ -97,7 +97,7 @@ class ConsolidationManager:
     async def _consolidate_cluster(
         self,
         cluster_ids: list[str],
-        llm_module,
+        llm_module: Any,
     ) -> None:
         """Merge one cluster of memories into a single consolidated memory."""
         # Fetch full memory records
@@ -188,13 +188,9 @@ class ConsolidationManager:
             except Exception as exc:
                 logger.warning("Failed to delete source embedding %s: %s", mem_id, exc)
 
-        logger.info(
-            "Consolidated %d memories into %s: %s", len(source_ids), merged_id, title
-        )
+        logger.info("Consolidated %d memories into %s: %s", len(source_ids), merged_id, title)
 
     def _get_active_memory_ids(self) -> set[str]:
         """Return the set of active memory IDs from SQLite."""
-        rows = self._db.execute(
-            "SELECT id FROM memories WHERE is_active = 1"
-        ).fetchall()
+        rows = self._db.execute("SELECT id FROM memories WHERE is_active = 1").fetchall()
         return {row[0] for row in rows}

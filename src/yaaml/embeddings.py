@@ -3,6 +3,7 @@
 import logging
 import os
 from pathlib import Path
+from typing import Any
 
 import chromadb
 from chromadb.config import Settings
@@ -12,7 +13,7 @@ logger = logging.getLogger(__name__)
 COLLECTION_NAME = "memories_v1"
 
 
-def _make_embedding_function(embedding_model: str):
+def _make_embedding_function(embedding_model: str) -> Any:
     """Build the appropriate ChromaDB embedding function.
 
     Uses OpenAI embeddings when OPENAI_API_KEY is set, otherwise falls back to
@@ -55,7 +56,7 @@ class EmbeddingStore:
             metadata={"hnsw:space": "cosine"},
         )
 
-    def upsert(self, memory_id: str, text: str, metadata: dict) -> None:
+    def upsert(self, memory_id: str, text: str, metadata: dict[str, Any]) -> None:
         """Insert or update a memory embedding.
 
         Args:
@@ -65,8 +66,10 @@ class EmbeddingStore:
         """
         try:
             # ChromaDB metadata values must be str/int/float/bool
-            safe_meta = {k: (v if isinstance(v, (str, int, float, bool)) else str(v))
-                         for k, v in metadata.items()}
+            safe_meta = {
+                k: (v if isinstance(v, (str, int, float, bool)) else str(v))
+                for k, v in metadata.items()
+            }
             self._collection.upsert(
                 ids=[memory_id],
                 documents=[text],
@@ -91,8 +94,8 @@ class EmbeddingStore:
         self,
         query_text: str,
         n_results: int,
-        where: dict | None = None,
-    ) -> list[dict]:
+        where: dict[str, Any] | None = None,
+    ) -> list[dict[str, Any]]:
         """Semantic search against stored memories.
 
         Args:
@@ -109,7 +112,7 @@ class EmbeddingStore:
             if count == 0:
                 return []
             actual_n = min(n_results, count)
-            kwargs: dict = {
+            kwargs: dict[str, Any] = {
                 "query_texts": [query_text],
                 "n_results": actual_n,
                 "include": ["distances", "metadatas"],
@@ -119,12 +122,13 @@ class EmbeddingStore:
 
             results = self._collection.query(**kwargs)
 
-            ids = results.get("ids", [[]])[0]
-            distances = results.get("distances", [[]])[0]
-            metadatas = results.get("metadatas", [[]])[0]
+            ids: list[str] = list((results.get("ids") or [[]])[0])
+            distances: list[float] = list((results.get("distances") or [[]])[0])
+            raw_metas = (results.get("metadatas") or [[]])[0]
+            metadatas: list[dict[str, Any]] = [dict(m) for m in raw_metas]
 
-            output = []
-            for doc_id, dist, meta in zip(ids, distances, metadatas):
+            output: list[dict[str, Any]] = []
+            for doc_id, dist, meta in zip(ids, distances, metadatas, strict=False):
                 output.append({"id": doc_id, "distance": dist, "metadata": meta or {}})
 
             # Already sorted by distance ascending from ChromaDB, but be explicit
@@ -134,7 +138,7 @@ class EmbeddingStore:
             logger.error("EmbeddingStore.search failed: %s", exc)
             return []
 
-    def get_all(self) -> list[dict]:
+    def get_all(self) -> list[dict[str, Any]]:
         """Retrieve all stored embeddings.
 
         Returns:
@@ -147,11 +151,13 @@ class EmbeddingStore:
             results = self._collection.get(
                 include=["embeddings", "metadatas"],
             )
-            ids = results.get("ids", [])
-            embeddings = results.get("embeddings", [])
-            metadatas = results.get("metadatas", [])
-            output = []
-            for doc_id, emb, meta in zip(ids, embeddings, metadatas):
+            raw = results
+            ids: list[str] = list(raw.get("ids") or [])
+            embeddings: list[Any] = list(raw.get("embeddings") or [])
+            raw_metas2 = raw.get("metadatas") or []
+            metadatas: list[dict[str, Any]] = [dict(m) for m in raw_metas2]
+            output: list[dict[str, Any]] = []
+            for doc_id, emb, meta in zip(ids, embeddings, metadatas, strict=False):
                 output.append({"id": doc_id, "embedding": emb, "metadata": meta or {}})
             return output
         except Exception as exc:

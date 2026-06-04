@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+from typing import Any
 
 import anthropic
 
@@ -38,9 +39,7 @@ def _turn_to_text(turn: ParsedTurn, truncation_limit: int) -> str:
 
 
 def _build_turns_text(turns: list[ParsedTurn], config: Config) -> str:
-    return "\n\n---\n\n".join(
-        _turn_to_text(t, config.tool_call_truncation_chars) for t in turns
-    )
+    return "\n\n---\n\n".join(_turn_to_text(t, config.tool_call_truncation_chars) for t in turns)
 
 
 async def _call_llm(prompt: str, model: str) -> str:
@@ -51,7 +50,12 @@ async def _call_llm(prompt: str, model: str) -> str:
         max_tokens=4096,
         messages=[{"role": "user", "content": prompt}],
     )
-    return response.content[0].text
+    from anthropic.types import TextBlock
+
+    block = response.content[0]
+    if not isinstance(block, TextBlock):
+        raise ValueError(f"Unexpected content block type: {type(block)}")
+    return block.text
 
 
 def _parse_title_body(text: str, max_length: int) -> tuple[str, str]:
@@ -137,7 +141,7 @@ async def summarize_turns(
 
 
 async def merge_memories(
-    memories: list[dict],
+    memories: list[dict[str, Any]],
     config: Config,
 ) -> tuple[str, str]:
     """Merge a cluster of memories into a single consolidated memory.
@@ -153,8 +157,7 @@ async def merge_memories(
         return "Consolidated Memory", ""
 
     memories_text = "\n\n---\n\n".join(
-        f"## {m.get('title', 'Untitled')}\n\n{m.get('body', '')}"
-        for m in memories
+        f"## {m.get('title', 'Untitled')}\n\n{m.get('body', '')}" for m in memories
     )
 
     prompt = (

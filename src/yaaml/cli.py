@@ -5,13 +5,16 @@ from __future__ import annotations
 import json
 import logging
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING
 
 import typer
 from rich.console import Console
 from rich.table import Table
+
+if TYPE_CHECKING:
+    from .config import Config
 
 app = typer.Typer(
     name="yaaml",
@@ -26,14 +29,14 @@ app.add_typer(memories_app, name="memories")
 logger = logging.getLogger(__name__)
 
 
-def _get_config(project_dir: Path | None = None):
+def _get_config(project_dir: Path | None = None) -> Config:
     from .config import load_config
 
     return load_config(project_dir)
 
 
 def _utcnow() -> str:
-    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
 
 # ---------------------------------------------------------------------------
@@ -117,17 +120,12 @@ def init() -> None:
     if ingest_backlog:
         import asyncio
 
-        from .daemon import YAAMLDaemon
         from .db import init_db
-        from .embeddings import EmbeddingStore
-        from .memory import MemoryManager
         from .parsers import ParsedTurn
-        from .recall import RecallManager
         from .watcher import CLAUDE_WATCH_PATH, CODEX_WATCH_PATH, FileWatcher
 
-        async def _ingest():
+        async def _ingest() -> None:
             db = init_db(config.db_path)
-            store = EmbeddingStore(config.chroma_path, config.embedding_model)
 
             async def _noop(turn: ParsedTurn) -> None:
                 pass
@@ -188,8 +186,8 @@ def _install_stop_hook() -> None:
 
 @app.command()
 def recall(
-    query: Optional[str] = typer.Option(None, "--query", "-q", help="Explicit recall query text."),
-    project: Optional[Path] = typer.Option(
+    query: str | None = typer.Option(None, "--query", "-q", help="Explicit recall query text."),
+    project: Path | None = typer.Option(
         None, "--project", "-p", help="Project directory.", exists=False
     ),
 ) -> None:
@@ -197,6 +195,7 @@ def recall(
     from .config import load_config
     from .db import get_db
     from .embeddings import EmbeddingStore
+    from .parsers import normalize_project_id
     from .recall import RecallManager
 
     project_dir = project or Path.cwd()
@@ -204,8 +203,6 @@ def recall(
     db = get_db(config.db_path)
     store = EmbeddingStore(config.chroma_path, config.embedding_model)
     recall_mgr = RecallManager(db, store, config)
-
-    from .parsers import normalize_project_id
 
     project_id = normalize_project_id(str(project_dir))
     query_text = query or f"Project: {project_id}"
@@ -215,7 +212,9 @@ def recall(
     recall_mgr._update_recall_state(project_id, [m["id"] for m in memories])
 
     recall_file = Path(project_id) / ".yaaml" / "recall.md"
-    console.print(f"[green]Recall complete.[/green] {len(memories)} memories written to {recall_file}")
+    console.print(
+        f"[green]Recall complete.[/green] {len(memories)} memories written to {recall_file}"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -238,9 +237,7 @@ def status() -> None:
         last_mem = db.execute(
             "SELECT MAX(created_at) FROM memories WHERE is_active = 1"
         ).fetchone()[0]
-        last_recall = db.execute(
-            "SELECT MAX(last_recall_at) FROM recall_state"
-        ).fetchone()[0]
+        last_recall = db.execute("SELECT MAX(last_recall_at) FROM recall_state").fetchone()[0]
     except Exception:
         total = 0
         last_mem = None
@@ -277,8 +274,10 @@ def status() -> None:
 
 @memories_app.command("list")
 def memories_list(
-    project: Optional[Path] = typer.Option(None, "--project", "-p", help="Filter by project directory."),
-    since: Optional[str] = typer.Option(None, "--since", help="ISO date filter (e.g. 2025-01-01)."),
+    project: Path | None = typer.Option(
+        None, "--project", "-p", help="Filter by project directory."
+    ),
+    since: str | None = typer.Option(None, "--since", help="ISO date filter (e.g. 2025-01-01)."),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show memory bodies."),
 ) -> None:
     """List stored memories in a table."""
@@ -291,7 +290,7 @@ def memories_list(
     db = get_db(config.db_path)
 
     query = "SELECT id, title, body, project_id, created_at FROM memories WHERE is_active = 1"
-    params: list = []
+    params: list[str] = []
 
     if project_dir:
         project_id = normalize_project_id(str(project_dir))
@@ -321,7 +320,8 @@ def memories_list(
         created_short = created_at[:10] if created_at else "—"
 
         if verbose:
-            table.add_row(short_id, title, short_project, created_short, body[:200] + ("…" if len(body) > 200 else ""))
+            body_preview = body[:200] + ("…" if len(body) > 200 else "")
+            table.add_row(short_id, title, short_project, created_short, body_preview)
         else:
             table.add_row(short_id, title, short_project, created_short)
 
@@ -335,7 +335,7 @@ def memories_list(
 
 @app.command()
 def path(
-    project: Optional[Path] = typer.Option(None, "--project", "-p", help="Project directory."),
+    project: Path | None = typer.Option(None, "--project", "-p", help="Project directory."),
 ) -> None:
     """Print the recall file path for the current (or specified) project."""
     from .parsers import normalize_project_id
@@ -378,8 +378,68 @@ def ingest(
 
     watcher = FileWatcher(db, config, on_turn)
 
-    async def _run():
+    async def _run() -> None:
         await watcher.process_file(file)
 
     asyncio.run(_run())
     console.print(f"[green]Ingested[/green] {file}")
+
+
+# ---------------------------------------------------------------------------
+# yaaml simulate
+# ---------------------------------------------------------------------------
+
+
+@app.command()
+def simulate(
+    agent: str = typer.Option("claude-code", "--agent", help="Agent type: claude-code or codex"),
+    turns: int = typer.Option(5, "--turns", "-n", help="Number of turns to generate"),
+    project: Path | None = typer.Option(None, "--project", "-p", help="Project cwd"),
+    delay: float = typer.Option(0.0, "--delay", "-d", help="Seconds between turns"),
+    output_dir: Path | None = typer.Option(
+        None, "--output-dir", "-o", help="Where to write the session file"
+    ),
+) -> None:
+    """Generate a synthetic agent session for testing YAAML."""
+    import time
+
+    from .harness import (
+        ClaudeCodeSessionWriter,
+        CodexSessionWriter,
+        FakeTurn,
+        LoremGenerator,
+        generate_session,
+    )
+
+    project_cwd = str(project or Path.cwd())
+    out_dir = output_dir or Path.cwd()
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    lorem = LoremGenerator()
+
+    if agent == "claude-code":
+        writer: ClaudeCodeSessionWriter | CodexSessionWriter = ClaudeCodeSessionWriter(
+            out_dir, project_cwd
+        )
+    elif agent == "codex":
+        writer = CodexSessionWriter(out_dir, project_cwd)
+    else:
+        console.print(f"[red]Unknown agent type: {agent}. Use 'claude-code' or 'codex'.[/red]")
+        raise typer.Exit(code=1)
+
+    console.print(f"Writing {turns} turns to {writer.file_path}")
+
+    if delay > 0:
+        for i in range(turns):
+            turn = FakeTurn(
+                user=lorem.paragraph(sentences=2),
+                assistant=lorem.paragraph(sentences=3),
+            )
+            writer.write_turn(turn)
+            console.print(f"  Turn {i + 1}/{turns} written")
+            if i < turns - 1:
+                time.sleep(delay)
+    else:
+        generate_session(writer, n_turns=turns, lorem=lorem)
+
+    console.print(f"[green]Done.[/green] Session file: {writer.file_path}")

@@ -3,9 +3,9 @@
 import json
 import logging
 import sqlite3
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from .config import Config
 from .parsers import ParsedTurn
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 def _utcnow() -> str:
-    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
 
 class RecallManager:
@@ -85,7 +85,9 @@ class RecallManager:
             role = row[0]
             try:
                 content = json.loads(row[1])
-                text = content.get("text", str(content)) if isinstance(content, dict) else str(content)
+                text = (
+                    content.get("text", str(content)) if isinstance(content, dict) else str(content)
+                )
             except (json.JSONDecodeError, TypeError):
                 text = str(row[1])
             if text:
@@ -99,7 +101,7 @@ class RecallManager:
 
         return "\n".join(parts)
 
-    def query(self, context_text: str, project_id: str) -> list[dict]:
+    def query(self, context_text: str, project_id: str) -> list[dict[str, Any]]:
         """Run vector search with project boost and deduplication.
 
         Args:
@@ -116,7 +118,7 @@ class RecallManager:
         )
 
         # Apply project boost: divide distance by boost factor for same project
-        boosted: list[dict] = []
+        boosted: list[dict[str, Any]] = []
         for result in candidates:
             meta = result.get("metadata", {})
             dist = result["distance"]
@@ -127,8 +129,7 @@ class RecallManager:
         # Sort by boosted distance, apply threshold
         boosted.sort(key=lambda x: x["boosted_distance"])
         filtered = [
-            r for r in boosted
-            if r["boosted_distance"] <= self._config.recall_distance_threshold
+            r for r in boosted if r["boosted_distance"] <= self._config.recall_distance_threshold
         ]
 
         # Cap at result limit
@@ -151,7 +152,7 @@ class RecallManager:
 
         return result_memories
 
-    def _fetch_memory(self, memory_id: str) -> dict | None:
+    def _fetch_memory(self, memory_id: str) -> dict[str, Any] | None:
         """Load a memory row from SQLite."""
         row = self._db.execute(
             "SELECT id, title, body, project_id, created_at, is_active FROM memories WHERE id = ?",
@@ -178,7 +179,7 @@ class RecallManager:
             return True
         try:
             stored_ids = json.loads(row[0])
-            return stored_ids != new_ids
+            return bool(stored_ids != new_ids)
         except (json.JSONDecodeError, TypeError):
             return True
 
@@ -199,7 +200,7 @@ class RecallManager:
 
     def write_recall_file(
         self,
-        memories: list[dict],
+        memories: list[dict[str, Any]],
         project_id: str,
         query_source: str,
     ) -> None:

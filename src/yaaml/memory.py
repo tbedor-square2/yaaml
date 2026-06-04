@@ -5,8 +5,8 @@ import logging
 import sqlite3
 import uuid
 from collections import defaultdict
-from datetime import datetime, timezone
-from typing import TYPE_CHECKING
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
 from .config import Config
 from .parsers import ParsedTurn
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 def _utcnow() -> str:
-    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
 
 class MemoryManager:
@@ -53,9 +53,7 @@ class MemoryManager:
             try:
                 await self.create_memories_for_project(project_id)
             except Exception as exc:
-                logger.error(
-                    "create_memories_for_project failed for %s: %s", project_id, exc
-                )
+                logger.error("create_memories_for_project failed for %s: %s", project_id, exc)
 
     async def create_memories_for_project(self, project_id: str) -> list[str]:
         """Summarize unprocessed turns into memories and persist them.
@@ -74,9 +72,7 @@ class MemoryManager:
             logger.debug("No new turns for project %s, skipping memory creation.", project_id)
             return []
 
-        logger.info(
-            "Creating memory for project %s from %d turns.", project_id, len(turns)
-        )
+        logger.info("Creating memory for project %s from %d turns.", project_id, len(turns))
 
         try:
             title, body = await llm_module.summarize_turns(turns, None, self._config)
@@ -200,16 +196,15 @@ class MemoryManager:
             )
         return [r[0] for r in cursor.fetchall()]
 
-    def _rows_to_parsed_turns(self, rows, project_id: str) -> list[ParsedTurn]:
+    def _rows_to_parsed_turns(self, rows: Any, project_id: str) -> list[ParsedTurn]:
         """Reconstruct ParsedTurn objects from DB rows grouped by session/timestamp."""
         # Group rows by (session_id, observed_at) to reconstruct turns
         # Each turn has user + assistant + tool rows stored separately
         # We return a simplified ParsedTurn per unique timestamp group
 
-        # Build a map: observed_at -> {role -> content, session_id}
-        turn_map: dict[str, dict] = {}
+        # Build a map: (session_id, observed_at) -> {role -> content, session_id}
+        turn_map: dict[tuple[str, str], dict[str, Any]] = {}
         for row in rows:
-            turn_id = row[0]
             session_id = row[1]
             role = row[2]
             content_json = row[3]

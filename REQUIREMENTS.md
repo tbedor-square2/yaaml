@@ -67,7 +67,7 @@ Turn content stored per line: timestamp, role, text content, tool name + truncat
 - Memory body: plain prose summary, max ~12,000 characters.
 - Memory should capture facts, decisions, user preferences, and project state — not raw transcript.
 - **Context scoping**: Memory formulation uses all turns since the last memory was created.
-- **Max context window**: A configurable token cap (default: 32,000 tokens) limits the input to the summarization model. When the window since the last memory exceeds this cap, turns are processed oldest-to-newest in overlapping chunks, producing multiple memories if needed.
+- **Max context window**: A configurable token cap (default: 32,000 tokens) limits the input to the summarization model. When the window since the last memory exceeds this cap, turns are split into non-overlapping chunks processed oldest-to-newest. Each chunk after the first is prepended with a one-paragraph summary of all prior chunks in this formulation pass, providing continuity without re-sending the full prior content.
 - **Backlog ingestion**: On first daemon startup, the user is prompted (via CLI) whether to ingest existing transcript history. If yes, YAAML processes all existing JSONL files in the agent home directories. This is a one-time operation.
 
 **1.4 Memory Storage**
@@ -147,6 +147,13 @@ Turn content stored per line: timestamp, role, text content, tool name + truncat
 - Failed tasks (LLM errors, embedding errors) are retried with exponential backoff.
 - Task state survives daemon restarts (tracked in SQLite).
 
+**4.4 Schema Migration**
+- Each SQLite database contains a `schema_version` table with a single integer row.
+- On daemon startup, the current schema version is compared against the expected version for the running binary. If behind, migrations run sequentially in-process before the daemon accepts any work.
+- Migration scripts are embedded in the binary (no external files required).
+- ChromaDB collection names are versioned (e.g., `memories_v2`) so a schema-breaking change can coexist with the old collection during migration, then the old collection is dropped.
+- Both `~/.yaaml/yaaml.db` (user-global) and any project-level `.yaaml/yaaml.db` follow the same versioning scheme independently.
+
 ---
 
 ### 5. Skills
@@ -181,7 +188,7 @@ Installed by `yaaml init` into `~/.claude/skills/` (or equivalent per-agent skil
 - `yaaml recall [--query "..."]` — run recall and write the recall file.
 - `yaaml daemon` — start the background worker.
 - `yaaml status` — show memory count, last creation timestamp, last recall timestamp.
-- `yaaml memories list` — list active memories with IDs, titles, and timestamps.
+- `yaaml memories list [--project <path>] [--since <date>]` — tabular output: ID, title, project (basename), created date. Add `--verbose` to include memory body.
 - `yaaml path` — print current recall file path.
 
 ---
@@ -221,14 +228,8 @@ All configuration lives in `~/.yaaml/config.toml` (user-level) with optional pro
 
 ---
 
-## Open Questions
+## Deferred / Future Work
 
-### Memory Creation
-1. **Formulation chunking strategy**: When the context since the last memory exceeds `max_formulation_tokens`, processing oldest-to-newest in chunks may produce redundant or overlapping memories. Should chunks use overlap (sliding window), or be non-overlapping with a brief summary of the prior chunk prepended as context?
-2. **Project ID in remote/container environments**: `cwd` as project_id breaks when the same project is accessed from a container (different path) or remote environment. Is this a v1 concern, or should we add an optional `project_alias` config key to override?
-
-### Architecture
-5. **Schema migration**: What is the upgrade story for the SQLite schema and ChromaDB collections between YAAML versions? Options: (a) Alembic-style versioned migrations in SQLite; (b) version field in DB with migration scripts; (c) nuke-and-reindex on schema change (acceptable since source transcripts are preserved).
-
-### Memory Quality
-6. **Memory management CLI**: `yaaml memories list` to inspect active memories is desirable. Delete is out of scope for v1 — deferred.
+- **Project ID in remote/container environments**: `cwd` as project_id breaks when a project is accessed from different paths (container, remote). Future: optional `project_alias` key in `.yaaml/config.toml` to override.
+- **Memory delete**: `yaaml memories delete <id>` deferred to post-v1.
+- **Web UI / Obsidian integration**: Out of scope for v1.

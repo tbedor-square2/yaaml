@@ -80,7 +80,7 @@ class YAAMLDaemon:
         consolidation_manager = ConsolidationManager(db, store, config)
 
         # Set up graceful shutdown on SIGINT / SIGTERM
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
 
         def _handle_signal() -> None:
             logger.info("Shutdown signal received.")
@@ -99,7 +99,7 @@ class YAAMLDaemon:
         watcher = FileWatcher(db, config, on_turn)
 
         # Process any backlogs before starting the live watcher
-        await self._process_backlog(db, watcher)
+        await self._process_backlog(db, watcher, memory_manager)
 
         # Start the consolidation dark-period timer initially
         self._reset_consolidation_timer(consolidation_manager)
@@ -130,12 +130,18 @@ class YAAMLDaemon:
         self,
         db: sqlite3.Connection,
         watcher: FileWatcher,
+        memory_manager: MemoryManager,
     ) -> None:
-        """Find JSONL files that haven't been processed yet and ingest them."""
-        logger.info("Checking for backlog files.")
+        """Ingest new JSONL lines, then create memories for any pending turns.
 
+        Two-phase approach:
+        1. File phase — process files with no cursor at all (brand new to daemon).
+        2. Memory phase — for every project that has stored turns not yet in any
+           memory (e.g. turns ingested by `yaaml init`), call create_memories_for_project.
+        """
+        # Phase 1: ingest files the daemon has never seen
+        logger.info("Checking for unread backlog files.")
         paths: list[Path] = []
-
         for watch_dir in (CLAUDE_WATCH_PATH, CODEX_WATCH_PATH):
             if not watch_dir.exists():
                 continue
@@ -144,17 +150,28 @@ class YAAMLDaemon:
                     "SELECT last_byte_offset FROM file_cursors WHERE file_path = ?",
                     (str(jsonl),),
                 ).fetchone()
-                # Only process files with no cursor (brand new to the daemon)
                 if row is None:
                     paths.append(jsonl)
 
         if paths:
-            logger.info("Found %d backlog files to ingest.", len(paths))
+            logger.info("Found %d unread backlog files.", len(paths))
         for path in paths:
             try:
                 await watcher.process_file(path)
             except Exception as exc:
-                logger.error("Backlog processing failed for %s: %s", path, exc)
+                logger.error("Backlog file processing failed for %s: %s", path, exc)
+
+        # Phase 2: create memories for turns already in DB but not yet summarised
+        pending = memory_manager.get_projects_with_pending_turns()
+        if pending:
+            logger.info("Creating memories for %d project(s) with pending turns.", len(pending))
+        for project_id in pending:
+            try:
+                ids = await memory_manager.create_memories_for_project(project_id)
+                if ids:
+                    logger.info("Created %d memory(s) for %s during startup.", len(ids), project_id)
+            except Exception as exc:
+                logger.error("Startup memory creation failed for %s: %s", project_id, exc)
 
     def _cleanup(self) -> None:
         """Remove PID file on exit."""

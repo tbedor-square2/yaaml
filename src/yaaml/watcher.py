@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import sqlite3
+import uuid
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from pathlib import Path
@@ -60,8 +61,6 @@ def _persist_session(db: sqlite3.Connection, meta: SessionMeta) -> None:
 
 def _persist_turn(db: sqlite3.Connection, turn: ParsedTurn) -> None:
     """Insert DB rows for each role in a completed turn."""
-    import uuid
-
     now = _utcnow()
 
     def _ins(role: str, content_dict: dict[str, object]) -> None:
@@ -221,6 +220,11 @@ class FileWatcher:
 
         text = new_bytes.decode("utf-8", errors="replace")
         lines = text.splitlines(keepends=True)
+
+        # If the last line has no trailing newline it is a partial write in progress.
+        # Leave the cursor before it so the next read picks it up once complete.
+        if lines and not lines[-1].endswith(("\n", "\r")):
+            lines = lines[:-1]
 
         bytes_processed = 0
         for line in lines:

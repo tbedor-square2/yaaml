@@ -7,14 +7,10 @@ import logging
 import os
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import typer
 from rich.console import Console
 from rich.table import Table
-
-if TYPE_CHECKING:
-    from .config import Config
 
 app = typer.Typer(
     name="yaaml",
@@ -29,12 +25,6 @@ app.add_typer(memories_app, name="memories")
 logger = logging.getLogger(__name__)
 
 
-def _get_config(project_dir: Path | None = None) -> Config:
-    from .config import load_config
-
-    return load_config(project_dir)
-
-
 def _utcnow() -> str:
     return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
@@ -42,6 +32,15 @@ def _utcnow() -> str:
 # ---------------------------------------------------------------------------
 # yaaml daemon
 # ---------------------------------------------------------------------------
+
+
+def _check_api_key() -> None:
+    """Warn if ANTHROPIC_API_KEY is not set."""
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        console.print(
+            "[yellow]Warning:[/yellow] ANTHROPIC_API_KEY is not set. "
+            "Memory creation and consolidation will fail until it is exported."
+        )
 
 
 @app.command()
@@ -52,6 +51,7 @@ def daemon() -> None:
     from .config import load_config
     from .daemon import YAAMLDaemon
 
+    _check_api_key()
     config = load_config(None)
     d = YAAMLDaemon(config)
     asyncio.run(d.run())
@@ -65,87 +65,123 @@ def daemon() -> None:
 @app.command()
 def init() -> None:
     """Initialize YAAML: create config dirs, install skills, show setup instructions."""
-    from .config import load_config
+    import asyncio
+    import platform
 
+    from .config import load_config
+    from .db import init_db
+
+    _check_api_key()
     config = load_config(None)
 
     # Create ~/.yaaml/
     yaaml_dir = Path("~/.yaaml").expanduser()
     yaaml_dir.mkdir(parents=True, exist_ok=True)
-    console.print(f"[green]Created[/green] {yaaml_dir}")
+    console.print(f"[green]✓[/green] Created {yaaml_dir}")
 
     # Initialize DB
-    from .db import init_db
-
     init_db(config.db_path)
-    console.print(f"[green]Initialized database[/green] at {config.db_path}")
+    console.print(f"[green]✓[/green] Initialized database at {config.db_path}")
 
     # Install skills to ~/.claude/skills/
     skills_dir = Path("~/.claude/skills").expanduser()
     skills_dir.mkdir(parents=True, exist_ok=True)
-
-    # Skills are bundled inside the package under yaaml/skills/
     src_skills = Path(__file__).parent / "skills"
     if src_skills.exists():
         for skill_file in src_skills.glob("*.md"):
             dest = skills_dir / skill_file.name
             dest.write_text(skill_file.read_text(encoding="utf-8"), encoding="utf-8")
-            console.print(f"[green]Installed skill[/green] {dest}")
+            console.print(f"[green]✓[/green] Installed skill {dest.name}")
     else:
-        console.print("[yellow]Skills directory not found — skipping skill installation.[/yellow]")
+        console.print("[yellow]Skills directory not found — skipping.[/yellow]")
 
     # Print CLAUDE.md snippet
-    claude_snippet = (
-        "\n## YAAML Memory Layer\n\n"
-        "At the start of each session, run: `yaaml recall --project $PWD`\n"
-        "Then read the recall file at: `$(yaaml path)`\n\n"
-        "This file contains memories from previous sessions relevant to this project.\n"
+    console.print(
+        "\n[bold]Add this to your project CLAUDE.md:[/bold]\n"
+        "\n## YAAML Memory Layer\n"
+        "\nAt the start of each session, run `yaaml recall --project $PWD`"
+        " and read `.yaaml/recall.md`.\n"
+        "It contains memories from previous sessions relevant to this project.\n"
     )
-    console.print("\n[bold]Add this to your CLAUDE.md:[/bold]")
-    console.print(claude_snippet)
 
-    # Offer to configure Stop hook
-    configure_hook = typer.confirm(
-        "Configure a Claude Code Stop hook to trigger recall after each session?",
-        default=False,
-    )
-    if configure_hook:
+    # Offer Stop hook
+    if typer.confirm("Configure Claude Code Stop hook for turn-boundary detection?", default=True):
         _install_stop_hook()
 
-    # Ask about backlog ingestion
-    ingest_backlog = typer.confirm(
-        "Ingest existing Claude Code / Codex transcripts now?",
-        default=False,
-    )
-    if ingest_backlog:
-        import asyncio
+    # Offer backlog ingestion
+    if typer.confirm(
+        "Ingest existing Claude Code / Codex transcripts and create memories now?",
+        default=True,
+    ):
+        has_key = bool(os.environ.get("ANTHROPIC_API_KEY"))
+        if not has_key:
+            console.print(
+                "[yellow]ANTHROPIC_API_KEY not set — transcripts will be stored but "
+                "memories will not be created until the key is available.[/yellow]"
+            )
 
-        from .db import init_db
+        from .embeddings import EmbeddingStore
+        from .memory import MemoryManager
         from .parsers import ParsedTurn
         from .watcher import CLAUDE_WATCH_PATH, CODEX_WATCH_PATH, FileWatcher
 
         async def _ingest() -> None:
             db = init_db(config.db_path)
+            store = EmbeddingStore(config.chroma_path, config.embedding_model)
+            memory_mgr = MemoryManager(db, store, config)
+            turn_count = 0
 
-            async def _noop(turn: ParsedTurn) -> None:
-                pass
+            async def _on_turn(turn: ParsedTurn) -> None:
+                nonlocal turn_count
+                turn_count += 1
+                await memory_mgr.on_turn(turn)
 
-            watcher = FileWatcher(db, config, _noop)
+            watcher = FileWatcher(db, config, _on_turn)
+            files_processed = 0
 
             for watch_dir in (CLAUDE_WATCH_PATH, CODEX_WATCH_PATH):
                 if not watch_dir.exists():
                     continue
-                for jsonl in watch_dir.rglob("*.jsonl"):
-                    console.print(f"Ingesting {jsonl} …")
+                for jsonl in sorted(watch_dir.rglob("*.jsonl")):
                     try:
                         await watcher.process_file(jsonl)
+                        files_processed += 1
                     except Exception as exc:
-                        console.print(f"[red]Error ingesting {jsonl}: {exc}[/red]")
+                        console.print(f"[red]Error ingesting {jsonl.name}: {exc}[/red]")
+
+            # After all files are read, flush any remaining turns into memories
+            if has_key:
+                for project_id in memory_mgr.get_projects_with_pending_turns():
+                    try:
+                        ids = await memory_mgr.create_memories_for_project(project_id)
+                        if ids:
+                            console.print(
+                                f"[dim]  {len(ids)} memory(s) created for "
+                                f"{Path(project_id).name}[/dim]"
+                            )
+                    except Exception as exc:
+                        console.print(f"[red]Memory creation failed for {project_id}: {exc}[/red]")
+
+            mem_count = db.execute("SELECT COUNT(*) FROM memories WHERE is_active = 1").fetchone()[
+                0
+            ]
+            console.print(
+                f"[green]✓[/green] Ingested {files_processed} file(s), "
+                f"{turn_count} turn(s) → {mem_count} memor{'y' if mem_count == 1 else 'ies'}"
+            )
 
         asyncio.run(_ingest())
-        console.print("[green]Backlog ingestion complete.[/green]")
 
-    console.print("\n[bold green]YAAML initialized successfully![/bold green]")
+    # Offer service autostart
+    if typer.confirm("Install YAAML daemon as a background service (autostart)?", default=True):
+        _install_service(platform.system())
+
+    # Next steps
+    console.print("\n[bold green]✓ YAAML initialized.[/bold green]\n")
+    console.print("[bold]Next steps:[/bold]")
+    console.print("  1. No service installed? Run [cyan]yaaml daemon[/cyan] to start observing")
+    console.print("  2. Paste the CLAUDE.md snippet above into your project")
+    console.print("  3. Run [cyan]yaaml status[/cyan] to confirm the daemon is running\n")
 
 
 def _install_stop_hook() -> None:
@@ -176,7 +212,95 @@ def _install_stop_hook() -> None:
     stop_hooks.append(hook_entry)
     settings_path.parent.mkdir(parents=True, exist_ok=True)
     settings_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
-    console.print(f"[green]Stop hook installed in[/green] {settings_path}")
+    console.print(f"[green]✓[/green] Stop hook installed in {settings_path}")
+
+
+def _install_service(system: str) -> None:
+    """Install the YAAML daemon as an OS-level autostart service."""
+    import shutil
+
+    yaaml_bin = shutil.which("yaaml")
+    if not yaaml_bin:
+        console.print(
+            "[yellow]Could not locate the yaaml binary — skipping service install. "
+            "Run `yaaml daemon` manually.[/yellow]"
+        )
+        return
+
+    if system == "Darwin":
+        _install_launchd(yaaml_bin)
+    elif system == "Linux":
+        _install_systemd(yaaml_bin)
+    else:
+        console.print(
+            f"[yellow]Autostart not supported on {system}. Run `yaaml daemon` manually.[/yellow]"
+        )
+
+
+def _install_launchd(yaaml_bin: str) -> None:
+    """Install a launchd user agent on macOS."""
+    label = "com.yaaml.daemon"
+    plist_dir = Path("~/Library/LaunchAgents").expanduser()
+    plist_dir.mkdir(parents=True, exist_ok=True)
+    plist_path = plist_dir / f"{label}.plist"
+
+    log_dir = Path("~/.yaaml").expanduser()
+    plist_content = f"""<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>{label}</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>{yaaml_bin}</string>
+        <string>daemon</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>{log_dir}/daemon-stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>{log_dir}/daemon-stderr.log</string>
+</dict>
+</plist>
+"""
+    plist_path.write_text(plist_content, encoding="utf-8")
+    console.print(f"[green]✓[/green] launchd plist written to {plist_path}")
+    console.print(
+        f"  Load now with: [cyan]launchctl load {plist_path}[/cyan]\n"
+        "  (It will also load automatically at next login.)"
+    )
+
+
+def _install_systemd(yaaml_bin: str) -> None:
+    """Install a systemd user service on Linux."""
+    service_dir = Path("~/.config/systemd/user").expanduser()
+    service_dir.mkdir(parents=True, exist_ok=True)
+    service_path = service_dir / "yaaml.service"
+
+    service_content = f"""[Unit]
+Description=YAAML memory layer daemon
+After=network.target
+
+[Service]
+ExecStart={yaaml_bin} daemon
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
+"""
+    service_path.write_text(service_content, encoding="utf-8")
+    console.print(f"[green]✓[/green] systemd unit written to {service_path}")
+    console.print(
+        "  Enable and start with:\n"
+        "    [cyan]systemctl --user daemon-reload[/cyan]\n"
+        "    [cyan]systemctl --user enable --now yaaml[/cyan]"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -209,7 +333,7 @@ def recall(
 
     memories = recall_mgr.query(query_text, project_id)
     recall_mgr.write_recall_file(memories, project_id, query_source=query or "cli")
-    recall_mgr._update_recall_state(project_id, [m["id"] for m in memories])
+    recall_mgr.update_recall_state(project_id, [m["id"] for m in memories])
 
     recall_file = Path(project_id) / ".yaaml" / "recall.md"
     console.print(

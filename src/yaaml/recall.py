@@ -62,7 +62,7 @@ class RecallManager:
             return
 
         self.write_recall_file(memories, turn.project_id, query_source="turn-context")
-        self._update_recall_state(turn.project_id, current_ids)
+        self.update_recall_state(turn.project_id, current_ids)
 
     def _build_context(self, turn: ParsedTurn) -> str:
         """Build a query context string from the current turn and up to 2 prior turns."""
@@ -183,7 +183,7 @@ class RecallManager:
         except (json.JSONDecodeError, TypeError):
             return True
 
-    def _update_recall_state(self, project_id: str, memory_ids: list[str]) -> None:
+    def update_recall_state(self, project_id: str, memory_ids: list[str]) -> None:
         """Persist the current recall result IDs to DB."""
         now = _utcnow()
         self._db.execute(

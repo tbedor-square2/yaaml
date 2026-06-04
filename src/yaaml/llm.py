@@ -52,6 +52,8 @@ async def _call_llm(prompt: str, model: str) -> str:
     )
     from anthropic.types import TextBlock
 
+    if not response.content:
+        raise ValueError("LLM returned an empty response")
     block = response.content[0]
     if not isinstance(block, TextBlock):
         raise ValueError(f"Unexpected content block type: {type(block)}")

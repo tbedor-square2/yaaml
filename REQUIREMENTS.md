@@ -40,9 +40,11 @@ YAAML observes agent conversations by watching native transcript files written b
 
 The daemon watches both directories via filesystem events (inotify on Linux, FSEvents on macOS) for new lines appended to any session file. No per-project hook configuration is required for observation.
 
-Each observed unit is a "turn pair": one user message + the subsequent assistant response, including all interleaved tool calls and tool results. Turn boundaries are detected via:
-1. **Primary**: A Claude Code `Stop` hook that sends a lightweight "turn complete" signal to the daemon (piped via the YAAML observation interface). This is opt-in and improves reliability.
-2. **Fallback**: Daemon detects turn boundary by observing an assistant message with no new JSONL lines appended for a short timeout (default: 3 seconds).
+Each observed unit is a "turn pair": one user message + the subsequent assistant response, including all interleaved tool calls and tool results.
+
+**Cursor model**: The daemon tracks its read position in each JSONL file via a `file_cursors` table in SQLite: `(file_path TEXT PRIMARY KEY, last_byte_offset INTEGER, last_processed_at TIMESTAMP)`. On each filesystem change event, the daemon reads only bytes from the stored offset to EOF, then updates the cursor. This ensures no lines are re-processed after daemon restarts and handles multiple concurrent sessions naturally — each file has its own independent cursor.
+
+**Turn boundary detection**: Boundaries are identified by JSONL content pattern, not by timeout. A turn is complete when an assistant message line appears whose `content` array contains only `text` blocks (no `tool_use` blocks), after any number of tool_use/tool_result cycles. The `Stop` hook (opt-in, configured by `yaaml init`) sends a lightweight `{session_id, timestamp}` signal to the daemon's Unix socket as a secondary confirmation — it does not pipe turn content, since the daemon already has the JSONL. The hook is useful for edge cases where a turn ends with no assistant text (e.g., pure tool sequences).
 
 Turn content stored per line: timestamp, role, text content, tool name + truncated output (for tool calls). Tool call content is stored at full fidelity in the raw transcript table but **truncated to a fixed character limit (default: 500 chars per tool call) at memory formulation time** — the stored transcript is never modified.
 
@@ -80,6 +82,7 @@ Turn content stored per line: timestamp, role, text content, tool name + truncat
 
 **2.1 Recall Trigger**
 - Recall is triggered on every agent turn, asynchronously and best-effort.
+- **First turn**: Recall is skipped on the very first turn of a session — there is no context yet to embed. The recall file from a prior session (if any) is preserved and available, but no new recall query runs until the first turn completes.
 - **Deduplication**: The daemon tracks which memory IDs are currently materialized in the recall file. If the top-N results for a new turn are identical to the current recall file contents, no rewrite occurs. Memories are only re-added to the recall file if they drop out and then become relevant again.
 - A recall classifier (heuristics + optional LLM gate, configurable) may skip recall entirely when recent context is too short to generate a meaningful query.
 
@@ -127,11 +130,11 @@ Turn content stored per line: timestamp, role, text content, tool name + truncat
 
 **4.1 Background Workers**
 - Memory creation, embedding indexing, consolidation, and recall all run in background worker processes or threads.
-- Workers are managed by a long-running YAAML daemon (`yaaml daemon`).
+- Workers are managed by a long-running, always-on YAAML daemon (`yaaml daemon`). The daemon must be always-on to: (a) maintain filesystem watchers across sessions, (b) track the dark-period consolidation timer across session boundaries, (c) maintain file cursors.
 
 **4.2 Observation Interface**
-- Daemon watches `~/.claude/projects/` and `~/.codex/sessions/` via filesystem events.
-- Also accepts turns pushed via a lightweight local interface (Unix socket or HTTP) for the optional Stop hook integration.
+- Daemon watches `~/.claude/projects/` and `~/.codex/sessions/` via filesystem events (inotify/FSEvents). Watchers cover the full directory tree so new session files are picked up automatically.
+- Also accepts lightweight `{session_id, timestamp}` signals via a Unix socket for the optional Stop hook integration. No full turn content is piped via the socket — the daemon reads the JSONL directly.
 
 **4.3 Durability**
 - Failed tasks (LLM errors, embedding errors) are retried with exponential backoff.
@@ -183,7 +186,6 @@ All configuration lives in `~/.yaaml/config.toml` (user-level) with optional pro
 |-----|---------|-------------|
 | `turns_between_memory` | `10` | Turn pairs before auto-creating a memory |
 | `consolidation_dark_period_seconds` | `300` | Inactivity seconds before consolidation runs |
-| `turn_boundary_timeout_seconds` | `3` | Fallback timeout to detect turn completion from JSONL |
 | `recall_result_limit` | `5` | Max memories returned per recall query |
 | `recall_candidate_pool` | `20` | Candidates fetched before project reranking |
 | `recall_distance_threshold` | `1.4` | L2 distance cutoff for vector search |
@@ -214,24 +216,16 @@ All configuration lives in `~/.yaaml/config.toml` (user-level) with optional pro
 ## Open Questions
 
 ### Memory Creation
-1. **Turn boundary detection fallback**: When the Stop hook is not configured, the 3-second timeout fallback is fragile for slow tool calls. Should the daemon instead look for the pattern of an assistant message following tool_result lines in the JSONL, rather than relying on a timeout?
-2. **Formulation chunking**: When the context window since the last memory exceeds `max_formulation_tokens`, the oldest-to-newest chunking may produce redundant memories. Should the chunking strategy use a sliding window with overlap, or produce one memory per chunk?
-3. **Project ID normalization edge cases**: Using `cwd` as project_id works for terminal-based agents but breaks for agents running inside containers or remote environments where paths differ between runs. Is this a v1 concern?
-
-### Recall
-4. **Project boost calibration**: The proposed 1.3× reranking boost is a guess. Is there a principled way to set this, or should it default to off (1.0×) until tuned?
-5. **Recall on very first turn**: No context exists yet for embedding. Should the first-turn recall query use just the working directory path as a text query (e.g., embed the string `"/home/user/myproject"`)? Or skip recall entirely?
+1. **Formulation chunking strategy**: When the context since the last memory exceeds `max_formulation_tokens`, processing oldest-to-newest in chunks may produce redundant or overlapping memories. Should chunks use overlap (sliding window), or be non-overlapping with a brief summary of the prior chunk prepended as context?
+2. **Project ID in remote/container environments**: `cwd` as project_id breaks when the same project is accessed from a container (different path) or remote environment. Is this a v1 concern, or should we add an optional `project_alias` config key to override?
 
 ### Integration
-6. **Stop hook schema**: The `Stop` hook in Claude Code receives the full conversation context. Does YAAML need the hook to pipe the full turn, or just a signal (session_id + timestamp) so the daemon knows when to batch the JSONL lines it's already watching?
-7. **Codex active hooks**: Does the Codex CLI have a lifecycle hook equivalent to Claude Code's `Stop` hook that fires after a complete agent turn? If not, is the 3-second fallback sufficient for Codex?
-8. **MCP server**: Should YAAML also expose a Claude Code MCP server so the agent can call `yaaml_recall(query)` as a tool for on-demand recall with an explicit query? This reintroduces some context injection but complements the file-based approach for targeted lookups.
+3. **Codex JSONL update frequency**: YAAML's observation model assumes Codex writes turns to `~/.codex/sessions/` incrementally (append-only, like Claude Code). Needs verification: how frequently does Codex flush to disk during a turn? If Codex batches writes or writes only at session end, the file-watching approach may need adjustment.
+4. **Codex turn boundary pattern**: The JSONL pattern for turn boundaries (assistant message with text-only content following tool cycles) is confirmed for Claude Code. What is the equivalent pattern in Codex's JSONL format?
 
 ### Architecture
-9. **Always-on daemon vs. per-session**: The dark-period consolidation timer strongly implies always-on. Is there an acceptable per-session alternative, or is always-on a hard requirement?
-10. **Schema migration**: What is the upgrade story for the SQLite schema and ChromaDB collections between YAAML versions?
-11. **Multiple concurrent agent processes**: If two Claude Code sessions in different projects are running simultaneously, the daemon must fan out recall writes to two different `.yaaml/recall.md` files. Is there any concern about daemon resource usage scaling with concurrent sessions?
+5. **Schema migration**: What is the upgrade story for the SQLite schema and ChromaDB collections between YAAML versions? Options: (a) Alembic-style versioned migrations in SQLite; (b) version field in DB with migration scripts; (c) nuke-and-reindex on schema change (acceptable since source transcripts are preserved).
 
 ### Memory Quality
-12. **Consolidation aggressiveness**: Elroy's DBSCAN threshold (0.85 cosine similarity) may be too aggressive for coding memories where two superficially similar memories record distinct decisions. Should the default be more conservative?
-13. **User feedback on memories**: Should `yaaml status` or a separate `yaaml memories` command allow the user to view and delete individual memories? How does deletion feed back into consolidation (re-run, or just mark inactive)?
+6. **Consolidation aggressiveness**: Elroy's DBSCAN clusters at 0.85 cosine similarity. For coding memories, two memories like "user prefers TypeScript for frontend" and "user prefers TypeScript for scripts" are superficially similar but distinct. Options: (a) raise threshold to ~0.92 (more conservative), (b) keep 0.85 but add an LLM confirmation step before merging, (c) keep Elroy's default and accept some over-merging. What's the right tradeoff?
+7. **Memory management CLI**: Should YAAML provide `yaaml memories list` and `yaaml memories delete <id>` commands for users to inspect and prune individual memories? If a memory is deleted, does that trigger re-consolidation of related memories, or just mark it inactive and leave the rest alone?

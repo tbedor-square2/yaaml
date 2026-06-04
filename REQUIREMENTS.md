@@ -35,16 +35,23 @@ YAAML borrows the storage and creation architecture from Elroy but replaces the 
 
 YAAML observes agent conversations by watching native transcript files written by the agent runtime:
 
-- **Claude Code**: Append-only JSONL files at `~/.claude/projects/<encoded-path>/<session-id>.jsonl`. Each line is a JSON object with `type`, `message.content` (may include tool_use and tool_result blocks), `uuid`, `timestamp`, `cwd`, `gitBranch`.
-- **Codex CLI**: Append-only JSONL files at `~/.codex/sessions/`. Similar structure with lifecycle hook events.
+- **Claude Code**: Append-only JSONL files at `~/.claude/projects/<encoded-path>/<session-id>.jsonl`. Each line is a JSON object with `type`, `message.content` (may include `tool_use` and `tool_result` blocks), `uuid`, `timestamp`, `cwd`, `gitBranch`.
+- **Codex CLI**: Append-only JSONL files at `~/.codex/sessions/YYYY/MM/DD/rollout-<timestamp>-<uuid>.jsonl`. Per-event, immediate flush to disk (via a background async writer). The first line of each file is a `SessionMeta` record containing `id`, `cwd`, `model_provider`, `git.branch`, `cli_version`. Subsequent lines are `RolloutItem` variants: `EventMsg/UserMessage`, `ResponseItem/Message`, `ResponseItem/LocalShellCall` (and other tool types), `ResponseItem/FunctionCallOutput`, etc.
 
-The daemon watches both directories via filesystem events (inotify on Linux, FSEvents on macOS) for new lines appended to any session file. No per-project hook configuration is required for observation.
+The daemon watches both root directories recursively via filesystem events (inotify on Linux, FSEvents on macOS). No per-project hook configuration is required for observation.
 
 Each observed unit is a "turn pair": one user message + the subsequent assistant response, including all interleaved tool calls and tool results.
 
 **Cursor model**: The daemon tracks its read position in each JSONL file via a `file_cursors` table in SQLite: `(file_path TEXT PRIMARY KEY, last_byte_offset INTEGER, last_processed_at TIMESTAMP)`. On each filesystem change event, the daemon reads only bytes from the stored offset to EOF, then updates the cursor. This ensures no lines are re-processed after daemon restarts and handles multiple concurrent sessions naturally — each file has its own independent cursor.
 
-**Turn boundary detection**: Boundaries are identified by JSONL content pattern. A turn is complete when an assistant message line appears whose `content` array contains only `text` blocks (no `tool_use` blocks), after any number of tool_use/tool_result cycles. File watching is the primary and sufficient mechanism for both Claude Code and Codex — no hook configuration required. For Claude Code, the optional `Stop` hook (fires after message sending, configured by `yaaml init`) can send a lightweight `{session_id, timestamp}` flush signal to the daemon's Unix socket for edge cases (e.g., turns ending with no assistant text). It does not pipe turn content.
+**Turn boundary detection** differs by agent:
+- **Codex**: Explicit `EventMsg/TurnComplete` (or `TurnAborted`) marker in the JSONL. Unambiguous — no inference needed.
+- **Claude Code**: Pattern-based — a turn is complete when an assistant message line appears whose `content` array contains only `text` blocks (no `tool_use` blocks), after any number of tool_use/tool_result cycles.
+
+Both agents also support a `Stop` hook that fires after a turn completes. YAAML can optionally use this as a flush signal:
+- **Claude Code `Stop` hook** payload: `session_id`, `cwd`, `transcript_path`, turn context.
+- **Codex `Stop` hook** payload: `session_id`, `cwd`, `transcript_path`, `turn_id`, `last_assistant_message`.
+The `transcript_path` field in both payloads is convenient for bootstrapping cursor tracking on new session files. Hook configuration is opt-in via `yaaml init`; file watching alone is sufficient for normal operation.
 
 Turn content stored per line: timestamp, role, text content, tool name + truncated output (for tool calls). Tool call content is stored at full fidelity in the raw transcript table but **truncated to a fixed character limit (default: 500 chars per tool call) at memory formulation time** — the stored transcript is never modified.
 
@@ -165,8 +172,8 @@ Installed by `yaaml init` into `~/.claude/skills/` (or equivalent per-agent skil
 - **Active** (optional, improves turn boundary detection): A `Stop` hook in `settings.json` pipes a turn-complete signal to the daemon's Unix socket. `yaaml init` emits the hook config snippet.
 
 **6.2 Codex CLI**
-- **Passive**: Daemon watches `~/.codex/sessions/` for new JSONL entries.
-- **Active**: Codex lifecycle hooks (if available) can pipe turn-complete signals similarly to Claude Code's Stop hook.
+- **Passive** (required): Daemon watches `~/.codex/sessions/` recursively for new JSONL entries. Turn boundaries detected via explicit `TurnComplete` / `TurnAborted` events.
+- **Active** (optional): Codex `Stop` hook (configured in `~/.codex/hooks.json` or `.codex/hooks.json`) fires after each turn and provides `transcript_path` directly — useful for bootstrapping cursor tracking. Note: the `Stop` hook may not fire reliably on Esc-interrupted turns (`TurnAborted` is written to JSONL instead); file watching handles this case correctly regardless.
 
 **6.3 Generic CLI**
 - `yaaml init` — install skills, emit CLAUDE.md snippet, configure Stop hook, prompt backlog ingestion.
@@ -219,10 +226,6 @@ All configuration lives in `~/.yaaml/config.toml` (user-level) with optional pro
 ### Memory Creation
 1. **Formulation chunking strategy**: When the context since the last memory exceeds `max_formulation_tokens`, processing oldest-to-newest in chunks may produce redundant or overlapping memories. Should chunks use overlap (sliding window), or be non-overlapping with a brief summary of the prior chunk prepended as context?
 2. **Project ID in remote/container environments**: `cwd` as project_id breaks when the same project is accessed from a container (different path) or remote environment. Is this a v1 concern, or should we add an optional `project_alias` config key to override?
-
-### Integration
-3. **Codex JSONL update frequency**: YAAML's observation model assumes Codex writes turns to `~/.codex/sessions/` incrementally (append-only, like Claude Code). Needs verification: how frequently does Codex flush to disk during a turn? If Codex batches writes or writes only at session end, the file-watching approach may need adjustment.
-4. **Codex turn boundary pattern**: The JSONL pattern for turn boundaries (assistant message with text-only content following tool cycles) is confirmed for Claude Code. What is the equivalent pattern in Codex's JSONL format?
 
 ### Architecture
 5. **Schema migration**: What is the upgrade story for the SQLite schema and ChromaDB collections between YAAML versions? Options: (a) Alembic-style versioned migrations in SQLite; (b) version field in DB with migration scripts; (c) nuke-and-reindex on schema change (acceptable since source transcripts are preserved).

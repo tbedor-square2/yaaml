@@ -29,8 +29,8 @@ YAAML gives AI coding agents (Claude Code, Codex) persistent memory across sessi
 
 - Python ≥ 3.11
 - [uv](https://docs.astral.sh/uv/)
-- An `ANTHROPIC_API_KEY` for memory summarisation and consolidation
-- An `OPENAI_API_KEY` for `text-embedding-3-small` (optional — falls back to local sentence-transformers)
+- Either `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` for memory summarisation and consolidation
+- `OPENAI_API_KEY` also enables `text-embedding-3-small` for embeddings (falls back to local sentence-transformers if absent)
 
 ## Installation
 
@@ -97,7 +97,7 @@ turns_between_memory = 10          # turn pairs before creating a memory
 consolidation_dark_period_seconds = 300  # inactivity before consolidation runs
 
 recall_result_limit = 5            # max memories per recall query
-recall_distance_threshold = 1.4    # L2 distance cutoff
+recall_distance_threshold = 0.8    # cosine distance cutoff (0=identical, 2=opposite)
 recall_project_boost = 1.3         # score multiplier for current-project memories
 
 embedding_model = "text-embedding-3-small"

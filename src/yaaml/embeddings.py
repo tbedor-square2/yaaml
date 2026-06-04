@@ -35,6 +35,11 @@ def _make_embedding_function(embedding_model: str) -> Any:
             )
 
     # Fallback: sentence-transformers (no external key required)
+    # The first call downloads the model (~90 MB) from HuggingFace.
+    logger.info(
+        "No OPENAI_API_KEY found; using sentence-transformers DefaultEmbeddingFunction. "
+        "The first call may download a model (~90 MB)."
+    )
     from chromadb.utils.embedding_functions import DefaultEmbeddingFunction
 
     return DefaultEmbeddingFunction()

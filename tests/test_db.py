@@ -13,7 +13,7 @@ def test_init_db_creates_schema_version(tmp_path: Path) -> None:
 
     row = conn.execute("SELECT version FROM schema_version").fetchone()
     assert row is not None
-    assert row[0] == 1
+    assert row[0] == 2
 
 
 def test_init_db_creates_all_tables(tmp_path: Path) -> None:
@@ -33,9 +33,9 @@ def test_init_db_idempotent(tmp_path: Path) -> None:
     init_db(db_path)
     conn2 = init_db(db_path)
 
-    # Should still have schema_version = 1
+    # Should still have schema_version = 2
     row = conn2.execute("SELECT version FROM schema_version").fetchone()
-    assert row[0] == 1
+    assert row[0] == 2
 
     # Should still have all expected tables
     tables = {

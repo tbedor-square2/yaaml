@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import sqlite3
+import time
 import uuid
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
@@ -17,6 +18,9 @@ from .config import Config
 from .parsers import ClaudeCodeParser, CodexParser, ParsedTurn, SessionMeta
 
 logger = logging.getLogger(__name__)
+
+_MAX_CACHED_PARSERS = 500
+_PARSER_STALE_SECONDS = 7 * 24 * 3600  # evict parsers for files untouched > 7 days
 
 
 def _watch_path(env_var: str, default: str) -> Path:
@@ -60,14 +64,23 @@ def _persist_session(db: sqlite3.Connection, meta: SessionMeta) -> None:
 
 
 def _persist_turn(db: sqlite3.Connection, turn: ParsedTurn) -> None:
-    """Insert DB rows for each role in a completed turn."""
+    """Insert DB rows for each role in a completed turn, sharing a turn_group_id."""
     now = _utcnow()
+    turn_group_id = str(uuid.uuid4())
 
     def _ins(role: str, content_dict: dict[str, object]) -> None:
         db.execute(
-            "INSERT OR IGNORE INTO turns (id, session_id, role, content_json, observed_at) "
-            "VALUES (?, ?, ?, ?, ?)",
-            (str(uuid.uuid4()), turn.session_id, role, json.dumps(content_dict), now),
+            "INSERT OR IGNORE INTO turns "
+            "(id, session_id, role, content_json, observed_at, turn_group_id) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (
+                str(uuid.uuid4()),
+                turn.session_id,
+                role,
+                json.dumps(content_dict),
+                now,
+                turn_group_id,
+            ),
         )
 
     if turn.user_content:
@@ -139,7 +152,6 @@ class FileWatcher:
         self._config = config
         self._on_turn = on_turn
         self._queue: asyncio.Queue[FileSystemEvent] = asyncio.Queue()
-        # Per-file parser cache
         self._parsers: dict[str, ClaudeCodeParser | CodexParser] = {}
 
     async def start(self) -> None:
@@ -183,12 +195,27 @@ class FileWatcher:
         except Exception as exc:
             logger.error("Error processing %s: %s", path, exc)
 
+    def _maybe_prune_parser_cache(self) -> None:
+        """Evict stale parsers when the cache grows large."""
+        if len(self._parsers) < _MAX_CACHED_PARSERS:
+            return
+        cutoff = time.time() - _PARSER_STALE_SECONDS
+        stale = [
+            p for p in self._parsers if not Path(p).exists() or Path(p).stat().st_mtime < cutoff
+        ]
+        for p in stale:
+            del self._parsers[p]
+        if stale:
+            logger.debug("Pruned %d stale parsers from cache.", len(stale))
+
     async def process_file(self, file_path: Path) -> None:
         """Read new lines from a JSONL file and feed them to the appropriate parser.
 
         Args:
             file_path: Path to the JSONL transcript file.
         """
+        self._maybe_prune_parser_cache()
+
         str_path = str(file_path)
 
         # Determine agent type from path
@@ -227,30 +254,42 @@ class FileWatcher:
             lines = lines[:-1]
 
         bytes_processed = 0
+        last_saved_offset = offset
+        # Track sessions persisted in this call to avoid redundant upserts per line.
+        persisted_this_call: set[str] = set()
+
         for line in lines:
             line_bytes = line.encode("utf-8", errors="replace")
             try:
-                turn = parser.feed(line.rstrip("\n"))
+                turn = parser.feed(line.rstrip("\r\n"))
             except Exception as exc:
                 logger.warning("Parser error on %s: %s", file_path, exc)
                 bytes_processed += len(line_bytes)
-                _save_cursor(self._db, str_path, offset + bytes_processed)
                 continue
 
             bytes_processed += len(line_bytes)
 
-            # Persist session meta as soon as it's available
+            # Persist session meta at most once per process_file call
             if parser.session_meta is not None:
-                try:
-                    _persist_session(self._db, parser.session_meta)
-                except Exception as exc:
-                    logger.warning("Could not persist session meta: %s", exc)
+                sid = parser.session_meta.session_id
+                if sid not in persisted_this_call:
+                    persisted_this_call.add(sid)
+                    try:
+                        _persist_session(self._db, parser.session_meta)
+                    except Exception as exc:
+                        logger.warning("Could not persist session meta: %s", exc)
 
             if turn is not None:
                 try:
                     _persist_turn(self._db, turn)
+                    current_offset = offset + bytes_processed
+                    _save_cursor(self._db, str_path, current_offset)
+                    last_saved_offset = current_offset
                     await self._on_turn(turn)
                 except Exception as exc:
                     logger.error("on_turn callback failed for %s: %s", file_path, exc)
 
-            _save_cursor(self._db, str_path, offset + bytes_processed)
+        # Advance cursor past any non-turn lines at the end of the batch
+        final_offset = offset + bytes_processed
+        if final_offset > last_saved_offset:
+            _save_cursor(self._db, str_path, final_offset)

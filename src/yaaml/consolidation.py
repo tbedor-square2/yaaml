@@ -61,35 +61,48 @@ class ConsolidationManager:
             logger.info("Fewer than 2 active memories — nothing to consolidate.")
             return
 
-        ids = [item["id"] for item in active_items]
-        embeddings = np.array([item["embedding"] for item in active_items], dtype=np.float32)
+        # Group by project_id so memories from different projects are never merged.
+        by_project: dict[str, list[dict[str, Any]]] = {}
+        for item in active_items:
+            pid = item.get("metadata", {}).get("project_id", "")
+            by_project.setdefault(pid, []).append(item)
 
-        # DBSCAN with cosine distance
-        # eps=0.08 ≈ cosine distance threshold for ~0.92 similarity
-        try:
-            labels = DBSCAN(
-                eps=0.08,
-                min_samples=2,
-                metric="cosine",
-            ).fit_predict(embeddings)
-        except Exception as exc:
-            logger.error("DBSCAN clustering failed: %s", exc)
-            return
+        all_clusters: list[list[str]] = []
 
-        # Group IDs by cluster label (exclude noise label -1)
-        clusters: dict[int, list[str]] = {}
-        for label, memory_id in zip(labels, ids, strict=False):
-            if label == -1:
+        for pid, project_items in by_project.items():
+            if len(project_items) < 2:
                 continue
-            clusters.setdefault(label, []).append(memory_id)
 
-        if not clusters:
+            ids = [item["id"] for item in project_items]
+            embeddings = np.array([item["embedding"] for item in project_items], dtype=np.float32)
+
+            # DBSCAN with cosine distance; eps=0.08 ≈ cosine distance for ~0.92 similarity
+            try:
+                labels = DBSCAN(
+                    eps=0.08,
+                    min_samples=2,
+                    metric="cosine",
+                ).fit_predict(embeddings)
+            except Exception as exc:
+                logger.error("DBSCAN clustering failed for project %s: %s", pid, exc)
+                continue
+
+            # Group IDs by cluster label (exclude noise label -1)
+            clusters: dict[int, list[str]] = {}
+            for label, memory_id in zip(labels, ids, strict=False):
+                if label == -1:
+                    continue
+                clusters.setdefault(label, []).append(memory_id)
+
+            all_clusters.extend(clusters.values())
+
+        if not all_clusters:
             logger.info("No clusters found — no consolidation needed.")
             return
 
-        logger.info("Found %d clusters to consolidate.", len(clusters))
+        logger.info("Found %d clusters to consolidate.", len(all_clusters))
 
-        for _cluster_label, cluster_ids in clusters.items():
+        for cluster_ids in all_clusters:
             await self._consolidate_cluster(cluster_ids, llm_module)
 
         logger.info("Consolidation pass complete.")

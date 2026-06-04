@@ -68,7 +68,8 @@ class RecallManager:
         """Build a query context string from the current turn and up to 2 prior turns."""
         parts = []
 
-        # Fetch last 2 turns from DB for this project (excluding current)
+        # Fetch the most recent rows for this project; the current turn is already
+        # persisted to DB before this method is called, so no manual append needed.
         rows = self._db.execute(
             """
             SELECT t.role, t.content_json
@@ -92,12 +93,6 @@ class RecallManager:
                 text = str(row[1])
             if text:
                 parts.append(f"{role}: {text[:500]}")
-
-        # Append current turn
-        if turn.user_content:
-            parts.append(f"user: {turn.user_content[:500]}")
-        if turn.assistant_content:
-            parts.append(f"assistant: {turn.assistant_content[:500]}")
 
         return "\n".join(parts)
 

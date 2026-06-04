@@ -80,10 +80,9 @@ class MemoryManager:
         Returns:
             List of newly created memory IDs.
         """
-        # Import here to avoid circular import at module load time
         from . import llm as llm_module
 
-        turns = self.get_turns_since_last_memory(project_id)
+        turns, source_turn_ids = self._get_pending_turns(project_id)
         if not turns:
             logger.debug("No new turns for project %s, skipping memory creation.", project_id)
             return []
@@ -98,10 +97,6 @@ class MemoryManager:
 
         now = _utcnow()
         memory_id = str(uuid.uuid4())
-
-        # Collect turn IDs that contributed to this memory
-        source_turn_ids = self._get_turn_ids_for_project_since_last_memory(project_id)
-
         session_id = turns[-1].session_id if turns else None
 
         self._db.execute(
@@ -124,7 +119,6 @@ class MemoryManager:
         )
         self._db.commit()
 
-        # Index in vector store
         try:
             self._store.upsert(
                 memory_id,
@@ -138,103 +132,85 @@ class MemoryManager:
         return [memory_id]
 
     def get_turns_since_last_memory(self, project_id: str) -> list[ParsedTurn]:
-        """Return turns not yet incorporated into any memory for this project.
+        """Return turns not yet incorporated into any memory for this project."""
+        turns, _ = self._get_pending_turns(project_id)
+        return turns
 
-        Fetches all turns for the project whose observed_at is later than the
-        most recently created memory's created_at (or all turns if no memory yet).
+    # ------------------------------------------------------------------
+    # Internal helpers
+    # ------------------------------------------------------------------
 
-        Args:
-            project_id: The normalized project directory path.
+    def _get_pending_turns(self, project_id: str) -> tuple[list[ParsedTurn], list[str]]:
+        """Return (parsed_turns, raw_row_ids) for turns since the last memory.
 
-        Returns:
-            List of ParsedTurn objects reconstructed from DB rows.
+        Runs a single query so both callers share the same cut-off timestamp.
         """
-        # Find the latest memory creation time for this project
+        last_memory_at = self._get_last_memory_at(project_id)
+        rows = self._run_turns_query(project_id, last_memory_at)
+        turns = self._rows_to_parsed_turns(rows, project_id)
+        ids = [row[0] for row in rows]
+        return turns, ids
+
+    def _get_last_memory_at(self, project_id: str) -> str | None:
         row = self._db.execute(
             "SELECT MAX(created_at) FROM memories WHERE project_id = ? AND is_active = 1",
             (project_id,),
         ).fetchone()
-        last_memory_at = row[0] if row and row[0] else None
+        return row[0] if row and row[0] else None
 
+    def _run_turns_query(self, project_id: str, last_memory_at: str | None) -> list[Any]:
+        """Fetch turn rows for a project since last_memory_at.
+
+        Returns rows with columns:
+          0: t.id  1: t.session_id  2: t.role  3: t.content_json
+          4: t.observed_at  5: group_key  6: s.agent_type
+        """
+        select = """
+            SELECT t.id, t.session_id, t.role, t.content_json, t.observed_at,
+                   COALESCE(t.turn_group_id, t.observed_at) AS group_key,
+                   s.agent_type
+            FROM turns t
+            JOIN sessions s ON s.id = t.session_id
+            WHERE s.project_id = ?
+        """
         if last_memory_at:
-            cursor = self._db.execute(
-                """
-                SELECT t.id, t.session_id, t.role, t.content_json, t.observed_at
-                FROM turns t
-                JOIN sessions s ON s.id = t.session_id
-                WHERE s.project_id = ? AND t.observed_at > ?
-                ORDER BY t.observed_at ASC
-                """,
+            return self._db.execute(
+                select + " AND t.observed_at > ? ORDER BY t.observed_at ASC",
                 (project_id, last_memory_at),
-            )
-        else:
-            cursor = self._db.execute(
-                """
-                SELECT t.id, t.session_id, t.role, t.content_json, t.observed_at
-                FROM turns t
-                JOIN sessions s ON s.id = t.session_id
-                WHERE s.project_id = ?
-                ORDER BY t.observed_at ASC
-                """,
-                (project_id,),
-            )
-
-        rows = cursor.fetchall()
-        return self._rows_to_parsed_turns(rows, project_id)
-
-    def _get_turn_ids_for_project_since_last_memory(self, project_id: str) -> list[str]:
-        """Return raw turn IDs since last memory — used for source_turn_ids field."""
-        row = self._db.execute(
-            "SELECT MAX(created_at) FROM memories WHERE project_id = ? AND is_active = 1",
+            ).fetchall()
+        return self._db.execute(
+            select + " ORDER BY t.observed_at ASC",
             (project_id,),
-        ).fetchone()
-        last_memory_at = row[0] if row and row[0] else None
+        ).fetchall()
 
-        if last_memory_at:
-            cursor = self._db.execute(
-                """
-                SELECT t.id FROM turns t
-                JOIN sessions s ON s.id = t.session_id
-                WHERE s.project_id = ? AND t.observed_at > ?
-                ORDER BY t.observed_at ASC
-                """,
-                (project_id, last_memory_at),
-            )
-        else:
-            cursor = self._db.execute(
-                """
-                SELECT t.id FROM turns t
-                JOIN sessions s ON s.id = t.session_id
-                WHERE s.project_id = ?
-                ORDER BY t.observed_at ASC
-                """,
-                (project_id,),
-            )
-        return [r[0] for r in cursor.fetchall()]
+    def _rows_to_parsed_turns(self, rows: list[Any], project_id: str) -> list[ParsedTurn]:
+        """Reconstruct ParsedTurn objects from DB rows.
 
-    def _rows_to_parsed_turns(self, rows: Any, project_id: str) -> list[ParsedTurn]:
-        """Reconstruct ParsedTurn objects from DB rows grouped by session/timestamp."""
-        # Group rows by (session_id, observed_at) to reconstruct turns
-        # Each turn has user + assistant + tool rows stored separately
-        # We return a simplified ParsedTurn per unique timestamp group
-
-        # Build a map: (session_id, observed_at) -> {role -> content, session_id}
+        Groups rows by (session_id, group_key) where group_key is turn_group_id
+        when present (V2 schema) or observed_at as a fallback (V1 rows).
+        """
         turn_map: dict[tuple[str, str], dict[str, Any]] = {}
+
         for row in rows:
+            turn_id = row[0]
             session_id = row[1]
             role = row[2]
             content_json = row[3]
             observed_at = row[4]
+            group_key = row[5]
+            agent_type = row[6]
 
-            key = (session_id, observed_at)
+            key = (session_id, group_key)
             if key not in turn_map:
                 turn_map[key] = {
                     "session_id": session_id,
                     "observed_at": observed_at,
+                    "agent_type": agent_type,
                     "user_content": "",
                     "assistant_content": "",
                     "tool_calls": [],
                 }
+
             try:
                 content = json.loads(content_json)
             except json.JSONDecodeError:
@@ -247,19 +223,22 @@ class MemoryManager:
             elif role == "tool":
                 turn_map[key]["tool_calls"].append(content)
 
+            # suppress unused variable warning — turn_id is consumed by callers via rows
+            _ = turn_id
+
         parsed = []
-        for (session_id, observed_at), data in sorted(turn_map.items(), key=lambda x: x[0][1]):
+        for data in sorted(turn_map.values(), key=lambda d: d["observed_at"]):
             parsed.append(
                 ParsedTurn(
-                    session_id=session_id,
-                    agent_type="claude-code",
+                    session_id=data["session_id"],
+                    agent_type=data["agent_type"],
                     project_id=project_id,
                     git_branch=None,
                     user_content=data["user_content"],
                     assistant_content=data["assistant_content"],
                     tool_calls=data["tool_calls"],
-                    started_at=observed_at,
-                    completed_at=observed_at,
+                    started_at=data["observed_at"],
+                    completed_at=data["observed_at"],
                 )
             )
         return parsed

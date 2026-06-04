@@ -1,9 +1,12 @@
 """Configuration management for YAAML."""
 
+import logging
 import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -12,7 +15,7 @@ class Config:
     consolidation_dark_period_seconds: int = 300
     recall_result_limit: int = 5
     recall_candidate_pool: int = 20
-    recall_distance_threshold: float = 1.4
+    recall_distance_threshold: float = 0.8
     recall_project_boost: float = 1.3
     db_path: Path = field(default_factory=lambda: Path("~/.yaaml/yaaml.db").expanduser())
     chroma_path: Path = field(default_factory=lambda: Path("~/.yaaml/chroma").expanduser())
@@ -41,6 +44,8 @@ def _apply_dict_to_config(config: Config, data: dict[str, Any]) -> None:
             if key in ("db_path", "chroma_path"):
                 value = Path(str(value)).expanduser()
             setattr(config, key, value)
+        else:
+            logger.warning("Unknown config key %r — ignoring.", key)
 
 
 def load_config(project_dir: Path | None) -> Config:

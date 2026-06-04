@@ -6,7 +6,7 @@ from pathlib import Path
 # Global connection cache
 _connections: dict[str, sqlite3.Connection] = {}
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 CREATE_SCHEMA_VERSION = """
 CREATE TABLE IF NOT EXISTS schema_version (
@@ -67,6 +67,18 @@ CREATE TABLE IF NOT EXISTS recall_state (
 );
 """
 
+# V2: add turn_group_id so all rows from one logical turn share a stable key,
+# and add indexes on the columns that appear in every hot query path.
+_V2_STATEMENTS = [
+    "ALTER TABLE turns ADD COLUMN turn_group_id TEXT",
+    "CREATE INDEX IF NOT EXISTS idx_sessions_project_id ON sessions(project_id)",
+    "CREATE INDEX IF NOT EXISTS idx_turns_session_id ON turns(session_id)",
+    "CREATE INDEX IF NOT EXISTS idx_turns_observed_at ON turns(observed_at)",
+    "CREATE INDEX IF NOT EXISTS idx_turns_turn_group_id ON turns(turn_group_id)",
+    "CREATE INDEX IF NOT EXISTS idx_memories_project_active ON memories(project_id, is_active)",
+    "CREATE INDEX IF NOT EXISTS idx_memories_created_at ON memories(created_at)",
+]
+
 MIGRATIONS: list[tuple[int, list[str]]] = [
     (
         1,
@@ -79,6 +91,7 @@ MIGRATIONS: list[tuple[int, list[str]]] = [
             CREATE_RECALL_STATE,
         ],
     ),
+    (2, _V2_STATEMENTS),
 ]
 
 
@@ -116,7 +129,6 @@ def init_db(db_path: Path) -> sqlite3.Connection:
         if current_version < version:
             for statement in statements:
                 conn.execute(statement)
-            # Update or insert schema version
             existing = conn.execute("SELECT COUNT(*) FROM schema_version").fetchone()[0]
             if existing == 0:
                 conn.execute("INSERT INTO schema_version (version) VALUES (?)", (version,))

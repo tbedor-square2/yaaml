@@ -36,6 +36,22 @@ class MemoryManager:
         # Per-project turn counters (reset after each memory creation batch)
         self._turn_counts: dict[str, int] = defaultdict(int)
 
+    def get_projects_with_pending_turns(self) -> list[str]:
+        """Return project IDs that have turns not yet incorporated into any memory."""
+        rows = self._db.execute(
+            """
+            SELECT DISTINCT s.project_id
+            FROM turns t
+            JOIN sessions s ON s.id = t.session_id
+            WHERE t.observed_at > (
+                SELECT COALESCE(MAX(m.created_at), '1970-01-01')
+                FROM memories m
+                WHERE m.project_id = s.project_id AND m.is_active = 1
+            )
+            """
+        ).fetchall()
+        return [row[0] for row in rows if row[0]]
+
     async def on_turn(self, turn: ParsedTurn) -> None:
         """Called after each completed turn.
 

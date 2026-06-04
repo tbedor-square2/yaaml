@@ -144,7 +144,7 @@ class FileWatcher:
 
     async def start(self) -> None:
         """Start watching directories and process events forever."""
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         handler = _QueueHandler(self._queue)
         handler.set_loop(loop)
 

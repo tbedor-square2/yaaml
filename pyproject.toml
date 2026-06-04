@@ -22,6 +22,9 @@ yaaml = "yaaml.cli:app"
 [tool.hatch.build.targets.wheel]
 packages = ["src/yaaml"]
 
+[tool.hatch.build.targets.wheel.force-include]
+"src/yaaml/skills" = "yaaml/skills"
+
 [dependency-groups]
 dev = [
     "pytest",

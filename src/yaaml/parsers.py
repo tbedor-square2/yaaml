@@ -215,10 +215,6 @@ class ClaudeCodeParser:
                 self._in_turn = False
                 return turn
 
-        # Handle tool result (comes in subsequent user messages in Claude Code)
-        elif msg_type == "user":
-            pass  # Already handled above
-
         return None
 
     def _extract_text(self, content) -> str:

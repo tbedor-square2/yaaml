@@ -81,9 +81,8 @@ def init() -> None:
     skills_dir = Path("~/.claude/skills").expanduser()
     skills_dir.mkdir(parents=True, exist_ok=True)
 
-    # Find skills directory relative to this package
-    pkg_dir = Path(__file__).parent.parent.parent  # project root
-    src_skills = pkg_dir / "skills"
+    # Skills are bundled inside the package under yaaml/skills/
+    src_skills = Path(__file__).parent / "skills"
     if src_skills.exists():
         for skill_file in src_skills.glob("*.md"):
             dest = skills_dir / skill_file.name

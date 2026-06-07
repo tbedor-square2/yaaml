@@ -269,8 +269,9 @@ class FileWatcher:
 
             bytes_processed += len(line_bytes)
 
-            # Persist session meta at most once per process_file call
-            if parser.session_meta is not None:
+            # Persist session meta at most once per process_file call.
+            # Skip sessions with no project_id — we can't route them anywhere useful.
+            if parser.session_meta is not None and parser.session_meta.project_id:
                 sid = parser.session_meta.session_id
                 if sid not in persisted_this_call:
                     persisted_this_call.add(sid)
@@ -278,16 +279,24 @@ class FileWatcher:
                         _persist_session(self._db, parser.session_meta)
                     except Exception as exc:
                         logger.warning("Could not persist session meta: %s", exc)
+            elif parser.session_meta is not None and not parser.session_meta.project_id:
+                logger.warning(
+                    "Session %s has no project_id — skipping.",
+                    parser.session_meta.session_id,
+                )
 
             if turn is not None:
-                try:
-                    _persist_turn(self._db, turn)
-                    current_offset = offset + bytes_processed
-                    _save_cursor(self._db, str_path, current_offset)
-                    last_saved_offset = current_offset
-                    await self._on_turn(turn)
-                except Exception as exc:
-                    logger.error("on_turn callback failed for %s: %s", file_path, exc)
+                if not turn.project_id:
+                    logger.warning("Dropping turn with empty project_id from %s", file_path)
+                else:
+                    try:
+                        _persist_turn(self._db, turn)
+                        current_offset = offset + bytes_processed
+                        _save_cursor(self._db, str_path, current_offset)
+                        last_saved_offset = current_offset
+                        await self._on_turn(turn)
+                    except Exception as exc:
+                        logger.error("on_turn callback failed for %s: %s", file_path, exc)
 
         # Advance cursor past any non-turn lines at the end of the batch
         final_offset = offset + bytes_processed

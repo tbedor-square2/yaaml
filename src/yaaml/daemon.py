@@ -59,6 +59,22 @@ class YAAMLDaemon:
     async def run(self) -> None:
         """Initialize everything and run forever."""
         setup_logging()
+
+        # Refuse to start if another instance is already running.
+        if PID_FILE.exists():
+            try:
+                pid = int(PID_FILE.read_text().strip())
+                os.kill(pid, 0)  # signal 0 = liveness check
+                logger.error(
+                    "YAAML daemon already running (pid=%d). "
+                    "Stop it first or remove %s if it is stale.",
+                    pid,
+                    PID_FILE,
+                )
+                return
+            except (ValueError, ProcessLookupError):
+                pass  # stale PID file — safe to overwrite
+
         logger.info("YAAML daemon starting (pid=%d).", os.getpid())
 
         # Write PID file

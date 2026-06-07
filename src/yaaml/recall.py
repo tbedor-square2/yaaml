@@ -38,9 +38,10 @@ class RecallManager:
     async def on_turn(self, turn: ParsedTurn) -> None:
         """Called after each completed turn.
 
-        Skips the very first turn of each session (no prior context to query
-        against). Builds a context string from the last 3 turns, runs vector
-        search, and writes the recall file if the result set changed.
+        Skips the very first logical turn of a brand-new session (no prior
+        context to query against). Uses the DB to detect "first turn" so the
+        check survives daemon restarts — if prior turns already exist for the
+        session, recall runs normally.
 
         Args:
             turn: The just-completed ParsedTurn.
@@ -48,8 +49,15 @@ class RecallManager:
         session_id = turn.session_id
         if session_id not in self._seen_sessions:
             self._seen_sessions.add(session_id)
-            # First turn of this session — skip recall to avoid cold-start noise
-            return
+            # Count distinct logical turns already stored for this session.
+            # After _persist_turn the current turn is already in the DB, so
+            # a count of 1 means this is genuinely the first turn.
+            n_groups = self._db.execute(
+                "SELECT COUNT(DISTINCT turn_group_id) FROM turns WHERE session_id = ?",
+                (session_id,),
+            ).fetchone()[0]
+            if n_groups <= 1:
+                return
 
         context_text = self._build_context(turn)
         memories = self.query(context_text, turn.project_id)

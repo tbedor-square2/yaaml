@@ -147,18 +147,22 @@ async def summarize_turns(
     max_chars = config.max_formulation_tokens * 4
     turns_text = _build_turns_text(turns, config)
 
-    # If too large, chunk and recurse
+    # If too large, chunk and recurse — but never recurse on a single turn (infinite loop).
     if len(turns_text) > max_chars:
-        chunk_size = max(1, len(turns) // 2)
-        first_half = turns[:chunk_size]
-        second_half = turns[chunk_size:]
-        try:
-            first_title, first_body = await summarize_turns(first_half, prior_summary, config)
-            chunk_summary = f"{first_title}\n\n{first_body}"
-            return await summarize_turns(second_half, chunk_summary, config)
-        except Exception as exc:
-            logger.error("Error in chunked summarize_turns: %s", exc)
-            raise
+        if len(turns) <= 1:
+            # Single turn exceeds limit; truncate rather than recurse forever.
+            turns_text = turns_text[:max_chars]
+        else:
+            chunk_size = max(1, len(turns) // 2)
+            first_half = turns[:chunk_size]
+            second_half = turns[chunk_size:]
+            try:
+                first_title, first_body = await summarize_turns(first_half, prior_summary, config)
+                chunk_summary = f"{first_title}\n\n{first_body}"
+                return await summarize_turns(second_half, chunk_summary, config)
+            except Exception as exc:
+                logger.error("Error in chunked summarize_turns: %s", exc)
+                raise
 
     prior_block = ""
     if prior_summary:

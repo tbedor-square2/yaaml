@@ -136,7 +136,9 @@ def init() -> None:
             async def _on_turn(turn: ParsedTurn) -> None:
                 nonlocal turn_count
                 turn_count += 1
-                await memory_mgr.on_turn(turn)
+                # Don't fire threshold-based memory creation during bulk ingest;
+                # create_memories_for_project is called per-project after all files
+                # are read so we get one coherent memory rather than many small ones.
 
             watcher = FileWatcher(db, config, _on_turn)
             files_processed = 0
@@ -331,7 +333,33 @@ def recall(
     recall_mgr = RecallManager(db, store, config)
 
     project_id = normalize_project_id(str(project_dir))
-    query_text = query or f"Project: {project_id}"
+
+    if query:
+        query_text = query
+    else:
+        # Build context from the most recent turns for this project so the
+        # vector search has something meaningful to match against.
+        rows = db.execute(
+            """
+            SELECT t.role, t.content_json FROM turns t
+            JOIN sessions s ON s.id = t.session_id
+            WHERE s.project_id = ?
+            ORDER BY t.observed_at DESC LIMIT 6
+            """,
+            (project_id,),
+        ).fetchall()
+        parts = []
+        for row in reversed(rows):
+            try:
+                content = json.loads(row[1])
+                text = (
+                    content.get("text", str(content)) if isinstance(content, dict) else str(content)
+                )
+            except (json.JSONDecodeError, TypeError):
+                text = str(row[1])
+            if text:
+                parts.append(f"{row[0]}: {text[:300]}")
+        query_text = "\n".join(parts) if parts else project_id
 
     memories = recall_mgr.query(query_text, project_id)
     recall_mgr.write_recall_file(memories, project_id, query_source=query or "cli")
@@ -489,26 +517,33 @@ def ingest(
     from .embeddings import EmbeddingStore
     from .memory import MemoryManager
     from .parsers import ParsedTurn
-    from .recall import RecallManager
     from .watcher import FileWatcher
 
     config = load_config(None)
     db = get_db(config.db_path)
     store = EmbeddingStore(config.chroma_path, config.embedding_model)
     memory_mgr = MemoryManager(db, store, config)
-    recall_mgr = RecallManager(db, store, config)
+
+    turn_count = 0
 
     async def on_turn(turn: ParsedTurn) -> None:
-        await memory_mgr.on_turn(turn)
-        await recall_mgr.on_turn(turn)
+        nonlocal turn_count
+        turn_count += 1
+        # Bulk ingest: defer memory creation to end so we get one coherent
+        # memory per project rather than many small threshold-sized ones.
 
     watcher = FileWatcher(db, config, on_turn)
 
     async def _run() -> None:
         await watcher.process_file(file)
+        for project_id in memory_mgr.get_projects_with_pending_turns():
+            try:
+                await memory_mgr.create_memories_for_project(project_id)
+            except Exception as exc:
+                console.print(f"[red]Memory creation failed for {project_id}: {exc}[/red]")
 
     asyncio.run(_run())
-    console.print(f"[green]Ingested[/green] {file}")
+    console.print(f"[green]Ingested[/green] {file} ({turn_count} turn(s))")
 
 
 # ---------------------------------------------------------------------------

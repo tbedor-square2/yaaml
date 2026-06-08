@@ -353,11 +353,15 @@ fn eval_recall(args: EvalRecallArgs) -> anyhow::Result<()> {
 fn path() -> anyhow::Result<()> {
     let cwd = env::current_dir().context("failed to determine current directory")?;
     let config = Config::load_for_cwd(&cwd).context("failed to load config")?;
+    let db_path = config.db_path().context("failed to resolve db_path")?;
+    let mut db = Database::open(&db_path)
+        .with_context(|| format!("failed to open {}", display(&db_path)))?;
+    db.migrate().context("failed to migrate database")?;
     let project_id = yaaml_core::paths::normalize_project_id(&cwd);
     let recall_dir = config
         .recall_dir()
         .context("failed to resolve recall_dir")?;
-    let path = contextual_recall_file_path(&recall_dir, &project_id);
+    let path = contextual_recall_file_path(&recall_dir, &project_id, &db)?;
 
     println!("{}", path.display());
     Ok(())
@@ -370,7 +374,11 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
     let recall_dir = config
         .recall_dir()
         .context("failed to resolve recall_dir")?;
-    let recall_path = contextual_recall_file_path(&recall_dir, &project_id_path);
+    let db_path = config.db_path().context("failed to resolve db_path")?;
+    let mut db = Database::open(&db_path)
+        .with_context(|| format!("failed to open {}", display(&db_path)))?;
+    db.migrate().context("failed to migrate database")?;
+    let recall_path = contextual_recall_file_path(&recall_dir, &project_id_path, &db)?;
     let Some(query) = args.query else {
         if recall_path.exists() {
             print!(
@@ -388,11 +396,6 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
             config.embedding_provider
         );
     }
-    let db_path = config.db_path().context("failed to resolve db_path")?;
-    let mut db = Database::open(&db_path)
-        .with_context(|| format!("failed to open {}", display(&db_path)))?;
-    db.migrate().context("failed to migrate database")?;
-
     let embedding_client = OpenAiEmbeddingClient::new(
         OpenAiEmbeddingConfig::from_config(&config),
         ReqwestTransport::default(),
@@ -484,12 +487,27 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
 fn contextual_recall_file_path(
     recall_dir: &std::path::Path,
     project_id: &std::path::Path,
-) -> PathBuf {
+    db: &Database,
+) -> anyhow::Result<PathBuf> {
     if let Some(session_id) = current_session_id() {
-        session_recall_file_path(recall_dir, project_id, &session_id)
-    } else {
-        recall_file_path(recall_dir, project_id)
+        return Ok(session_recall_file_path(
+            recall_dir,
+            project_id,
+            &session_id,
+        ));
     }
+    let project_id_string = project_id.display().to_string();
+    if let Some(session) = db
+        .latest_session_for_project(&project_id_string)
+        .context("failed to load latest project session")?
+    {
+        return Ok(session_recall_file_path(
+            recall_dir,
+            project_id,
+            &session.id,
+        ));
+    }
+    Ok(recall_file_path(recall_dir, project_id))
 }
 
 fn current_session_id() -> Option<String> {

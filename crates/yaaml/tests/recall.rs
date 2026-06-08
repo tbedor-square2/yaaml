@@ -6,7 +6,8 @@ use std::thread;
 
 use tempfile::TempDir;
 use yaaml_core::{
-    recall_file_path, session_recall_file_path, EmbeddingRecord, MemoryRecord, MemoryScope,
+    recall_file_path, session_recall_file_path, AgentType, EmbeddingRecord, MemoryRecord,
+    MemoryScope, SessionRecord,
 };
 use yaaml_store::database::encode_f32_embedding;
 use yaaml_store::Database;
@@ -187,6 +188,106 @@ embedding_base_url = "{}"
 
     assert!(markdown.contains("## Session recall"));
     assert!(String::from_utf8_lossy(&output.stdout).contains("## Session recall"));
+}
+
+#[test]
+fn recall_query_falls_back_to_latest_project_session() {
+    let tmp = TempDir::new().unwrap();
+    let home = tmp.path().join("home");
+    let project = tmp.path().join("project");
+    fs::create_dir_all(home.join(".yaaml")).unwrap();
+    fs::create_dir_all(&project).unwrap();
+    let db_path = home.join(".yaaml").join("yaaml.db");
+    let recall_dir = home.join(".yaaml").join("recall");
+    let server = fake_embedding_server();
+    fs::write(
+        home.join(".yaaml").join("config.toml"),
+        format!(
+            r#"
+db_path = "{}"
+recall_dir = "{}"
+embedding_base_url = "{}"
+"#,
+            db_path.display(),
+            recall_dir.display(),
+            server.base_url
+        ),
+    )
+    .unwrap();
+
+    let project_id = project.canonicalize().unwrap().display().to_string();
+    let mut db = Database::open(&db_path).unwrap();
+    db.migrate().unwrap();
+    for session in [
+        SessionRecord {
+            id: "old-session".to_string(),
+            agent_type: AgentType::Codex,
+            project_id: project_id.clone(),
+            transcript_file_path: "/tmp/old.jsonl".to_string(),
+            started_at: Some("2026-06-08T00:00:00Z".to_string()),
+            last_seen_at: Some("2026-06-08T00:01:00Z".to_string()),
+        },
+        SessionRecord {
+            id: "new-session".to_string(),
+            agent_type: AgentType::Codex,
+            project_id: project_id.clone(),
+            transcript_file_path: "/tmp/new.jsonl".to_string(),
+            started_at: Some("2026-06-08T00:00:00Z".to_string()),
+            last_seen_at: Some("2026-06-08T00:02:00Z".to_string()),
+        },
+    ] {
+        db.upsert_session(&session).unwrap();
+    }
+    let memory = MemoryRecord {
+        id: None,
+        title: "Fallback session recall".to_string(),
+        body: "Recall should use the newest known project session without a Codex thread id."
+            .to_string(),
+        scope: MemoryScope::Project,
+        source_turn_refs: Vec::new(),
+        created_at: "2026-06-08T00:00:00Z".to_string(),
+        updated_at: "2026-06-08T00:00:00Z".to_string(),
+        is_active: true,
+        session_id: None,
+        project_id: Some(project_id),
+        project_descriptor: Some("yaaml, Rust CLI memory daemon".to_string()),
+        lineage_refs: Vec::new(),
+    };
+    let memory_id = db.insert_memory(&memory).unwrap();
+    db.upsert_embedding(&EmbeddingRecord {
+        memory_id,
+        embedding_model: "text-embedding-3-small".to_string(),
+        dimensions: 2,
+        embedding_blob: encode_f32_embedding(&[1.0, 0.0]),
+        embedded_text_hash: "hash".to_string(),
+        updated_at: "2026-06-08T00:00:00Z".to_string(),
+    })
+    .unwrap();
+
+    let binary = env!("CARGO_BIN_EXE_yaaml");
+    let output = Command::new(binary)
+        .arg("recall")
+        .arg("--query")
+        .arg("current user request")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .env("OPENAI_API_KEY", "test-key")
+        .env_remove("CODEX_THREAD_ID")
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    server.join();
+    let recall_path =
+        session_recall_file_path(&recall_dir, &project.canonicalize().unwrap(), "new-session");
+    let markdown = fs::read_to_string(recall_path).unwrap();
+
+    assert!(markdown.contains("## Fallback session recall"));
+    assert!(String::from_utf8_lossy(&output.stdout).contains("## Fallback session recall"));
 }
 
 struct FakeServer {

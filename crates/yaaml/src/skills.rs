@@ -14,7 +14,7 @@ Use this skill directly and proactively when working in a repo, debugging, revie
 
 Run `yaaml recall --query "<current user request>"` from the current working directory and read its output as contextual hints before proceeding. Do not wait for the user to ask for memory explicitly when the task is non-trivial or project-specific.
 
-Do not assume a project-local `.yaaml/recall.md` path. `yaaml recall --query` writes and prints the daemon-owned recall file for the current Codex session when `CODEX_THREAD_ID` is present, otherwise for the current project. Use bare `yaaml recall` only to re-read the existing recall file.
+Do not assume a project-local `.yaaml/recall.md` path. `yaaml recall --query` writes and prints the daemon-owned recall file for the current Codex session when `CODEX_THREAD_ID` is present; otherwise it uses the newest known session for the current project, then falls back to the project-level recall file. Use bare `yaaml recall` only to re-read the existing recall file.
 "#;
 
 const CLAUDE_SKILL: &str = CODEX_SKILL;

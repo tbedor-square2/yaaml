@@ -170,6 +170,24 @@ impl Database {
             .map_err(DatabaseError::from)
     }
 
+    pub fn latest_session_for_project(
+        &self,
+        project_id: &str,
+    ) -> Result<Option<SessionRecord>, DatabaseError> {
+        self.conn
+            .query_row(
+                "SELECT id, agent_type, project_id, transcript_file_path, started_at, last_seen_at
+                 FROM sessions
+                 WHERE project_id = ?1
+                 ORDER BY COALESCE(last_seen_at, started_at) DESC, id DESC
+                 LIMIT 1",
+                params![project_id],
+                read_session_record,
+            )
+            .optional()
+            .map_err(DatabaseError::from)
+    }
+
     pub fn sessions_with_completed_turn_counts(
         &self,
     ) -> Result<Vec<(SessionRecord, u64)>, DatabaseError> {
@@ -1005,6 +1023,51 @@ mod tests {
             db.cursor_paths().unwrap(),
             vec![PathBuf::from("/tmp/session.jsonl")]
         );
+    }
+
+    #[test]
+    fn latest_session_for_project_prefers_most_recent_last_seen() {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+        for session in [
+            SessionRecord {
+                id: "old-session".to_string(),
+                agent_type: yaaml_core::AgentType::Codex,
+                project_id: "/tmp/project".to_string(),
+                transcript_file_path: "/tmp/old.jsonl".to_string(),
+                started_at: Some("2026-06-08T00:00:00Z".to_string()),
+                last_seen_at: Some("2026-06-08T00:01:00Z".to_string()),
+            },
+            SessionRecord {
+                id: "new-session".to_string(),
+                agent_type: yaaml_core::AgentType::Codex,
+                project_id: "/tmp/project".to_string(),
+                transcript_file_path: "/tmp/new.jsonl".to_string(),
+                started_at: Some("2026-06-08T00:00:00Z".to_string()),
+                last_seen_at: Some("2026-06-08T00:02:00Z".to_string()),
+            },
+            SessionRecord {
+                id: "other-project".to_string(),
+                agent_type: yaaml_core::AgentType::Codex,
+                project_id: "/tmp/other".to_string(),
+                transcript_file_path: "/tmp/other.jsonl".to_string(),
+                started_at: Some("2026-06-08T00:00:00Z".to_string()),
+                last_seen_at: Some("2026-06-08T00:03:00Z".to_string()),
+            },
+        ] {
+            db.upsert_session(&session).unwrap();
+        }
+
+        let session = db
+            .latest_session_for_project("/tmp/project")
+            .unwrap()
+            .unwrap();
+
+        assert_eq!(session.id, "new-session");
+        assert!(db
+            .latest_session_for_project("/tmp/missing")
+            .unwrap()
+            .is_none());
     }
 
     #[test]

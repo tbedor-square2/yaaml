@@ -650,7 +650,15 @@ fn judge_eval_candidate(
 }
 
 fn eval_judge_system_prompt() -> &'static str {
-    "Score whether a stored memory would help an AI coding agent answer the replayed turn. Return only JSON with fields: score, rationale. score must be one of useful, neutral, distracting."
+    concat!(
+        "Rate whether recalled context helped an AI coding agent after it was incorporated into the conversation. ",
+        "Return only JSON with fields score and rationale. score must be a string from \"1\" to \"5\". ",
+        "5: recalled context was relevant, concise, and actionable. ",
+        "4: recalled context was relevant and concise, but not directly actionable. ",
+        "3: recalled context was partially relevant, but also partially irrelevant or overly long. ",
+        "2: recalled context had only weak relevance, was stale/misleading, or required substantial filtering before use. ",
+        "1: recalled context was not relevant."
+    )
 }
 
 fn eval_judge_prompt(turn: &TurnRecord, candidate: &EvalCandidate, citation_score: &str) -> String {
@@ -794,6 +802,18 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
     let rendered = render_recall_markdown(&now, "user input", &project_id, &recall_memories);
     let write = write_recall_file(&recall_path, &rendered, &selected_ids)
         .context("failed to write recall file")?;
+    if !selected_ids.is_empty() && matches!(write, RecallWrite::Written | RecallWrite::Unchanged) {
+        if let Some(anchor_turn) = recall_eval_anchor_turn(&db, &project_id)? {
+            yaaml::daemon::queue_recall_eval_after_turn(
+                &db,
+                &anchor_turn.session_id,
+                anchor_turn.ordinal,
+                &rendered,
+                &selected_ids,
+                0,
+            )?;
+        }
+    }
 
     match write {
         RecallWrite::Written | RecallWrite::Unchanged => print!("{rendered}"),
@@ -809,6 +829,24 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
         }
     }
     Ok(())
+}
+
+fn recall_eval_anchor_turn(db: &Database, project_id: &str) -> anyhow::Result<Option<TurnRecord>> {
+    if let Some(session_id) = current_session_id() {
+        return db
+            .turns_for_session(&session_id, 1)
+            .context("failed to load current session turns")
+            .map(|turns| turns.into_iter().last());
+    }
+    let Some(session) = db
+        .latest_session_for_project(project_id)
+        .context("failed to load latest project session")?
+    else {
+        return Ok(None);
+    };
+    db.turns_for_session(&session.id, 1)
+        .context("failed to load latest project session turns")
+        .map(|turns| turns.into_iter().last())
 }
 
 fn contextual_recall_file_path(

@@ -8,11 +8,11 @@ use yaaml::daemon::{
     dedupe_active_memories, ingest_codex_file, process_codex_backlog, process_codex_changes,
     queue_memory_formulation_if_due, queue_missing_memory_formulation_tasks, recover_running_tasks,
     refresh_recall_with_embedding, run_queued_tasks, start_signal_socket, DaemonShutdown,
-    PartialBatchPolicy, TASK_KIND_MEMORY_FORMULATION,
+    PartialBatchPolicy, TASK_KIND_MEMORY_FORMULATION, TASK_KIND_RECALL_EVAL,
 };
 use yaaml_core::{
-    session_recall_file_path, Config, EmbeddingRecord, MemoryRecord, MemoryScope, SourceTurnRef,
-    TurnRecord,
+    session_recall_file_path, AgentType, Config, EmbeddingRecord, MemoryRecord, MemoryScope,
+    SessionRecord, SourceTurnRef, TurnRecord,
 };
 use yaaml_store::database::encode_f32_embedding;
 use yaaml_store::Database;
@@ -419,6 +419,15 @@ fn recall_file_is_written_after_memory_exists_and_new_turn_completes() {
     let project = tmp.path().join("project");
     fs::create_dir_all(&project).unwrap();
     let project_id = project.canonicalize().unwrap().display().to_string();
+    db.upsert_session(&SessionRecord {
+        id: "session-1".to_string(),
+        agent_type: AgentType::Codex,
+        project_id: project_id.clone(),
+        transcript_file_path: "/tmp/session-1.jsonl".to_string(),
+        started_at: Some("2026-06-08T00:00:00Z".to_string()),
+        last_seen_at: Some("2026-06-08T00:00:01Z".to_string()),
+    })
+    .unwrap();
     let memory = MemoryRecord {
         id: None,
         title: "Recall file location".to_string(),
@@ -453,6 +462,7 @@ fn recall_file_is_written_after_memory_exists_and_new_turn_completes() {
         status: yaaml_core::TurnStatus::Completed,
         display_text: Some("where is recall written?".to_string()),
     };
+    db.insert_turn(&turn).unwrap();
 
     refresh_recall_with_embedding(
         &db,
@@ -471,6 +481,12 @@ fn recall_file_is_written_after_memory_exists_and_new_turn_completes() {
     let markdown = fs::read_to_string(path).unwrap();
 
     assert!(markdown.contains("## Recall file location"));
+    assert_eq!(
+        db.count_tasks_by_status(TASK_KIND_RECALL_EVAL, yaaml_core::TaskStatus::Queued)
+            .unwrap(),
+        1
+    );
+    assert_eq!(run_queued_tasks(&db, &config, 1).unwrap(), 0);
 }
 
 #[test]

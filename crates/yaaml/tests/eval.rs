@@ -207,7 +207,7 @@ eval_judge_api_key_env = "YAAML_TEST_ANTHROPIC_KEY"
     );
     server.join();
     let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
-    assert_eq!(value["score_counts"]["useful"], 1);
+    assert_eq!(value["score_counts"]["5"], 1);
 }
 
 struct FakeServer {
@@ -228,7 +228,7 @@ fn fake_anthropic_server() -> FakeServer {
         let (mut stream, _) = listener.accept().unwrap();
         let mut buffer = [0_u8; 8192];
         let _ = stream.read(&mut buffer).unwrap();
-        let body = r#"{"content":[{"type":"text","text":"{\"score\":\"useful\",\"rationale\":\"directly relevant\"}"}]}"#;
+        let body = r#"{"content":[{"type":"text","text":"{\"score\":\"5\",\"rationale\":\"directly relevant\"}"}]}"#;
         let response = format!(
             "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
             body.len(),

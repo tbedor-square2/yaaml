@@ -15,9 +15,9 @@ use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use serde_json::json;
 use yaaml_core::{
     apply_project_bonus, build_recall_query, derive_project_descriptor, embedded_text_hash,
-    embedding_text, parse_formulation_response, recall_file_path, render_recall_markdown,
-    session_recall_file_path, write_recall_file, Config, EmbeddingRecord, RecallCandidate,
-    RecallMemory, SourceTurnRef, TaskRecord, TaskStatus, VectorIndex,
+    embedding_text, parse_eval_judge_response, parse_formulation_response, recall_file_path,
+    render_recall_markdown, session_recall_file_path, write_recall_file, Config, EmbeddingRecord,
+    RecallCandidate, RecallMemory, SourceTurnRef, TaskRecord, TaskStatus, VectorIndex,
 };
 use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
@@ -28,6 +28,7 @@ use yaaml_transcript::discovery::discover_codex_backlog;
 
 pub const TASK_KIND_MEMORY_FORMULATION: &str = "memory_formulation";
 pub const TASK_KIND_RECALL: &str = "recall";
+pub const TASK_KIND_RECALL_EVAL: &str = "recall_eval";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PartialBatchPolicy {
@@ -255,7 +256,7 @@ pub fn run_queued_tasks(db: &Database, config: &Config, limit: usize) -> anyhow:
     let mut completed = 0;
     for _ in 0..limit {
         let Some(task) = db
-            .next_queued_task()
+            .next_queued_task(unix_timestamp_seconds())
             .context("failed to fetch queued task")?
         else {
             break;
@@ -265,6 +266,7 @@ pub fn run_queued_tasks(db: &Database, config: &Config, limit: usize) -> anyhow:
             .context("failed to mark task running")?;
         let result = match task.kind.as_str() {
             TASK_KIND_MEMORY_FORMULATION => run_memory_formulation_task(db, config, &task),
+            TASK_KIND_RECALL_EVAL => run_recall_eval_task(db, config, &task),
             _ => Ok(()),
         };
         match result {
@@ -381,13 +383,96 @@ fn run_memory_formulation_task(
     Ok(())
 }
 
+fn run_recall_eval_task(db: &Database, config: &Config, task: &TaskRecord) -> anyhow::Result<()> {
+    let payload: serde_json::Value =
+        serde_json::from_str(&task.payload_json).context("failed to parse recall eval payload")?;
+    let session_id = payload
+        .get("session_id")
+        .and_then(serde_json::Value::as_str)
+        .context("recall eval task missing session_id")?;
+    let turn_ordinal = payload
+        .get("turn_ordinal")
+        .and_then(serde_json::Value::as_u64)
+        .context("recall eval task missing turn_ordinal")?;
+    let recall_text = payload
+        .get("recall_text")
+        .and_then(serde_json::Value::as_str)
+        .context("recall eval task missing recall_text")?;
+    let memory_ids = payload
+        .get("memory_ids")
+        .and_then(serde_json::Value::as_array)
+        .map(|ids| {
+            ids.iter()
+                .filter_map(serde_json::Value::as_i64)
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+    let turn_row_id = db
+        .turn_row_id_for_session_ordinal(session_id, turn_ordinal)
+        .context("failed to load recall eval anchor turn")?
+        .context("recall eval anchor turn is missing")?;
+    let later_turns = db
+        .completed_turns_for_session_after_ordinal(session_id, turn_ordinal, 20)
+        .context("failed to load turns after recall")?;
+    let now = unix_timestamp();
+    let run_id = db
+        .insert_eval_run(
+            "recall_1_to_5",
+            &now,
+            &json!({
+                "session_id": session_id,
+                "turn_ordinal": turn_ordinal,
+                "memory_ids": memory_ids,
+                "rating_delay_seconds": 600,
+                "rubric": "1-5 recall relevance, concision, and actionability",
+            })
+            .to_string(),
+        )
+        .context("failed to create recall eval run")?;
+    let judge_client = AnthropicMessageClient::new(
+        AnthropicMessageConfig::judge_from_config(config),
+        ReqwestTransport::default(),
+    );
+    let prompt = recall_eval_prompt(recall_text, &later_turns);
+    let outcome = judge_client
+        .structured_json(recall_eval_system_prompt(), &prompt)
+        .map(|value| parse_eval_judge_response(&value))
+        .context("failed to rate recall")?;
+    db.insert_eval_result(
+        run_id,
+        turn_row_id,
+        memory_ids.first().copied(),
+        &outcome.score,
+        &outcome.rationale,
+        &now,
+    )
+    .context("failed to insert recall eval result")?;
+    db.complete_eval_run(run_id, &unix_timestamp())
+        .context("failed to complete recall eval run")?;
+    Ok(())
+}
+
 fn formulation_system_prompt() -> &'static str {
     concat!(
         "Create concise durable memories from coding-agent transcript turns. ",
         "Return only JSON shaped as {\"memories\":[{\"title\":\"...\",\"body\":\"...\",\"scope\":\"project\"|\"global\",\"project_descriptor\":\"...\"}]}. ",
         "Prefer small, granular memories. ",
+        "Focus memories on insights gained while solving the problem and on redirection provided by the user. ",
         "Always capture repeated user corrections, preferences, and process guidance as their own concise memories, including coding style preferences such as functional vs imperative style. ",
         "Use project scope when the preference is tied to the current project or language; use global scope only for durable cross-project user preferences or agent workflow patterns."
+    )
+}
+
+fn recall_eval_system_prompt() -> &'static str {
+    concat!(
+        "Rate whether recalled context helped an AI coding agent after it was incorporated into the conversation. ",
+        "Return only JSON with fields score and rationale. ",
+        "score must be a string from \"1\" to \"5\". ",
+        "5: recalled context was relevant, concise, and actionable. ",
+        "4: recalled context was relevant and concise, but not directly actionable. ",
+        "3: recalled context was partially relevant, but also partially irrelevant or overly long. ",
+        "2: recalled context had only weak relevance, was stale/misleading, or required substantial filtering before use. ",
+        "1: recalled context was not relevant."
     )
 }
 
@@ -431,6 +516,29 @@ fn formulation_turn_text(text: &str, max_chars: usize, tool_output_chars: usize)
         }
     }
     output
+}
+
+fn recall_eval_prompt(recall_text: &str, later_turns: &[yaaml_core::TurnRecord]) -> String {
+    let later_text = if later_turns.is_empty() {
+        "No subsequent turns were captured after recall.".to_string()
+    } else {
+        later_turns
+            .iter()
+            .map(|turn| {
+                format!(
+                    "Turn {}:\n{}",
+                    turn.ordinal,
+                    truncate_chars(turn.display_text.as_deref().unwrap_or(""), 2_000)
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("\n\n")
+    };
+    format!(
+        "Recalled context:\n{}\n\nSubsequent conversation after recall:\n{}\n\nRate the recalled context from 1 to 5 using the rubric.",
+        truncate_chars(recall_text, 8_000),
+        truncate_chars(&later_text, 12_000)
+    )
 }
 
 fn truncate_chars(text: &str, max_chars: usize) -> String {
@@ -751,6 +859,41 @@ pub fn queue_recall_after_turn(
         .context("failed to enqueue recall task")
 }
 
+pub fn queue_recall_eval_after_turn(
+    db: &Database,
+    session_id: &str,
+    turn_ordinal: u64,
+    recall_text: &str,
+    memory_ids: &[i64],
+    priority: i64,
+) -> anyhow::Result<i64> {
+    let now_seconds = unix_timestamp_seconds();
+    let payload = json!({
+        "session_id": session_id,
+        "turn_ordinal": turn_ordinal,
+        "recall_text": recall_text,
+        "memory_ids": memory_ids,
+        "recall_at": format!("unix:{now_seconds}"),
+        "eval_after": format!("unix:{}", now_seconds + 600),
+    });
+    let now = format!("unix:{now_seconds}");
+    let task = TaskRecord {
+        id: None,
+        kind: TASK_KIND_RECALL_EVAL.to_string(),
+        status: TaskStatus::Queued,
+        priority,
+        payload_json: payload.to_string(),
+        attempts: 0,
+        max_attempts: 5,
+        next_run_at: Some(format!("unix:{}", now_seconds + 600)),
+        last_error: None,
+        created_at: now.clone(),
+        updated_at: now,
+    };
+    db.enqueue_task(&task)
+        .context("failed to enqueue recall eval task")
+}
+
 pub fn refresh_recall_with_embedding(
     db: &Database,
     config: &Config,
@@ -840,7 +983,21 @@ pub fn refresh_recall_with_embedding(
         .last()
         .map(|turn| session_recall_file_path(&recall_dir, project_id, &turn.session_id))
         .unwrap_or_else(|| recall_file_path(&recall_dir, project_id));
-    write_recall_file(&path, &rendered, &selected_ids).context("failed to write recall file")
+    let write = write_recall_file(&path, &rendered, &selected_ids)
+        .context("failed to write recall file")?;
+    if !selected_ids.is_empty() {
+        if let Some(turn) = recent_turns.last() {
+            queue_recall_eval_after_turn(
+                db,
+                &turn.session_id,
+                turn.ordinal,
+                &rendered,
+                &selected_ids,
+                0,
+            )?;
+        }
+    }
+    Ok(write)
 }
 
 pub fn recover_running_tasks(db: &Database) -> anyhow::Result<u64> {
@@ -957,8 +1114,20 @@ mod tests {
     fn formulation_system_prompt_mentions_user_preferences() {
         let prompt = formulation_system_prompt();
 
+        assert!(prompt.contains("insights gained while solving the problem"));
+        assert!(prompt.contains("redirection provided by the user"));
         assert!(prompt.contains("repeated user corrections"));
         assert!(prompt.contains("coding style preferences"));
         assert!(prompt.contains("functional vs imperative"));
+    }
+
+    #[test]
+    fn recall_eval_system_prompt_uses_one_to_five_rubric() {
+        let prompt = recall_eval_system_prompt();
+
+        assert!(prompt.contains("\"1\" to \"5\""));
+        assert!(prompt.contains("relevant, concise, and actionable"));
+        assert!(prompt.contains("weak relevance"));
+        assert!(prompt.contains("not relevant"));
     }
 }

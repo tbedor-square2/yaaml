@@ -63,9 +63,12 @@ pub fn parse_eval_judge_response(value: &Value) -> EvalJudgeOutcome {
 
 fn normalize_eval_score(score: &str) -> String {
     match score.trim().to_ascii_lowercase().as_str() {
-        "useful" => "useful".to_string(),
-        "distracting" => "distracting".to_string(),
-        _ => "neutral".to_string(),
+        "5" | "excellent" | "useful" => "5".to_string(),
+        "4" | "good" => "4".to_string(),
+        "3" | "partial" | "neutral" => "3".to_string(),
+        "2" | "weak" => "2".to_string(),
+        "1" | "irrelevant" | "distracting" => "1".to_string(),
+        _ => "3".to_string(),
     }
 }
 
@@ -158,15 +161,19 @@ mod tests {
     #[test]
     fn parses_eval_judge_response_with_score_normalization() {
         let outcome = parse_eval_judge_response(
-            &serde_json::json!({"score":"USEFUL","rationale":"directly relevant"}),
+            &serde_json::json!({"score":"5","rationale":"directly relevant"}),
         );
 
-        assert_eq!(outcome.score, "useful");
+        assert_eq!(outcome.score, "5");
         assert_eq!(outcome.rationale, "directly relevant");
+
+        let outcome = parse_eval_judge_response(&serde_json::json!({"score":"distracting"}));
+
+        assert_eq!(outcome.score, "1");
 
         let outcome = parse_eval_judge_response(&serde_json::json!({"score":"surprising"}));
 
-        assert_eq!(outcome.score, "neutral");
+        assert_eq!(outcome.score, "3");
         assert_eq!(outcome.rationale, "judge returned no rationale");
     }
 }

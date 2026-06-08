@@ -73,6 +73,7 @@ pub fn uninstall(paths: &ServicePaths) -> anyhow::Result<()> {
 
 pub fn start(paths: &ServicePaths) -> anyhow::Result<()> {
     if cfg!(target_os = "macos") {
+        propagate_provider_env_to_launchd()?;
         Command::new("launchctl")
             .arg("bootstrap")
             .arg(launchd_domain_target()?)
@@ -86,6 +87,7 @@ pub fn start(paths: &ServicePaths) -> anyhow::Result<()> {
             .status()
             .context("failed to run launchctl kickstart")?;
     } else {
+        import_provider_env_to_systemd()?;
         Command::new("systemctl")
             .arg("--user")
             .arg("start")
@@ -94,6 +96,62 @@ pub fn start(paths: &ServicePaths) -> anyhow::Result<()> {
             .context("failed to run systemctl start")?;
     }
     Ok(())
+}
+
+fn propagate_provider_env_to_launchd() -> anyhow::Result<()> {
+    for key in provider_env_keys() {
+        if let Ok(value) = std::env::var(key) {
+            Command::new("launchctl")
+                .arg("setenv")
+                .arg(key)
+                .arg(value)
+                .status()
+                .with_context(|| format!("failed to run launchctl setenv {key}"))?;
+        }
+    }
+    Ok(())
+}
+
+fn import_provider_env_to_systemd() -> anyhow::Result<()> {
+    let keys = provider_env_keys()
+        .into_iter()
+        .filter(|key| std::env::var(key).is_ok())
+        .collect::<Vec<_>>();
+    if keys.is_empty() {
+        return Ok(());
+    }
+    Command::new("systemctl")
+        .arg("--user")
+        .arg("import-environment")
+        .args(keys)
+        .status()
+        .context("failed to import provider environment into systemd")?;
+    Ok(())
+}
+
+fn provider_env_keys() -> Vec<&'static str> {
+    vec!["ANTHROPIC_API_KEY", "OPENAI_API_KEY"]
+}
+
+fn redact_provider_env(text: &str) -> String {
+    let mut redacted = text
+        .lines()
+        .map(|line| {
+            if provider_env_keys().iter().any(|key| line.contains(key)) {
+                match line.split_once("=>") {
+                    Some((prefix, _)) => format!("{prefix}=> [redacted]"),
+                    None => line.to_string(),
+                }
+            } else {
+                line.to_string()
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    if text.ends_with('\n') {
+        redacted.push('\n');
+    }
+    redacted
 }
 
 pub fn stop() -> anyhow::Result<()> {
@@ -116,18 +174,34 @@ pub fn stop() -> anyhow::Result<()> {
 
 pub fn status() -> anyhow::Result<()> {
     if cfg!(target_os = "macos") {
-        Command::new("launchctl")
+        let output = Command::new("launchctl")
             .arg("print")
             .arg(launchd_service_target()?)
-            .status()
+            .output()
             .context("failed to run launchctl print")?;
+        print!(
+            "{}",
+            redact_provider_env(&String::from_utf8_lossy(&output.stdout))
+        );
+        eprint!(
+            "{}",
+            redact_provider_env(&String::from_utf8_lossy(&output.stderr))
+        );
     } else {
-        Command::new("systemctl")
+        let output = Command::new("systemctl")
             .arg("--user")
             .arg("status")
             .arg("yaaml.service")
-            .status()
+            .output()
             .context("failed to run systemctl status")?;
+        print!(
+            "{}",
+            redact_provider_env(&String::from_utf8_lossy(&output.stdout))
+        );
+        eprint!(
+            "{}",
+            redact_provider_env(&String::from_utf8_lossy(&output.stderr))
+        );
     }
     Ok(())
 }
@@ -244,6 +318,25 @@ mod tests {
             "gui/501/com.yaaml.daemon"
         );
         assert_eq!(launchd_domain_target_for_uid("501"), "gui/501");
+    }
+
+    #[test]
+    fn provider_env_keys_cover_remote_defaults() {
+        assert_eq!(
+            provider_env_keys(),
+            vec!["ANTHROPIC_API_KEY", "OPENAI_API_KEY"]
+        );
+    }
+
+    #[test]
+    fn status_redacts_provider_environment_values() {
+        let output = "  OPENAI_API_KEY => sk-test\n  OTHER => value\n";
+
+        let redacted = redact_provider_env(output);
+
+        assert!(redacted.contains("OPENAI_API_KEY => [redacted]"));
+        assert!(redacted.contains("OTHER => value"));
+        assert!(!redacted.contains("sk-test"));
     }
 
     #[test]

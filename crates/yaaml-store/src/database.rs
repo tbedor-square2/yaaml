@@ -346,6 +346,47 @@ impl Database {
         Ok(i64_to_u64(count))
     }
 
+    pub fn turn_row_id_for_session_ordinal(
+        &self,
+        session_id: &str,
+        ordinal: u64,
+    ) -> Result<Option<i64>, DatabaseError> {
+        self.conn
+            .query_row(
+                "SELECT id FROM turns WHERE session_id = ?1 AND ordinal = ?2",
+                params![session_id, u64_to_i64(ordinal)],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(DatabaseError::from)
+    }
+
+    pub fn completed_turns_for_session_after_ordinal(
+        &self,
+        session_id: &str,
+        ordinal: u64,
+        limit: usize,
+    ) -> Result<Vec<TurnRecord>, DatabaseError> {
+        let mut stmt = self.conn.prepare(
+            "SELECT session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text
+             FROM turns
+             WHERE session_id = ?1
+               AND status = 'completed'
+               AND ordinal > ?2
+             ORDER BY ordinal ASC
+             LIMIT ?3",
+        )?;
+        let rows = stmt.query_map(
+            params![session_id, u64_to_i64(ordinal), u64_to_i64(limit as u64)],
+            read_turn_record,
+        )?;
+        let mut turns = Vec::new();
+        for row in rows {
+            turns.push(row?);
+        }
+        Ok(turns)
+    }
+
     pub fn next_turn_ordinal_for_session(&self, session_id: &str) -> Result<u64, DatabaseError> {
         let max_ordinal: Option<i64> = self
             .conn
@@ -638,16 +679,21 @@ impl Database {
         Ok(self.conn.last_insert_rowid())
     }
 
-    pub fn next_queued_task(&self) -> Result<Option<TaskRecord>, DatabaseError> {
+    pub fn next_queued_task(&self, now_seconds: i64) -> Result<Option<TaskRecord>, DatabaseError> {
         self.conn
             .query_row(
                 "SELECT id, kind, status, priority, payload_json, attempts, max_attempts,
                         next_run_at, last_error, created_at, updated_at
                  FROM tasks
                  WHERE status = 'queued'
+                   AND (
+                       next_run_at IS NULL
+                       OR next_run_at NOT LIKE 'unix:%'
+                       OR CAST(substr(next_run_at, 6) AS INTEGER) <= ?1
+                   )
                  ORDER BY priority DESC, id ASC
                  LIMIT 1",
-                [],
+                params![now_seconds],
                 read_task_record,
             )
             .optional()
@@ -1207,10 +1253,38 @@ mod tests {
         db.enqueue_task(&task("live", 10)).unwrap();
         db.enqueue_task(&task("backlog-2", 0)).unwrap();
 
-        let next = db.next_queued_task().unwrap().unwrap();
+        let next = db.next_queued_task(0).unwrap().unwrap();
 
         assert_eq!(next.kind, "live");
         assert_eq!(next.priority, 10);
+    }
+
+    #[test]
+    fn task_queue_ignores_future_next_run_at() {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+
+        let task = |kind: &str, next_run_at: Option<&str>| TaskRecord {
+            id: None,
+            kind: kind.to_string(),
+            status: TaskStatus::Queued,
+            priority: 0,
+            payload_json: "{}".to_string(),
+            attempts: 0,
+            max_attempts: 5,
+            next_run_at: next_run_at.map(str::to_string),
+            last_error: None,
+            created_at: "unix:100".to_string(),
+            updated_at: "unix:100".to_string(),
+        };
+
+        db.enqueue_task(&task("future", Some("unix:200"))).unwrap();
+        assert!(db.next_queued_task(100).unwrap().is_none());
+
+        db.enqueue_task(&task("due", Some("unix:99"))).unwrap();
+        let next = db.next_queued_task(100).unwrap().unwrap();
+
+        assert_eq!(next.kind, "due");
     }
 
     #[test]

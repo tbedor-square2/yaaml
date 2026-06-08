@@ -3,7 +3,12 @@ use std::path::{Path, PathBuf};
 
 use anyhow::Context;
 
-const CODEX_SKILL: &str = r#"# YAAML Recall
+const CODEX_SKILL: &str = r#"---
+name: yaaml
+description: Use when project or user memory may help the current coding task; resolves and reads YAAML's daemon-owned recall file for the current project.
+---
+
+# YAAML Recall
 
 Use this skill when project memory could help with the current task.
 
@@ -79,6 +84,13 @@ mod tests {
 
         assert!(metadata.file_type().is_file());
         assert!(!metadata.file_type().is_symlink());
+    }
+
+    #[test]
+    fn skill_template_has_yaml_frontmatter() {
+        assert!(CODEX_SKILL.starts_with("---\n"));
+        assert!(CODEX_SKILL.contains("name: yaaml"));
+        assert!(CODEX_SKILL.contains("description:"));
     }
 
     #[test]

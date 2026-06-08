@@ -173,7 +173,15 @@ fn daemon(args: DaemonArgs) -> anyhow::Result<()> {
     let signal_thread = yaaml::daemon::start_signal_socket(&socket, shutdown.clone())?;
 
     while !shutdown.is_requested() {
-        thread::sleep(Duration::from_millis(100));
+        let changes = yaaml::daemon::process_codex_changes(&db, &config, &codex_root)?;
+        let completed_tasks = yaaml::daemon::run_queued_tasks(&db, &config, 10)?;
+        if changes.changed_files > 0 || completed_tasks > 0 || changes.failures > 0 {
+            println!(
+                "processed Codex changes: {} files, {} turns, {} tasks, {} failures",
+                changes.changed_files, changes.processed_turns, completed_tasks, changes.failures
+            );
+        }
+        thread::sleep(Duration::from_secs(5));
     }
     signal_thread
         .join()

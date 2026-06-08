@@ -45,6 +45,15 @@ pub struct BacklogIngestReport {
     pub failures: u64,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ChangeIngestReport {
+    pub scanned_files: u64,
+    pub changed_files: u64,
+    pub processed_turns: u64,
+    pub queued_memory_jobs: u64,
+    pub failures: u64,
+}
+
 #[derive(Debug, Clone)]
 pub struct DaemonShutdown {
     requested: Arc<AtomicBool>,
@@ -79,8 +88,13 @@ pub fn ingest_codex_file(db: &Database, transcript_path: &Path) -> anyhow::Resul
     } else {
         None
     };
+    let start_offset = if offset > 0 && fallback_session.is_none() {
+        0
+    } else {
+        offset
+    };
     let parsed =
-        parse_codex_file_from_offset_with_session(transcript_path, offset, fallback_session)
+        parse_codex_file_from_offset_with_session(transcript_path, start_offset, fallback_session)
             .context("failed to parse Codex transcript")?;
     db.upsert_session(&parsed.session)
         .context("failed to persist Codex session")?;
@@ -163,6 +177,61 @@ pub fn process_codex_backlog(
                 report.failures += 1;
                 db.add_backlog_progress(0, 0, 0, 0, 1, Some(&unix_timestamp()))
                     .context("failed to record backlog failure")?;
+            }
+        }
+    }
+
+    Ok(report)
+}
+
+pub fn process_codex_changes(
+    db: &Database,
+    config: &Config,
+    sessions_root: &Path,
+) -> anyhow::Result<ChangeIngestReport> {
+    let files = discover_codex_backlog(sessions_root, &HashSet::new())
+        .context("failed to discover Codex transcript changes")?;
+    let mut report = ChangeIngestReport {
+        scanned_files: files.len() as u64,
+        changed_files: 0,
+        processed_turns: 0,
+        queued_memory_jobs: 0,
+        failures: 0,
+    };
+
+    for file in files {
+        let previous_offset = db
+            .get_cursor(&file.path.display().to_string())
+            .context("failed to read transcript cursor")?;
+        match ingest_codex_file(db, &file.path) {
+            Ok(ingested) => {
+                if ingested.next_offset > previous_offset || ingested.inserted_turns > 0 {
+                    report.changed_files += 1;
+                    report.processed_turns += ingested.inserted_turns;
+                    let queued_memory_jobs = if ingested.inserted_turns > 0
+                        && queue_memory_formulation_if_due(db, config, &ingested.session_id, 10)?
+                            .is_some()
+                    {
+                        report.queued_memory_jobs += 1;
+                        1
+                    } else {
+                        0
+                    };
+                    db.add_backlog_progress(
+                        0,
+                        1,
+                        ingested.inserted_turns,
+                        queued_memory_jobs,
+                        0,
+                        Some(&unix_timestamp()),
+                    )
+                    .context("failed to record Codex change progress")?;
+                }
+            }
+            Err(_) => {
+                report.failures += 1;
+                db.add_backlog_progress(0, 0, 0, 0, 1, Some(&unix_timestamp()))
+                    .context("failed to record Codex change failure")?;
             }
         }
     }

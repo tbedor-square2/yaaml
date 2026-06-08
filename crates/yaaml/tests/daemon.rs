@@ -4,9 +4,9 @@ use std::os::unix::net::UnixStream;
 
 use tempfile::TempDir;
 use yaaml::daemon::{
-    ingest_codex_file, process_codex_backlog, queue_memory_formulation_if_due,
-    recover_running_tasks, refresh_recall_with_embedding, run_queued_tasks, start_signal_socket,
-    DaemonShutdown, TASK_KIND_MEMORY_FORMULATION,
+    ingest_codex_file, process_codex_backlog, process_codex_changes,
+    queue_memory_formulation_if_due, recover_running_tasks, refresh_recall_with_embedding,
+    run_queued_tasks, start_signal_socket, DaemonShutdown, TASK_KIND_MEMORY_FORMULATION,
 };
 use yaaml_core::{
     recall_file_path, Config, EmbeddingRecord, MemoryRecord, MemoryScope, TurnRecord,
@@ -35,6 +35,25 @@ fn appending_codex_jsonl_turn_creates_turn_row_from_cursor() {
 }
 
 #[test]
+fn ingest_recovers_missing_session_row_for_existing_cursor() {
+    let tmp = TempDir::new().unwrap();
+    let transcript = tmp.path().join("session.jsonl");
+    fs::write(&transcript, session_meta()).unwrap();
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+    db.update_cursor(&transcript.display().to_string(), 10, None)
+        .unwrap();
+
+    let report = ingest_codex_file(&db, &transcript).unwrap();
+
+    assert_eq!(report.inserted_turns, 0);
+    assert!(db
+        .session_by_transcript_path(&transcript.display().to_string())
+        .unwrap()
+        .is_some());
+}
+
+#[test]
 fn codex_backlog_processing_discovers_and_ingests_uncursored_files() {
     let tmp = TempDir::new().unwrap();
     let root = tmp.path().join("sessions");
@@ -54,6 +73,29 @@ fn codex_backlog_processing_discovers_and_ingests_uncursored_files() {
     assert_eq!(report.processed_files, 1);
     assert_eq!(report.processed_turns, 1);
     assert_eq!(db.status().unwrap().backlog.processed_files, 1);
+}
+
+#[test]
+fn codex_change_processing_ingests_appended_cursored_file() {
+    let tmp = TempDir::new().unwrap();
+    let root = tmp.path().join("sessions");
+    let dated = root.join("2026").join("06").join("08");
+    fs::create_dir_all(&dated).unwrap();
+    let transcript = dated.join("session.jsonl");
+    fs::write(&transcript, session_meta()).unwrap();
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+    ingest_codex_file(&db, &transcript).unwrap();
+    append(&transcript, &completed_turn(1));
+
+    let report = process_codex_changes(&db, &Config::default(), &root).unwrap();
+
+    assert_eq!(report.scanned_files, 1);
+    assert_eq!(report.changed_files, 1);
+    assert_eq!(report.processed_turns, 1);
+    assert_eq!(db.completed_turn_count_for_session("session-1").unwrap(), 1);
+    assert_eq!(db.status().unwrap().backlog.processed_files, 1);
+    assert_eq!(db.status().unwrap().backlog.processed_turns, 1);
 }
 
 #[test]

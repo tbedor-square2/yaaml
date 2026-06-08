@@ -5,16 +5,16 @@ use anyhow::Context;
 
 const CODEX_SKILL: &str = r#"---
 name: yaaml
-description: Invoke directly at the start of non-trivial coding tasks, debugging, reviews, repo questions, or when prior user/project context could help; reads YAAML's daemon-owned recall file for the current project.
+description: Invoke directly at the start of non-trivial coding tasks, debugging, reviews, repo questions, or when prior user/project context could help; queries YAAML memory from the current user request and writes session-aware recall.
 ---
 
 # YAAML Recall
 
 Use this skill directly and proactively when working in a repo, debugging, reviewing code, implementing changes, answering project-specific questions, or when prior user/project context could affect the answer.
 
-Run `yaaml recall` from the current working directory and read its output as contextual hints before proceeding. Do not wait for the user to ask for memory explicitly when the task is non-trivial or project-specific.
+Run `yaaml recall --query "<current user request>"` from the current working directory and read its output as contextual hints before proceeding. Do not wait for the user to ask for memory explicitly when the task is non-trivial or project-specific.
 
-Do not assume a project-local `.yaaml/recall.md` path. `yaaml recall` reads the daemon-owned recall file for the current project. Use `yaaml recall --query "<query>"` only when you need to manually recompute recall for a specific query.
+Do not assume a project-local `.yaaml/recall.md` path. `yaaml recall --query` writes and prints the daemon-owned recall file for the current Codex session when `CODEX_THREAD_ID` is present, otherwise for the current project. Use bare `yaaml recall` only to re-read the existing recall file.
 "#;
 
 const CLAUDE_SKILL: &str = CODEX_SKILL;

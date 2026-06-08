@@ -6,8 +6,9 @@ use std::{env, fs};
 use anyhow::{bail, Context};
 use clap::{Parser, Subcommand};
 use yaaml_core::{
-    apply_project_bonus, recall_file_path, render_recall_markdown, write_recall_file, Config,
-    ConfigPaths, RecallCandidate, RecallMemory, RecallWrite, VectorIndex,
+    apply_project_bonus, recall_file_path, render_recall_markdown, session_recall_file_path,
+    write_recall_file, Config, ConfigPaths, RecallCandidate, RecallMemory, RecallWrite,
+    VectorIndex,
 };
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
 use yaaml_llm::ReqwestTransport;
@@ -36,9 +37,9 @@ enum Command {
     Eval(EvalArgs),
     /// Show daemon, memory, backlog, and provider status.
     Status(StatusArgs),
-    /// Resolve the current project's daemon-owned recall file path.
+    /// Resolve the current session or project's daemon-owned recall file path.
     Path,
-    /// Print existing recall, or update it for a manual query.
+    /// Print existing recall, or update it from user input.
     Recall(RecallArgs),
 }
 
@@ -104,7 +105,7 @@ struct StatusArgs {
 
 #[derive(Debug, Parser)]
 struct RecallArgs {
-    /// Query text to embed and search against stored memories. Omit to print existing recall.
+    /// User input to embed and search against stored memories. Omit to print existing recall.
     #[arg(long)]
     query: Option<String>,
 }
@@ -356,7 +357,7 @@ fn path() -> anyhow::Result<()> {
     let recall_dir = config
         .recall_dir()
         .context("failed to resolve recall_dir")?;
-    let path = recall_file_path(&recall_dir, &project_id);
+    let path = contextual_recall_file_path(&recall_dir, &project_id);
 
     println!("{}", path.display());
     Ok(())
@@ -369,7 +370,7 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
     let recall_dir = config
         .recall_dir()
         .context("failed to resolve recall_dir")?;
-    let recall_path = recall_file_path(&recall_dir, &project_id_path);
+    let recall_path = contextual_recall_file_path(&recall_dir, &project_id_path);
     let Some(query) = args.query else {
         if recall_path.exists() {
             print!(
@@ -460,16 +461,42 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
                 })
         })
         .collect::<Vec<_>>();
-    let rendered = render_recall_markdown(&now, "manual query", &project_id, &recall_memories);
+    let rendered = render_recall_markdown(&now, "user input", &project_id, &recall_memories);
     let write = write_recall_file(&recall_path, &rendered, &selected_ids)
         .context("failed to write recall file")?;
 
     match write {
-        RecallWrite::Written => println!("wrote {}", recall_path.display()),
-        RecallWrite::Unchanged => println!("unchanged {}", recall_path.display()),
-        RecallWrite::NoopEmptyResults => println!("no recall results; preserved existing file"),
+        RecallWrite::Written | RecallWrite::Unchanged => print!("{rendered}"),
+        RecallWrite::NoopEmptyResults => {
+            if recall_path.exists() {
+                print!(
+                    "{}",
+                    fs::read_to_string(&recall_path).context("failed to read recall file")?
+                );
+            } else {
+                println!("no recall results");
+            }
+        }
     }
     Ok(())
+}
+
+fn contextual_recall_file_path(
+    recall_dir: &std::path::Path,
+    project_id: &std::path::Path,
+) -> PathBuf {
+    if let Some(session_id) = current_session_id() {
+        session_recall_file_path(recall_dir, project_id, &session_id)
+    } else {
+        recall_file_path(recall_dir, project_id)
+    }
+}
+
+fn current_session_id() -> Option<String> {
+    env::var("CODEX_THREAD_ID")
+        .ok()
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty())
 }
 
 fn print_human_status(status: &yaaml_core::status::Status) {

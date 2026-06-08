@@ -11,7 +11,8 @@ use yaaml::daemon::{
     PartialBatchPolicy, TASK_KIND_MEMORY_FORMULATION,
 };
 use yaaml_core::{
-    recall_file_path, Config, EmbeddingRecord, MemoryRecord, MemoryScope, SourceTurnRef, TurnRecord,
+    session_recall_file_path, Config, EmbeddingRecord, MemoryRecord, MemoryScope, SourceTurnRef,
+    TurnRecord,
 };
 use yaaml_store::database::encode_f32_embedding;
 use yaaml_store::Database;
@@ -350,9 +351,10 @@ fn recall_file_is_written_after_memory_exists_and_new_turn_completes() {
         "new completed turn",
     )
     .unwrap();
-    let path = recall_file_path(
+    let path = session_recall_file_path(
         &config.recall_dir().unwrap(),
         &project.canonicalize().unwrap(),
+        "session-1",
     );
     let markdown = fs::read_to_string(path).unwrap();
 

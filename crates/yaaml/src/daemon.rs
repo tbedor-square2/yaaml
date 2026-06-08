@@ -16,8 +16,8 @@ use serde_json::json;
 use yaaml_core::{
     apply_project_bonus, build_recall_query, derive_project_descriptor, embedded_text_hash,
     embedding_text, parse_formulation_response, recall_file_path, render_recall_markdown,
-    write_recall_file, Config, EmbeddingRecord, RecallCandidate, RecallMemory, SourceTurnRef,
-    TaskRecord, TaskStatus, VectorIndex,
+    session_recall_file_path, write_recall_file, Config, EmbeddingRecord, RecallCandidate,
+    RecallMemory, SourceTurnRef, TaskRecord, TaskStatus, VectorIndex,
 };
 use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
@@ -821,7 +821,11 @@ pub fn refresh_recall_with_embedding(
         format!("{query_source}: {} chars", query_text.len())
     };
     let rendered = render_recall_markdown(&now, &source, &project_id_string, &recall_memories);
-    let path = recall_file_path(&config.recall_dir()?, project_id);
+    let recall_dir = config.recall_dir()?;
+    let path = recent_turns
+        .last()
+        .map(|turn| session_recall_file_path(&recall_dir, project_id, &turn.session_id))
+        .unwrap_or_else(|| recall_file_path(&recall_dir, project_id));
     write_recall_file(&path, &rendered, &selected_ids).context("failed to write recall file")
 }
 

@@ -127,6 +127,32 @@ pub fn recall_file_path(recall_dir: &Path, project_id: &Path) -> PathBuf {
     recall_dir.join(format!("{}.md", project_hash(project_id)))
 }
 
+pub fn session_recall_file_path(recall_dir: &Path, project_id: &Path, session_id: &str) -> PathBuf {
+    recall_dir.join(format!(
+        "{}-{}.md",
+        project_hash(project_id),
+        safe_session_id(session_id)
+    ))
+}
+
+fn safe_session_id(session_id: &str) -> String {
+    let safe = session_id
+        .chars()
+        .map(|ch| {
+            if ch.is_ascii_alphanumeric() || ch == '-' || ch == '_' {
+                ch
+            } else {
+                '_'
+            }
+        })
+        .collect::<String>();
+    if safe.is_empty() {
+        "unknown".to_string()
+    } else {
+        safe
+    }
+}
+
 pub fn render_recall_markdown(
     query_timestamp: &str,
     query_source: &str,
@@ -282,5 +308,16 @@ mod tests {
 
         assert_eq!(result, RecallWrite::Unchanged);
         assert_eq!(fs::read_to_string(path).unwrap(), first);
+    }
+
+    #[test]
+    fn session_recall_path_includes_project_and_session() {
+        let path =
+            session_recall_file_path(Path::new("/tmp/recall"), Path::new("/tmp/project"), "a/b");
+
+        assert!(path.ends_with(format!(
+            "{}-a_b.md",
+            project_hash(Path::new("/tmp/project"))
+        )));
     }
 }

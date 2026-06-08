@@ -9,7 +9,10 @@ pub mod status;
 
 pub use config::{Config, ConfigPaths};
 pub use consolidation::{find_consolidation_clusters, ClusterMemory, MemoryCluster};
-pub use eval::{memories_created_before, replay_context_before_turn};
+pub use eval::{
+    counterfactual_citation_score, memories_created_before, parse_eval_judge_response,
+    replay_context_before_turn, EvalJudgeOutcome,
+};
 pub use memory::{
     derive_project_descriptor, embedded_text_hash, embedding_text, parse_formulation_response,
     MemoryDraft, MemoryError,

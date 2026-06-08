@@ -81,6 +81,8 @@ pub struct Config {
     pub backlog_formulation_turn_window: usize,
     pub eval_judge_provider: String,
     pub eval_judge_model: String,
+    pub eval_judge_api_key_env: String,
+    pub eval_judge_base_url: Option<String>,
 }
 
 impl Default for Config {
@@ -124,6 +126,8 @@ impl Default for Config {
             backlog_formulation_turn_window: 10,
             eval_judge_provider: "anthropic".to_string(),
             eval_judge_model: "claude-haiku-4-5-20251001".to_string(),
+            eval_judge_api_key_env: "ANTHROPIC_API_KEY".to_string(),
+            eval_judge_base_url: None,
         }
     }
 }
@@ -205,6 +209,8 @@ mod tests {
         assert_eq!(config.vector_index_backend, "sqlite-exact");
         assert_eq!(config.memory_cluster_distance_threshold, 0.21125);
         assert_eq!(config.backlog_formulation_turn_window, 10);
+        assert_eq!(config.eval_judge_provider, "anthropic");
+        assert_eq!(config.eval_judge_api_key_env, "ANTHROPIC_API_KEY");
     }
 
     #[test]

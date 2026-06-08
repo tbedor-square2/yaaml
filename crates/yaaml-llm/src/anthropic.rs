@@ -43,6 +43,18 @@ impl AnthropicMessageConfig {
             max_tokens: 4096,
         }
     }
+
+    pub fn judge_from_config(config: &Config) -> Self {
+        Self {
+            model: config.eval_judge_model.clone(),
+            api_key_env: config.eval_judge_api_key_env.clone(),
+            base_url: config
+                .eval_judge_base_url
+                .clone()
+                .unwrap_or_else(|| DEFAULT_ANTHROPIC_BASE_URL.to_string()),
+            max_tokens: 1024,
+        }
+    }
 }
 
 pub struct AnthropicMessageClient<T> {

@@ -2,6 +2,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use rusqlite::{params, Connection, OptionalExtension};
+use serde::Serialize;
 use thiserror::Error;
 use yaaml_core::status::{BacklogStatus, Status, TaskFailure, WorkerStatus};
 use yaaml_core::{
@@ -27,6 +28,28 @@ pub enum DatabaseError {
 pub struct Database {
     conn: Connection,
     path: PathBuf,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct EvalRunRecord {
+    pub id: i64,
+    pub strategy: String,
+    pub started_at: String,
+    pub completed_at: Option<String>,
+    pub config_json: String,
+    pub result_count: u64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct EvalResultRecord {
+    pub id: i64,
+    pub eval_run_id: i64,
+    pub turn_id: i64,
+    pub memory_id: Option<i64>,
+    pub memory_title: Option<String>,
+    pub judge_score: Option<String>,
+    pub rationale: Option<String>,
+    pub created_at: String,
 }
 
 impl Database {
@@ -774,6 +797,60 @@ impl Database {
         Ok(scores)
     }
 
+    pub fn list_eval_runs(&self, limit: usize) -> Result<Vec<EvalRunRecord>, DatabaseError> {
+        let mut stmt = self.conn.prepare(
+            "SELECT r.id, r.strategy, r.started_at, r.completed_at, r.config_json,
+                    COUNT(er.id) AS result_count
+             FROM eval_runs r
+             LEFT JOIN eval_results er ON er.eval_run_id = r.id
+             GROUP BY r.id, r.strategy, r.started_at, r.completed_at, r.config_json
+             ORDER BY r.id DESC
+             LIMIT ?1",
+        )?;
+        let rows = stmt.query_map(params![u64_to_i64(limit as u64)], read_eval_run_record)?;
+        let mut runs = Vec::new();
+        for row in rows {
+            runs.push(row?);
+        }
+        Ok(runs)
+    }
+
+    pub fn eval_run_by_id(&self, eval_run_id: i64) -> Result<Option<EvalRunRecord>, DatabaseError> {
+        self.conn
+            .query_row(
+                "SELECT r.id, r.strategy, r.started_at, r.completed_at, r.config_json,
+                        COUNT(er.id) AS result_count
+                 FROM eval_runs r
+                 LEFT JOIN eval_results er ON er.eval_run_id = r.id
+                 WHERE r.id = ?1
+                 GROUP BY r.id, r.strategy, r.started_at, r.completed_at, r.config_json",
+                params![eval_run_id],
+                read_eval_run_record,
+            )
+            .optional()
+            .map_err(DatabaseError::from)
+    }
+
+    pub fn eval_results_for_run(
+        &self,
+        eval_run_id: i64,
+    ) -> Result<Vec<EvalResultRecord>, DatabaseError> {
+        let mut stmt = self.conn.prepare(
+            "SELECT er.id, er.eval_run_id, er.turn_id, er.memory_id, m.title,
+                    er.judge_score, er.rationale, er.created_at
+             FROM eval_results er
+             LEFT JOIN memories m ON m.id = er.memory_id
+             WHERE er.eval_run_id = ?1
+             ORDER BY er.id",
+        )?;
+        let rows = stmt.query_map(params![eval_run_id], read_eval_result_record)?;
+        let mut results = Vec::new();
+        for row in rows {
+            results.push(row?);
+        }
+        Ok(results)
+    }
+
     fn count(&self, sql: &str) -> Result<u64, DatabaseError> {
         let count: i64 = self.conn.query_row(sql, [], |row| row.get(0))?;
         Ok(count.try_into().unwrap_or(0))
@@ -862,6 +939,30 @@ fn read_session_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<SessionRecor
         transcript_file_path: row.get(3)?,
         started_at: row.get(4)?,
         last_seen_at: row.get(5)?,
+    })
+}
+
+fn read_eval_run_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<EvalRunRecord> {
+    Ok(EvalRunRecord {
+        id: row.get(0)?,
+        strategy: row.get(1)?,
+        started_at: row.get(2)?,
+        completed_at: row.get(3)?,
+        config_json: row.get(4)?,
+        result_count: i64_to_u64(row.get(5)?),
+    })
+}
+
+fn read_eval_result_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<EvalResultRecord> {
+    Ok(EvalResultRecord {
+        id: row.get(0)?,
+        eval_run_id: row.get(1)?,
+        turn_id: row.get(2)?,
+        memory_id: row.get(3)?,
+        memory_title: row.get(4)?,
+        judge_score: row.get(5)?,
+        rationale: row.get(6)?,
+        created_at: row.get(7)?,
     })
 }
 
@@ -1320,5 +1421,22 @@ mod tests {
             db.eval_scores_for_run(run_id).unwrap(),
             vec!["useful", "neutral", "distracting"]
         );
+        let runs = db.list_eval_runs(10).unwrap();
+        assert_eq!(runs.len(), 1);
+        assert_eq!(runs[0].id, run_id);
+        assert_eq!(runs[0].result_count, 3);
+        assert_eq!(
+            runs[0].completed_at.as_deref(),
+            Some("2026-06-08T00:00:04Z")
+        );
+
+        let run = db.eval_run_by_id(run_id).unwrap().unwrap();
+        assert_eq!(run.result_count, 3);
+        assert!(db.eval_run_by_id(run_id + 1).unwrap().is_none());
+
+        let results = db.eval_results_for_run(run_id).unwrap();
+        assert_eq!(results.len(), 3);
+        assert_eq!(results[0].judge_score.as_deref(), Some("useful"));
+        assert_eq!(results[0].rationale.as_deref(), Some("helped"));
     }
 }

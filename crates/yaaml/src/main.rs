@@ -30,6 +30,8 @@ enum Command {
     Init,
     /// Manage the user service.
     Service(ServiceArgs),
+    /// Run evaluation workflows.
+    Eval(EvalArgs),
     /// Show daemon, memory, backlog, and provider status.
     Status(StatusArgs),
     /// Resolve the current project's daemon-owned recall file path.
@@ -61,6 +63,27 @@ enum ServiceCommand {
 }
 
 #[derive(Debug, Parser)]
+struct EvalArgs {
+    #[command(subcommand)]
+    command: EvalCommand,
+}
+
+#[derive(Debug, Subcommand)]
+enum EvalCommand {
+    Recall(EvalRecallArgs),
+}
+
+#[derive(Debug, Parser)]
+struct EvalRecallArgs {
+    /// Maximum turns to replay.
+    #[arg(long, default_value_t = 10)]
+    limit: usize,
+    /// Emit machine-readable JSON.
+    #[arg(long)]
+    json: bool,
+}
+
+#[derive(Debug, Parser)]
 struct StatusArgs {
     /// Emit machine-readable JSON.
     #[arg(long)]
@@ -84,6 +107,7 @@ fn main() -> anyhow::Result<()> {
         Command::Daemon(args) => daemon(args),
         Command::Init => init(),
         Command::Service(args) => service(args),
+        Command::Eval(args) => eval(args),
         Command::Status(args) => status(args),
         Command::Path => path(),
         Command::Recall(args) => recall(args),
@@ -158,6 +182,91 @@ fn service(args: ServiceArgs) -> anyhow::Result<()> {
         ServiceCommand::Start => yaaml::service::start()?,
         ServiceCommand::Stop => yaaml::service::stop()?,
         ServiceCommand::Status => yaaml::service::status()?,
+    }
+    Ok(())
+}
+
+fn eval(args: EvalArgs) -> anyhow::Result<()> {
+    match args.command {
+        EvalCommand::Recall(args) => eval_recall(args),
+    }
+}
+
+fn eval_recall(args: EvalRecallArgs) -> anyhow::Result<()> {
+    let cwd = env::current_dir().context("failed to determine current directory")?;
+    let config = Config::load_for_cwd(&cwd).context("failed to load config")?;
+    let db_path = config.db_path().context("failed to resolve db_path")?;
+    let mut db = Database::open(&db_path)
+        .with_context(|| format!("failed to open {}", display(&db_path)))?;
+    db.migrate().context("failed to migrate database")?;
+    let now = unix_timestamp();
+    let run_id = db
+        .insert_eval_run(
+            "default",
+            &now,
+            &serde_json::json!({
+                "limit": args.limit,
+                "judge_provider": config.eval_judge_provider,
+                "judge_model": config.eval_judge_model,
+            })
+            .to_string(),
+        )
+        .context("failed to create eval run")?;
+    let turns = db
+        .list_turns_with_ids(args.limit)
+        .context("failed to load replay turns")?;
+    let mut evaluated_memories = 0_u64;
+    for (turn_row_id, turn) in &turns {
+        let memories = match turn.observed_at.as_deref() {
+            Some(observed_at) => db
+                .list_active_memories_created_before(observed_at)
+                .context("failed to load memories for replay turn")?,
+            None => Vec::new(),
+        };
+        if memories.is_empty() {
+            db.insert_eval_result(
+                run_id,
+                *turn_row_id,
+                None,
+                "neutral",
+                "no eligible recalled memories",
+                &now,
+            )
+            .context("failed to insert eval result")?;
+        } else {
+            for memory in memories {
+                evaluated_memories += 1;
+                db.insert_eval_result(
+                    run_id,
+                    *turn_row_id,
+                    memory.id,
+                    "neutral",
+                    "judge not configured in this run",
+                    &now,
+                )
+                .context("failed to insert eval result")?;
+            }
+        }
+    }
+    db.complete_eval_run(run_id, &unix_timestamp())
+        .context("failed to complete eval run")?;
+
+    if args.json {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&serde_json::json!({
+                "run_id": run_id,
+                "evaluated_turns": turns.len(),
+                "evaluated_memories": evaluated_memories,
+            }))?
+        );
+    } else {
+        println!(
+            "evaluated {} turns and {} memories in run {}",
+            turns.len(),
+            evaluated_memories,
+            run_id
+        );
     }
     Ok(())
 }

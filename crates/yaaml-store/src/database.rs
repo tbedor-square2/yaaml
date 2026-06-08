@@ -292,6 +292,60 @@ impl Database {
         Ok(memories)
     }
 
+    pub fn list_active_memories_created_before(
+        &self,
+        observed_at: &str,
+    ) -> Result<Vec<MemoryRecord>, DatabaseError> {
+        let mut stmt = self.conn.prepare(
+            "SELECT id, title, body, scope, source_turn_refs, created_at, updated_at,
+                    is_active, session_id, project_id, project_descriptor, lineage_refs
+             FROM memories
+             WHERE is_active = 1 AND created_at < ?1
+             ORDER BY created_at, id",
+        )?;
+        let rows = stmt.query_map(params![observed_at], read_memory_record)?;
+        let mut memories = Vec::new();
+        for row in rows {
+            memories.push(row?);
+        }
+        Ok(memories)
+    }
+
+    pub fn list_turns(&self, limit: usize) -> Result<Vec<TurnRecord>, DatabaseError> {
+        let mut stmt = self.conn.prepare(
+            "SELECT session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text
+             FROM turns
+             ORDER BY observed_at, id
+             LIMIT ?1",
+        )?;
+        let rows = stmt.query_map(params![u64_to_i64(limit as u64)], read_turn_record)?;
+        let mut turns = Vec::new();
+        for row in rows {
+            turns.push(row?);
+        }
+        Ok(turns)
+    }
+
+    pub fn list_turns_with_ids(
+        &self,
+        limit: usize,
+    ) -> Result<Vec<(i64, TurnRecord)>, DatabaseError> {
+        let mut stmt = self.conn.prepare(
+            "SELECT id, session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text
+             FROM turns
+             ORDER BY observed_at, id
+             LIMIT ?1",
+        )?;
+        let rows = stmt.query_map(params![u64_to_i64(limit as u64)], |row| {
+            Ok((row.get(0)?, read_turn_record_from_offset(row, 1)?))
+        })?;
+        let mut turns = Vec::new();
+        for row in rows {
+            turns.push(row?);
+        }
+        Ok(turns)
+    }
+
     pub fn upsert_embedding(&self, embedding: &EmbeddingRecord) -> Result<(), DatabaseError> {
         self.conn.execute(
             "INSERT INTO embeddings (
@@ -496,6 +550,69 @@ impl Database {
         Ok(())
     }
 
+    pub fn insert_eval_run(
+        &self,
+        strategy: &str,
+        started_at: &str,
+        config_json: &str,
+    ) -> Result<i64, DatabaseError> {
+        self.conn.execute(
+            "INSERT INTO eval_runs (strategy, started_at, completed_at, config_json)
+             VALUES (?1, ?2, NULL, ?3)",
+            params![strategy, started_at, config_json],
+        )?;
+        Ok(self.conn.last_insert_rowid())
+    }
+
+    pub fn complete_eval_run(
+        &self,
+        eval_run_id: i64,
+        completed_at: &str,
+    ) -> Result<(), DatabaseError> {
+        self.conn.execute(
+            "UPDATE eval_runs SET completed_at = ?1 WHERE id = ?2",
+            params![completed_at, eval_run_id],
+        )?;
+        Ok(())
+    }
+
+    pub fn insert_eval_result(
+        &self,
+        eval_run_id: i64,
+        turn_id: i64,
+        memory_id: Option<i64>,
+        judge_score: &str,
+        rationale: &str,
+        created_at: &str,
+    ) -> Result<i64, DatabaseError> {
+        self.conn.execute(
+            "INSERT INTO eval_results (
+                eval_run_id, turn_id, memory_id, judge_score, rationale, created_at
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            params![
+                eval_run_id,
+                turn_id,
+                memory_id,
+                judge_score,
+                rationale,
+                created_at
+            ],
+        )?;
+        Ok(self.conn.last_insert_rowid())
+    }
+
+    pub fn eval_scores_for_run(&self, eval_run_id: i64) -> Result<Vec<String>, DatabaseError> {
+        let mut stmt = self
+            .conn
+            .prepare("SELECT judge_score FROM eval_results WHERE eval_run_id = ?1 ORDER BY id")?;
+        let rows = stmt.query_map(params![eval_run_id], |row| row.get(0))?;
+        let mut scores = Vec::new();
+        for row in rows {
+            scores.push(row?);
+        }
+        Ok(scores)
+    }
+
     fn count(&self, sql: &str) -> Result<u64, DatabaseError> {
         let count: i64 = self.conn.query_row(sql, [], |row| row.get(0))?;
         Ok(count.try_into().unwrap_or(0))
@@ -588,19 +705,26 @@ fn read_session_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<SessionRecor
 }
 
 fn read_turn_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<TurnRecord> {
-    let status: String = row.get(6)?;
+    read_turn_record_from_offset(row, 0)
+}
+
+fn read_turn_record_from_offset(
+    row: &rusqlite::Row<'_>,
+    offset: usize,
+) -> rusqlite::Result<TurnRecord> {
+    let status: String = row.get(offset + 6)?;
     Ok(TurnRecord {
-        session_id: row.get(0)?,
-        turn_id: row.get(1)?,
-        ordinal: i64_to_u64(row.get(2)?),
-        byte_start: i64_to_u64(row.get(3)?),
-        byte_end: i64_to_u64(row.get(4)?),
-        observed_at: row.get(5)?,
+        session_id: row.get(offset)?,
+        turn_id: row.get(offset + 1)?,
+        ordinal: i64_to_u64(row.get(offset + 2)?),
+        byte_start: i64_to_u64(row.get(offset + 3)?),
+        byte_end: i64_to_u64(row.get(offset + 4)?),
+        observed_at: row.get(offset + 5)?,
         status: match status.as_str() {
             "aborted" => yaaml_core::TurnStatus::Aborted,
             _ => yaaml_core::TurnStatus::Completed,
         },
-        display_text: row.get(7)?,
+        display_text: row.get(offset + 7)?,
     })
 }
 
@@ -942,5 +1066,49 @@ mod tests {
             .find(|memory| memory.id == Some(merged_id))
             .unwrap();
         assert_eq!(merged.lineage_refs, vec![first, second]);
+    }
+
+    #[test]
+    fn mock_judge_scores_persist_for_eval_run() {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+        let run_id = db
+            .insert_eval_run("default", "2026-06-08T00:00:00Z", "{}")
+            .unwrap();
+
+        db.insert_eval_result(
+            run_id,
+            1,
+            Some(10),
+            "useful",
+            "helped",
+            "2026-06-08T00:00:01Z",
+        )
+        .unwrap();
+        db.insert_eval_result(
+            run_id,
+            2,
+            Some(11),
+            "neutral",
+            "unused",
+            "2026-06-08T00:00:02Z",
+        )
+        .unwrap();
+        db.insert_eval_result(
+            run_id,
+            3,
+            Some(12),
+            "distracting",
+            "wrong context",
+            "2026-06-08T00:00:03Z",
+        )
+        .unwrap();
+        db.complete_eval_run(run_id, "2026-06-08T00:00:04Z")
+            .unwrap();
+
+        assert_eq!(
+            db.eval_scores_for_run(run_id).unwrap(),
+            vec!["useful", "neutral", "distracting"]
+        );
     }
 }

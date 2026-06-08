@@ -362,6 +362,17 @@ impl Database {
         Ok(consolidated_id)
     }
 
+    pub fn deactivate_memory(&self, memory_id: i64, updated_at: &str) -> Result<(), DatabaseError> {
+        self.conn.execute(
+            "UPDATE memories
+             SET is_active = 0,
+                 updated_at = ?1
+             WHERE id = ?2",
+            params![updated_at, memory_id],
+        )?;
+        Ok(())
+    }
+
     pub fn list_memories(&self) -> Result<Vec<MemoryRecord>, DatabaseError> {
         let mut stmt = self.conn.prepare(
             "SELECT id, title, body, scope, source_turn_refs, created_at, updated_at,

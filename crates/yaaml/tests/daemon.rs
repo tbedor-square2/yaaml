@@ -4,7 +4,7 @@ use std::os::unix::net::UnixStream;
 
 use tempfile::TempDir;
 use yaaml::daemon::{
-    ingest_codex_file, process_codex_backlog, process_codex_changes,
+    dedupe_active_memories, ingest_codex_file, process_codex_backlog, process_codex_changes,
     queue_memory_formulation_if_due, queue_missing_memory_formulation_tasks, recover_running_tasks,
     refresh_recall_with_embedding, run_queued_tasks, start_signal_socket, DaemonShutdown,
     PartialBatchPolicy, TASK_KIND_MEMORY_FORMULATION,
@@ -199,6 +199,66 @@ fn memory_queue_skips_already_covered_source_refs() {
 }
 
 #[test]
+fn dedupe_deactivates_obvious_same_project_duplicate_memory() {
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+    db.insert_memory(&memory(
+        "Elroy uses just as command runner",
+        "The elroy Python project uses just for build, test, lint, and format commands. Always use just test, just build, just lint, and just format.",
+        Some("/tmp/elroy"),
+    ))
+    .unwrap();
+    db.insert_memory(&memory(
+        "Elroy project uses just command runner",
+        "This project uses just instead of running tools directly. Always use just test, just build, just lint, just format, and just typecheck. Run just --list for commands. Required before code review: just lint, just typecheck, and just test must pass.",
+        Some("/tmp/elroy"),
+    ))
+    .unwrap();
+
+    let deactivated = dedupe_active_memories(&db, "2026-06-08T00:00:01Z").unwrap();
+    let memories = db.list_memories().unwrap();
+
+    assert_eq!(deactivated, 1);
+    assert_eq!(memories.iter().filter(|memory| memory.is_active).count(), 1);
+    assert!(memories
+        .iter()
+        .find(|memory| memory.is_active)
+        .unwrap()
+        .body
+        .contains("typecheck"));
+}
+
+#[test]
+fn dedupe_keeps_related_but_distinct_same_project_memories() {
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+    db.insert_memory(&memory(
+        "Annotation types and generation precedence",
+        "Six annotation types, in precedence order: identical serialized expression, model changed, feature signal changed, true conditions changed, and likely old version.",
+        Some("/tmp/redundant-rules"),
+    ))
+    .unwrap();
+    db.insert_memory(&memory(
+        "Annotation generator patterns: vector plus AST vs lexical plus AST",
+        "Two patterns exist: vector-first for model and feature-signal candidates, and lexical-first for true-condition directional candidates. AST checks reject false positives.",
+        Some("/tmp/redundant-rules"),
+    ))
+    .unwrap();
+
+    let deactivated = dedupe_active_memories(&db, "2026-06-08T00:00:01Z").unwrap();
+
+    assert_eq!(deactivated, 0);
+    assert_eq!(
+        db.list_memories()
+            .unwrap()
+            .iter()
+            .filter(|memory| memory.is_active)
+            .count(),
+        2
+    );
+}
+
+#[test]
 fn queued_memory_task_parks_when_provider_is_unavailable() {
     std::env::remove_var("YAAML_TEST_MISSING_ANTHROPIC_KEY");
     let tmp = TempDir::new().unwrap();
@@ -367,4 +427,21 @@ fn completed_turn(ordinal: u64) -> String {
 fn append(path: &std::path::Path, contents: &str) {
     let mut file = OpenOptions::new().append(true).open(path).unwrap();
     file.write_all(contents.as_bytes()).unwrap();
+}
+
+fn memory(title: &str, body: &str, project_id: Option<&str>) -> MemoryRecord {
+    MemoryRecord {
+        id: None,
+        title: title.to_string(),
+        body: body.to_string(),
+        scope: MemoryScope::Project,
+        source_turn_refs: Vec::new(),
+        created_at: "2026-06-08T00:00:00Z".to_string(),
+        updated_at: "2026-06-08T00:00:00Z".to_string(),
+        is_active: true,
+        session_id: None,
+        project_id: project_id.map(str::to_string),
+        project_descriptor: project_id.map(str::to_string),
+        lineage_refs: Vec::new(),
+    }
 }

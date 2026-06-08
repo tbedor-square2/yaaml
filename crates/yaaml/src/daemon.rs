@@ -261,6 +261,10 @@ pub fn run_queued_tasks(db: &Database, config: &Config, limit: usize) -> anyhow:
         };
         match result {
             Ok(()) => {
+                if task.kind == TASK_KIND_MEMORY_FORMULATION {
+                    dedupe_active_memories(db, &unix_timestamp())
+                        .context("failed to dedupe active memories")?;
+                }
                 db.complete_task(task_id, &unix_timestamp())
                     .context("failed to complete task")?;
                 completed += 1;
@@ -444,6 +448,97 @@ pub fn queue_missing_memory_formulation_tasks(
     }
     Ok(queued)
 }
+
+pub fn dedupe_active_memories(db: &Database, updated_at: &str) -> anyhow::Result<u64> {
+    let memories = db
+        .list_memories()
+        .context("failed to list memories for dedupe")?
+        .into_iter()
+        .filter(|memory| memory.is_active)
+        .collect::<Vec<_>>();
+    let mut inactive = HashSet::new();
+    for left_index in 0..memories.len() {
+        let left = &memories[left_index];
+        let Some(left_id) = left.id else {
+            continue;
+        };
+        if inactive.contains(&left_id) {
+            continue;
+        }
+        for right in memories.iter().skip(left_index + 1) {
+            let Some(right_id) = right.id else {
+                continue;
+            };
+            if inactive.contains(&right_id) || !same_recall_scope(left, right) {
+                continue;
+            }
+            if !memories_are_duplicates(left, right) {
+                continue;
+            }
+            let deactivate_id = if memory_information_score(left) >= memory_information_score(right)
+            {
+                right_id
+            } else {
+                left_id
+            };
+            inactive.insert(deactivate_id);
+            if deactivate_id == left_id {
+                break;
+            }
+        }
+    }
+    for memory_id in &inactive {
+        db.deactivate_memory(*memory_id, updated_at)
+            .context("failed to deactivate duplicate memory")?;
+    }
+    Ok(inactive.len() as u64)
+}
+
+fn same_recall_scope(left: &yaaml_core::MemoryRecord, right: &yaaml_core::MemoryRecord) -> bool {
+    left.scope == right.scope && left.project_id == right.project_id
+}
+
+fn memories_are_duplicates(
+    left: &yaaml_core::MemoryRecord,
+    right: &yaaml_core::MemoryRecord,
+) -> bool {
+    let title_similarity = token_jaccard(&left.title, &right.title);
+    let body_similarity = token_jaccard(&left.body, &right.body);
+    let text_similarity = token_jaccard(
+        &format!("{} {}", left.title, left.body),
+        &format!("{} {}", right.title, right.body),
+    );
+    (title_similarity >= 0.65 && (body_similarity >= 0.3 || text_similarity >= 0.4))
+        || text_similarity >= 0.72
+}
+
+fn memory_information_score(memory: &yaaml_core::MemoryRecord) -> usize {
+    let token_count = tokens_for_similarity(&format!("{} {}", memory.title, memory.body)).len();
+    token_count * 8 + memory.body.chars().count()
+}
+
+fn token_jaccard(left: &str, right: &str) -> f32 {
+    let left_tokens = tokens_for_similarity(left);
+    let right_tokens = tokens_for_similarity(right);
+    if left_tokens.is_empty() || right_tokens.is_empty() {
+        return 0.0;
+    }
+    let intersection = left_tokens.intersection(&right_tokens).count();
+    let union = left_tokens.union(&right_tokens).count();
+    intersection as f32 / union as f32
+}
+
+fn tokens_for_similarity(text: &str) -> HashSet<String> {
+    text.split(|character: char| !character.is_ascii_alphanumeric())
+        .map(str::to_ascii_lowercase)
+        .filter(|token| token.len() > 1 && !SIMILARITY_STOP_WORDS.contains(&token.as_str()))
+        .collect()
+}
+
+const SIMILARITY_STOP_WORDS: &[&str] = &[
+    "and", "are", "but", "for", "from", "has", "have", "into", "not", "the", "this", "that", "use",
+    "uses", "with",
+];
 
 fn enqueue_memory_formulation_task(
     db: &Database,

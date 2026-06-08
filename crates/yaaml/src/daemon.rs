@@ -336,9 +336,7 @@ fn run_memory_formulation_task(
     );
     let value = match summary_client.structured_json(formulation_system_prompt(), &prompt) {
         Ok(value) => value,
-        Err(ProviderError::Parse(message)) if message == "message text did not contain JSON" => {
-            json!({"memories":[]})
-        }
+        Err(ProviderError::Parse(_)) => json!({"memories":[]}),
         Err(error) => return Err(error).context("failed to formulate memory"),
     };
     let drafts = parse_formulation_response(&value, &project_descriptor, config.max_memory_length)

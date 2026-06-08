@@ -1,4 +1,5 @@
 pub mod config;
+pub mod consolidation;
 pub mod memory;
 pub mod model;
 pub mod paths;
@@ -6,6 +7,7 @@ pub mod recall;
 pub mod status;
 
 pub use config::{Config, ConfigPaths};
+pub use consolidation::{find_consolidation_clusters, ClusterMemory, MemoryCluster};
 pub use memory::{
     derive_project_descriptor, embedded_text_hash, embedding_text, parse_formulation_response,
     MemoryDraft, MemoryError,

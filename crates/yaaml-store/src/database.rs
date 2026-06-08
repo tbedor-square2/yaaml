@@ -234,6 +234,25 @@ impl Database {
         Ok(self.conn.last_insert_rowid())
     }
 
+    pub fn consolidate_memories(
+        &self,
+        source_memory_ids: &[i64],
+        consolidated: &MemoryRecord,
+        updated_at: &str,
+    ) -> Result<i64, DatabaseError> {
+        let consolidated_id = self.insert_memory(consolidated)?;
+        for source_id in source_memory_ids {
+            self.conn.execute(
+                "UPDATE memories
+                 SET is_active = 0,
+                     updated_at = ?1
+                 WHERE id = ?2",
+                params![updated_at, source_id],
+            )?;
+        }
+        Ok(consolidated_id)
+    }
+
     pub fn list_memories(&self) -> Result<Vec<MemoryRecord>, DatabaseError> {
         let mut stmt = self.conn.prepare(
             "SELECT id, title, body, scope, source_turn_refs, created_at, updated_at,
@@ -875,5 +894,53 @@ mod tests {
             vec![0.1, 0.2, 0.3]
         );
         assert_eq!(stored.embedded_text_hash, embedding.embedded_text_hash);
+    }
+
+    #[test]
+    fn consolidation_creates_new_memory_and_marks_sources_inactive() {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+        let source = |title: &str| MemoryRecord {
+            id: None,
+            title: title.to_string(),
+            body: title.to_string(),
+            scope: MemoryScope::Project,
+            source_turn_refs: Vec::new(),
+            created_at: "2026-06-08T00:00:00Z".to_string(),
+            updated_at: "2026-06-08T00:00:00Z".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some("/tmp/yaaml".to_string()),
+            project_descriptor: Some("yaaml, Rust".to_string()),
+            lineage_refs: Vec::new(),
+        };
+        let first = db.insert_memory(&source("first")).unwrap();
+        let second = db.insert_memory(&source("second")).unwrap();
+        let consolidated = MemoryRecord {
+            id: None,
+            title: "merged".to_string(),
+            body: "merged body".to_string(),
+            scope: MemoryScope::Project,
+            source_turn_refs: Vec::new(),
+            created_at: "2026-06-08T00:00:01Z".to_string(),
+            updated_at: "2026-06-08T00:00:01Z".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some("/tmp/yaaml".to_string()),
+            project_descriptor: Some("yaaml, Rust".to_string()),
+            lineage_refs: vec![first, second],
+        };
+
+        let merged_id = db
+            .consolidate_memories(&[first, second], &consolidated, "2026-06-08T00:00:01Z")
+            .unwrap();
+        let memories = db.list_memories().unwrap();
+
+        assert_eq!(memories.iter().filter(|memory| memory.is_active).count(), 1);
+        let merged = memories
+            .iter()
+            .find(|memory| memory.id == Some(merged_id))
+            .unwrap();
+        assert_eq!(merged.lineage_refs, vec![first, second]);
     }
 }

@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 
 use serde_json::Value;
 use thiserror::Error;
-use yaaml_core::{AgentType, SessionRecord, TurnRecord, TurnStatus};
+use yaaml_core::{paths::normalize_project_id, AgentType, SessionRecord, TurnRecord, TurnStatus};
 
 #[derive(Debug, Error)]
 pub enum ClaudeParseError {
@@ -103,7 +103,7 @@ pub fn parse_claude_jsonl(
         }
         session.last_seen_at = timestamp.clone().or_else(|| session.last_seen_at.clone());
         if let Some(cwd) = value.get("cwd").and_then(Value::as_str) {
-            session.project_id = cwd.to_string();
+            session.project_id = normalized_project_id(cwd);
         }
         let role = value
             .get("role")
@@ -222,6 +222,10 @@ fn infer_project_id(path: &Path) -> String {
         .and_then(|name| name.to_str())
         .unwrap_or("")
         .to_string()
+}
+
+fn normalized_project_id(cwd: &str) -> String {
+    normalize_project_id(Path::new(cwd)).display().to_string()
 }
 
 fn visit(path: &Path, files: &mut Vec<PathBuf>) -> Result<(), ClaudeParseError> {

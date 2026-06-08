@@ -3,7 +3,7 @@ use std::path::Path;
 
 use serde_json::Value;
 use thiserror::Error;
-use yaaml_core::{AgentType, SessionRecord, TurnRecord, TurnStatus};
+use yaaml_core::{paths::normalize_project_id, AgentType, SessionRecord, TurnRecord, TurnStatus};
 
 #[derive(Debug, Error)]
 pub enum CodexParseError {
@@ -127,7 +127,7 @@ fn parse_codex_jsonl_with_session(
                     session.as_mut(),
                     value.pointer("/payload/cwd").and_then(Value::as_str),
                 ) {
-                    session.project_id = cwd.to_string();
+                    session.project_id = normalized_project_id(cwd);
                 }
                 if let Some(turn) = current.as_mut() {
                     turn.byte_end = line_end;
@@ -170,8 +170,8 @@ fn parse_session(transcript_path: &Path, value: &Value) -> SessionRecord {
     let project_id = payload
         .get("cwd")
         .and_then(Value::as_str)
-        .unwrap_or("")
-        .to_string();
+        .map(normalized_project_id)
+        .unwrap_or_default();
     let started_at = payload
         .get("timestamp")
         .or_else(|| value.get("timestamp"))
@@ -186,6 +186,10 @@ fn parse_session(transcript_path: &Path, value: &Value) -> SessionRecord {
         started_at: started_at.clone(),
         last_seen_at: started_at,
     }
+}
+
+fn normalized_project_id(cwd: &str) -> String {
+    normalize_project_id(Path::new(cwd)).display().to_string()
 }
 
 fn handle_event_msg(

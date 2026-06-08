@@ -114,6 +114,10 @@ impl Database {
         Ok(names)
     }
 
+    pub(crate) fn conn(&self) -> &Connection {
+        &self.conn
+    }
+
     pub fn upsert_session(&self, session: &SessionRecord) -> Result<(), DatabaseError> {
         self.conn.execute(
             "INSERT INTO sessions (
@@ -192,6 +196,30 @@ impl Database {
         let mut memories = Vec::new();
         for row in rows {
             memories.push(row?);
+        }
+        Ok(memories)
+    }
+
+    pub fn list_active_memories_by_ids(
+        &self,
+        memory_ids: &[i64],
+    ) -> Result<Vec<MemoryRecord>, DatabaseError> {
+        let mut memories = Vec::new();
+        for memory_id in memory_ids {
+            let memory = self
+                .conn
+                .query_row(
+                    "SELECT id, title, body, scope, source_turn_refs, created_at, updated_at,
+                            is_active, session_id, project_id, project_descriptor, lineage_refs
+                     FROM memories
+                     WHERE id = ?1 AND is_active = 1",
+                    params![memory_id],
+                    read_memory_record,
+                )
+                .optional()?;
+            if let Some(memory) = memory {
+                memories.push(memory);
+            }
         }
         Ok(memories)
     }

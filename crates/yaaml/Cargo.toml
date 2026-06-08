@@ -14,6 +14,7 @@ anyhow.workspace = true
 clap.workspace = true
 serde_json.workspace = true
 yaaml-core = { path = "../yaaml-core" }
+yaaml-llm = { path = "../yaaml-llm" }
 yaaml-store = { path = "../yaaml-store" }
 
 [dev-dependencies]

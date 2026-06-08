@@ -2,6 +2,7 @@ pub mod config;
 pub mod memory;
 pub mod model;
 pub mod paths;
+pub mod recall;
 pub mod status;
 
 pub use config::{Config, ConfigPaths};
@@ -12,4 +13,9 @@ pub use memory::{
 pub use model::{
     AgentType, EmbeddingRecord, MemoryRecord, MemoryScope, SessionRecord, SourceTurnRef,
     TaskRecord, TaskStatus, TurnRecord, TurnStatus,
+};
+pub use recall::{
+    apply_project_bonus, build_recall_query, cosine_similarity, recall_file_path,
+    render_recall_markdown, write_recall_file, RecallCandidate, RecallMemory, RecallWrite,
+    VectorHit, VectorIndex,
 };

@@ -1826,6 +1826,7 @@ dependencies = [
  "serde_json",
  "tempfile",
  "yaaml-core",
+ "yaaml-llm",
  "yaaml-store",
  "yaaml-transcript",
 ]

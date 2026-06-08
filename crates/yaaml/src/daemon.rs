@@ -329,7 +329,7 @@ fn run_memory_formulation_task(
         })
         .collect::<Vec<_>>();
     let project_descriptor = derive_project_descriptor(Path::new(&session.project_id), None);
-    let prompt = formulation_prompt(&project_descriptor, &turns);
+    let prompt = formulation_prompt(config, &project_descriptor, &turns);
     let summary_client = AnthropicMessageClient::new(
         AnthropicMessageConfig::summary_from_config(config),
         ReqwestTransport::default(),
@@ -379,16 +379,58 @@ fn formulation_system_prompt() -> &'static str {
     "Create concise durable memories from coding-agent transcript turns. Return only JSON shaped as {\"memories\":[{\"title\":\"...\",\"body\":\"...\",\"scope\":\"project\"|\"global\",\"project_descriptor\":\"...\"}]}. Prefer small, granular memories. Use global scope only for durable cross-project user preferences or agent workflow patterns."
 }
 
-fn formulation_prompt(project_descriptor: &str, turns: &[yaaml_core::TurnRecord]) -> String {
+fn formulation_prompt(
+    config: &Config,
+    project_descriptor: &str,
+    turns: &[yaaml_core::TurnRecord],
+) -> String {
     let mut prompt = format!("Project descriptor: {project_descriptor}\n\nTurns:\n");
+    let max_prompt_chars = config.max_formulation_tokens.saturating_mul(3).min(80_000);
     for turn in turns {
-        prompt.push_str(&format!(
-            "\nTurn {}:\n{}\n",
-            turn.ordinal,
-            turn.display_text.as_deref().unwrap_or("")
-        ));
+        if prompt.chars().count() >= max_prompt_chars {
+            prompt.push_str("\n[additional turns omitted due to prompt budget]\n");
+            break;
+        }
+        let remaining = max_prompt_chars.saturating_sub(prompt.chars().count());
+        let text = formulation_turn_text(
+            turn.display_text.as_deref().unwrap_or(""),
+            remaining,
+            config.tool_call_truncation_chars,
+        );
+        prompt.push_str(&format!("\nTurn {}:\n{}\n", turn.ordinal, text));
     }
     prompt
+}
+
+fn formulation_turn_text(text: &str, max_chars: usize, tool_output_chars: usize) -> String {
+    let mut output = String::new();
+    for line in text.lines() {
+        let line = if line.trim_start().starts_with("tool output:") {
+            truncate_chars(line, tool_output_chars)
+        } else {
+            line.to_string()
+        };
+        if !output.is_empty() {
+            output.push('\n');
+        }
+        output.push_str(&line);
+        if output.chars().count() >= max_chars {
+            return truncate_chars(&output, max_chars);
+        }
+    }
+    output
+}
+
+fn truncate_chars(text: &str, max_chars: usize) -> String {
+    if text.chars().count() <= max_chars {
+        return text.to_string();
+    }
+    let mut truncated = text
+        .chars()
+        .take(max_chars.saturating_sub(15))
+        .collect::<String>();
+    truncated.push_str("[truncated]");
+    truncated
 }
 
 pub fn queue_memory_formulation_if_due(
@@ -867,4 +909,31 @@ fn unix_timestamp_seconds() -> i64 {
         .duration_since(UNIX_EPOCH)
         .map(|duration| duration.as_secs())
         .unwrap_or(0) as i64
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn formulation_prompt_truncates_large_tool_output() {
+        let mut config = Config::default();
+        config.max_formulation_tokens = 100;
+        config.tool_call_truncation_chars = 40;
+        let turns = vec![yaaml_core::TurnRecord {
+            session_id: "session-1".to_string(),
+            turn_id: Some("turn-1".to_string()),
+            ordinal: 0,
+            byte_start: 0,
+            byte_end: 10,
+            observed_at: None,
+            status: yaaml_core::TurnStatus::Completed,
+            display_text: Some(format!("user text\ntool output: {}", "x".repeat(10_000))),
+        }];
+
+        let prompt = formulation_prompt(&config, "yaaml", &turns);
+
+        assert!(prompt.chars().count() <= 360);
+        assert!(prompt.contains("[truncated]"));
+    }
 }

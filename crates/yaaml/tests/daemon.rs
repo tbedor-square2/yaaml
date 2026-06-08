@@ -1,5 +1,6 @@
 use std::fs::{self, OpenOptions};
 use std::io::{Read, Write};
+use std::net::Shutdown;
 use std::os::unix::net::UnixStream;
 
 use tempfile::TempDir;
@@ -395,6 +396,8 @@ fn signal_socket_requests_shutdown_and_removes_socket() {
     let handle = start_signal_socket(&socket, shutdown.clone()).unwrap();
     let mut stream = UnixStream::connect(&socket).unwrap();
     stream.write_all(b"shutdown\n").unwrap();
+    stream.flush().unwrap();
+    stream.shutdown(Shutdown::Write).unwrap();
     let mut response = String::new();
     stream.read_to_string(&mut response).unwrap();
 

@@ -1,5 +1,7 @@
-//! Remote model providers are implemented in Milestone 4.
+pub mod anthropic;
+pub mod error;
+pub mod openai;
+pub mod transport;
 
-pub fn crate_ready() -> bool {
-    true
-}
+pub use error::{ProviderError, RetryClass};
+pub use transport::{HttpRequest, HttpResponse, HttpTransport, ReqwestTransport};

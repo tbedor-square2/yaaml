@@ -228,6 +228,23 @@ impl Database {
             .map_err(DatabaseError::from)
     }
 
+    pub fn park_task(
+        &self,
+        task_id: i64,
+        error: &str,
+        updated_at: &str,
+    ) -> Result<(), DatabaseError> {
+        self.conn.execute(
+            "UPDATE tasks
+             SET status = 'parked',
+                 last_error = ?1,
+                 updated_at = ?2
+             WHERE id = ?3",
+            params![error, updated_at, task_id],
+        )?;
+        Ok(())
+    }
+
     pub fn add_backlog_progress(
         &self,
         discovered_files: u64,
@@ -464,5 +481,34 @@ mod tests {
             status.backlog.last_activity_at.as_deref(),
             Some("2026-06-08T00:00:00Z")
         );
+    }
+
+    #[test]
+    fn parked_task_appears_in_status() {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+        let task = TaskRecord {
+            id: None,
+            kind: "embedding".to_string(),
+            status: TaskStatus::Queued,
+            priority: 0,
+            payload_json: "{}".to_string(),
+            attempts: 0,
+            max_attempts: 5,
+            next_run_at: None,
+            last_error: None,
+            created_at: "2026-06-08T00:00:00Z".to_string(),
+            updated_at: "2026-06-08T00:00:00Z".to_string(),
+        };
+        let id = db.enqueue_task(&task).unwrap();
+
+        db.park_task(id, "missing API key", "2026-06-08T00:00:01Z")
+            .unwrap();
+        let status = db.status().unwrap();
+
+        assert_eq!(status.parked_jobs, 1);
+        assert_eq!(status.recent_failures.len(), 1);
+        assert_eq!(status.recent_failures[0].task_kind, "embedding");
+        assert_eq!(status.recent_failures[0].error, "missing API key");
     }
 }

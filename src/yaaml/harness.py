@@ -231,14 +231,17 @@ class CodexSessionWriter:
         self._file_path = session_dir / f"rollout-{ts}-{self._session_uuid}.jsonl"
         session_dir.mkdir(parents=True, exist_ok=True)
 
-        # Write SessionMeta as the first line automatically
+        # Write the current Codex envelope shape.
         self._append(
             {
-                "type": "SessionMeta",
-                "id": self._session_uuid,
-                "cwd": project_cwd,
-                "git": {"branch": git_branch},
                 "timestamp": _utcnow(),
+                "type": "session_meta",
+                "payload": {
+                    "id": self._session_uuid,
+                    "timestamp": _utcnow(),
+                    "cwd": project_cwd,
+                    "git": {"branch": git_branch},
+                },
             }
         )
 
@@ -256,44 +259,62 @@ class CodexSessionWriter:
         # User message
         self._append(
             {
-                "type": "EventMsg/UserMessage",
-                "content": turn.user,
                 "timestamp": _utcnow(),
+                "type": "event_msg",
+                "payload": {"type": "user_message", "message": turn.user},
             }
         )
 
         # Tool call / result pairs
         for tc in turn.tool_calls:
+            call_id = str(uuid.uuid4())
             self._append(
                 {
-                    "type": "EventMsg/ToolCall",
-                    "name": tc.name,
-                    "arguments": tc.input,
                     "timestamp": _utcnow(),
+                    "type": "response_item",
+                    "payload": {
+                        "type": "function_call",
+                        "name": tc.name,
+                        "arguments": json.dumps(tc.input),
+                        "call_id": call_id,
+                    },
                 }
             )
             self._append(
                 {
-                    "type": "EventMsg/ToolResult",
-                    "output": tc.output,
                     "timestamp": _utcnow(),
+                    "type": "response_item",
+                    "payload": {
+                        "type": "function_call_output",
+                        "call_id": call_id,
+                        "output": tc.output,
+                    },
                 }
             )
 
         # Assistant message
         self._append(
             {
-                "type": "EventMsg/AssistantMessage",
-                "content": turn.assistant,
                 "timestamp": _utcnow(),
+                "type": "response_item",
+                "payload": {
+                    "type": "message",
+                    "role": "assistant",
+                    "content": [{"type": "output_text", "text": turn.assistant}],
+                    "phase": "final_answer",
+                },
             }
         )
 
         # Turn complete
         self._append(
             {
-                "type": "EventMsg/TurnComplete",
                 "timestamp": _utcnow(),
+                "type": "event_msg",
+                "payload": {
+                    "type": "task_complete",
+                    "last_agent_message": turn.assistant,
+                },
             }
         )
 

@@ -60,13 +60,15 @@ class RecallManager:
                 return
 
         context_text = self._build_context(turn)
+        if self._config.recall_classifier_enabled and not self._is_meaningful_context(context_text):
+            return
         memories = self.query(context_text, turn.project_id)
 
         if not memories:
             return
 
         current_ids = [m["id"] for m in memories]
-        if not self._recall_changed(turn.project_id, current_ids):
+        if not self.recall_changed(turn.project_id, current_ids):
             return
 
         self.write_recall_file(memories, turn.project_id, query_source="turn-context")
@@ -103,6 +105,12 @@ class RecallManager:
                 parts.append(f"{role}: {text[:500]}")
 
         return "\n".join(parts)
+
+    @staticmethod
+    def _is_meaningful_context(context_text: str) -> bool:
+        """Cheap first-stage recall gate for empty or trivial exchanges."""
+        words = [word for word in context_text.split() if any(char.isalnum() for char in word)]
+        return len(words) >= 6
 
     def query(self, context_text: str, project_id: str) -> list[dict[str, Any]]:
         """Run vector search with project boost and deduplication.
@@ -172,13 +180,15 @@ class RecallManager:
             "is_active": row[5],
         }
 
-    def _recall_changed(self, project_id: str, new_ids: list[str]) -> bool:
+    def recall_changed(self, project_id: str, new_ids: list[str]) -> bool:
         """Return True if the recall set is different from what's stored."""
         row = self._db.execute(
             "SELECT memory_ids FROM recall_state WHERE project_id = ?",
             (project_id,),
         ).fetchone()
         if not row:
+            return True
+        if not self.recall_file_path(project_id).is_file():
             return True
         try:
             stored_ids = json.loads(row[0])
@@ -229,7 +239,8 @@ class RecallManager:
             created = mem.get("created_at", "")[:10]  # date portion
 
             lines.append(f"## {title}")
-            lines.append(f"*{proj} · {created}*")
+            origin = f" · {proj}" if proj and proj != project_id else ""
+            lines.append(f"*{created}{origin}*")
             lines.append("")
             lines.append(body)
             lines.append("")
@@ -238,12 +249,17 @@ class RecallManager:
 
         content = "\n".join(lines)
 
-        # Write to {project_id}/.yaaml/recall.md
-        recall_dir = Path(project_id) / ".yaaml"
+        recall_file = self.recall_file_path(project_id)
         try:
-            recall_dir.mkdir(parents=True, exist_ok=True)
-            recall_file = recall_dir / "recall.md"
+            recall_file.parent.mkdir(parents=True, exist_ok=True)
             recall_file.write_text(content, encoding="utf-8")
             logger.info("Wrote recall file: %s (%d memories)", recall_file, n)
         except Exception as exc:
             logger.error("Failed to write recall file for %s: %s", project_id, exc)
+
+    def recall_file_path(self, project_id: str) -> Path:
+        """Resolve the configured recall path for a project."""
+        configured = self._config.recall_file_path
+        if configured.is_absolute():
+            return configured
+        return Path(project_id) / configured

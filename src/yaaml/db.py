@@ -6,7 +6,7 @@ from pathlib import Path
 # Global connection cache
 _connections: dict[str, sqlite3.Connection] = {}
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 4
 
 CREATE_SCHEMA_VERSION = """
 CREATE TABLE IF NOT EXISTS schema_version (
@@ -67,6 +67,30 @@ CREATE TABLE IF NOT EXISTS recall_state (
 );
 """
 
+CREATE_EMBEDDING_JOBS = """
+CREATE TABLE IF NOT EXISTS embedding_jobs (
+    memory_id TEXT PRIMARY KEY,
+    source_memory_ids TEXT NOT NULL DEFAULT '[]',
+    attempts INTEGER NOT NULL DEFAULT 0,
+    next_attempt_at TEXT NOT NULL,
+    last_error TEXT,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (memory_id) REFERENCES memories(id)
+);
+"""
+
+CREATE_BACKGROUND_JOBS = """
+CREATE TABLE IF NOT EXISTS background_jobs (
+    id TEXT PRIMARY KEY,
+    task_type TEXT NOT NULL,
+    payload_json TEXT NOT NULL,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    next_attempt_at TEXT NOT NULL,
+    last_error TEXT,
+    created_at TEXT NOT NULL
+);
+"""
+
 # V2: add turn_group_id so all rows from one logical turn share a stable key,
 # and add indexes on the columns that appear in every hot query path.
 _V2_STATEMENTS = [
@@ -92,6 +116,21 @@ MIGRATIONS: list[tuple[int, list[str]]] = [
         ],
     ),
     (2, _V2_STATEMENTS),
+    (
+        3,
+        [
+            CREATE_EMBEDDING_JOBS,
+            "CREATE INDEX IF NOT EXISTS idx_embedding_jobs_due ON embedding_jobs(next_attempt_at)",
+        ],
+    ),
+    (
+        4,
+        [
+            CREATE_BACKGROUND_JOBS,
+            "CREATE INDEX IF NOT EXISTS idx_background_jobs_due "
+            "ON background_jobs(task_type, next_attempt_at)",
+        ],
+    ),
 ]
 
 

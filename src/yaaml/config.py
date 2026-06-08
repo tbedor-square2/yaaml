@@ -15,8 +15,9 @@ class Config:
     consolidation_dark_period_seconds: int = 300
     recall_result_limit: int = 5
     recall_candidate_pool: int = 20
-    recall_distance_threshold: float = 0.8
+    recall_distance_threshold: float = 1.4
     recall_project_boost: float = 1.3
+    recall_file_path: Path = field(default_factory=lambda: Path(".yaaml/recall.md"))
     db_path: Path = field(default_factory=lambda: Path("~/.yaaml/yaaml.db").expanduser())
     chroma_path: Path = field(default_factory=lambda: Path("~/.yaaml/chroma").expanduser())
     embedding_model: str = "text-embedding-3-small"
@@ -41,7 +42,7 @@ def _apply_dict_to_config(config: Config, data: dict[str, Any]) -> None:
     for key, value in data.items():
         if hasattr(config, key):
             # Handle Path fields
-            if key in ("db_path", "chroma_path"):
+            if key in ("db_path", "chroma_path", "recall_file_path"):
                 value = Path(str(value)).expanduser()
             setattr(config, key, value)
         else:
@@ -73,5 +74,6 @@ def load_config(project_dir: Path | None) -> Config:
     # Expand ~ in path fields
     config.db_path = Path(str(config.db_path)).expanduser()
     config.chroma_path = Path(str(config.chroma_path)).expanduser()
+    config.recall_file_path = Path(str(config.recall_file_path)).expanduser()
 
     return config

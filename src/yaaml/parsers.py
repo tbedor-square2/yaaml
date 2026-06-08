@@ -15,7 +15,9 @@ def normalize_project_id(cwd: str) -> str:
     Returns:
         Resolved absolute path string without trailing slash.
     """
-    return str(Path(cwd).resolve()).rstrip("/")
+    resolved = Path(cwd).resolve()
+    text = str(resolved)
+    return text if text == resolved.anchor else text.rstrip("/")
 
 
 def truncate_tool_content(text: str, limit: int) -> str:
@@ -201,8 +203,12 @@ class ClaudeCodeParser:
 
             assistant_text = "\n".join(assistant_text_parts)
 
-            # If no tool_use blocks: this is a completed turn
-            if not tool_use_blocks:
+            only_text_blocks = bool(content_array) and all(
+                isinstance(block, dict) and block.get("type") == "text" for block in content_array
+            )
+
+            # A Claude turn ends only on a text-only assistant message.
+            if not tool_use_blocks and only_text_blocks:
                 completed_at = obj.get("timestamp", "")
                 project_id = self._project_id or ""
 
@@ -256,8 +262,8 @@ class ClaudeCodeParser:
                             self._current_tool_calls.append(
                                 {
                                     "name": pending["name"],
-                                    "input_summary": truncate_tool_content(pending["input"], 500),
-                                    "output_summary": truncate_tool_content(result_text, 500),
+                                    "input_summary": pending["input"],
+                                    "output_summary": result_text,
                                 }
                             )
                 elif isinstance(item, str):
@@ -285,7 +291,8 @@ class CodexParser:
         self._user_content: str = ""
         self._assistant_parts: list[str] = []
         self._tool_calls: list[dict[str, Any]] = []
-        self._pending_tool: dict[str, Any] | None = None
+        self._pending_tools: dict[str, dict[str, Any]] = {}
+        self._pending_tool_order: list[str] = []
         self._first_line_seen: bool = False
 
     def feed(self, line: str) -> ParsedTurn | None:
@@ -306,17 +313,30 @@ class CodexParser:
         except json.JSONDecodeError:
             return None
 
+        envelope_type = obj.get("type", "")
+        payload = obj.get("payload")
+
+        # Current Codex rollouts use lowercase envelope types with the record in
+        # `payload`. Keep accepting the older flat shape for imported fixtures.
+        meta = payload if envelope_type == "session_meta" and isinstance(payload, dict) else obj
+
         # First line: session metadata
         if not self._first_line_seen:
             self._first_line_seen = True
-            self._session_id = obj.get("id", Path(self.file_path).stem)
-            cwd = obj.get("cwd", "")
+            self._session_id = str(meta.get("id", Path(self.file_path).stem))
+            cwd = meta.get("cwd", "")
             if cwd:
-                self._project_id = normalize_project_id(cwd)
-            git_info = obj.get("git", {})
+                self._project_id = normalize_project_id(str(cwd))
+            git_info = meta.get("git", {})
             if isinstance(git_info, dict):
                 self._git_branch = git_info.get("branch")
-            started_at = obj.get("created_at") or obj.get("startedAt") or ""
+            started_at = (
+                meta.get("timestamp")
+                or meta.get("created_at")
+                or meta.get("startedAt")
+                or obj.get("timestamp")
+                or ""
+            )
             self.session_meta = SessionMeta(
                 session_id=self._session_id,
                 agent_type="codex",
@@ -327,75 +347,128 @@ class CodexParser:
             )
             return None
 
-        # Subsequent lines are event messages
-        msg_type = obj.get("type", "")
+        if envelope_type in ("event_msg", "response_item") and isinstance(payload, dict):
+            event = payload
+            msg_type = str(payload.get("type", ""))
+        else:
+            event = obj
+            msg_type = str(envelope_type)
 
         try:
-            return self._handle_event(obj, msg_type)
+            return self._handle_event(event, msg_type, str(obj.get("timestamp", "")))
         except Exception:
             # Skip unknown / malformed event types gracefully
             return None
 
-    def _handle_event(self, obj: dict[str, Any], msg_type: str) -> ParsedTurn | None:
+    def _handle_event(
+        self,
+        obj: dict[str, Any],
+        msg_type: str,
+        envelope_timestamp: str = "",
+    ) -> ParsedTurn | None:
         """Handle a Codex event object."""
 
         # UserMessage event — starts a new turn
-        if msg_type in ("EventMsg/UserMessage", "user"):
+        if msg_type in ("EventMsg/UserMessage", "user", "user_message"):
             content = obj.get("content", "") or obj.get("message", "")
             if isinstance(content, list):
                 content = " ".join(
                     c.get("text", "")
                     for c in content
-                    if isinstance(c, dict) and c.get("type") == "text"
+                    if isinstance(c, dict) and c.get("type") in ("text", "input_text")
                 )
             self._user_content = str(content)
-            self._turn_started_at = obj.get("timestamp", "")
+            self._turn_started_at = str(obj.get("timestamp") or envelope_timestamp)
             self._in_turn = True
             self._assistant_parts = []
             self._tool_calls = []
-            self._pending_tool = None
+            self._pending_tools = {}
+            self._pending_tool_order = []
             return None
 
         if not self._in_turn:
             return None
 
         # Assistant/model output tokens
-        if msg_type in ("EventMsg/AssistantMessage", "assistant", "EventMsg/ModelOutput"):
+        if msg_type in (
+            "EventMsg/AssistantMessage",
+            "assistant",
+            "EventMsg/ModelOutput",
+            "agent_message",
+            "message",
+        ):
+            if msg_type == "message" and obj.get("role") != "assistant":
+                return None
             content = obj.get("content", "") or obj.get("message", "")
             if isinstance(content, list):
                 for item in content:
-                    if isinstance(item, dict) and item.get("type") == "text":
+                    if isinstance(item, dict) and item.get("type") in ("text", "output_text"):
                         self._assistant_parts.append(item.get("text", ""))
             elif isinstance(content, str):
-                self._assistant_parts.append(content)
+                phase = obj.get("phase")
+                if phase == "final_answer" or msg_type != "agent_message":
+                    self._assistant_parts.append(content)
             return None
 
         # Tool call started
-        if msg_type in ("EventMsg/ToolCall", "EventMsg/FunctionCall"):
-            self._pending_tool = {
+        if msg_type in (
+            "EventMsg/ToolCall",
+            "EventMsg/FunctionCall",
+            "function_call",
+            "custom_tool_call",
+            "local_shell_call",
+        ):
+            raw_input = obj.get("arguments", obj.get("input", obj.get("command", {})))
+            if not isinstance(raw_input, str):
+                raw_input = json.dumps(raw_input)
+            call_id = str(obj.get("call_id") or obj.get("id") or len(self._pending_tool_order))
+            self._pending_tools[call_id] = {
                 "name": obj.get("name", obj.get("function", "")),
-                "input": json.dumps(obj.get("arguments", obj.get("input", {}))),
+                "input": raw_input,
             }
+            self._pending_tool_order.append(call_id)
             return None
 
         # Tool result
-        if msg_type in ("EventMsg/ToolResult", "EventMsg/FunctionResult"):
+        if msg_type in (
+            "EventMsg/ToolResult",
+            "EventMsg/FunctionResult",
+            "function_call_output",
+            "custom_tool_call_output",
+        ):
             result = obj.get("output", obj.get("result", ""))
-            if self._pending_tool:
+            call_id = str(obj.get("call_id") or "")
+            if not call_id and self._pending_tool_order:
+                call_id = self._pending_tool_order[0]
+            pending = self._pending_tools.pop(call_id, None)
+            if call_id in self._pending_tool_order:
+                self._pending_tool_order.remove(call_id)
+            if pending:
                 self._tool_calls.append(
                     {
-                        "name": self._pending_tool["name"],
-                        "input_summary": truncate_tool_content(self._pending_tool["input"], 500),
-                        "output_summary": truncate_tool_content(str(result), 500),
+                        "name": pending["name"],
+                        "input_summary": pending["input"],
+                        "output_summary": (
+                            result if isinstance(result, str) else json.dumps(result)
+                        ),
                     }
                 )
-                self._pending_tool = None
             return None
 
         # Turn complete
-        if msg_type in ("EventMsg/TurnComplete", "EventMsg/TurnAborted"):
-            is_aborted = msg_type == "EventMsg/TurnAborted"
-            completed_at = obj.get("timestamp", "")
+        if msg_type in (
+            "EventMsg/TurnComplete",
+            "EventMsg/TurnAborted",
+            "task_complete",
+            "turn_aborted",
+        ):
+            is_aborted = msg_type in ("EventMsg/TurnAborted", "turn_aborted")
+            completed_at = str(
+                obj.get("timestamp") or obj.get("completed_at") or envelope_timestamp
+            )
+            final_message = obj.get("last_agent_message")
+            if isinstance(final_message, str) and not self._assistant_parts:
+                self._assistant_parts.append(final_message)
 
             turn = ParsedTurn(
                 session_id=self._session_id or "",
@@ -414,7 +487,8 @@ class CodexParser:
             self._user_content = ""
             self._assistant_parts = []
             self._tool_calls = []
-            self._pending_tool = None
+            self._pending_tools = {}
+            self._pending_tool_order = []
             self._turn_started_at = None
             return turn
 

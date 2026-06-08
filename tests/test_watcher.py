@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sqlite3
 from pathlib import Path
 
@@ -183,3 +184,55 @@ async def test_codex_reprocessing_is_noop(tmp_path, project_cwd, tmp_codex_dir):
     count_after_second = _turn_count(db)
 
     assert count_after_first == count_after_second
+
+
+async def test_codex_restart_restores_in_progress_turn(tmp_path, project_cwd, tmp_codex_dir):
+    db = init_db(tmp_path / "test.db")
+    claude_root = tmp_path / "claude" / "projects"
+    claude_root.mkdir(parents=True, exist_ok=True)
+    codex_root = tmp_path / "codex"
+    codex_root.mkdir(parents=True, exist_ok=True)
+
+    writer = CodexSessionWriter(tmp_codex_dir, project_cwd)
+    with writer.file_path.open("a", encoding="utf-8") as fh:
+        fh.write(
+            json.dumps(
+                {
+                    "timestamp": "2026-06-08T00:00:01Z",
+                    "type": "event_msg",
+                    "payload": {"type": "user_message", "message": "Interrupted turn"},
+                }
+            )
+            + "\n"
+        )
+
+    first_watcher = _make_watcher(db, claude_root, codex_root)
+    await first_watcher.process_file(writer.file_path)
+    assert _turn_count(db) == 0
+
+    with writer.file_path.open("a", encoding="utf-8") as fh:
+        for record in (
+            {
+                "timestamp": "2026-06-08T00:00:02Z",
+                "type": "response_item",
+                "payload": {
+                    "type": "message",
+                    "role": "assistant",
+                    "content": [{"type": "output_text", "text": "Recovered"}],
+                },
+            },
+            {
+                "timestamp": "2026-06-08T00:00:03Z",
+                "type": "event_msg",
+                "payload": {"type": "task_complete"},
+            },
+        ):
+            fh.write(json.dumps(record) + "\n")
+
+    restarted_watcher = _make_watcher(db, claude_root, codex_root)
+    await restarted_watcher.process_file(writer.file_path)
+
+    rows = db.execute("SELECT role, content_json FROM turns ORDER BY rowid").fetchall()
+    assert [row[0] for row in rows] == ["user", "assistant"]
+    assert json.loads(rows[0][1])["text"] == "Interrupted turn"
+    assert json.loads(rows[1][1])["text"] == "Recovered"

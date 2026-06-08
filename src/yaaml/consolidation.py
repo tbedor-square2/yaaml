@@ -10,12 +10,15 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 from sklearn.cluster import DBSCAN
 
+from .background_jobs import complete_job, due_jobs, enqueue_job, fail_job
 from .config import Config
+from .embedding_jobs import enqueue_embedding, process_embedding_job
 
 if TYPE_CHECKING:
     from .embeddings import EmbeddingStore
 
 logger = logging.getLogger(__name__)
+_CONSOLIDATION_JOB_TYPE = "memory_consolidation"
 
 
 def _utcnow() -> str:
@@ -34,6 +37,7 @@ class ConsolidationManager:
         self._db = db
         self._store = store
         self._config = config
+        self._running_jobs: set[str] = set()
 
     async def run(self) -> None:
         """Full consolidation pass.
@@ -103,25 +107,66 @@ class ConsolidationManager:
         logger.info("Found %d clusters to consolidate.", len(all_clusters))
 
         for cluster_ids in all_clusters:
-            await self._consolidate_cluster(cluster_ids, llm_module)
+            job_id = "consolidate:" + ":".join(sorted(cluster_ids))
+            enqueue_job(
+                self._db,
+                job_id,
+                _CONSOLIDATION_JOB_TYPE,
+                {"memory_ids": cluster_ids},
+            )
+        self._db.commit()
+        await self.process_due_jobs(llm_module)
 
         logger.info("Consolidation pass complete.")
 
+    async def process_due_jobs(self, llm_module: Any | None = None) -> int:
+        """Retry due consolidation jobs and return the number attempted."""
+        if llm_module is None:
+            from . import llm as llm_module
+
+        jobs = due_jobs(self._db, _CONSOLIDATION_JOB_TYPE)
+        for job_id, payload in jobs:
+            cluster_ids = payload.get("memory_ids")
+            if isinstance(cluster_ids, list) and all(
+                isinstance(memory_id, str) for memory_id in cluster_ids
+            ):
+                await self._consolidate_cluster(job_id, cluster_ids, llm_module)
+            else:
+                complete_job(self._db, job_id)
+        return len(jobs)
+
     async def _consolidate_cluster(
         self,
+        job_id: str,
         cluster_ids: list[str],
         llm_module: Any,
     ) -> None:
         """Merge one cluster of memories into a single consolidated memory."""
+        if job_id in self._running_jobs:
+            return
+        self._running_jobs.add(job_id)
+        try:
+            await self._run_consolidation_job(job_id, cluster_ids, llm_module)
+        finally:
+            self._running_jobs.discard(job_id)
+
+    async def _run_consolidation_job(
+        self,
+        job_id: str,
+        cluster_ids: list[str],
+        llm_module: Any,
+    ) -> None:
+        """Execute a claimed consolidation job."""
         # Fetch full memory records
         placeholders = ",".join("?" * len(cluster_ids))
         rows = self._db.execute(
             f"SELECT id, title, body, project_id, session_id FROM memories "
-            f"WHERE id IN ({placeholders}) AND is_active = 1",
+            f"WHERE id IN ({placeholders}) AND is_active = 1 AND consolidated_into IS NULL",
             cluster_ids,
         ).fetchall()
 
-        if not rows:
+        if len(rows) < 2:
+            complete_job(self._db, job_id)
             return
 
         memories = [
@@ -145,6 +190,7 @@ class ConsolidationManager:
             title, body = await llm_module.merge_memories(memories, self._config)
         except Exception as exc:
             logger.error("LLM merge failed for cluster: %s", exc)
+            fail_job(self._db, job_id, exc)
             return
 
         now = _utcnow()
@@ -161,7 +207,7 @@ class ConsolidationManager:
             INSERT INTO memories
               (id, title, body, source_turn_ids, created_at, updated_at,
                is_active, session_id, project_id, consolidated_into)
-            VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, NULL)
+            VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, NULL)
             """,
             (
                 merged_id,
@@ -175,35 +221,26 @@ class ConsolidationManager:
             ),
         )
 
-        # Mark source memories as inactive
+        # Reserve source memories so another consolidation pass does not create
+        # a duplicate merge while this embedding is waiting to retry.
         for mem_id in source_ids:
             self._db.execute(
-                "UPDATE memories SET is_active = 0, consolidated_into = ? WHERE id = ?",
+                "UPDATE memories SET consolidated_into = ? WHERE id = ?",
                 (merged_id, mem_id),
             )
 
+        enqueue_embedding(self._db, merged_id, source_ids)
+        self._db.execute("DELETE FROM background_jobs WHERE id = ?", (job_id,))
         self._db.commit()
 
-        # Index merged memory in ChromaDB
-        try:
-            self._store.upsert(
-                merged_id,
-                f"{title}\n\n{body}",
-                {"project_id": project_id, "session_id": session_id or ""},
-            )
-        except Exception as exc:
-            logger.error("Failed to upsert merged memory embedding %s: %s", merged_id, exc)
-
-        # Remove source embeddings from ChromaDB
-        for mem_id in source_ids:
-            try:
-                self._store.delete(mem_id)
-            except Exception as exc:
-                logger.warning("Failed to delete source embedding %s: %s", mem_id, exc)
-
-        logger.info("Consolidated %d memories into %s: %s", len(source_ids), merged_id, title)
+        if process_embedding_job(self._db, self._store, merged_id):
+            logger.info("Consolidated %d memories into %s: %s", len(source_ids), merged_id, title)
+        else:
+            logger.info("Queued consolidation embedding retry for %s", merged_id)
 
     def _get_active_memory_ids(self) -> set[str]:
         """Return the set of active memory IDs from SQLite."""
-        rows = self._db.execute("SELECT id FROM memories WHERE is_active = 1").fetchall()
+        rows = self._db.execute(
+            "SELECT id FROM memories WHERE is_active = 1 AND consolidated_into IS NULL"
+        ).fetchall()
         return {row[0] for row in rows}

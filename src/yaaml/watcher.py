@@ -63,18 +63,24 @@ def _persist_session(db: sqlite3.Connection, meta: SessionMeta) -> None:
     db.commit()
 
 
-def _persist_turn(db: sqlite3.Connection, turn: ParsedTurn) -> None:
+def _persist_turn(db: sqlite3.Connection, turn: ParsedTurn, source_key: str | None = None) -> None:
     """Insert DB rows for each role in a completed turn, sharing a turn_group_id."""
     now = _utcnow()
-    turn_group_id = str(uuid.uuid4())
+    turn_group_id = (
+        str(uuid.uuid5(uuid.NAMESPACE_URL, source_key)) if source_key else str(uuid.uuid4())
+    )
+    row_index = 0
 
     def _ins(role: str, content_dict: dict[str, object]) -> None:
+        nonlocal row_index
+        row_id = str(uuid.uuid5(uuid.UUID(turn_group_id), f"{row_index}:{role}"))
+        row_index += 1
         db.execute(
             "INSERT OR IGNORE INTO turns "
             "(id, session_id, role, content_json, observed_at, turn_group_id) "
             "VALUES (?, ?, ?, ?, ?, ?)",
             (
-                str(uuid.uuid4()),
+                row_id,
                 turn.session_id,
                 role,
                 json.dumps(content_dict),
@@ -153,6 +159,7 @@ class FileWatcher:
         self._on_turn = on_turn
         self._queue: asyncio.Queue[FileSystemEvent] = asyncio.Queue()
         self._parsers: dict[str, ClaudeCodeParser | CodexParser] = {}
+        self._parsers_restored: set[str] = set()
 
     async def start(self) -> None:
         """Start watching directories and process events forever."""
@@ -205,6 +212,7 @@ class FileWatcher:
         ]
         for p in stale:
             del self._parsers[p]
+            self._parsers_restored.discard(p)
         if stale:
             logger.debug("Pruned %d stale parsers from cache.", len(stale))
 
@@ -236,6 +244,14 @@ class FileWatcher:
 
         try:
             with open(file_path, "rb") as fh:
+                # Parser state is in memory, while the cursor is durable. After
+                # a restart, replay the consumed prefix without emitting turns
+                # so session metadata and any in-progress turn are restored.
+                if offset > 0 and str_path not in self._parsers_restored:
+                    prefix = fh.read(offset)
+                    for old_line in prefix.decode("utf-8", errors="replace").splitlines():
+                        parser.feed(old_line)
+                    self._parsers_restored.add(str_path)
                 fh.seek(offset)
                 new_bytes = fh.read()
         except OSError as exc:
@@ -290,8 +306,9 @@ class FileWatcher:
                     logger.warning("Dropping turn with empty project_id from %s", file_path)
                 else:
                     try:
-                        _persist_turn(self._db, turn)
                         current_offset = offset + bytes_processed
+                        source_key = f"{str_path}:{current_offset}"
+                        _persist_turn(self._db, turn, source_key)
                         _save_cursor(self._db, str_path, current_offset)
                         last_saved_offset = current_offset
                         await self._on_turn(turn)

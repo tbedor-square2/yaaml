@@ -2,6 +2,7 @@
 
 import asyncio
 import contextlib
+import json
 import logging
 import logging.handlers
 import os
@@ -12,6 +13,7 @@ from pathlib import Path
 from .config import Config
 from .consolidation import ConsolidationManager
 from .db import init_db
+from .embedding_jobs import process_due_embedding_jobs
 from .embeddings import EmbeddingStore
 from .memory import MemoryManager
 from .parsers import ParsedTurn
@@ -22,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 PID_FILE = Path("~/.yaaml/daemon.pid").expanduser()
 LOG_FILE = Path("~/.yaaml/yaaml.log").expanduser()
+SOCKET_FILE = Path("~/.yaaml/daemon.sock").expanduser()
 
 
 def setup_logging() -> None:
@@ -95,6 +98,16 @@ class YAAMLDaemon:
         recall_manager = RecallManager(db, store, config)
         consolidation_manager = ConsolidationManager(db, store, config)
 
+        async def retry_embeddings() -> None:
+            while True:
+                try:
+                    process_due_embedding_jobs(db, store)
+                    await memory_manager.process_due_jobs()
+                    await consolidation_manager.process_due_jobs()
+                except Exception as exc:
+                    logger.error("Background retry worker failed: %s", exc)
+                await asyncio.sleep(1)
+
         # Set up graceful shutdown on SIGINT / SIGTERM
         loop = asyncio.get_running_loop()
 
@@ -114,8 +127,33 @@ class YAAMLDaemon:
 
         watcher = FileWatcher(db, config, on_turn)
 
+        async def handle_signal(
+            reader: asyncio.StreamReader,
+            writer: asyncio.StreamWriter,
+        ) -> None:
+            try:
+                raw = await reader.read(1024 * 1024)
+                payload = json.loads(raw) if raw else {}
+                transcript_path = payload.get("transcript_path")
+                if transcript_path:
+                    await watcher.process_file(Path(str(transcript_path)))
+                writer.write(b"ok\n")
+                await writer.drain()
+            except Exception as exc:
+                logger.warning("Invalid Stop-hook signal: %s", exc)
+                writer.write(b"error\n")
+                await writer.drain()
+            finally:
+                writer.close()
+                await writer.wait_closed()
+
         # Process any backlogs before starting the live watcher
         await self._process_backlog(db, watcher, memory_manager)
+
+        with contextlib.suppress(FileNotFoundError):
+            SOCKET_FILE.unlink()
+        signal_server = await asyncio.start_unix_server(handle_signal, path=str(SOCKET_FILE))
+        embedding_retry_task = asyncio.create_task(retry_embeddings())
 
         # Start the consolidation dark-period timer initially
         self._reset_consolidation_timer(consolidation_manager)
@@ -124,6 +162,14 @@ class YAAMLDaemon:
             await watcher.start()
         except asyncio.CancelledError:
             logger.info("Watcher cancelled — daemon shutting down.")
+        finally:
+            signal_server.close()
+            await signal_server.wait_closed()
+            with contextlib.suppress(FileNotFoundError):
+                SOCKET_FILE.unlink()
+            embedding_retry_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await embedding_retry_task
 
     def _reset_consolidation_timer(self, consolidation_manager: ConsolidationManager) -> None:
         """Cancel existing timer and start a new dark-period countdown."""
@@ -151,7 +197,7 @@ class YAAMLDaemon:
         """Ingest new JSONL lines, then create memories for any pending turns.
 
         Two-phase approach:
-        1. File phase — process files with no cursor at all (brand new to daemon).
+        1. File phase — process files with unread bytes.
         2. Memory phase — for every project that has stored turns not yet in any
            memory (e.g. turns ingested by `yaaml init`), call create_memories_for_project.
         """
@@ -166,7 +212,7 @@ class YAAMLDaemon:
                     "SELECT last_byte_offset FROM file_cursors WHERE file_path = ?",
                     (str(jsonl),),
                 ).fetchone()
-                if row is None:
+                if row is None or jsonl.stat().st_size > int(row[0]):
                     paths.append(jsonl)
 
         if paths:

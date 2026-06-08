@@ -8,13 +8,16 @@ from collections import defaultdict
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
+from .background_jobs import complete_job, due_jobs, enqueue_job, fail_job
 from .config import Config
+from .embedding_jobs import enqueue_embedding, process_embedding_job
 from .parsers import ParsedTurn
 
 if TYPE_CHECKING:
     from .embeddings import EmbeddingStore
 
 logger = logging.getLogger(__name__)
+_MEMORY_JOB_TYPE = "memory_formulation"
 
 
 def _utcnow() -> str:
@@ -35,6 +38,7 @@ class MemoryManager:
         self._config = config
         # Per-project turn counters (reset after each memory creation batch)
         self._turn_counts: dict[str, int] = defaultdict(int)
+        self._running_jobs: set[str] = set()
 
     def get_projects_with_pending_turns(self) -> list[str]:
         """Return project IDs that have turns not yet incorporated into any memory."""
@@ -80,11 +84,45 @@ class MemoryManager:
         Returns:
             List of newly created memory IDs.
         """
+        job_id = f"memory:{project_id}"
+        enqueue_job(
+            self._db,
+            job_id,
+            _MEMORY_JOB_TYPE,
+            {"project_id": project_id},
+        )
+        self._db.commit()
+        return await self._process_memory_job(job_id, project_id)
+
+    async def process_due_jobs(self) -> int:
+        """Retry due formulation jobs and return the number attempted."""
+        jobs = due_jobs(self._db, _MEMORY_JOB_TYPE)
+        for job_id, payload in jobs:
+            project_id = payload.get("project_id")
+            if isinstance(project_id, str) and project_id:
+                await self._process_memory_job(job_id, project_id)
+            else:
+                complete_job(self._db, job_id)
+        return len(jobs)
+
+    async def _process_memory_job(self, job_id: str, project_id: str) -> list[str]:
+        """Run one durable formulation job."""
+        if job_id in self._running_jobs:
+            return []
+        self._running_jobs.add(job_id)
+        try:
+            return await self._run_memory_job(job_id, project_id)
+        finally:
+            self._running_jobs.discard(job_id)
+
+    async def _run_memory_job(self, job_id: str, project_id: str) -> list[str]:
+        """Execute a claimed formulation job."""
         from . import llm as llm_module
 
         turns, source_turn_ids = self._get_pending_turns(project_id)
         if not turns:
             logger.debug("No new turns for project %s, skipping memory creation.", project_id)
+            complete_job(self._db, job_id)
             return []
 
         logger.info("Creating memory for project %s from %d turns.", project_id, len(turns))
@@ -93,6 +131,7 @@ class MemoryManager:
             title, body = await llm_module.summarize_turns(turns, None, self._config)
         except Exception as exc:
             logger.error("LLM summarization failed for %s: %s", project_id, exc)
+            fail_job(self._db, job_id, exc)
             return []
 
         now = _utcnow()
@@ -117,16 +156,11 @@ class MemoryManager:
                 project_id,
             ),
         )
+        enqueue_embedding(self._db, memory_id)
+        self._db.execute("DELETE FROM background_jobs WHERE id = ?", (job_id,))
         self._db.commit()
 
-        try:
-            self._store.upsert(
-                memory_id,
-                f"{title}\n\n{body}",
-                {"project_id": project_id, "session_id": session_id or ""},
-            )
-        except Exception as exc:
-            logger.error("Failed to upsert embedding for memory %s: %s", memory_id, exc)
+        process_embedding_job(self._db, self._store, memory_id)
 
         logger.info("Created memory %s: %s", memory_id, title)
         return [memory_id]

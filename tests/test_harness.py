@@ -40,14 +40,14 @@ def test_codex_writer_creates_jsonl_with_session_meta(tmp_codex_dir, project_cwd
     assert writer.file_path.exists()  # SessionMeta written on init
 
     rows = _read_jsonl(writer.file_path)
-    assert rows[0]["type"] == "SessionMeta"
-    assert rows[0]["cwd"] == project_cwd
+    assert rows[0]["type"] == "session_meta"
+    assert rows[0]["payload"]["cwd"] == project_cwd
 
     lorem = LoremGenerator()
     generate_session(writer, n_turns=1, lorem=lorem)
 
     rows = _read_jsonl(writer.file_path)
-    assert rows[0]["type"] == "SessionMeta"
+    assert rows[0]["type"] == "session_meta"
     assert len(rows) > 1
 
 

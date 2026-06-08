@@ -189,7 +189,7 @@ def init() -> None:
 
 
 def _install_stop_hook() -> None:
-    """Add a yaaml recall Stop hook to ~/.claude/settings.json."""
+    """Add a YAAML flush signal Stop hook to ~/.claude/settings.json."""
     settings_path = Path("~/.claude/settings.json").expanduser()
     if settings_path.exists():
         try:
@@ -203,13 +203,13 @@ def _install_stop_hook() -> None:
     stop_hooks = hooks.setdefault("Stop", [])
 
     hook_entry = {
-        "type": "command",
-        "command": "yaaml recall --project $CLAUDE_PROJECT_DIR",
+        "matcher": "",
+        "hooks": [{"type": "command", "command": "yaaml signal"}],
     }
 
     # Check if already present
     for h in stop_hooks:
-        if isinstance(h, dict) and h.get("command", "").startswith("yaaml recall"):
+        if "yaaml signal" in json.dumps(h):
             console.print("[yellow]Stop hook already configured.[/yellow]")
             return
 
@@ -217,6 +217,28 @@ def _install_stop_hook() -> None:
     settings_path.parent.mkdir(parents=True, exist_ok=True)
     settings_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
     console.print(f"[green]✓[/green] Stop hook installed in {settings_path}")
+
+
+@app.command("signal", hidden=True)
+def signal_hook() -> None:
+    """Forward a Stop-hook payload to the running daemon."""
+    import socket
+    import sys
+
+    from .daemon import SOCKET_FILE
+
+    payload = sys.stdin.buffer.read()
+    if not payload:
+        payload = b"{}"
+    try:
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+            client.settimeout(1)
+            client.connect(str(SOCKET_FILE))
+            client.sendall(payload)
+            client.shutdown(socket.SHUT_WR)
+            client.recv(64)
+    except OSError as exc:
+        logger.debug("Could not signal YAAML daemon: %s", exc)
 
 
 def _install_service(system: str) -> None:
@@ -362,13 +384,19 @@ def recall(
         query_text = "\n".join(parts) if parts else project_id
 
     memories = recall_mgr.query(query_text, project_id)
-    recall_mgr.write_recall_file(memories, project_id, query_source=query or "cli")
-    recall_mgr.update_recall_state(project_id, [m["id"] for m in memories])
-
-    recall_file = Path(project_id) / ".yaaml" / "recall.md"
-    console.print(
-        f"[green]Recall complete.[/green] {len(memories)} memories written to {recall_file}"
-    )
+    recall_file = recall_mgr.recall_file_path(project_id)
+    if memories:
+        memory_ids = [m["id"] for m in memories]
+        if recall_mgr.recall_changed(project_id, memory_ids):
+            recall_mgr.write_recall_file(memories, project_id, query_source=query or "cli")
+            recall_mgr.update_recall_state(project_id, memory_ids)
+            console.print(
+                f"[green]Recall complete.[/green] {len(memories)} memories written to {recall_file}"
+            )
+        else:
+            console.print(f"[green]Recall unchanged.[/green] Preserved {recall_file}")
+    else:
+        console.print(f"[yellow]No matching memories.[/yellow] Preserved {recall_file}")
 
 
 # ---------------------------------------------------------------------------
@@ -483,6 +511,97 @@ def memories_list(
 
 
 # ---------------------------------------------------------------------------
+# yaaml transcript
+# ---------------------------------------------------------------------------
+
+
+@app.command()
+def transcript(
+    session: str | None = typer.Option(None, "--session", help="Session ID."),
+    since: str | None = typer.Option(None, "--since", help="ISO timestamp or date."),
+    project: Path | None = typer.Option(None, "--project", "-p", help="Project directory."),
+) -> None:
+    """Print stored transcript turns as Markdown."""
+    from .config import load_config
+    from .db import get_db
+    from .parsers import normalize_project_id
+
+    project_dir = project or Path.cwd()
+    config = load_config(project_dir)
+    db = get_db(config.db_path)
+
+    params: list[str] = []
+    where = []
+
+    if session:
+        where.append("t.session_id = ?")
+        params.append(session)
+    else:
+        project_id = normalize_project_id(str(project_dir))
+        if project is None:
+            latest = db.execute(
+                """
+                SELECT id FROM sessions
+                WHERE project_id = ?
+                ORDER BY last_seen_at DESC
+                LIMIT 1
+                """,
+                (project_id,),
+            ).fetchone()
+            if latest is not None:
+                where.append("t.session_id = ?")
+                params.append(str(latest[0]))
+            else:
+                where.append("s.project_id = ?")
+                params.append(project_id)
+        else:
+            where.append("s.project_id = ?")
+            params.append(project_id)
+
+    if since:
+        where.append("t.observed_at >= ?")
+        params.append(since)
+
+    clause = " AND ".join(where) if where else "1 = 1"
+    rows = db.execute(
+        f"""
+        SELECT t.session_id, t.role, t.content_json, t.observed_at
+        FROM turns t
+        JOIN sessions s ON s.id = t.session_id
+        WHERE {clause}
+        ORDER BY t.observed_at, t.rowid
+        """,
+        params,
+    ).fetchall()
+
+    if not rows:
+        console.print("No transcript turns found.")
+        return
+
+    lines = ["# YAAML Transcript", ""]
+    current_session = ""
+    for row in rows:
+        session_id, role, content_json, observed_at = row
+        if session_id != current_session:
+            current_session = session_id
+            lines.extend([f"## Session `{session_id}`", ""])
+        try:
+            content = json.loads(content_json)
+        except json.JSONDecodeError:
+            content = content_json
+        lines.append(f"### {str(role).title()} · {observed_at}")
+        lines.append("")
+        if role == "tool":
+            lines.extend(["```json", json.dumps(content, indent=2), "```", ""])
+        elif isinstance(content, dict):
+            lines.extend([str(content.get("text", content)), ""])
+        else:
+            lines.extend([str(content), ""])
+
+    console.print("\n".join(lines), markup=False)
+
+
+# ---------------------------------------------------------------------------
 # yaaml path
 # ---------------------------------------------------------------------------
 
@@ -492,11 +611,14 @@ def path(
     project: Path | None = typer.Option(None, "--project", "-p", help="Project directory."),
 ) -> None:
     """Print the recall file path for the current (or specified) project."""
+    from .config import load_config
     from .parsers import normalize_project_id
 
     project_dir = project or Path.cwd()
     project_id = normalize_project_id(str(project_dir))
-    recall_file = Path(project_id) / ".yaaml" / "recall.md"
+    config = load_config(project_dir)
+    configured = config.recall_file_path
+    recall_file = configured if configured.is_absolute() else Path(project_id) / configured
     typer.echo(str(recall_file))
 
 

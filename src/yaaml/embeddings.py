@@ -10,7 +10,7 @@ from chromadb.config import Settings
 
 logger = logging.getLogger(__name__)
 
-COLLECTION_NAME = "memories_v1"
+COLLECTION_NAME = "memories_v2"
 
 
 def _make_embedding_function(embedding_model: str) -> Any:
@@ -58,8 +58,32 @@ class EmbeddingStore:
         self._collection = self._client.get_or_create_collection(
             name=COLLECTION_NAME,
             embedding_function=self._ef,
-            metadata={"hnsw:space": "cosine"},
+            metadata={"hnsw:space": "l2"},
         )
+        self._migrate_v1_collection()
+
+    def _migrate_v1_collection(self) -> None:
+        """Re-embed the previous cosine collection into the v2 L2 collection."""
+        try:
+            old = self._client.get_collection("memories_v1")
+        except Exception:
+            return
+        if old.count() == 0:
+            self._client.delete_collection("memories_v1")
+            return
+
+        records = old.get(include=["documents", "metadatas"])
+        ids = list(records.get("ids") or [])
+        documents = list(records.get("documents") or [])
+        metadatas = list(records.get("metadatas") or [])
+        if ids and len(ids) == len(documents):
+            self._collection.upsert(
+                ids=ids,
+                documents=documents,
+                metadatas=metadatas or None,
+            )
+            self._client.delete_collection("memories_v1")
+            logger.info("Migrated %d embeddings from memories_v1 to memories_v2.", len(ids))
 
     def upsert(self, memory_id: str, text: str, metadata: dict[str, Any]) -> None:
         """Insert or update a memory embedding.
@@ -93,7 +117,8 @@ class EmbeddingStore:
         try:
             self._collection.delete(ids=[memory_id])
         except Exception as exc:
-            logger.warning("EmbeddingStore.delete failed for %s: %s", memory_id, exc)
+            logger.error("EmbeddingStore.delete failed for %s: %s", memory_id, exc)
+            raise
 
     def search(
         self,

@@ -141,6 +141,22 @@ impl Database {
         Ok(())
     }
 
+    pub fn session_by_transcript_path(
+        &self,
+        transcript_path: &str,
+    ) -> Result<Option<SessionRecord>, DatabaseError> {
+        self.conn
+            .query_row(
+                "SELECT id, agent_type, project_id, transcript_file_path, started_at, last_seen_at
+                 FROM sessions
+                 WHERE transcript_file_path = ?1",
+                params![transcript_path],
+                read_session_record,
+            )
+            .optional()
+            .map_err(DatabaseError::from)
+    }
+
     pub fn insert_turn(&self, turn: &TurnRecord) -> Result<bool, DatabaseError> {
         let inserted = self.conn.execute(
             "INSERT OR IGNORE INTO turns (
@@ -158,6 +174,39 @@ impl Database {
             ],
         )?;
         Ok(inserted > 0)
+    }
+
+    pub fn turns_for_session(
+        &self,
+        session_id: &str,
+        limit: usize,
+    ) -> Result<Vec<TurnRecord>, DatabaseError> {
+        let mut stmt = self.conn.prepare(
+            "SELECT session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text
+             FROM turns
+             WHERE session_id = ?1
+             ORDER BY ordinal DESC
+             LIMIT ?2",
+        )?;
+        let rows = stmt.query_map(
+            params![session_id, u64_to_i64(limit as u64)],
+            read_turn_record,
+        )?;
+        let mut turns = Vec::new();
+        for row in rows {
+            turns.push(row?);
+        }
+        turns.reverse();
+        Ok(turns)
+    }
+
+    pub fn completed_turn_count_for_session(&self, session_id: &str) -> Result<u64, DatabaseError> {
+        let count: i64 = self.conn.query_row(
+            "SELECT COUNT(*) FROM turns WHERE session_id = ?1 AND status = 'completed'",
+            params![session_id],
+            |row| row.get(0),
+        )?;
+        Ok(i64_to_u64(count))
     }
 
     pub fn insert_memory(&self, memory: &MemoryRecord) -> Result<i64, DatabaseError> {
@@ -346,6 +395,41 @@ impl Database {
             .map_err(DatabaseError::from)
     }
 
+    pub fn count_tasks_by_status(
+        &self,
+        kind: &str,
+        status: TaskStatus,
+    ) -> Result<u64, DatabaseError> {
+        let count: i64 = self.conn.query_row(
+            "SELECT COUNT(*) FROM tasks WHERE kind = ?1 AND status = ?2",
+            params![kind, status.as_str()],
+            |row| row.get(0),
+        )?;
+        Ok(i64_to_u64(count))
+    }
+
+    pub fn mark_task_running(&self, task_id: i64, updated_at: &str) -> Result<(), DatabaseError> {
+        self.conn.execute(
+            "UPDATE tasks
+             SET status = 'running',
+                 updated_at = ?1
+             WHERE id = ?2",
+            params![updated_at, task_id],
+        )?;
+        Ok(())
+    }
+
+    pub fn requeue_running_tasks(&self, updated_at: &str) -> Result<u64, DatabaseError> {
+        let updated = self.conn.execute(
+            "UPDATE tasks
+             SET status = 'queued',
+                 updated_at = ?1
+             WHERE status = 'running'",
+            params![updated_at],
+        )?;
+        Ok(updated as u64)
+    }
+
     pub fn park_task(
         &self,
         task_id: i64,
@@ -466,6 +550,38 @@ fn read_task_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<TaskRecord> {
         last_error: row.get(8)?,
         created_at: row.get(9)?,
         updated_at: row.get(10)?,
+    })
+}
+
+fn read_session_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<SessionRecord> {
+    let agent_type: String = row.get(1)?;
+    Ok(SessionRecord {
+        id: row.get(0)?,
+        agent_type: match agent_type.as_str() {
+            "claude-code" => yaaml_core::AgentType::ClaudeCode,
+            _ => yaaml_core::AgentType::Codex,
+        },
+        project_id: row.get(2)?,
+        transcript_file_path: row.get(3)?,
+        started_at: row.get(4)?,
+        last_seen_at: row.get(5)?,
+    })
+}
+
+fn read_turn_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<TurnRecord> {
+    let status: String = row.get(6)?;
+    Ok(TurnRecord {
+        session_id: row.get(0)?,
+        turn_id: row.get(1)?,
+        ordinal: i64_to_u64(row.get(2)?),
+        byte_start: i64_to_u64(row.get(3)?),
+        byte_end: i64_to_u64(row.get(4)?),
+        observed_at: row.get(5)?,
+        status: match status.as_str() {
+            "aborted" => yaaml_core::TurnStatus::Aborted,
+            _ => yaaml_core::TurnStatus::Completed,
+        },
+        display_text: row.get(7)?,
     })
 }
 

@@ -42,6 +42,14 @@ pub fn parse_codex_file_from_offset(
     path: impl AsRef<Path>,
     start_offset: u64,
 ) -> Result<ParsedCodexChunk, CodexParseError> {
+    parse_codex_file_from_offset_with_session(path, start_offset, None)
+}
+
+pub fn parse_codex_file_from_offset_with_session(
+    path: impl AsRef<Path>,
+    start_offset: u64,
+    fallback_session: Option<SessionRecord>,
+) -> Result<ParsedCodexChunk, CodexParseError> {
     let path = path.as_ref();
     let bytes = fs::read(path).map_err(|source| CodexParseError::Read {
         path: path.display().to_string(),
@@ -50,7 +58,7 @@ pub fn parse_codex_file_from_offset(
     let start = usize::try_from(start_offset)
         .unwrap_or(usize::MAX)
         .min(bytes.len());
-    parse_codex_jsonl(path, &bytes[start..], start_offset)
+    parse_codex_jsonl_with_session(path, &bytes[start..], start_offset, fallback_session)
 }
 
 pub fn parse_codex_jsonl(
@@ -58,7 +66,16 @@ pub fn parse_codex_jsonl(
     bytes: &[u8],
     start_offset: u64,
 ) -> Result<ParsedCodexChunk, CodexParseError> {
-    let mut session: Option<SessionRecord> = None;
+    parse_codex_jsonl_with_session(transcript_path, bytes, start_offset, None)
+}
+
+fn parse_codex_jsonl_with_session(
+    transcript_path: &Path,
+    bytes: &[u8],
+    start_offset: u64,
+    fallback_session: Option<SessionRecord>,
+) -> Result<ParsedCodexChunk, CodexParseError> {
+    let mut session: Option<SessionRecord> = fallback_session;
     let mut current: Option<CurrentTurn> = None;
     let mut turns = Vec::new();
     let mut next_offset = start_offset;

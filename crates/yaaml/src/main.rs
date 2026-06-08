@@ -1,7 +1,7 @@
-use std::env;
 use std::path::PathBuf;
 use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::{env, fs};
 
 use anyhow::{bail, Context};
 use clap::{Parser, Subcommand};
@@ -38,7 +38,7 @@ enum Command {
     Status(StatusArgs),
     /// Resolve the current project's daemon-owned recall file path.
     Path,
-    /// Write recalled memories for a manual query.
+    /// Print existing recall, or update it for a manual query.
     Recall(RecallArgs),
 }
 
@@ -104,9 +104,9 @@ struct StatusArgs {
 
 #[derive(Debug, Parser)]
 struct RecallArgs {
-    /// Query text to embed and search against stored memories.
+    /// Query text to embed and search against stored memories. Omit to print existing recall.
     #[arg(long)]
-    query: String,
+    query: Option<String>,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -365,6 +365,22 @@ fn path() -> anyhow::Result<()> {
 fn recall(args: RecallArgs) -> anyhow::Result<()> {
     let cwd = env::current_dir().context("failed to determine current directory")?;
     let config = Config::load_for_cwd(&cwd).context("failed to load config")?;
+    let project_id_path = yaaml_core::paths::normalize_project_id(&cwd);
+    let recall_dir = config
+        .recall_dir()
+        .context("failed to resolve recall_dir")?;
+    let recall_path = recall_file_path(&recall_dir, &project_id_path);
+    let Some(query) = args.query else {
+        if recall_path.exists() {
+            print!(
+                "{}",
+                fs::read_to_string(&recall_path).context("failed to read recall file")?
+            );
+        } else {
+            println!("no recall file at {}", recall_path.display());
+        }
+        return Ok(());
+    };
     if config.embedding_provider != "openai" {
         bail!(
             "unsupported embedding_provider {}; only openai is implemented",
@@ -381,7 +397,7 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
         ReqwestTransport::default(),
     );
     let query_embedding = embedding_client
-        .embed(&args.query)
+        .embed(&query)
         .context("failed to embed recall query")?;
     let now = unix_timestamp();
     let index = SqliteExactVectorIndex::new(&db, config.embedding_model.clone(), now.clone());
@@ -410,7 +426,6 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
                 })
         })
         .collect::<Vec<_>>();
-    let project_id_path = yaaml_core::paths::normalize_project_id(&cwd);
     let project_id = project_id_path.display().to_string();
     let candidates = if config.recall_project_tiebreaker {
         apply_project_bonus(candidates, &project_id, config.recall_project_score_bonus)
@@ -446,10 +461,6 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
         })
         .collect::<Vec<_>>();
     let rendered = render_recall_markdown(&now, "manual query", &project_id, &recall_memories);
-    let recall_dir = config
-        .recall_dir()
-        .context("failed to resolve recall_dir")?;
-    let recall_path = recall_file_path(&recall_dir, &project_id_path);
     let write = write_recall_file(&recall_path, &rendered, &selected_ids)
         .context("failed to write recall file")?;
 

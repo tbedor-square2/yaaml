@@ -85,6 +85,22 @@ embedding_base_url = "{}"
     assert!(markdown.contains("## Recall files"));
     assert!(markdown.contains("daemon-owned recall file"));
     assert!(markdown.contains(&format!("memory_ids: {memory_id}")));
+
+    let output = Command::new(binary)
+        .arg("recall")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("## Recall files"));
+    assert!(stdout.contains("daemon-owned recall file"));
 }
 
 struct FakeServer {

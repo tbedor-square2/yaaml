@@ -12,9 +12,9 @@ description: Invoke directly at the start of non-trivial coding tasks, debugging
 
 Use this skill directly and proactively when working in a repo, debugging, reviewing code, implementing changes, answering project-specific questions, or when prior user/project context could affect the answer.
 
-Run `yaaml path` from the current working directory to resolve the daemon-owned recall file for this project. If the file exists, read it and use the memories as contextual hints before proceeding. Do not wait for the user to ask for memory explicitly when the task is non-trivial or project-specific.
+Run `yaaml recall` from the current working directory and read its output as contextual hints before proceeding. Do not wait for the user to ask for memory explicitly when the task is non-trivial or project-specific.
 
-Do not assume a project-local `.yaaml/recall.md` path. The skill is the access path: resolve the current project's recall file with `yaaml path`, then read that file.
+Do not assume a project-local `.yaaml/recall.md` path. `yaaml recall` reads the daemon-owned recall file for the current project. Use `yaaml recall --query "<query>"` only when you need to manually recompute recall for a specific query.
 "#;
 
 const CLAUDE_SKILL: &str = CODEX_SKILL;

@@ -102,12 +102,20 @@ pub fn ingest_codex_file(db: &Database, transcript_path: &Path) -> anyhow::Resul
     let parsed =
         parse_codex_file_from_offset_with_session(transcript_path, start_offset, fallback_session)
             .context("failed to parse Codex transcript")?;
+    let ordinal_base = if start_offset > 0 {
+        db.next_turn_ordinal_for_session(&parsed.session.id)
+            .context("failed to read next Codex turn ordinal")?
+    } else {
+        0
+    };
     db.upsert_session(&parsed.session)
         .context("failed to persist Codex session")?;
     let mut inserted_turns = 0;
     for turn in &parsed.turns {
+        let mut turn = turn.clone();
+        turn.ordinal += ordinal_base;
         if db
-            .insert_turn(turn)
+            .insert_turn(&turn)
             .context("failed to persist Codex turn")?
         {
             inserted_turns += 1;
@@ -374,7 +382,13 @@ fn run_memory_formulation_task(
 }
 
 fn formulation_system_prompt() -> &'static str {
-    "Create concise durable memories from coding-agent transcript turns. Return only JSON shaped as {\"memories\":[{\"title\":\"...\",\"body\":\"...\",\"scope\":\"project\"|\"global\",\"project_descriptor\":\"...\"}]}. Prefer small, granular memories. Use global scope only for durable cross-project user preferences or agent workflow patterns."
+    concat!(
+        "Create concise durable memories from coding-agent transcript turns. ",
+        "Return only JSON shaped as {\"memories\":[{\"title\":\"...\",\"body\":\"...\",\"scope\":\"project\"|\"global\",\"project_descriptor\":\"...\"}]}. ",
+        "Prefer small, granular memories. ",
+        "Always capture repeated user corrections, preferences, and process guidance as their own concise memories, including coding style preferences such as functional vs imperative style. ",
+        "Use project scope when the preference is tied to the current project or language; use global scope only for durable cross-project user preferences or agent workflow patterns."
+    )
 }
 
 fn formulation_prompt(
@@ -937,5 +951,14 @@ mod tests {
 
         assert!(prompt.chars().count() <= 360);
         assert!(prompt.contains("[truncated]"));
+    }
+
+    #[test]
+    fn formulation_system_prompt_mentions_user_preferences() {
+        let prompt = formulation_system_prompt();
+
+        assert!(prompt.contains("repeated user corrections"));
+        assert!(prompt.contains("coding style preferences"));
+        assert!(prompt.contains("functional vs imperative"));
     }
 }

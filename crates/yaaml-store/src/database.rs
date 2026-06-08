@@ -346,6 +346,19 @@ impl Database {
         Ok(i64_to_u64(count))
     }
 
+    pub fn next_turn_ordinal_for_session(&self, session_id: &str) -> Result<u64, DatabaseError> {
+        let max_ordinal: Option<i64> = self
+            .conn
+            .query_row(
+                "SELECT MAX(ordinal) FROM turns WHERE session_id = ?1",
+                params![session_id],
+                |row| row.get(0),
+            )
+            .optional()?
+            .flatten();
+        Ok(max_ordinal.map(i64_to_u64).unwrap_or(0) + u64::from(max_ordinal.is_some()))
+    }
+
     pub fn task_payload_exists(
         &self,
         kind: &str,

@@ -71,12 +71,18 @@ pub fn uninstall(paths: &ServicePaths) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub fn start() -> anyhow::Result<()> {
+pub fn start(paths: &ServicePaths) -> anyhow::Result<()> {
     if cfg!(target_os = "macos") {
+        Command::new("launchctl")
+            .arg("bootstrap")
+            .arg(launchd_domain_target()?)
+            .arg(paths.launch_agent_path())
+            .status()
+            .context("failed to run launchctl bootstrap")?;
         Command::new("launchctl")
             .arg("kickstart")
             .arg("-k")
-            .arg("gui/$UID/com.yaaml.daemon")
+            .arg(launchd_service_target()?)
             .status()
             .context("failed to run launchctl kickstart")?;
     } else {
@@ -94,7 +100,7 @@ pub fn stop() -> anyhow::Result<()> {
     if cfg!(target_os = "macos") {
         Command::new("launchctl")
             .arg("bootout")
-            .arg("gui/$UID/com.yaaml.daemon")
+            .arg(launchd_service_target()?)
             .status()
             .context("failed to run launchctl bootout")?;
     } else {
@@ -112,7 +118,7 @@ pub fn status() -> anyhow::Result<()> {
     if cfg!(target_os = "macos") {
         Command::new("launchctl")
             .arg("print")
-            .arg("gui/$UID/com.yaaml.daemon")
+            .arg(launchd_service_target()?)
             .status()
             .context("failed to run launchctl print")?;
     } else {
@@ -124,6 +130,32 @@ pub fn status() -> anyhow::Result<()> {
             .context("failed to run systemctl status")?;
     }
     Ok(())
+}
+
+fn launchd_service_target() -> anyhow::Result<String> {
+    let output = Command::new("id")
+        .arg("-u")
+        .output()
+        .context("failed to resolve current uid")?;
+    let uid = String::from_utf8(output.stdout).context("id -u output was not UTF-8")?;
+    Ok(launchd_service_target_for_uid(uid.trim()))
+}
+
+fn launchd_domain_target() -> anyhow::Result<String> {
+    let output = Command::new("id")
+        .arg("-u")
+        .output()
+        .context("failed to resolve current uid")?;
+    let uid = String::from_utf8(output.stdout).context("id -u output was not UTF-8")?;
+    Ok(launchd_domain_target_for_uid(uid.trim()))
+}
+
+fn launchd_domain_target_for_uid(uid: &str) -> String {
+    format!("gui/{uid}")
+}
+
+fn launchd_service_target_for_uid(uid: &str) -> String {
+    format!("gui/{uid}/com.yaaml.daemon")
 }
 
 pub fn render_launch_agent(paths: &ServicePaths) -> String {
@@ -203,6 +235,15 @@ mod tests {
         let unit = render_systemd_user_unit(&paths);
 
         assert!(unit.contains("ExecStart=/bin/yaaml daemon --config /home/test/.yaaml/config.toml"));
+    }
+
+    #[test]
+    fn launchd_service_target_uses_concrete_uid() {
+        assert_eq!(
+            launchd_service_target_for_uid("501"),
+            "gui/501/com.yaaml.daemon"
+        );
+        assert_eq!(launchd_domain_target_for_uid("501"), "gui/501");
     }
 
     #[test]

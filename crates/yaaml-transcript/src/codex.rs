@@ -106,9 +106,15 @@ fn parse_codex_jsonl_with_session(
 
         match top_type {
             Some("session_meta") => {
-                session = Some(parse_session(transcript_path, &value));
+                if session.is_none() {
+                    session = Some(parse_session(transcript_path, &value));
+                }
+                if current.is_none() {
+                    next_offset = line_end;
+                }
             }
             Some("event_msg") => {
+                let before_turn_count = turns.len();
                 handle_event_msg(
                     &value,
                     line_start,
@@ -118,6 +124,9 @@ fn parse_codex_jsonl_with_session(
                     &mut turns,
                     session.as_ref().map(|s| s.id.as_str()),
                 );
+                if turns.len() > before_turn_count || current.is_none() {
+                    next_offset = line_end;
+                }
             }
             Some("turn_context") => {
                 if current.is_none() {
@@ -132,6 +141,8 @@ fn parse_codex_jsonl_with_session(
                 if let Some(turn) = current.as_mut() {
                     turn.byte_end = line_end;
                     turn.observed_at = timestamp.or_else(|| turn.observed_at.clone());
+                } else {
+                    next_offset = line_end;
                 }
             }
             Some("response_item") => {
@@ -139,17 +150,19 @@ fn parse_codex_jsonl_with_session(
                     turn.byte_end = line_end;
                     turn.observed_at = timestamp.or_else(|| turn.observed_at.clone());
                     extract_response_item_text(&value, &mut turn.display_parts);
+                } else {
+                    next_offset = line_end;
                 }
             }
             _ => {
                 if let Some(turn) = current.as_mut() {
                     turn.byte_end = line_end;
                     turn.observed_at = timestamp.or_else(|| turn.observed_at.clone());
+                } else {
+                    next_offset = line_end;
                 }
             }
         }
-
-        next_offset = line_end;
     }
 
     let session = session.ok_or(CodexParseError::MissingSession)?;
@@ -438,6 +451,51 @@ mod tests {
 
         assert_eq!(parsed.turns.len(), 0);
         assert!(parsed.next_offset < input.len() as u64);
+    }
+
+    #[test]
+    fn does_not_advance_cursor_past_incomplete_turn() {
+        let session = concat!(
+            r#"{"timestamp":"2026-06-08T00:00:00Z","type":"session_meta","payload":{"id":"session-1","cwd":"/tmp/yaaml"}}"#,
+            "\n"
+        );
+        let input = format!(
+            "{}{}{}",
+            session,
+            concat!(
+                r#"{"timestamp":"2026-06-08T00:00:01Z","type":"event_msg","payload":{"type":"task_started","turn_id":"turn-1"}}"#,
+                "\n"
+            ),
+            concat!(
+                r#"{"timestamp":"2026-06-08T00:00:02Z","type":"event_msg","payload":{"type":"user_message","message":"remember this"}}"#,
+                "\n"
+            )
+        );
+
+        let parsed =
+            parse_codex_jsonl(Path::new("/tmp/session.jsonl"), input.as_bytes(), 0).unwrap();
+
+        assert_eq!(parsed.turns.len(), 0);
+        assert_eq!(parsed.next_offset, session.len() as u64);
+    }
+
+    #[test]
+    fn keeps_first_session_meta_as_transcript_identity() {
+        let input = concat!(
+            r#"{"timestamp":"2026-06-08T00:00:00Z","type":"session_meta","payload":{"id":"child-session","cwd":"/tmp/yaaml-child"}}"#,
+            "\n",
+            r#"{"timestamp":"2026-06-08T00:00:01Z","type":"session_meta","payload":{"id":"parent-session","cwd":"/tmp/yaaml-parent"}}"#,
+            "\n"
+        );
+
+        let parsed = parse_codex_jsonl(Path::new("/tmp/child.jsonl"), input.as_bytes(), 0).unwrap();
+
+        assert_eq!(parsed.session.id, "child-session");
+        assert_eq!(parsed.session.project_id, "/tmp/yaaml-child");
+        assert_eq!(
+            parsed.session.transcript_file_path,
+            "/tmp/child.jsonl".to_string()
+        );
     }
 
     #[test]

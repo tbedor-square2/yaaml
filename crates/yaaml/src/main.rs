@@ -234,33 +234,36 @@ fn ingest(args: IngestArgs) -> anyhow::Result<()> {
             .join(".codex")
             .join("sessions"),
     };
-    let report = yaaml::daemon::process_codex_backlog(&db, &config, &codex_root)?;
+    let backlog_report = yaaml::daemon::process_codex_backlog(&db, &config, &codex_root)?;
+    let change_report = yaaml::daemon::process_codex_changes(&db, &config, &codex_root)?;
     let completed_tasks = yaaml::daemon::run_queued_tasks(
         &db,
         &config,
         config.backlog_max_concurrent_remote_jobs.max(1),
     )?;
+    let processed_files = backlog_report.processed_files + change_report.changed_files;
+    let processed_turns = backlog_report.processed_turns + change_report.processed_turns;
+    let queued_memory_jobs = backlog_report.queued_memory_jobs + change_report.queued_memory_jobs;
+    let failures = backlog_report.failures + change_report.failures;
 
     if args.json {
         println!(
             "{}",
             serde_json::to_string_pretty(&serde_json::json!({
-                "discovered_files": report.discovered_files,
-                "processed_files": report.processed_files,
-                "processed_turns": report.processed_turns,
-                "queued_memory_jobs": report.queued_memory_jobs,
+                "discovered_files": backlog_report.discovered_files,
+                "scanned_files": change_report.scanned_files,
+                "changed_files": change_report.changed_files,
+                "processed_files": processed_files,
+                "processed_turns": processed_turns,
+                "queued_memory_jobs": queued_memory_jobs,
                 "completed_tasks": completed_tasks,
-                "failures": report.failures,
+                "failures": failures,
             }))?
         );
     } else {
         println!(
             "ingested {} files, {} turns, queued {} memory jobs, completed {} tasks, {} failures",
-            report.processed_files,
-            report.processed_turns,
-            report.queued_memory_jobs,
-            completed_tasks,
-            report.failures
+            processed_files, processed_turns, queued_memory_jobs, completed_tasks, failures
         );
     }
     Ok(())
@@ -287,7 +290,7 @@ fn service(args: ServiceArgs) -> anyhow::Result<()> {
             println!("installed service: {}", report.service_file.display());
         }
         ServiceCommand::Uninstall => yaaml::service::uninstall(&paths)?,
-        ServiceCommand::Start => yaaml::service::start()?,
+        ServiceCommand::Start => yaaml::service::start(&paths)?,
         ServiceCommand::Stop => yaaml::service::stop()?,
         ServiceCommand::Status => yaaml::service::status()?,
     }

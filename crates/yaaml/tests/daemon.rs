@@ -102,6 +102,118 @@ fn codex_change_processing_ingests_appended_cursored_file() {
 }
 
 #[test]
+fn codex_cursor_waits_for_incomplete_turn_before_advancing() {
+    let tmp = TempDir::new().unwrap();
+    let transcript = tmp.path().join("session.jsonl");
+    let session = session_meta();
+    fs::write(
+        &transcript,
+        format!(
+            "{}{}{}",
+            session,
+            r#"{"timestamp":"2026-06-08T00:00:01Z","type":"event_msg","payload":{"type":"task_started","turn_id":"turn-1"}}"#,
+            "\n"
+        ),
+    )
+    .unwrap();
+    append(
+        &transcript,
+        concat!(
+            r#"{"timestamp":"2026-06-08T00:00:02Z","type":"event_msg","payload":{"type":"user_message","message":"prefer functional style"}}"#,
+            "\n"
+        ),
+    );
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+
+    let first = ingest_codex_file(&db, &transcript).unwrap();
+    assert_eq!(first.inserted_turns, 0);
+    assert_eq!(first.next_offset, session.len() as u64);
+
+    append(
+        &transcript,
+        concat!(
+            r#"{"timestamp":"2026-06-08T00:00:03Z","type":"event_msg","payload":{"type":"task_complete","turn_id":"turn-1"}}"#,
+            "\n"
+        ),
+    );
+    let second = ingest_codex_file(&db, &transcript).unwrap();
+
+    assert_eq!(second.inserted_turns, 1);
+    let turns = db
+        .completed_turns_for_session_range("session-1", 0, u64::MAX)
+        .unwrap();
+    assert_eq!(turns.len(), 1);
+    assert!(turns[0]
+        .display_text
+        .as_ref()
+        .unwrap()
+        .contains("prefer functional style"));
+}
+
+#[test]
+fn incremental_codex_ingest_assigns_continuing_ordinals() {
+    let tmp = TempDir::new().unwrap();
+    let transcript = tmp.path().join("session.jsonl");
+    fs::write(
+        &transcript,
+        format!("{}{}", session_meta(), completed_turn(0)),
+    )
+    .unwrap();
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+    ingest_codex_file(&db, &transcript).unwrap();
+    append(&transcript, &completed_turn(1));
+
+    let report = ingest_codex_file(&db, &transcript).unwrap();
+
+    assert_eq!(report.inserted_turns, 1);
+    let turns = db
+        .completed_turns_for_session_range("session-1", 0, u64::MAX)
+        .unwrap();
+    assert_eq!(turns.len(), 2);
+    assert_eq!(turns[0].ordinal, 0);
+    assert_eq!(turns[1].ordinal, 1);
+}
+
+#[test]
+fn forked_codex_transcript_does_not_repoint_parent_session_path() {
+    let tmp = TempDir::new().unwrap();
+    let parent = tmp.path().join("parent.jsonl");
+    let child = tmp.path().join("child.jsonl");
+    fs::write(&parent, session_meta_with("parent-session", "/tmp/parent")).unwrap();
+    fs::write(
+        &child,
+        format!(
+            "{}{}",
+            session_meta_with("child-session", "/tmp/child"),
+            session_meta_with("parent-session", "/tmp/parent")
+        ),
+    )
+    .unwrap();
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+
+    ingest_codex_file(&db, &parent).unwrap();
+    ingest_codex_file(&db, &child).unwrap();
+
+    assert_eq!(
+        db.session_by_id("parent-session")
+            .unwrap()
+            .unwrap()
+            .transcript_file_path,
+        parent.display().to_string()
+    );
+    assert_eq!(
+        db.session_by_id("child-session")
+            .unwrap()
+            .unwrap()
+            .transcript_file_path,
+        child.display().to_string()
+    );
+}
+
+#[test]
 fn completing_enough_turns_queues_memory_creation() {
     let tmp = TempDir::new().unwrap();
     let transcript = tmp.path().join("session.jsonl");
@@ -413,6 +525,12 @@ fn session_meta() -> String {
     r#"{"timestamp":"2026-06-08T00:00:00Z","type":"session_meta","payload":{"id":"session-1","timestamp":"2026-06-08T00:00:00Z","cwd":"/tmp/yaaml"}}"#
         .to_string()
         + "\n"
+}
+
+fn session_meta_with(id: &str, cwd: &str) -> String {
+    format!(
+        r#"{{"timestamp":"2026-06-08T00:00:00Z","type":"session_meta","payload":{{"id":"{id}","timestamp":"2026-06-08T00:00:00Z","cwd":"{cwd}"}}}}"#
+    ) + "\n"
 }
 
 fn completed_turn(ordinal: u64) -> String {

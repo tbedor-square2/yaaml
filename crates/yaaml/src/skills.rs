@@ -5,14 +5,16 @@ use anyhow::Context;
 
 const CODEX_SKILL: &str = r#"---
 name: yaaml
-description: Use when project or user memory may help the current coding task; resolves and reads YAAML's daemon-owned recall file for the current project.
+description: Invoke directly at the start of non-trivial coding tasks, debugging, reviews, repo questions, or when prior user/project context could help; reads YAAML's daemon-owned recall file for the current project.
 ---
 
 # YAAML Recall
 
-Use this skill when project memory could help with the current task.
+Use this skill directly and proactively when working in a repo, debugging, reviewing code, implementing changes, answering project-specific questions, or when prior user/project context could affect the answer.
 
-Run `yaaml path` from the current working directory to resolve the daemon-owned recall file for this project. If the file exists, read it and use the memories as contextual hints. Do not assume a project-local `.yaaml/recall.md` path.
+Run `yaaml path` from the current working directory to resolve the daemon-owned recall file for this project. If the file exists, read it and use the memories as contextual hints before proceeding. Do not wait for the user to ask for memory explicitly when the task is non-trivial or project-specific.
+
+Do not assume a project-local `.yaaml/recall.md` path. The skill is the access path: resolve the current project's recall file with `yaaml path`, then read that file.
 "#;
 
 const CLAUDE_SKILL: &str = CODEX_SKILL;

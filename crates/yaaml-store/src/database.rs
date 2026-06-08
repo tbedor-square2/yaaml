@@ -170,6 +170,29 @@ impl Database {
             .map_err(DatabaseError::from)
     }
 
+    pub fn sessions_with_completed_turn_counts(
+        &self,
+    ) -> Result<Vec<(SessionRecord, u64)>, DatabaseError> {
+        let mut stmt = self.conn.prepare(
+            "SELECT s.id, s.agent_type, s.project_id, s.transcript_file_path, s.started_at,
+                    s.last_seen_at, COUNT(t.id)
+             FROM sessions s
+             JOIN turns t ON t.session_id = s.id
+             WHERE t.status = 'completed'
+             GROUP BY s.id, s.agent_type, s.project_id, s.transcript_file_path, s.started_at,
+                      s.last_seen_at
+             ORDER BY COALESCE(s.last_seen_at, s.started_at), s.id",
+        )?;
+        let rows = stmt.query_map([], |row| {
+            Ok((read_session_record(row)?, i64_to_u64(row.get(6)?)))
+        })?;
+        let mut sessions = Vec::new();
+        for row in rows {
+            sessions.push(row?);
+        }
+        Ok(sessions)
+    }
+
     pub fn insert_turn(&self, turn: &TurnRecord) -> Result<bool, DatabaseError> {
         let inserted = self.conn.execute(
             "INSERT OR IGNORE INTO turns (
@@ -213,6 +236,66 @@ impl Database {
         Ok(turns)
     }
 
+    pub fn completed_turns_for_session_range(
+        &self,
+        session_id: &str,
+        start_ordinal: u64,
+        end_ordinal: u64,
+    ) -> Result<Vec<TurnRecord>, DatabaseError> {
+        let mut stmt = self.conn.prepare(
+            "SELECT session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text
+             FROM turns
+             WHERE session_id = ?1
+               AND status = 'completed'
+               AND ordinal >= ?2
+               AND ordinal < ?3
+             ORDER BY ordinal ASC",
+        )?;
+        let rows = stmt.query_map(
+            params![
+                session_id,
+                u64_to_i64(start_ordinal),
+                u64_to_i64(end_ordinal)
+            ],
+            read_turn_record,
+        )?;
+        let mut turns = Vec::new();
+        for row in rows {
+            turns.push(row?);
+        }
+        Ok(turns)
+    }
+
+    pub fn completed_turns_for_source_refs(
+        &self,
+        refs: &[SourceTurnRef],
+    ) -> Result<Vec<TurnRecord>, DatabaseError> {
+        let mut turns = Vec::new();
+        for source_ref in refs {
+            let turn = self
+                .conn
+                .query_row(
+                    "SELECT session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text
+                     FROM turns
+                     WHERE session_id = ?1
+                       AND status = 'completed'
+                       AND ordinal = ?2",
+                    params![source_ref.session_id, u64_to_i64(source_ref.ordinal)],
+                    read_turn_record,
+                )
+                .optional()?;
+            if let Some(turn) = turn {
+                turns.push(turn);
+            }
+        }
+        turns.sort_by(|left, right| {
+            left.session_id
+                .cmp(&right.session_id)
+                .then(left.ordinal.cmp(&right.ordinal))
+        });
+        Ok(turns)
+    }
+
     pub fn completed_turn_count_for_session(&self, session_id: &str) -> Result<u64, DatabaseError> {
         let count: i64 = self.conn.query_row(
             "SELECT COUNT(*) FROM turns WHERE session_id = ?1 AND status = 'completed'",
@@ -220,6 +303,19 @@ impl Database {
             |row| row.get(0),
         )?;
         Ok(i64_to_u64(count))
+    }
+
+    pub fn task_payload_exists(
+        &self,
+        kind: &str,
+        payload_json: &str,
+    ) -> Result<bool, DatabaseError> {
+        let exists: i64 = self.conn.query_row(
+            "SELECT EXISTS(SELECT 1 FROM tasks WHERE kind = ?1 AND payload_json = ?2)",
+            params![kind, payload_json],
+            |row| row.get(0),
+        )?;
+        Ok(exists != 0)
     }
 
     pub fn insert_memory(&self, memory: &MemoryRecord) -> Result<i64, DatabaseError> {

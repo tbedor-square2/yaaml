@@ -5,11 +5,12 @@ use std::os::unix::net::UnixStream;
 use tempfile::TempDir;
 use yaaml::daemon::{
     ingest_codex_file, process_codex_backlog, process_codex_changes,
-    queue_memory_formulation_if_due, recover_running_tasks, refresh_recall_with_embedding,
-    run_queued_tasks, start_signal_socket, DaemonShutdown, TASK_KIND_MEMORY_FORMULATION,
+    queue_memory_formulation_if_due, queue_missing_memory_formulation_tasks, recover_running_tasks,
+    refresh_recall_with_embedding, run_queued_tasks, start_signal_socket, DaemonShutdown,
+    PartialBatchPolicy, TASK_KIND_MEMORY_FORMULATION,
 };
 use yaaml_core::{
-    recall_file_path, Config, EmbeddingRecord, MemoryRecord, MemoryScope, TurnRecord,
+    recall_file_path, Config, EmbeddingRecord, MemoryRecord, MemoryScope, SourceTurnRef, TurnRecord,
 };
 use yaaml_store::database::encode_f32_embedding;
 use yaaml_store::Database;
@@ -120,6 +121,81 @@ fn completing_enough_turns_queues_memory_creation() {
             .unwrap(),
         1
     );
+}
+
+#[test]
+fn historical_memory_queue_batches_all_completed_turns() {
+    let tmp = TempDir::new().unwrap();
+    let transcript = tmp.path().join("session.jsonl");
+    let mut contents = session_meta();
+    for ordinal in 0..25 {
+        contents.push_str(&completed_turn(ordinal));
+    }
+    fs::write(&transcript, contents).unwrap();
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+    ingest_codex_file(&db, &transcript).unwrap();
+    let mut config = Config::default();
+    config.backlog_formulation_turn_window = 10;
+
+    let queued =
+        queue_missing_memory_formulation_tasks(&db, &config, 0, PartialBatchPolicy::Include)
+            .unwrap();
+    let queued_again =
+        queue_missing_memory_formulation_tasks(&db, &config, 0, PartialBatchPolicy::Include)
+            .unwrap();
+
+    assert_eq!(queued, 3);
+    assert_eq!(queued_again, 0);
+    assert_eq!(
+        db.count_tasks_by_status(TASK_KIND_MEMORY_FORMULATION, yaaml_core::TaskStatus::Queued)
+            .unwrap(),
+        3
+    );
+}
+
+#[test]
+fn memory_queue_skips_already_covered_source_refs() {
+    let tmp = TempDir::new().unwrap();
+    let transcript = tmp.path().join("session.jsonl");
+    let mut contents = session_meta();
+    for ordinal in 0..12 {
+        contents.push_str(&completed_turn(ordinal));
+    }
+    fs::write(&transcript, contents).unwrap();
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+    ingest_codex_file(&db, &transcript).unwrap();
+    db.insert_memory(&MemoryRecord {
+        id: None,
+        title: "covered".to_string(),
+        body: "covered".to_string(),
+        scope: MemoryScope::Project,
+        source_turn_refs: (0..10)
+            .map(|ordinal| SourceTurnRef {
+                session_id: "session-1".to_string(),
+                ordinal,
+                byte_start: 0,
+                byte_end: 1,
+            })
+            .collect(),
+        created_at: "2026-06-08T00:00:00Z".to_string(),
+        updated_at: "2026-06-08T00:00:00Z".to_string(),
+        is_active: true,
+        session_id: Some("session-1".to_string()),
+        project_id: Some("/tmp/yaaml".to_string()),
+        project_descriptor: Some("yaaml, Rust".to_string()),
+        lineage_refs: Vec::new(),
+    })
+    .unwrap();
+    let mut config = Config::default();
+    config.backlog_formulation_turn_window = 10;
+
+    let queued =
+        queue_missing_memory_formulation_tasks(&db, &config, 0, PartialBatchPolicy::Include)
+            .unwrap();
+
+    assert_eq!(queued, 1);
 }
 
 #[test]

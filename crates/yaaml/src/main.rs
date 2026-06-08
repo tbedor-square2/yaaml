@@ -158,12 +158,13 @@ fn daemon(args: DaemonArgs) -> anyhow::Result<()> {
         .with_context(|| format!("failed to open {}", display(&db_path)))?;
     db.migrate().context("failed to migrate database")?;
     yaaml::daemon::recover_running_tasks(&db)?;
+    let remote_task_limit = config.backlog_max_concurrent_remote_jobs.max(1);
     let codex_root = yaaml_core::paths::home_dir()
         .context("failed to resolve HOME")?
         .join(".codex")
         .join("sessions");
     let report = yaaml::daemon::process_codex_backlog(&db, &config, &codex_root)?;
-    let completed_tasks = yaaml::daemon::run_queued_tasks(&db, &config, 10)?;
+    let completed_tasks = yaaml::daemon::run_queued_tasks(&db, &config, remote_task_limit)?;
     println!(
         "processed Codex backlog: {} files, {} turns, {} tasks, {} failures",
         report.processed_files, report.processed_turns, completed_tasks, report.failures
@@ -174,7 +175,7 @@ fn daemon(args: DaemonArgs) -> anyhow::Result<()> {
 
     while !shutdown.is_requested() {
         let changes = yaaml::daemon::process_codex_changes(&db, &config, &codex_root)?;
-        let completed_tasks = yaaml::daemon::run_queued_tasks(&db, &config, 10)?;
+        let completed_tasks = yaaml::daemon::run_queued_tasks(&db, &config, remote_task_limit)?;
         if changes.changed_files > 0 || completed_tasks > 0 || changes.failures > 0 {
             println!(
                 "processed Codex changes: {} files, {} turns, {} tasks, {} failures",
@@ -204,7 +205,11 @@ fn ingest(args: IngestArgs) -> anyhow::Result<()> {
             .join("sessions"),
     };
     let report = yaaml::daemon::process_codex_backlog(&db, &config, &codex_root)?;
-    let completed_tasks = yaaml::daemon::run_queued_tasks(&db, &config, 10)?;
+    let completed_tasks = yaaml::daemon::run_queued_tasks(
+        &db,
+        &config,
+        config.backlog_max_concurrent_remote_jobs.max(1),
+    )?;
 
     if args.json {
         println!(

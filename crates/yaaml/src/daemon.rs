@@ -29,6 +29,12 @@ use yaaml_transcript::discovery::discover_codex_backlog;
 pub const TASK_KIND_MEMORY_FORMULATION: &str = "memory_formulation";
 pub const TASK_KIND_RECALL: &str = "recall";
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PartialBatchPolicy {
+    Include,
+    IfSessionIdle,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct IngestReport {
     pub session_id: String,
@@ -154,20 +160,11 @@ pub fn process_codex_backlog(
             Ok(ingested) => {
                 report.processed_files += 1;
                 report.processed_turns += ingested.inserted_turns;
-                let queued_memory_jobs = if ingested.inserted_turns > 0
-                    && queue_memory_formulation_if_due(db, config, &ingested.session_id, 0)?
-                        .is_some()
-                {
-                    report.queued_memory_jobs += 1;
-                    1
-                } else {
-                    0
-                };
                 db.add_backlog_progress(
                     0,
                     1,
                     ingested.inserted_turns,
-                    queued_memory_jobs,
+                    0,
                     0,
                     Some(&unix_timestamp()),
                 )
@@ -179,6 +176,14 @@ pub fn process_codex_backlog(
                     .context("failed to record backlog failure")?;
             }
         }
+    }
+    let queued_memory_jobs =
+        queue_missing_memory_formulation_tasks(db, config, 0, PartialBatchPolicy::Include)
+            .context("failed to queue backlog memory formulation tasks")?;
+    if queued_memory_jobs > 0 {
+        report.queued_memory_jobs += queued_memory_jobs;
+        db.add_backlog_progress(0, 0, 0, queued_memory_jobs, 0, Some(&unix_timestamp()))
+            .context("failed to record queued backlog memory tasks")?;
     }
 
     Ok(report)
@@ -208,20 +213,11 @@ pub fn process_codex_changes(
                 if ingested.next_offset > previous_offset || ingested.inserted_turns > 0 {
                     report.changed_files += 1;
                     report.processed_turns += ingested.inserted_turns;
-                    let queued_memory_jobs = if ingested.inserted_turns > 0
-                        && queue_memory_formulation_if_due(db, config, &ingested.session_id, 10)?
-                            .is_some()
-                    {
-                        report.queued_memory_jobs += 1;
-                        1
-                    } else {
-                        0
-                    };
                     db.add_backlog_progress(
                         0,
                         1,
                         ingested.inserted_turns,
-                        queued_memory_jobs,
+                        0,
                         0,
                         Some(&unix_timestamp()),
                     )
@@ -234,6 +230,14 @@ pub fn process_codex_changes(
                     .context("failed to record Codex change failure")?;
             }
         }
+    }
+    let queued_memory_jobs =
+        queue_missing_memory_formulation_tasks(db, config, 10, PartialBatchPolicy::IfSessionIdle)
+            .context("failed to queue Codex change memory formulation tasks")?;
+    if queued_memory_jobs > 0 {
+        report.queued_memory_jobs += queued_memory_jobs;
+        db.add_backlog_progress(0, 0, 0, queued_memory_jobs, 0, Some(&unix_timestamp()))
+            .context("failed to record queued Codex change memory tasks")?;
     }
 
     Ok(report)
@@ -300,9 +304,14 @@ fn run_memory_formulation_task(
         .session_by_id(session_id)
         .context("failed to load task session")?
         .context("memory formulation task references missing session")?;
-    let turns = db
-        .turns_for_session(session_id, config.turns_between_memory as usize)
-        .context("failed to load task turns")?;
+    let requested_source_turn_refs = source_turn_refs_from_payload(&payload)?;
+    let turns = if requested_source_turn_refs.is_empty() {
+        db.turns_for_session(session_id, config.turns_between_memory as usize)
+            .context("failed to load task turns")?
+    } else {
+        db.completed_turns_for_source_refs(&requested_source_turn_refs)
+            .context("failed to load task source turns")?
+    };
     if turns.is_empty() {
         return Ok(());
     }
@@ -386,36 +395,92 @@ pub fn queue_memory_formulation_if_due(
     if completed < config.turns_between_memory {
         return Ok(None);
     }
-    if db
-        .count_tasks_by_status(TASK_KIND_MEMORY_FORMULATION, TaskStatus::Queued)
-        .context("failed to count queued formulation tasks")?
-        > 0
-    {
-        return Ok(None);
-    }
     let turns = db
         .turns_for_session(session_id, config.turns_between_memory as usize)
         .context("failed to load formulation turns")?;
-    let source_turn_refs = turns
-        .iter()
-        .map(|turn| SourceTurnRef {
-            session_id: turn.session_id.clone(),
-            ordinal: turn.ordinal,
-            byte_start: turn.byte_start,
-            byte_end: turn.byte_end,
-        })
-        .collect::<Vec<_>>();
+    if turns.is_empty() {
+        return Ok(None);
+    }
+    enqueue_memory_formulation_task(db, session_id, &turns, priority)
+}
+
+pub fn queue_missing_memory_formulation_tasks(
+    db: &Database,
+    config: &Config,
+    priority: i64,
+    partial_policy: PartialBatchPolicy,
+) -> anyhow::Result<u64> {
+    let window = config.backlog_formulation_turn_window.max(1);
+    let covered = covered_memory_turn_refs(db).context("failed to load covered memory refs")?;
+    let mut queued = 0;
+    for (session, _completed_turns) in db
+        .sessions_with_completed_turn_counts()
+        .context("failed to load sessions with turns")?
+    {
+        let turns = db
+            .completed_turns_for_session_range(&session.id, 0, u64::MAX)
+            .context("failed to load session turns")?;
+        let include_partial = match partial_policy {
+            PartialBatchPolicy::Include => true,
+            PartialBatchPolicy::IfSessionIdle => session_is_idle(&session, config),
+        };
+        for chunk in turns.chunks(window) {
+            if chunk.len() < window && !include_partial {
+                continue;
+            }
+            if chunk
+                .iter()
+                .all(|turn| covered.contains(&(turn.session_id.clone(), turn.ordinal)))
+            {
+                continue;
+            }
+            if enqueue_memory_formulation_task(db, &session.id, chunk, priority)
+                .context("failed to enqueue missing formulation task")?
+                .is_some()
+            {
+                queued += 1;
+            }
+        }
+    }
+    Ok(queued)
+}
+
+fn enqueue_memory_formulation_task(
+    db: &Database,
+    session_id: &str,
+    turns: &[yaaml_core::TurnRecord],
+    priority: i64,
+) -> anyhow::Result<Option<i64>> {
+    let source_turn_refs = source_turn_refs_for_turns(turns);
+    if source_turn_refs.is_empty() {
+        return Ok(None);
+    }
+    let start_ordinal = source_turn_refs
+        .first()
+        .map(|source_ref| source_ref.ordinal);
+    let end_ordinal = source_turn_refs
+        .last()
+        .map(|source_ref| source_ref.ordinal.saturating_add(1));
     let payload = json!({
         "session_id": session_id,
+        "start_ordinal": start_ordinal,
+        "end_ordinal": end_ordinal,
         "source_turn_refs": source_turn_refs,
     });
+    let payload_json = payload.to_string();
+    if db
+        .task_payload_exists(TASK_KIND_MEMORY_FORMULATION, &payload_json)
+        .context("failed to check existing formulation task")?
+    {
+        return Ok(None);
+    }
     let now = unix_timestamp();
     let task = TaskRecord {
         id: None,
         kind: TASK_KIND_MEMORY_FORMULATION.to_string(),
         status: TaskStatus::Queued,
         priority,
-        payload_json: payload.to_string(),
+        payload_json,
         attempts: 0,
         max_attempts: 5,
         next_run_at: None,
@@ -426,6 +491,83 @@ pub fn queue_memory_formulation_if_due(
     db.enqueue_task(&task)
         .map(Some)
         .context("failed to enqueue formulation task")
+}
+
+fn source_turn_refs_from_payload(
+    payload: &serde_json::Value,
+) -> anyhow::Result<Vec<SourceTurnRef>> {
+    match payload.get("source_turn_refs") {
+        Some(value) => serde_json::from_value(value.clone())
+            .context("failed to parse formulation source_turn_refs"),
+        None => Ok(Vec::new()),
+    }
+}
+
+fn source_turn_refs_for_turns(turns: &[yaaml_core::TurnRecord]) -> Vec<SourceTurnRef> {
+    turns
+        .iter()
+        .map(|turn| SourceTurnRef {
+            session_id: turn.session_id.clone(),
+            ordinal: turn.ordinal,
+            byte_start: turn.byte_start,
+            byte_end: turn.byte_end,
+        })
+        .collect()
+}
+
+fn covered_memory_turn_refs(db: &Database) -> anyhow::Result<HashSet<(String, u64)>> {
+    let mut covered = HashSet::new();
+    for memory in db.list_memories().context("failed to list memories")? {
+        for source_ref in memory.source_turn_refs {
+            covered.insert((source_ref.session_id, source_ref.ordinal));
+        }
+    }
+    Ok(covered)
+}
+
+fn session_is_idle(session: &yaaml_core::SessionRecord, config: &Config) -> bool {
+    let Some(last_seen_at) = session.last_seen_at.as_deref() else {
+        return true;
+    };
+    let Some(last_seen_seconds) = timestamp_seconds(last_seen_at) else {
+        return false;
+    };
+    unix_timestamp_seconds().saturating_sub(last_seen_seconds) as u64
+        >= config.session_idle_memory_seconds
+}
+
+fn timestamp_seconds(timestamp: &str) -> Option<i64> {
+    if let Some(value) = timestamp.strip_prefix("unix:") {
+        return value.parse().ok();
+    }
+    let timestamp = timestamp.strip_suffix('Z')?;
+    let (date, time) = timestamp.split_once('T')?;
+    let mut date_parts = date.split('-');
+    let year: i32 = date_parts.next()?.parse().ok()?;
+    let month: u32 = date_parts.next()?.parse().ok()?;
+    let day: u32 = date_parts.next()?.parse().ok()?;
+    let mut time_parts = time.split(':');
+    let hour: u32 = time_parts.next()?.parse().ok()?;
+    let minute: u32 = time_parts.next()?.parse().ok()?;
+    let second_part = time_parts.next()?;
+    let second_text = second_part.split('.').next().unwrap_or(second_part);
+    let second: u32 = second_text.parse().ok()?;
+    let days = days_from_civil(year, month, day)?;
+    Some(days * 86_400 + hour as i64 * 3_600 + minute as i64 * 60 + second as i64)
+}
+
+fn days_from_civil(year: i32, month: u32, day: u32) -> Option<i64> {
+    if !(1..=12).contains(&month) || !(1..=31).contains(&day) {
+        return None;
+    }
+    let year = year - i32::from(month <= 2);
+    let era = if year >= 0 { year } else { year - 399 } / 400;
+    let year_of_era = year - era * 400;
+    let month = month as i32;
+    let day = day as i32;
+    let day_of_year = (153 * (month + if month > 2 { -3 } else { 9 }) + 2) / 5 + day - 1;
+    let day_of_era = year_of_era * 365 + year_of_era / 4 - year_of_era / 100 + day_of_year;
+    Some((era * 146_097 + day_of_era - 719_468) as i64)
 }
 
 pub fn queue_recall_after_turn(
@@ -617,9 +759,13 @@ fn handle_signal_stream(stream: &mut UnixStream, shutdown: &DaemonShutdown) -> a
 }
 
 fn unix_timestamp() -> String {
-    let seconds = SystemTime::now()
+    let seconds = unix_timestamp_seconds();
+    format!("unix:{seconds}")
+}
+
+fn unix_timestamp_seconds() -> i64 {
+    SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map(|duration| duration.as_secs())
-        .unwrap_or(0);
-    format!("unix:{seconds}")
+        .unwrap_or(0) as i64
 }

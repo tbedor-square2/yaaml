@@ -1,15 +1,17 @@
 use std::env;
 use std::path::PathBuf;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::thread;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use anyhow::{bail, Context};
 use clap::{Parser, Subcommand};
 use yaaml_core::{
     apply_project_bonus, recall_file_path, render_recall_markdown, write_recall_file, Config,
-    RecallCandidate, RecallMemory, RecallWrite, VectorIndex,
+    ConfigPaths, RecallCandidate, RecallMemory, RecallWrite, VectorIndex,
 };
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
 use yaaml_llm::ReqwestTransport;
+use yaaml_store::lock::DaemonLock;
 use yaaml_store::{Database, SqliteExactVectorIndex};
 
 #[derive(Debug, Parser)]
@@ -22,12 +24,40 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Command {
+    /// Run the daemon process.
+    Daemon(DaemonArgs),
+    /// Install YAAML skills and local setup.
+    Init,
+    /// Manage the user service.
+    Service(ServiceArgs),
     /// Show daemon, memory, backlog, and provider status.
     Status(StatusArgs),
     /// Resolve the current project's daemon-owned recall file path.
     Path,
     /// Write recalled memories for a manual query.
     Recall(RecallArgs),
+}
+
+#[derive(Debug, Parser)]
+struct DaemonArgs {
+    /// Explicit config file path, used by generated service definitions.
+    #[arg(long)]
+    config: Option<PathBuf>,
+}
+
+#[derive(Debug, Parser)]
+struct ServiceArgs {
+    #[command(subcommand)]
+    command: ServiceCommand,
+}
+
+#[derive(Debug, Subcommand)]
+enum ServiceCommand {
+    Install,
+    Uninstall,
+    Start,
+    Stop,
+    Status,
 }
 
 #[derive(Debug, Parser)]
@@ -51,6 +81,9 @@ fn main() -> anyhow::Result<()> {
         .command
         .unwrap_or(Command::Status(StatusArgs { json: false }))
     {
+        Command::Daemon(args) => daemon(args),
+        Command::Init => init(),
+        Command::Service(args) => service(args),
         Command::Status(args) => status(args),
         Command::Path => path(),
         Command::Recall(args) => recall(args),
@@ -72,6 +105,60 @@ fn status(args: StatusArgs) -> anyhow::Result<()> {
         print_human_status(&status);
     }
 
+    Ok(())
+}
+
+fn daemon(args: DaemonArgs) -> anyhow::Result<()> {
+    let cwd = env::current_dir().context("failed to determine current directory")?;
+    let config = load_config(&cwd, args.config)?;
+    let db_path = config.db_path().context("failed to resolve db_path")?;
+    let data_dir = db_path
+        .parent()
+        .map(PathBuf::from)
+        .context("db_path has no parent directory")?;
+    let _lock = DaemonLock::acquire(&data_dir).context("failed to acquire daemon lock")?;
+    let mut db = Database::open(&db_path)
+        .with_context(|| format!("failed to open {}", display(&db_path)))?;
+    db.migrate().context("failed to migrate database")?;
+    yaaml::daemon::recover_running_tasks(&db)?;
+    let shutdown = yaaml::daemon::DaemonShutdown::default();
+    let socket = data_dir.join("daemon.sock");
+    let signal_thread = yaaml::daemon::start_signal_socket(&socket, shutdown.clone())?;
+
+    while !shutdown.is_requested() {
+        thread::sleep(Duration::from_millis(100));
+    }
+    signal_thread
+        .join()
+        .map_err(|_| anyhow::anyhow!("signal thread panicked"))??;
+    Ok(())
+}
+
+fn init() -> anyhow::Result<()> {
+    let home = yaaml_core::paths::home_dir().context("failed to resolve HOME")?;
+    let paths = yaaml::skills::InitPaths::for_home(&home);
+    let report = yaaml::skills::init(&paths)?;
+
+    println!("installed Codex skill: {}", report.codex_skill.display());
+    println!("installed Claude skill: {}", report.claude_skill.display());
+    Ok(())
+}
+
+fn service(args: ServiceArgs) -> anyhow::Result<()> {
+    let home = yaaml_core::paths::home_dir().context("failed to resolve HOME")?;
+    let binary = env::current_exe().context("failed to resolve current executable")?;
+    let paths = yaaml::service::ServicePaths::for_home(&home, binary);
+
+    match args.command {
+        ServiceCommand::Install => {
+            let report = yaaml::service::install(&paths)?;
+            println!("installed service: {}", report.service_file.display());
+        }
+        ServiceCommand::Uninstall => yaaml::service::uninstall(&paths)?,
+        ServiceCommand::Start => yaaml::service::start()?,
+        ServiceCommand::Stop => yaaml::service::stop()?,
+        ServiceCommand::Status => yaaml::service::status()?,
+    }
     Ok(())
 }
 
@@ -209,6 +296,18 @@ fn print_human_status(status: &yaaml_core::status::Status) {
 
 fn display(path: &PathBuf) -> String {
     path.display().to_string()
+}
+
+fn load_config(cwd: &std::path::Path, explicit_config: Option<PathBuf>) -> anyhow::Result<Config> {
+    if let Some(config) = explicit_config {
+        Config::load_from_paths(ConfigPaths {
+            user_config: config,
+            project_config: cwd.join(".yaaml").join("config.toml"),
+        })
+        .context("failed to load explicit config")
+    } else {
+        Config::load_for_cwd(cwd).context("failed to load config")
+    }
 }
 
 fn unix_timestamp() -> String {

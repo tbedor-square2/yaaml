@@ -4,4 +4,4 @@ pub mod paths;
 pub mod status;
 
 pub use config::{Config, ConfigPaths};
-pub use model::{AgentType, SessionRecord, TurnRecord, TurnStatus};
+pub use model::{AgentType, SessionRecord, TaskRecord, TaskStatus, TurnRecord, TurnStatus};

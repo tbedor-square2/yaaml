@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use rusqlite::{params, Connection, OptionalExtension};
 use thiserror::Error;
 use yaaml_core::status::{BacklogStatus, Status, TaskFailure, WorkerStatus};
-use yaaml_core::{SessionRecord, TurnRecord};
+use yaaml_core::{SessionRecord, TaskRecord, TaskStatus, TurnRecord};
 
 use crate::migrations::MIGRATIONS;
 
@@ -181,6 +181,83 @@ impl Database {
         Ok(())
     }
 
+    pub fn cursor_exists(&self, file_path: &str) -> Result<bool, DatabaseError> {
+        let exists: i64 = self.conn.query_row(
+            "SELECT EXISTS(SELECT 1 FROM file_cursors WHERE file_path = ?1)",
+            params![file_path],
+            |row| row.get(0),
+        )?;
+        Ok(exists != 0)
+    }
+
+    pub fn enqueue_task(&self, task: &TaskRecord) -> Result<i64, DatabaseError> {
+        self.conn.execute(
+            "INSERT INTO tasks (
+                kind, status, priority, payload_json, attempts, max_attempts,
+                next_run_at, last_error, created_at, updated_at
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+            params![
+                task.kind,
+                task.status.as_str(),
+                task.priority,
+                task.payload_json,
+                u64_to_i64(task.attempts),
+                u64_to_i64(task.max_attempts),
+                task.next_run_at,
+                task.last_error,
+                task.created_at,
+                task.updated_at
+            ],
+        )?;
+        Ok(self.conn.last_insert_rowid())
+    }
+
+    pub fn next_queued_task(&self) -> Result<Option<TaskRecord>, DatabaseError> {
+        self.conn
+            .query_row(
+                "SELECT id, kind, status, priority, payload_json, attempts, max_attempts,
+                        next_run_at, last_error, created_at, updated_at
+                 FROM tasks
+                 WHERE status = 'queued'
+                 ORDER BY priority DESC, id ASC
+                 LIMIT 1",
+                [],
+                read_task_record,
+            )
+            .optional()
+            .map_err(DatabaseError::from)
+    }
+
+    pub fn add_backlog_progress(
+        &self,
+        discovered_files: u64,
+        processed_files: u64,
+        processed_turns: u64,
+        queued_memory_jobs: u64,
+        failures: u64,
+        last_activity_at: Option<&str>,
+    ) -> Result<(), DatabaseError> {
+        self.conn.execute(
+            "UPDATE backlog_progress
+             SET discovered_files = discovered_files + ?1,
+                 processed_files = processed_files + ?2,
+                 processed_turns = processed_turns + ?3,
+                 queued_memory_jobs = queued_memory_jobs + ?4,
+                 failures = failures + ?5,
+                 last_activity_at = COALESCE(?6, last_activity_at)
+             WHERE id = 1",
+            params![
+                u64_to_i64(discovered_files),
+                u64_to_i64(processed_files),
+                u64_to_i64(processed_turns),
+                u64_to_i64(queued_memory_jobs),
+                u64_to_i64(failures),
+                last_activity_at
+            ],
+        )?;
+        Ok(())
+    }
+
     fn count(&self, sql: &str) -> Result<u64, DatabaseError> {
         let count: i64 = self.conn.query_row(sql, [], |row| row.get(0))?;
         Ok(count.try_into().unwrap_or(0))
@@ -233,6 +310,28 @@ fn i64_to_u64(value: i64) -> u64 {
 
 fn u64_to_i64(value: u64) -> i64 {
     value.try_into().unwrap_or(i64::MAX)
+}
+
+fn read_task_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<TaskRecord> {
+    let status: String = row.get(2)?;
+    Ok(TaskRecord {
+        id: row.get(0)?,
+        kind: row.get(1)?,
+        status: match status.as_str() {
+            "running" => TaskStatus::Running,
+            "parked" => TaskStatus::Parked,
+            "completed" => TaskStatus::Completed,
+            _ => TaskStatus::Queued,
+        },
+        priority: row.get(3)?,
+        payload_json: row.get(4)?,
+        attempts: i64_to_u64(row.get(5)?),
+        max_attempts: i64_to_u64(row.get(6)?),
+        next_run_at: row.get(7)?,
+        last_error: row.get(8)?,
+        created_at: row.get(9)?,
+        updated_at: row.get(10)?,
+    })
 }
 
 #[cfg(test)]
@@ -312,5 +411,58 @@ mod tests {
         db.update_cursor("/tmp/session.jsonl", 100, Some("2026-06-08T00:01:00Z"))
             .unwrap();
         assert_eq!(db.get_cursor("/tmp/session.jsonl").unwrap(), 100);
+        assert!(db.cursor_exists("/tmp/session.jsonl").unwrap());
+        assert!(!db.cursor_exists("/tmp/other.jsonl").unwrap());
+    }
+
+    #[test]
+    fn task_queue_returns_highest_priority_then_oldest() {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+
+        let task = |kind: &str, priority: i64| TaskRecord {
+            id: None,
+            kind: kind.to_string(),
+            status: TaskStatus::Queued,
+            priority,
+            payload_json: "{}".to_string(),
+            attempts: 0,
+            max_attempts: 5,
+            next_run_at: None,
+            last_error: None,
+            created_at: "2026-06-08T00:00:00Z".to_string(),
+            updated_at: "2026-06-08T00:00:00Z".to_string(),
+        };
+
+        db.enqueue_task(&task("backlog", 0)).unwrap();
+        db.enqueue_task(&task("live", 10)).unwrap();
+        db.enqueue_task(&task("backlog-2", 0)).unwrap();
+
+        let next = db.next_queued_task().unwrap().unwrap();
+
+        assert_eq!(next.kind, "live");
+        assert_eq!(next.priority, 10);
+    }
+
+    #[test]
+    fn updates_backlog_progress_counters() {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+
+        db.add_backlog_progress(2, 1, 3, 4, 0, Some("2026-06-08T00:00:00Z"))
+            .unwrap();
+        db.add_backlog_progress(1, 2, 3, 4, 1, None).unwrap();
+
+        let status = db.status().unwrap();
+
+        assert_eq!(status.backlog.discovered_files, 3);
+        assert_eq!(status.backlog.processed_files, 3);
+        assert_eq!(status.backlog.processed_turns, 6);
+        assert_eq!(status.backlog.queued_memory_jobs, 8);
+        assert_eq!(status.backlog.failures, 1);
+        assert_eq!(
+            status.backlog.last_activity_at.as_deref(),
+            Some("2026-06-08T00:00:00Z")
+        );
     }
 }

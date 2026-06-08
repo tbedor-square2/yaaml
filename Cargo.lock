@@ -796,6 +796,7 @@ name = "yaaml-transcript"
 version = "0.1.0"
 dependencies = [
  "serde_json",
+ "tempfile",
  "thiserror",
  "yaaml-core",
 ]

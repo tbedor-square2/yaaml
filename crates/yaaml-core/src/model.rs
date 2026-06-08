@@ -53,6 +53,55 @@ pub struct TurnRecord {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum MemoryScope {
+    Project,
+    Global,
+}
+
+impl MemoryScope {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Project => "project",
+            Self::Global => "global",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SourceTurnRef {
+    pub session_id: String,
+    pub ordinal: u64,
+    pub byte_start: u64,
+    pub byte_end: u64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MemoryRecord {
+    pub id: Option<i64>,
+    pub title: String,
+    pub body: String,
+    pub scope: MemoryScope,
+    pub source_turn_refs: Vec<SourceTurnRef>,
+    pub created_at: String,
+    pub updated_at: String,
+    pub is_active: bool,
+    pub session_id: Option<String>,
+    pub project_id: Option<String>,
+    pub project_descriptor: Option<String>,
+    pub lineage_refs: Vec<i64>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct EmbeddingRecord {
+    pub memory_id: i64,
+    pub embedding_model: String,
+    pub dimensions: u64,
+    pub embedding_blob: Vec<u8>,
+    pub embedded_text_hash: String,
+    pub updated_at: String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum TaskStatus {
     Queued,
     Running,

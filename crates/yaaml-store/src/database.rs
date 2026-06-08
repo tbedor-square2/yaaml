@@ -4,7 +4,10 @@ use std::path::{Path, PathBuf};
 use rusqlite::{params, Connection, OptionalExtension};
 use thiserror::Error;
 use yaaml_core::status::{BacklogStatus, Status, TaskFailure, WorkerStatus};
-use yaaml_core::{SessionRecord, TaskRecord, TaskStatus, TurnRecord};
+use yaaml_core::{
+    EmbeddingRecord, MemoryRecord, MemoryScope, SessionRecord, SourceTurnRef, TaskRecord,
+    TaskStatus, TurnRecord,
+};
 
 use crate::migrations::MIGRATIONS;
 
@@ -15,6 +18,8 @@ pub enum DatabaseError {
         path: PathBuf,
         source: std::io::Error,
     },
+    #[error("failed to serialize JSON field: {0}")]
+    Json(#[from] serde_json::Error),
     #[error(transparent)]
     Sqlite(#[from] rusqlite::Error),
 }
@@ -149,6 +154,91 @@ impl Database {
             ],
         )?;
         Ok(inserted > 0)
+    }
+
+    pub fn insert_memory(&self, memory: &MemoryRecord) -> Result<i64, DatabaseError> {
+        let source_turn_refs = serde_json::to_string(&memory.source_turn_refs)?;
+        let lineage_refs = serde_json::to_string(&memory.lineage_refs)?;
+        self.conn.execute(
+            "INSERT INTO memories (
+                title, body, scope, source_turn_refs, created_at, updated_at, is_active,
+                session_id, project_id, project_descriptor, lineage_refs
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+            params![
+                memory.title,
+                memory.body,
+                memory.scope.as_str(),
+                source_turn_refs,
+                memory.created_at,
+                memory.updated_at,
+                if memory.is_active { 1 } else { 0 },
+                memory.session_id,
+                memory.project_id,
+                memory.project_descriptor,
+                lineage_refs
+            ],
+        )?;
+        Ok(self.conn.last_insert_rowid())
+    }
+
+    pub fn list_memories(&self) -> Result<Vec<MemoryRecord>, DatabaseError> {
+        let mut stmt = self.conn.prepare(
+            "SELECT id, title, body, scope, source_turn_refs, created_at, updated_at,
+                    is_active, session_id, project_id, project_descriptor, lineage_refs
+             FROM memories
+             ORDER BY id",
+        )?;
+        let rows = stmt.query_map([], read_memory_record)?;
+        let mut memories = Vec::new();
+        for row in rows {
+            memories.push(row?);
+        }
+        Ok(memories)
+    }
+
+    pub fn upsert_embedding(&self, embedding: &EmbeddingRecord) -> Result<(), DatabaseError> {
+        self.conn.execute(
+            "INSERT INTO embeddings (
+                memory_id, embedding_model, dimensions, embedding_blob, embedded_text_hash, updated_at
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6)
+             ON CONFLICT(memory_id) DO UPDATE SET
+                embedding_model = excluded.embedding_model,
+                dimensions = excluded.dimensions,
+                embedding_blob = excluded.embedding_blob,
+                embedded_text_hash = excluded.embedded_text_hash,
+                updated_at = excluded.updated_at",
+            params![
+                embedding.memory_id,
+                embedding.embedding_model,
+                u64_to_i64(embedding.dimensions),
+                embedding.embedding_blob,
+                embedding.embedded_text_hash,
+                embedding.updated_at
+            ],
+        )?;
+        Ok(())
+    }
+
+    pub fn get_embedding(&self, memory_id: i64) -> Result<Option<EmbeddingRecord>, DatabaseError> {
+        self.conn
+            .query_row(
+                "SELECT memory_id, embedding_model, dimensions, embedding_blob, embedded_text_hash, updated_at
+                 FROM embeddings
+                 WHERE memory_id = ?1",
+                params![memory_id],
+                |row| {
+                    Ok(EmbeddingRecord {
+                        memory_id: row.get(0)?,
+                        embedding_model: row.get(1)?,
+                        dimensions: i64_to_u64(row.get(2)?),
+                        embedding_blob: row.get(3)?,
+                        embedded_text_hash: row.get(4)?,
+                        updated_at: row.get(5)?,
+                    })
+                },
+            )
+            .optional()
+            .map_err(DatabaseError::from)
     }
 
     pub fn get_cursor(&self, file_path: &str) -> Result<u64, DatabaseError> {
@@ -351,6 +441,57 @@ fn read_task_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<TaskRecord> {
     })
 }
 
+fn read_memory_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<MemoryRecord> {
+    let scope: String = row.get(3)?;
+    let source_turn_refs_json: String = row.get(4)?;
+    let lineage_refs_json: String = row.get(11)?;
+    let source_turn_refs: Vec<SourceTurnRef> =
+        serde_json::from_str(&source_turn_refs_json).map_err(json_decode_error)?;
+    let lineage_refs: Vec<i64> =
+        serde_json::from_str(&lineage_refs_json).map_err(json_decode_error)?;
+    let is_active: i64 = row.get(7)?;
+    Ok(MemoryRecord {
+        id: row.get(0)?,
+        title: row.get(1)?,
+        body: row.get(2)?,
+        scope: match scope.as_str() {
+            "global" => MemoryScope::Global,
+            _ => MemoryScope::Project,
+        },
+        source_turn_refs,
+        created_at: row.get(5)?,
+        updated_at: row.get(6)?,
+        is_active: is_active != 0,
+        session_id: row.get(8)?,
+        project_id: row.get(9)?,
+        project_descriptor: row.get(10)?,
+        lineage_refs,
+    })
+}
+
+fn json_decode_error(error: serde_json::Error) -> rusqlite::Error {
+    rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, Box::new(error))
+}
+
+pub fn encode_f32_embedding(values: &[f32]) -> Vec<u8> {
+    let mut blob = Vec::with_capacity(values.len() * std::mem::size_of::<f32>());
+    for value in values {
+        blob.extend_from_slice(&value.to_le_bytes());
+    }
+    blob
+}
+
+pub fn decode_f32_embedding(blob: &[u8]) -> Option<Vec<f32>> {
+    if blob.len() % std::mem::size_of::<f32>() != 0 {
+        return None;
+    }
+    let mut values = Vec::with_capacity(blob.len() / std::mem::size_of::<f32>());
+    for chunk in blob.chunks_exact(std::mem::size_of::<f32>()) {
+        values.push(f32::from_le_bytes(chunk.try_into().ok()?));
+    }
+    Some(values)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -510,5 +651,85 @@ mod tests {
         assert_eq!(status.recent_failures.len(), 1);
         assert_eq!(status.recent_failures[0].task_kind, "embedding");
         assert_eq!(status.recent_failures[0].error, "missing API key");
+    }
+
+    #[test]
+    fn multiple_formulated_memories_persist_with_shared_source_refs() {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+        let source_refs = vec![SourceTurnRef {
+            session_id: "session-1".to_string(),
+            ordinal: 3,
+            byte_start: 100,
+            byte_end: 250,
+        }];
+        let drafts = yaaml_core::parse_formulation_response(
+            &serde_json::json!({
+                "memories": [
+                    {"title":"Recall files","body":"Skills read daemon-owned recall files.","project_descriptor":"yaaml, Rust"},
+                    {"title":"Commit checkpoints","body":"Commit implementation milestones as progress is made.","scope":"global","project_descriptor":"agent workflow"}
+                ]
+            }),
+            "yaaml, Rust",
+            12_000,
+        )
+        .unwrap();
+
+        for draft in drafts {
+            let record = draft.into_record(
+                source_refs.clone(),
+                "2026-06-08T00:00:00Z".to_string(),
+                Some("session-1".to_string()),
+                Some("/tmp/yaaml".to_string()),
+            );
+            db.insert_memory(&record).unwrap();
+        }
+        let memories = db.list_memories().unwrap();
+
+        assert_eq!(memories.len(), 2);
+        assert_eq!(memories[0].source_turn_refs, source_refs);
+        assert_eq!(memories[1].source_turn_refs, source_refs);
+        assert_eq!(memories[0].scope, MemoryScope::Project);
+        assert_eq!(memories[1].scope, MemoryScope::Global);
+    }
+
+    #[test]
+    fn embedding_persists_as_f32_blob() {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+        let memory = MemoryRecord {
+            id: None,
+            title: "Recall files".to_string(),
+            body: "Skills read recall markdown.".to_string(),
+            scope: MemoryScope::Project,
+            source_turn_refs: Vec::new(),
+            created_at: "2026-06-08T00:00:00Z".to_string(),
+            updated_at: "2026-06-08T00:00:00Z".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some("/tmp/yaaml".to_string()),
+            project_descriptor: Some("yaaml, Rust".to_string()),
+            lineage_refs: Vec::new(),
+        };
+        let memory_id = db.insert_memory(&memory).unwrap();
+        let embedded_text = yaaml_core::embedding_text(&memory);
+        let embedding = EmbeddingRecord {
+            memory_id,
+            embedding_model: "text-embedding-3-small".to_string(),
+            dimensions: 3,
+            embedding_blob: encode_f32_embedding(&[0.1, 0.2, 0.3]),
+            embedded_text_hash: yaaml_core::embedded_text_hash(&embedded_text),
+            updated_at: "2026-06-08T00:00:01Z".to_string(),
+        };
+
+        db.upsert_embedding(&embedding).unwrap();
+        let stored = db.get_embedding(memory_id).unwrap().unwrap();
+
+        assert_eq!(stored.dimensions, 3);
+        assert_eq!(
+            decode_f32_embedding(&stored.embedding_blob).unwrap(),
+            vec![0.1, 0.2, 0.3]
+        );
+        assert_eq!(stored.embedded_text_hash, embedding.embedded_text_hash);
     }
 }

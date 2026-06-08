@@ -21,7 +21,7 @@ use yaaml_core::{
 };
 use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
-use yaaml_llm::ReqwestTransport;
+use yaaml_llm::{ProviderError, ReqwestTransport};
 use yaaml_store::{Database, SqliteExactVectorIndex};
 use yaaml_transcript::codex::parse_codex_file_from_offset_with_session;
 use yaaml_transcript::discovery::discover_codex_backlog;
@@ -334,9 +334,13 @@ fn run_memory_formulation_task(
         AnthropicMessageConfig::summary_from_config(config),
         ReqwestTransport::default(),
     );
-    let value = summary_client
-        .structured_json(formulation_system_prompt(), &prompt)
-        .context("failed to formulate memory")?;
+    let value = match summary_client.structured_json(formulation_system_prompt(), &prompt) {
+        Ok(value) => value,
+        Err(ProviderError::Parse(message)) if message == "message text did not contain JSON" => {
+            json!({"memories":[]})
+        }
+        Err(error) => return Err(error).context("failed to formulate memory"),
+    };
     let drafts = parse_formulation_response(&value, &project_descriptor, config.max_memory_length)
         .context("failed to parse memory formulation")?;
     let embedding_client = OpenAiEmbeddingClient::new(

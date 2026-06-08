@@ -757,6 +757,7 @@ dependencies = [
  "tempfile",
  "yaaml-core",
  "yaaml-store",
+ "yaaml-transcript",
 ]
 
 [[package]]
@@ -794,6 +795,8 @@ dependencies = [
 name = "yaaml-transcript"
 version = "0.1.0"
 dependencies = [
+ "serde_json",
+ "thiserror",
  "yaaml-core",
 ]
 

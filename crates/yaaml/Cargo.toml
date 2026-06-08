@@ -18,4 +18,4 @@ yaaml-store = { path = "../yaaml-store" }
 
 [dev-dependencies]
 tempfile.workspace = true
-
+yaaml-transcript = { path = "../yaaml-transcript" }

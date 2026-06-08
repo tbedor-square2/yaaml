@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS turns (
 );
 
 CREATE INDEX IF NOT EXISTS idx_turns_session_ordinal ON turns(session_id, ordinal);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_turns_session_ordinal_unique ON turns(session_id, ordinal);
 
 CREATE TABLE IF NOT EXISTS memories (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

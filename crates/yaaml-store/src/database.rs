@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 use rusqlite::{params, Connection, OptionalExtension};
 use thiserror::Error;
 use yaaml_core::status::{BacklogStatus, Status, TaskFailure, WorkerStatus};
+use yaaml_core::{SessionRecord, TurnRecord};
 
 use crate::migrations::MIGRATIONS;
 
@@ -108,6 +109,78 @@ impl Database {
         Ok(names)
     }
 
+    pub fn upsert_session(&self, session: &SessionRecord) -> Result<(), DatabaseError> {
+        self.conn.execute(
+            "INSERT INTO sessions (
+                id, agent_type, project_id, transcript_file_path, started_at, last_seen_at
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6)
+             ON CONFLICT(id) DO UPDATE SET
+                agent_type = excluded.agent_type,
+                project_id = excluded.project_id,
+                transcript_file_path = excluded.transcript_file_path,
+                started_at = COALESCE(sessions.started_at, excluded.started_at),
+                last_seen_at = excluded.last_seen_at",
+            params![
+                session.id,
+                session.agent_type.as_str(),
+                session.project_id,
+                session.transcript_file_path,
+                session.started_at,
+                session.last_seen_at
+            ],
+        )?;
+        Ok(())
+    }
+
+    pub fn insert_turn(&self, turn: &TurnRecord) -> Result<bool, DatabaseError> {
+        let inserted = self.conn.execute(
+            "INSERT OR IGNORE INTO turns (
+                session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+            params![
+                turn.session_id,
+                turn.turn_id,
+                u64_to_i64(turn.ordinal),
+                u64_to_i64(turn.byte_start),
+                u64_to_i64(turn.byte_end),
+                turn.observed_at,
+                turn.status.as_str(),
+                turn.display_text
+            ],
+        )?;
+        Ok(inserted > 0)
+    }
+
+    pub fn get_cursor(&self, file_path: &str) -> Result<u64, DatabaseError> {
+        let offset = self
+            .conn
+            .query_row(
+                "SELECT last_byte_offset FROM file_cursors WHERE file_path = ?1",
+                params![file_path],
+                |row| row.get::<_, i64>(0),
+            )
+            .optional()?
+            .unwrap_or(0);
+        Ok(i64_to_u64(offset))
+    }
+
+    pub fn update_cursor(
+        &self,
+        file_path: &str,
+        last_byte_offset: u64,
+        last_processed_at: Option<&str>,
+    ) -> Result<(), DatabaseError> {
+        self.conn.execute(
+            "INSERT INTO file_cursors (file_path, last_byte_offset, last_processed_at)
+             VALUES (?1, ?2, ?3)
+             ON CONFLICT(file_path) DO UPDATE SET
+                last_byte_offset = excluded.last_byte_offset,
+                last_processed_at = excluded.last_processed_at",
+            params![file_path, u64_to_i64(last_byte_offset), last_processed_at],
+        )?;
+        Ok(())
+    }
+
     fn count(&self, sql: &str) -> Result<u64, DatabaseError> {
         let count: i64 = self.conn.query_row(sql, [], |row| row.get(0))?;
         Ok(count.try_into().unwrap_or(0))
@@ -158,6 +231,10 @@ fn i64_to_u64(value: i64) -> u64 {
     value.try_into().unwrap_or(0)
 }
 
+fn u64_to_i64(value: u64) -> i64 {
+    value.try_into().unwrap_or(i64::MAX)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -201,5 +278,39 @@ mod tests {
         assert_eq!(status.backlog.discovered_files, 0);
         assert_eq!(status.workers.queued_jobs, 0);
         assert_eq!(status.parked_jobs, 0);
+    }
+
+    #[test]
+    fn stores_session_turn_and_cursor() {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+
+        let session = SessionRecord {
+            id: "session-1".to_string(),
+            agent_type: yaaml_core::AgentType::Codex,
+            project_id: "/tmp/project".to_string(),
+            transcript_file_path: "/tmp/session.jsonl".to_string(),
+            started_at: Some("2026-06-08T00:00:00Z".to_string()),
+            last_seen_at: Some("2026-06-08T00:01:00Z".to_string()),
+        };
+        db.upsert_session(&session).unwrap();
+
+        let turn = TurnRecord {
+            session_id: session.id.clone(),
+            turn_id: Some("turn-1".to_string()),
+            ordinal: 0,
+            byte_start: 10,
+            byte_end: 100,
+            observed_at: Some("2026-06-08T00:01:00Z".to_string()),
+            status: yaaml_core::TurnStatus::Completed,
+            display_text: Some("hello".to_string()),
+        };
+
+        assert!(db.insert_turn(&turn).unwrap());
+        assert!(!db.insert_turn(&turn).unwrap());
+
+        db.update_cursor("/tmp/session.jsonl", 100, Some("2026-06-08T00:01:00Z"))
+            .unwrap();
+        assert_eq!(db.get_cursor("/tmp/session.jsonl").unwrap(), 100);
     }
 }

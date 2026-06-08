@@ -68,6 +68,7 @@ Turn content extracted for formulation: timestamp, role, text content, tool name
 - Memory title: concise, includes date when time-relevant (ISO 8601 format).
 - Memory body: plain prose summary, max ~12,000 characters.
 - Memory should capture facts, decisions, user preferences, and project state — not raw transcript.
+- Memory formulation output is structured JSON with `title`, `body`, `scope`, and `project_descriptor`. Do not include a model-generated confidence field; source coverage, eval scores, and later recall usefulness are better quality signals.
 - **Context scoping**: Memory formulation is per project by default: it uses observed turns for the same normalized `project_id` since that project's last memory was created. Memories are marked project-specific by default. The formulation prompt may mark a memory as global only when it captures durable user preferences, cross-project workflow patterns, or agent/tool behavior that is not project-specific.
 - **Max context window**: A configurable token cap (default: 32,000 tokens) limits the input to the summarization model. When the window since the last memory exceeds this cap, turns are split into non-overlapping chunks processed oldest-to-newest. Each chunk after the first is prepended with a one-paragraph summary of all prior chunks in this formulation pass, providing continuity without re-sending the full prior content.
 - **Backlog ingestion**: On first startup, the daemon discovers existing transcript JSONL files in the agent home directories and processes them in the background by default. Backlog processing is lower priority than new transcript writes and must not block live observation, memory recall, or CLI commands. Historical ingestion can also be rerun later via CLI.
@@ -78,14 +79,15 @@ Turn content extracted for formulation: timestamp, role, text content, tool name
 - Memories are persisted to a local SQLite database at `~/.yaaml/yaaml.db` (user-global).
 - Each memory record stores: id, title, body, scope (project/global), source_turn_refs[], created_at, updated_at, is_active, session_id, project_id, project_descriptor.
 - **Project ID** is the absolute path of the working directory (`cwd`) at the time of the conversation, normalized (resolved symlinks, trailing slash stripped).
-- **Project descriptor** is a compact human-readable string used for embedding and display, derived from project metadata such as repo basename, normalized path basename, git remote, and detected domain (for example: `yaaml, Rust CLI memory daemon`). Absolute paths remain structured metadata and should not be the only project signal embedded into vectors.
+- **Project descriptor** is a compact human-readable string used for embedding and display, derived from local project metadata such as repo basename, normalized path basename, package/crate name, detected ecosystem, and a short formulation-derived project phrase (for example: `yaaml, Rust CLI memory daemon`). Absolute paths remain structured metadata and should not be the only project signal embedded into vectors. Git remotes and domain labels are not included by default.
 - Vector embeddings are stored in a local vector index under `~/.yaaml/` (user-global). The implementation exposes a `VectorIndex` abstraction so the backend can change without affecting memory creation or recall. The MVP backend is an exact scan over embeddings stored in SQLite as `f32` vectors; Chroma compatibility is not required.
 - Embedding provider and model are configurable (default provider: OpenAI; default model: `text-embedding-3-small`).
 - The embedded text for a memory includes its title, body, scope, and compact project descriptor. Structured metadata is still used separately for ranking and display.
 
 **1.5 Consolidation**
 - After the dark period timer fires, a consolidation job runs asynchronously.
-- DBSCAN clustering on memory embeddings identifies overlapping memories. Similarity threshold: 0.92 cosine similarity (conservative — avoids over-merging distinct coding decisions that share surface similarity).
+- DBSCAN-style clustering on memory embeddings identifies overlapping memories using cosine distance. Consolidation is scoped: global memories cluster only with global memories, and project memories cluster only with memories from the same `project_id`.
+- Cluster ranking follows the Elroy approach: sort candidate clusters by larger cluster size first, then tighter mean intra-cluster distance. Large clusters are capped to the densest N memories before LLM consolidation.
 - An LLM merges clustered memories into a single consolidated memory.
 - Original memories are marked inactive (soft delete) with lineage references preserved.
 
@@ -101,14 +103,15 @@ Turn content extracted for formulation: timestamp, role, text content, tool name
 
 **2.2 Recall Query**
 - Recall uses vector similarity search against stored memory embeddings.
-- Query is derived from recent context (last N turns) embedded as a single vector.
+- Query is derived from recent context embedded as a single compact synthetic document rather than raw JSONL. The default live query window is the last 3 completed turn pairs, capped by size. The query includes user text, assistant final text, tool names, command names, file paths touched, and short error snippets; it excludes long command output, large file reads, reasoning/private metadata, and unrelated transcript bookkeeping.
+- Backlog and eval workflows may batch more turns into a single query/formulation window to process historical transcripts efficiently. Larger windows improve backlog throughput but can dilute recall specificity, so the live recall window and backlog formulation window are separately configurable.
 - Result limit: top 4–5 memories by score (configurable, default: 5).
 - Similarity threshold: cosine similarity ≥ 0.3 (configurable). OpenAI embeddings are normalized, so cosine and L2 produce equivalent rankings for those embeddings, but YAAML uses cosine terminology and thresholds explicitly.
 - Inactive memories excluded.
 - **Project weighting**: Recall retrieves global candidates by cosine similarity, then applies a bounded same-project reranking nudge. Same-project memories receive a small additive score bonus only when they are already semantically close; irrelevant same-project memories must not beat clearly relevant global or other-project memories. Memories from other projects may still be recalled when semantically relevant; recall output preserves the originating project when it differs from the current project.
 
 **2.3 Recall Output File**
-- Retrieved memories are written to `.yaaml/recall.md` relative to the current working directory.
+- Retrieved memories are written to a daemon-owned global per-project recall file under `~/.yaaml/recall/<project-hash>.md`. For daemon-triggered recall, the project hash is derived from the observed transcript metadata (`cwd` in Codex/Claude session or turn context). For manual `yaaml recall`, the project hash is derived from the CLI process cwd.
 - Format: Markdown. Each memory is one section: title (heading), body, timestamp, originating project (if different from current).
 - The recall file is overwritten when a recall run returns at least one memory.
 - Metadata block at top: query timestamp, memory count, query source.
@@ -117,7 +120,8 @@ Turn content extracted for formulation: timestamp, role, text content, tool name
 **2.4 Agent Discovery of Recall File**
 - Primary: a `yaaml-recall` skill installed by `yaaml init` for Claude Code and Codex. See §5.
 - Secondary: `yaaml path` CLI command prints the recall file path.
-- YAAML provides a CLI command to emit a ready-made `CLAUDE.md` snippet.
+- Agents should access recalled memory through the installed skill rather than assuming a project-local path. The skill resolves the current project to the correct global recall file and returns its contents.
+- YAAML provides a CLI command to emit ready-made agent instruction snippets.
 
 ---
 
@@ -170,7 +174,7 @@ Turn content extracted for formulation: timestamp, role, text content, tool name
 Installed by `yaaml init` into both `~/.claude/skills/` and `~/.codex/skills/` when those agent homes exist, with equivalent skill content for each agent.
 
 **5.1 `yaaml-recall`**
-- Reads `.yaaml/recall.md` in the current working directory and returns its contents.
+- Resolves the current working directory to the corresponding global recall file under `~/.yaaml/recall/` and returns its contents.
 - If the file does not exist or is empty, returns a message indicating no memories are available.
 - Intended to be invoked at session start via a `CLAUDE.md` instruction or `UserPromptSubmit` hook.
 
@@ -199,6 +203,7 @@ Installed by `yaaml init` into both `~/.claude/skills/` and `~/.codex/skills/` w
 - `yaaml status` — show memory count, last creation timestamp, last recall timestamp, backlog ingestion progress, active worker counts, and recent task failures. Supports `--json` for machine-readable output.
 - `yaaml memories list [--project <path>] [--since <date>]` — tabular output: ID, title, project (basename), created date. Add `--verbose` to include memory body.
 - `yaaml path` — print current recall file path.
+- `yaaml service install|uninstall|start|stop|status` — install and manage the daemon as a user service (macOS LaunchAgent or Linux systemd user service). `service install` also runs the idempotent `init` setup if skills or hook snippets are missing.
 - `yaaml eval recall [--project <path>] [--since <date>] [--limit N]` — replay historical transcript turns and evaluate whether recalled memories would have been useful for subsequent agent behavior.
 
 ---
@@ -208,7 +213,7 @@ Installed by `yaaml init` into both `~/.claude/skills/` and `~/.codex/skills/` w
 YAAML provides an offline evaluation workflow that replays historical transcripts without using future context in the recall query:
 
 1. For each eligible historical turn, derive the recall query from only the context available before that turn.
-2. Run recall against memories that existed, or would have existed, before that turn.
+2. Run recall against actual memories whose `created_at` is before that turn.
 3. Compare the recalled memories to the subsequent transcript content: the user's next message, the assistant's next response, and relevant tool calls.
 4. Record per-memory and per-turn evaluation results in SQLite for comparison across ranking strategies.
 
@@ -226,13 +231,16 @@ All configuration lives in `~/.yaaml/config.toml` (user-level) with optional pro
 | Key | Default | Description |
 |-----|---------|-------------|
 | `turns_between_memory` | `10` | Turn pairs before auto-creating a memory |
+| `session_idle_memory_seconds` | `600` | Idle seconds after which a below-threshold session is flushed for memory formulation |
 | `consolidation_dark_period_seconds` | `300` | Inactivity seconds before consolidation runs |
 | `recall_result_limit` | `5` | Max memories returned per recall query |
 | `recall_candidate_pool` | `20` | Candidates fetched before final trimming |
+| `recall_live_turn_window` | `3` | Completed turn pairs included in live recall query construction |
+| `recall_query_max_chars` | `12000` | Max characters in synthesized recall query text |
 | `recall_similarity_threshold` | `0.3` | Cosine similarity cutoff for vector search |
 | `recall_project_tiebreaker` | `true` | Prefer current-project memories when similarity scores are otherwise close |
 | `recall_project_score_bonus` | `0.05` | Maximum additive reranking bonus for same-project memories |
-| `recall_file_path` | `.yaaml/recall.md` | Where recalled memories are written |
+| `recall_dir` | `~/.yaaml/recall` | Directory containing global per-project recall files |
 | `db_path` | `~/.yaaml/yaaml.db` | SQLite database path |
 | `vector_index_backend` | `sqlite-exact` | Vector index backend; MVP uses exact scan over SQLite-stored embeddings |
 | `vector_index_path` | `~/.yaaml/vector-index` | Local vector index persistence path |
@@ -248,12 +256,16 @@ All configuration lives in `~/.yaaml/config.toml` (user-level) with optional pro
 | `consolidation_model` | `claude-haiku-4-5-20251001` | Model for consolidation |
 | `consolidation_api_key_env` | `ANTHROPIC_API_KEY` | Environment variable containing the consolidation provider API key |
 | `consolidation_base_url` | provider default | Optional override for consolidation API base URL |
+| `memory_cluster_distance_threshold` | `0.21125` | DBSCAN cosine-distance threshold for consolidation clustering |
+| `memory_cluster_min_size` | `3` | Minimum memories required for a consolidation cluster |
+| `memory_cluster_max_size` | `5` | Maximum densest memories sent to the consolidation LLM |
 | `max_memory_length` | `12000` | Max characters per memory body |
 | `max_formulation_tokens` | `32000` | Token cap for memory formulation input |
 | `tool_call_truncation_chars` | `500` | Max chars per tool call at formulation time |
 | `recall_classifier_enabled` | `true` | Gate recall with heuristics/LLM classifier |
 | `backlog_max_concurrent_remote_jobs` | `1` | Max concurrent backlog embedding/summary calls |
 | `backlog_newest_first` | `true` | Process discovered historical transcripts from newest to oldest |
+| `backlog_formulation_turn_window` | `10` | Completed turn pairs batched into a backlog memory formulation job |
 | `eval_judge_provider` | same as summary | Provider for recall relevance judging |
 | `eval_judge_model` | same as summary | Model for recall relevance judging |
 

@@ -47,7 +47,7 @@ impl HttpTransport for ReqwestTransport {
             .timeout(self.timeout)
             .build()
             .map_err(|error| ProviderError::Transport(error.to_string()))?;
-        let mut builder = client.post(&request.url).json(&request.body);
+        let mut builder = client.post(&request.url).body(request.body.to_string());
         for (key, value) in &request.headers {
             builder = builder.header(key, value);
         }

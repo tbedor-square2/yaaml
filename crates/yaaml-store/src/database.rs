@@ -157,6 +157,19 @@ impl Database {
             .map_err(DatabaseError::from)
     }
 
+    pub fn session_by_id(&self, session_id: &str) -> Result<Option<SessionRecord>, DatabaseError> {
+        self.conn
+            .query_row(
+                "SELECT id, agent_type, project_id, transcript_file_path, started_at, last_seen_at
+                 FROM sessions
+                 WHERE id = ?1",
+                params![session_id],
+                read_session_record,
+            )
+            .optional()
+            .map_err(DatabaseError::from)
+    }
+
     pub fn insert_turn(&self, turn: &TurnRecord) -> Result<bool, DatabaseError> {
         let inserted = self.conn.execute(
             "INSERT OR IGNORE INTO turns (
@@ -430,6 +443,18 @@ impl Database {
         Ok(exists != 0)
     }
 
+    pub fn cursor_paths(&self) -> Result<Vec<PathBuf>, DatabaseError> {
+        let mut stmt = self
+            .conn
+            .prepare("SELECT file_path FROM file_cursors ORDER BY file_path")?;
+        let rows = stmt.query_map([], |row| row.get::<_, String>(0))?;
+        let mut paths = Vec::new();
+        for row in rows {
+            paths.push(PathBuf::from(row?));
+        }
+        Ok(paths)
+    }
+
     pub fn enqueue_task(&self, task: &TaskRecord) -> Result<i64, DatabaseError> {
         self.conn.execute(
             "INSERT INTO tasks (
@@ -485,6 +510,17 @@ impl Database {
         self.conn.execute(
             "UPDATE tasks
              SET status = 'running',
+                 updated_at = ?1
+             WHERE id = ?2",
+            params![updated_at, task_id],
+        )?;
+        Ok(())
+    }
+
+    pub fn complete_task(&self, task_id: i64, updated_at: &str) -> Result<(), DatabaseError> {
+        self.conn.execute(
+            "UPDATE tasks
+             SET status = 'completed',
                  updated_at = ?1
              WHERE id = ?2",
             params![updated_at, task_id],
@@ -858,6 +894,10 @@ mod tests {
         assert_eq!(db.get_cursor("/tmp/session.jsonl").unwrap(), 100);
         assert!(db.cursor_exists("/tmp/session.jsonl").unwrap());
         assert!(!db.cursor_exists("/tmp/other.jsonl").unwrap());
+        assert_eq!(
+            db.cursor_paths().unwrap(),
+            vec![PathBuf::from("/tmp/session.jsonl")]
+        );
     }
 
     #[test]

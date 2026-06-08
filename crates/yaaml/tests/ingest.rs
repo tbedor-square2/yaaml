@@ -1,0 +1,57 @@
+use std::fs;
+use std::process::Command;
+
+use tempfile::TempDir;
+
+#[test]
+fn ingest_json_reports_processed_codex_backlog() {
+    let tmp = TempDir::new().unwrap();
+    let home = tmp.path().join("home");
+    let project = tmp.path().join("project");
+    let codex_root = tmp.path().join("sessions");
+    let dated = codex_root.join("2026").join("06").join("08");
+    fs::create_dir_all(home.join(".yaaml")).unwrap();
+    fs::create_dir_all(&project).unwrap();
+    fs::create_dir_all(&dated).unwrap();
+    let db_path = home.join(".yaaml").join("yaaml.db");
+    fs::write(
+        home.join(".yaaml").join("config.toml"),
+        format!(r#"db_path = "{}""#, db_path.display()),
+    )
+    .unwrap();
+    fs::write(dated.join("session.jsonl"), transcript()).unwrap();
+
+    let output = Command::new(env!("CARGO_BIN_EXE_yaaml"))
+        .arg("ingest")
+        .arg("--codex-root")
+        .arg(&codex_root)
+        .arg("--json")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(value["discovered_files"], 1);
+    assert_eq!(value["processed_files"], 1);
+    assert_eq!(value["processed_turns"], 1);
+}
+
+fn transcript() -> String {
+    concat!(
+        r#"{"timestamp":"2026-06-08T00:00:00Z","type":"session_meta","payload":{"id":"session-1","timestamp":"2026-06-08T00:00:00Z","cwd":"/tmp/yaaml"}}"#,
+        "\n",
+        r#"{"timestamp":"2026-06-08T00:00:01Z","type":"event_msg","payload":{"type":"task_started","turn_id":"turn-1"}}"#,
+        "\n",
+        r#"{"timestamp":"2026-06-08T00:00:02Z","type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"hello"}]}}"#,
+        "\n",
+        r#"{"timestamp":"2026-06-08T00:00:03Z","type":"event_msg","payload":{"type":"task_complete","turn_id":"turn-1"}}"#,
+        "\n"
+    )
+    .to_string()
+}

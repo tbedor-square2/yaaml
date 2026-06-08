@@ -28,6 +28,8 @@ enum Command {
     Daemon(DaemonArgs),
     /// Install YAAML skills and local setup.
     Init,
+    /// Ingest existing agent transcripts once.
+    Ingest(IngestArgs),
     /// Manage the user service.
     Service(ServiceArgs),
     /// Run evaluation workflows.
@@ -45,6 +47,16 @@ struct DaemonArgs {
     /// Explicit config file path, used by generated service definitions.
     #[arg(long)]
     config: Option<PathBuf>,
+}
+
+#[derive(Debug, Parser)]
+struct IngestArgs {
+    /// Override the Codex sessions root.
+    #[arg(long)]
+    codex_root: Option<PathBuf>,
+    /// Emit machine-readable JSON.
+    #[arg(long)]
+    json: bool,
 }
 
 #[derive(Debug, Parser)]
@@ -106,6 +118,7 @@ fn main() -> anyhow::Result<()> {
     {
         Command::Daemon(args) => daemon(args),
         Command::Init => init(),
+        Command::Ingest(args) => ingest(args),
         Command::Service(args) => service(args),
         Command::Eval(args) => eval(args),
         Command::Status(args) => status(args),
@@ -145,6 +158,16 @@ fn daemon(args: DaemonArgs) -> anyhow::Result<()> {
         .with_context(|| format!("failed to open {}", display(&db_path)))?;
     db.migrate().context("failed to migrate database")?;
     yaaml::daemon::recover_running_tasks(&db)?;
+    let codex_root = yaaml_core::paths::home_dir()
+        .context("failed to resolve HOME")?
+        .join(".codex")
+        .join("sessions");
+    let report = yaaml::daemon::process_codex_backlog(&db, &config, &codex_root)?;
+    let completed_tasks = yaaml::daemon::run_queued_tasks(&db, &config, 10)?;
+    println!(
+        "processed Codex backlog: {} files, {} turns, {} tasks, {} failures",
+        report.processed_files, report.processed_turns, completed_tasks, report.failures
+    );
     let shutdown = yaaml::daemon::DaemonShutdown::default();
     let socket = data_dir.join("daemon.sock");
     let signal_thread = yaaml::daemon::start_signal_socket(&socket, shutdown.clone())?;
@@ -155,6 +178,48 @@ fn daemon(args: DaemonArgs) -> anyhow::Result<()> {
     signal_thread
         .join()
         .map_err(|_| anyhow::anyhow!("signal thread panicked"))??;
+    Ok(())
+}
+
+fn ingest(args: IngestArgs) -> anyhow::Result<()> {
+    let cwd = env::current_dir().context("failed to determine current directory")?;
+    let config = Config::load_for_cwd(&cwd).context("failed to load config")?;
+    let db_path = config.db_path().context("failed to resolve db_path")?;
+    let mut db = Database::open(&db_path)
+        .with_context(|| format!("failed to open {}", display(&db_path)))?;
+    db.migrate().context("failed to migrate database")?;
+    let codex_root = match args.codex_root {
+        Some(path) => path,
+        None => yaaml_core::paths::home_dir()
+            .context("failed to resolve HOME")?
+            .join(".codex")
+            .join("sessions"),
+    };
+    let report = yaaml::daemon::process_codex_backlog(&db, &config, &codex_root)?;
+    let completed_tasks = yaaml::daemon::run_queued_tasks(&db, &config, 10)?;
+
+    if args.json {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&serde_json::json!({
+                "discovered_files": report.discovered_files,
+                "processed_files": report.processed_files,
+                "processed_turns": report.processed_turns,
+                "queued_memory_jobs": report.queued_memory_jobs,
+                "completed_tasks": completed_tasks,
+                "failures": report.failures,
+            }))?
+        );
+    } else {
+        println!(
+            "ingested {} files, {} turns, queued {} memory jobs, completed {} tasks, {} failures",
+            report.processed_files,
+            report.processed_turns,
+            report.queued_memory_jobs,
+            completed_tasks,
+            report.failures
+        );
+    }
     Ok(())
 }
 

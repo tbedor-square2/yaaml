@@ -99,20 +99,24 @@ pub fn parse_embedding_response(body: &str) -> Result<Vec<f32>, ProviderError> {
 #[cfg(test)]
 mod tests {
     use std::cell::RefCell;
+    use std::io::{Read, Write};
+    use std::net::TcpListener;
+    use std::rc::Rc;
+    use std::thread;
 
-    use crate::transport::{HttpResponse, HttpTransport};
+    use crate::transport::{HttpResponse, HttpTransport, ReqwestTransport};
 
     use super::*;
 
     struct MockTransport {
-        request: RefCell<Option<HttpRequest>>,
+        request: Rc<RefCell<Option<HttpRequest>>>,
         response: HttpResponse,
     }
 
     impl Default for MockTransport {
         fn default() -> Self {
             Self {
-                request: RefCell::new(None),
+                request: Rc::new(RefCell::new(None)),
                 response: HttpResponse {
                     status: 200,
                     body: r#"{"data":[{"embedding":[0.1,0.2,0.3]}]}"#.to_string(),
@@ -156,6 +160,7 @@ mod tests {
     fn sends_embedding_request() {
         env::set_var("YAAML_TEST_OPENAI_KEY", "test-key");
         let transport = MockTransport::default();
+        let request = transport.request.clone();
         let config = OpenAiEmbeddingConfig {
             model: "text-embedding-3-small".to_string(),
             api_key_env: "YAAML_TEST_OPENAI_KEY".to_string(),
@@ -166,5 +171,54 @@ mod tests {
         let embedding = client.embed("hello").unwrap();
 
         assert_eq!(embedding, vec![0.1, 0.2, 0.3]);
+        let request = request.borrow();
+        let request = request.as_ref().unwrap();
+        assert_eq!(request.url, "https://example.test/v1/embeddings");
+        assert_eq!(request.body["model"], "text-embedding-3-small");
+        assert_eq!(request.body["input"], "hello");
+    }
+
+    #[test]
+    fn default_config_sets_embedding_model() {
+        let config = OpenAiEmbeddingConfig::from_config(&Config::default());
+
+        assert_eq!(config.model, "text-embedding-3-small");
+    }
+
+    #[test]
+    fn reqwest_transport_sends_model_parameter() {
+        env::set_var("YAAML_TEST_OPENAI_KEY", "test-key");
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let base_url = format!("http://{}", listener.local_addr().unwrap());
+        let handle = thread::spawn(move || {
+            let (mut stream, _) = listener.accept().unwrap();
+            let mut buffer = [0_u8; 8192];
+            let bytes = stream.read(&mut buffer).unwrap();
+            let request = String::from_utf8_lossy(&buffer[..bytes]).to_string();
+            let body = r#"{"data":[{"embedding":[0.1,0.2,0.3]}]}"#;
+            let response = format!(
+                "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+                body.len(),
+                body
+            );
+            stream.write_all(response.as_bytes()).unwrap();
+            request
+        });
+        let config = OpenAiEmbeddingConfig {
+            model: "text-embedding-3-small".to_string(),
+            api_key_env: "YAAML_TEST_OPENAI_KEY".to_string(),
+            base_url,
+        };
+        let client = OpenAiEmbeddingClient::new(config, ReqwestTransport::default());
+
+        let embedding = client.embed("hello").unwrap();
+        let request = handle.join().unwrap();
+
+        assert_eq!(embedding, vec![0.1, 0.2, 0.3]);
+        assert!(
+            request.contains(r#""model":"text-embedding-3-small""#),
+            "{request}"
+        );
+        assert!(request.contains(r#""input":"hello""#), "{request}");
     }
 }

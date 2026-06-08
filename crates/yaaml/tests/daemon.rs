@@ -4,9 +4,9 @@ use std::os::unix::net::UnixStream;
 
 use tempfile::TempDir;
 use yaaml::daemon::{
-    ingest_codex_file, queue_memory_formulation_if_due, recover_running_tasks,
-    refresh_recall_with_embedding, start_signal_socket, DaemonShutdown,
-    TASK_KIND_MEMORY_FORMULATION,
+    ingest_codex_file, process_codex_backlog, queue_memory_formulation_if_due,
+    recover_running_tasks, refresh_recall_with_embedding, run_queued_tasks, start_signal_socket,
+    DaemonShutdown, TASK_KIND_MEMORY_FORMULATION,
 };
 use yaaml_core::{
     recall_file_path, Config, EmbeddingRecord, MemoryRecord, MemoryScope, TurnRecord,
@@ -35,6 +35,28 @@ fn appending_codex_jsonl_turn_creates_turn_row_from_cursor() {
 }
 
 #[test]
+fn codex_backlog_processing_discovers_and_ingests_uncursored_files() {
+    let tmp = TempDir::new().unwrap();
+    let root = tmp.path().join("sessions");
+    let dated = root.join("2026").join("06").join("08");
+    fs::create_dir_all(&dated).unwrap();
+    fs::write(
+        dated.join("session.jsonl"),
+        format!("{}{}", session_meta(), completed_turn(1)),
+    )
+    .unwrap();
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+
+    let report = process_codex_backlog(&db, &Config::default(), &root).unwrap();
+
+    assert_eq!(report.discovered_files, 1);
+    assert_eq!(report.processed_files, 1);
+    assert_eq!(report.processed_turns, 1);
+    assert_eq!(db.status().unwrap().backlog.processed_files, 1);
+}
+
+#[test]
 fn completing_enough_turns_queues_memory_creation() {
     let tmp = TempDir::new().unwrap();
     let transcript = tmp.path().join("session.jsonl");
@@ -56,6 +78,43 @@ fn completing_enough_turns_queues_memory_creation() {
             .unwrap(),
         1
     );
+}
+
+#[test]
+fn queued_memory_task_parks_when_provider_is_unavailable() {
+    std::env::remove_var("YAAML_TEST_MISSING_ANTHROPIC_KEY");
+    let tmp = TempDir::new().unwrap();
+    let transcript = tmp.path().join("session.jsonl");
+    fs::write(
+        &transcript,
+        format!("{}{}", session_meta(), completed_turn(1)),
+    )
+    .unwrap();
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+    ingest_codex_file(&db, &transcript).unwrap();
+    db.enqueue_task(&yaaml_core::TaskRecord {
+        id: None,
+        kind: TASK_KIND_MEMORY_FORMULATION.to_string(),
+        status: yaaml_core::TaskStatus::Queued,
+        priority: 0,
+        payload_json: serde_json::json!({"session_id":"session-1"}).to_string(),
+        attempts: 0,
+        max_attempts: 5,
+        next_run_at: None,
+        last_error: None,
+        created_at: "2026-06-08T00:00:00Z".to_string(),
+        updated_at: "2026-06-08T00:00:00Z".to_string(),
+    })
+    .unwrap();
+    let mut config = Config::default();
+    config.summary_api_key_env = "YAAML_TEST_MISSING_ANTHROPIC_KEY".to_string();
+
+    assert_eq!(run_queued_tasks(&db, &config, 1).unwrap(), 0);
+    let status = db.status().unwrap();
+
+    assert_eq!(status.parked_jobs, 1);
+    assert_eq!(status.workers.queued_jobs, 0);
 }
 
 #[test]

@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fs;
 use std::io::{Read, Write};
 use std::os::unix::net::{UnixListener, UnixStream};
@@ -13,12 +14,17 @@ use anyhow::Context;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use serde_json::json;
 use yaaml_core::{
-    apply_project_bonus, build_recall_query, recall_file_path, render_recall_markdown,
-    write_recall_file, Config, RecallCandidate, RecallMemory, SourceTurnRef, TaskRecord,
-    TaskStatus, VectorIndex,
+    apply_project_bonus, build_recall_query, derive_project_descriptor, embedded_text_hash,
+    embedding_text, parse_formulation_response, recall_file_path, render_recall_markdown,
+    write_recall_file, Config, EmbeddingRecord, RecallCandidate, RecallMemory, SourceTurnRef,
+    TaskRecord, TaskStatus, VectorIndex,
 };
+use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
+use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
+use yaaml_llm::ReqwestTransport;
 use yaaml_store::{Database, SqliteExactVectorIndex};
 use yaaml_transcript::codex::parse_codex_file_from_offset_with_session;
+use yaaml_transcript::discovery::discover_codex_backlog;
 
 pub const TASK_KIND_MEMORY_FORMULATION: &str = "memory_formulation";
 pub const TASK_KIND_RECALL: &str = "recall";
@@ -28,6 +34,15 @@ pub struct IngestReport {
     pub session_id: String,
     pub inserted_turns: u64,
     pub next_offset: u64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BacklogIngestReport {
+    pub discovered_files: u64,
+    pub processed_files: u64,
+    pub processed_turns: u64,
+    pub queued_memory_jobs: u64,
+    pub failures: u64,
 }
 
 #[derive(Debug, Clone)]
@@ -94,6 +109,200 @@ pub fn ingest_codex_file(db: &Database, transcript_path: &Path) -> anyhow::Resul
         inserted_turns,
         next_offset: parsed.next_offset,
     })
+}
+
+pub fn process_codex_backlog(
+    db: &Database,
+    config: &Config,
+    sessions_root: &Path,
+) -> anyhow::Result<BacklogIngestReport> {
+    let already_cursored = db
+        .cursor_paths()
+        .context("failed to load transcript cursors")?
+        .into_iter()
+        .collect::<HashSet<_>>();
+    let files = discover_codex_backlog(sessions_root, &already_cursored)
+        .context("failed to discover Codex backlog")?;
+    let mut report = BacklogIngestReport {
+        discovered_files: files.len() as u64,
+        processed_files: 0,
+        processed_turns: 0,
+        queued_memory_jobs: 0,
+        failures: 0,
+    };
+    if report.discovered_files > 0 {
+        db.add_backlog_progress(report.discovered_files, 0, 0, 0, 0, Some(&unix_timestamp()))
+            .context("failed to record backlog discovery")?;
+    }
+
+    for file in files {
+        match ingest_codex_file(db, &file.path) {
+            Ok(ingested) => {
+                report.processed_files += 1;
+                report.processed_turns += ingested.inserted_turns;
+                let queued_memory_jobs = if ingested.inserted_turns > 0
+                    && queue_memory_formulation_if_due(db, config, &ingested.session_id, 0)?
+                        .is_some()
+                {
+                    report.queued_memory_jobs += 1;
+                    1
+                } else {
+                    0
+                };
+                db.add_backlog_progress(
+                    0,
+                    1,
+                    ingested.inserted_turns,
+                    queued_memory_jobs,
+                    0,
+                    Some(&unix_timestamp()),
+                )
+                .context("failed to record backlog progress")?;
+            }
+            Err(_) => {
+                report.failures += 1;
+                db.add_backlog_progress(0, 0, 0, 0, 1, Some(&unix_timestamp()))
+                    .context("failed to record backlog failure")?;
+            }
+        }
+    }
+
+    Ok(report)
+}
+
+pub fn run_queued_tasks(db: &Database, config: &Config, limit: usize) -> anyhow::Result<usize> {
+    let mut completed = 0;
+    for _ in 0..limit {
+        let Some(task) = db
+            .next_queued_task()
+            .context("failed to fetch queued task")?
+        else {
+            break;
+        };
+        let task_id = task.id.context("queued task missing id")?;
+        db.mark_task_running(task_id, &unix_timestamp())
+            .context("failed to mark task running")?;
+        let result = match task.kind.as_str() {
+            TASK_KIND_MEMORY_FORMULATION => run_memory_formulation_task(db, config, &task),
+            _ => Ok(()),
+        };
+        match result {
+            Ok(()) => {
+                db.complete_task(task_id, &unix_timestamp())
+                    .context("failed to complete task")?;
+                completed += 1;
+            }
+            Err(error) => {
+                db.park_task(
+                    task_id,
+                    &format_error_chain(error.as_ref()),
+                    &unix_timestamp(),
+                )
+                .context("failed to park task")?;
+            }
+        }
+    }
+    Ok(completed)
+}
+
+fn format_error_chain(error: &dyn std::error::Error) -> String {
+    let mut message = error.to_string();
+    let mut source = error.source();
+    while let Some(error) = source {
+        message.push_str(": ");
+        message.push_str(&error.to_string());
+        source = error.source();
+    }
+    message
+}
+
+fn run_memory_formulation_task(
+    db: &Database,
+    config: &Config,
+    task: &TaskRecord,
+) -> anyhow::Result<()> {
+    let payload: serde_json::Value =
+        serde_json::from_str(&task.payload_json).context("failed to parse task payload")?;
+    let session_id = payload
+        .get("session_id")
+        .and_then(serde_json::Value::as_str)
+        .context("memory formulation task missing session_id")?;
+    let session = db
+        .session_by_id(session_id)
+        .context("failed to load task session")?
+        .context("memory formulation task references missing session")?;
+    let turns = db
+        .turns_for_session(session_id, config.turns_between_memory as usize)
+        .context("failed to load task turns")?;
+    if turns.is_empty() {
+        return Ok(());
+    }
+    let source_turn_refs = turns
+        .iter()
+        .map(|turn| SourceTurnRef {
+            session_id: turn.session_id.clone(),
+            ordinal: turn.ordinal,
+            byte_start: turn.byte_start,
+            byte_end: turn.byte_end,
+        })
+        .collect::<Vec<_>>();
+    let project_descriptor = derive_project_descriptor(Path::new(&session.project_id), None);
+    let prompt = formulation_prompt(&project_descriptor, &turns);
+    let summary_client = AnthropicMessageClient::new(
+        AnthropicMessageConfig::summary_from_config(config),
+        ReqwestTransport::default(),
+    );
+    let value = summary_client
+        .structured_json(formulation_system_prompt(), &prompt)
+        .context("failed to formulate memory")?;
+    let drafts = parse_formulation_response(&value, &project_descriptor, config.max_memory_length)
+        .context("failed to parse memory formulation")?;
+    let embedding_client = OpenAiEmbeddingClient::new(
+        OpenAiEmbeddingConfig::from_config(config),
+        ReqwestTransport::default(),
+    );
+    let now = unix_timestamp();
+    for draft in drafts {
+        let memory = draft.into_record(
+            source_turn_refs.clone(),
+            now.clone(),
+            Some(session.id.clone()),
+            Some(session.project_id.clone()),
+        );
+        let text = embedding_text(&memory);
+        let vector = embedding_client
+            .embed(&text)
+            .context("failed to embed memory")?;
+        let memory_id = db
+            .insert_memory(&memory)
+            .context("failed to insert memory")?;
+        db.upsert_embedding(&EmbeddingRecord {
+            memory_id,
+            embedding_model: config.embedding_model.clone(),
+            dimensions: vector.len() as u64,
+            embedding_blob: yaaml_store::database::encode_f32_embedding(&vector),
+            embedded_text_hash: embedded_text_hash(&text),
+            updated_at: now.clone(),
+        })
+        .context("failed to persist embedding")?;
+    }
+    Ok(())
+}
+
+fn formulation_system_prompt() -> &'static str {
+    "Create concise durable memories from coding-agent transcript turns. Return only JSON shaped as {\"memories\":[{\"title\":\"...\",\"body\":\"...\",\"scope\":\"project\"|\"global\",\"project_descriptor\":\"...\"}]}. Prefer small, granular memories. Use global scope only for durable cross-project user preferences or agent workflow patterns."
+}
+
+fn formulation_prompt(project_descriptor: &str, turns: &[yaaml_core::TurnRecord]) -> String {
+    let mut prompt = format!("Project descriptor: {project_descriptor}\n\nTurns:\n");
+    for turn in turns {
+        prompt.push_str(&format!(
+            "\nTurn {}:\n{}\n",
+            turn.ordinal,
+            turn.display_text.as_deref().unwrap_or("")
+        ));
+    }
+    prompt
 }
 
 pub fn queue_memory_formulation_if_due(

@@ -1,0 +1,67 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "yaaml"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "anthropic>=0.40",
+    "openai>=1.0",
+    "chromadb>=0.5",
+    "watchdog>=4.0",
+    "typer>=0.12",
+    "rich>=13",
+    "scikit-learn>=1.4",
+    "numpy>=1.26",
+]
+
+[project.scripts]
+yaaml = "yaaml.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/yaaml"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"src/yaaml/skills" = "yaaml/skills"
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-asyncio>=0.23",
+    "mypy>=1.10",
+    "ruff>=0.4",
+    "types-setuptools",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "TCH", "ANN"]
+ignore = [
+    "ANN401",  # Any is ok sometimes
+    "B008",    # typer uses function calls in defaults
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ANN", "S", "TC"]
+"src/yaaml/cli.py" = ["TC001"]
+"src/yaaml/harness.py" = ["TC003"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_ignores = true
+exclude = ["tests/"]
+
+[[tool.mypy.overrides]]
+module = ["chromadb.*", "watchdog.*", "sklearn.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

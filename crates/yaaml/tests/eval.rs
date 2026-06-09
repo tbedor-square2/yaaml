@@ -124,6 +124,26 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     assert_eq!(shown["run"]["id"], run_id);
     assert_eq!(shown["score_counts"]["unjudged"], 1);
     assert_eq!(shown["results"][0]["memory_title"], "Earlier memory");
+
+    let summary = Command::new(binary)
+        .arg("eval")
+        .arg("summary")
+        .arg("--json")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .output()
+        .unwrap();
+    assert!(
+        summary.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&summary.stderr)
+    );
+    let summary_value: serde_json::Value = serde_json::from_slice(&summary.stdout).unwrap();
+    assert_eq!(summary_value["runs_considered"], 1);
+    assert_eq!(summary_value["results_considered"], 1);
+    assert_eq!(summary_value["judged_results"], 0);
+    assert_eq!(summary_value["average_score"], serde_json::Value::Null);
+    assert_eq!(summary_value["score_counts"]["unjudged"], 1);
 }
 
 #[test]
@@ -208,6 +228,162 @@ eval_judge_api_key_env = "YAAML_TEST_ANTHROPIC_KEY"
     server.join();
     let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
     assert_eq!(value["score_counts"]["5"], 1);
+}
+
+#[test]
+fn eval_summary_reports_distribution_and_examples() {
+    let tmp = TempDir::new().unwrap();
+    let home = tmp.path().join("home");
+    let project = tmp.path().join("project");
+    fs::create_dir_all(home.join(".yaaml")).unwrap();
+    fs::create_dir_all(&project).unwrap();
+    let db_path = home.join(".yaaml").join("yaaml.db");
+    fs::write(
+        home.join(".yaaml").join("config.toml"),
+        format!(
+            r#"
+db_path = "{}"
+embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
+"#,
+            db_path.display()
+        ),
+    )
+    .unwrap();
+    let mut db = Database::open(&db_path).unwrap();
+    db.migrate().unwrap();
+    db.upsert_session(&SessionRecord {
+        id: "session-1".to_string(),
+        agent_type: AgentType::Codex,
+        project_id: project.display().to_string(),
+        transcript_file_path: "/tmp/session.jsonl".to_string(),
+        started_at: Some("2026-06-08T00:00:00Z".to_string()),
+        last_seen_at: Some("2026-06-08T00:00:01Z".to_string()),
+    })
+    .unwrap();
+    db.insert_turn(&TurnRecord {
+        session_id: "session-1".to_string(),
+        turn_id: Some("turn-1".to_string()),
+        ordinal: 7,
+        byte_start: 0,
+        byte_end: 10,
+        observed_at: Some("2026-06-08T00:00:02Z".to_string()),
+        status: TurnStatus::Completed,
+        display_text: Some("use recall".to_string()),
+    })
+    .unwrap();
+    let turn_row_id = db
+        .turn_row_id_for_session_ordinal("session-1", 7)
+        .unwrap()
+        .unwrap();
+    let low_memory_id = db
+        .insert_memory(&MemoryRecord {
+            id: None,
+            title: "Weak memory".to_string(),
+            body: "Mostly unrelated context".to_string(),
+            scope: MemoryScope::Project,
+            source_turn_refs: Vec::new(),
+            created_at: "2026-06-08T00:00:01Z".to_string(),
+            updated_at: "2026-06-08T00:00:01Z".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some(project.display().to_string()),
+            project_descriptor: Some("yaaml".to_string()),
+            lineage_refs: Vec::new(),
+        })
+        .unwrap();
+    let high_memory_id = db
+        .insert_memory(&MemoryRecord {
+            id: None,
+            title: "Useful memory".to_string(),
+            body: "Directly actionable context".to_string(),
+            scope: MemoryScope::Project,
+            source_turn_refs: Vec::new(),
+            created_at: "2026-06-08T00:00:01Z".to_string(),
+            updated_at: "2026-06-08T00:00:01Z".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some(project.display().to_string()),
+            project_descriptor: Some("yaaml".to_string()),
+            lineage_refs: Vec::new(),
+        })
+        .unwrap();
+    let run_id = db
+        .insert_eval_run(
+            "default",
+            "2026-06-08T00:00:03Z",
+            r#"{"session_id":"session-1","turn_ordinal":7}"#,
+        )
+        .unwrap();
+    db.insert_eval_result(
+        run_id,
+        turn_row_id,
+        Some(low_memory_id),
+        "2",
+        "weak relevance",
+        "2026-06-08T00:00:04Z",
+    )
+    .unwrap();
+    db.insert_eval_result(
+        run_id,
+        turn_row_id,
+        Some(high_memory_id),
+        "5",
+        "directly relevant and actionable",
+        "2026-06-08T00:00:05Z",
+    )
+    .unwrap();
+    db.complete_eval_run(run_id, "2026-06-08T00:00:06Z")
+        .unwrap();
+
+    let binary = env!("CARGO_BIN_EXE_yaaml");
+    let output = Command::new(binary)
+        .arg("eval")
+        .arg("summary")
+        .arg("--json")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(value["runs_considered"], 1);
+    assert_eq!(value["results_considered"], 2);
+    assert_eq!(value["judged_results"], 2);
+    assert_eq!(value["average_score"], 3.5);
+    assert_eq!(value["score_counts"]["2"], 1);
+    assert_eq!(value["score_counts"]["5"], 1);
+    assert_eq!(
+        value["low_score_examples"][0]["memory_title"],
+        "Weak memory"
+    );
+    assert_eq!(
+        value["high_score_examples"][0]["memory_title"],
+        "Useful memory"
+    );
+    assert_eq!(value["high_score_examples"][0]["session_id"], "session-1");
+    assert_eq!(value["high_score_examples"][0]["turn_ordinal"], 7);
+
+    let human = Command::new(binary)
+        .arg("eval")
+        .arg("summary")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .output()
+        .unwrap();
+    assert!(
+        human.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&human.stderr)
+    );
+    let human_stdout = String::from_utf8_lossy(&human.stdout);
+    assert!(human_stdout.contains("Eval summary"));
+    assert!(human_stdout.contains("average score: 3.50"));
+    assert!(human_stdout.contains("Weak memory"));
+    assert!(human_stdout.contains("Useful memory"));
 }
 
 struct FakeServer {

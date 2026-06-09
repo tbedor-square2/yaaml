@@ -1929,6 +1929,7 @@ dependencies = [
  "anyhow",
  "clap",
  "notify",
+ "serde",
  "serde_json",
  "tempfile",
  "yaaml-core",

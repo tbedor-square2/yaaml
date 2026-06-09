@@ -6,6 +6,7 @@ use std::{env, fs};
 
 use anyhow::{bail, Context};
 use clap::{Parser, Subcommand, ValueEnum};
+use serde::Serialize;
 use yaaml_core::{
     apply_project_bonus, counterfactual_citation_score, derive_project_descriptor,
     embedded_text_hash, embedding_text, parse_eval_judge_response, recall_file_path,
@@ -16,6 +17,7 @@ use yaaml_core::{
 use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
 use yaaml_llm::ReqwestTransport;
+use yaaml_store::database::{EvalResultRecord, EvalRunRecord};
 use yaaml_store::lock::DaemonLock;
 use yaaml_store::{Database, SqliteExactVectorIndex};
 
@@ -95,6 +97,8 @@ enum EvalCommand {
     List(EvalListArgs),
     /// Show one eval run and its results.
     Show(EvalShowArgs),
+    /// Summarize recent recall eval quality.
+    Summary(EvalSummaryArgs),
 }
 
 #[derive(Debug, Parser)]
@@ -124,6 +128,16 @@ struct EvalListArgs {
 struct EvalShowArgs {
     /// Eval run id.
     run_id: i64,
+    /// Emit machine-readable JSON.
+    #[arg(long)]
+    json: bool,
+}
+
+#[derive(Debug, Parser)]
+struct EvalSummaryArgs {
+    /// Maximum recent runs to summarize.
+    #[arg(long, default_value_t = 50)]
+    limit: usize,
     /// Emit machine-readable JSON.
     #[arg(long)]
     json: bool,
@@ -352,6 +366,7 @@ fn eval(args: EvalArgs) -> anyhow::Result<()> {
         EvalCommand::Recall(args) => eval_recall(args),
         EvalCommand::List(args) => eval_list(args),
         EvalCommand::Show(args) => eval_show(args),
+        EvalCommand::Summary(args) => eval_summary(args),
     }
 }
 
@@ -544,6 +559,209 @@ fn eval_show(args: EvalShowArgs) -> anyhow::Result<()> {
         }
     }
     Ok(())
+}
+
+fn eval_summary(args: EvalSummaryArgs) -> anyhow::Result<()> {
+    let cwd = env::current_dir().context("failed to determine current directory")?;
+    let config = Config::load_for_cwd(&cwd).context("failed to load config")?;
+    let db_path = config.db_path().context("failed to resolve db_path")?;
+    let mut db = Database::open(&db_path)
+        .with_context(|| format!("failed to open {}", display(&db_path)))?;
+    db.migrate().context("failed to migrate database")?;
+    let runs = db
+        .list_eval_runs(args.limit)
+        .context("failed to list eval runs")?;
+    let summary = build_eval_summary(&db, runs)?;
+
+    if args.json {
+        println!("{}", serde_json::to_string_pretty(&summary)?);
+    } else {
+        print_human_eval_summary(&summary);
+    }
+    Ok(())
+}
+
+#[derive(Debug, Serialize)]
+struct EvalSummary {
+    runs_considered: usize,
+    results_considered: usize,
+    judged_results: usize,
+    average_score: Option<f64>,
+    score_counts: BTreeMap<String, u64>,
+    low_score_examples: Vec<EvalSummaryExample>,
+    high_score_examples: Vec<EvalSummaryExample>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct EvalSummaryExample {
+    run_id: i64,
+    result_id: i64,
+    session_id: Option<String>,
+    turn_ordinal: Option<u64>,
+    score: String,
+    memory_id: Option<i64>,
+    memory_title: Option<String>,
+    rationale: Option<String>,
+}
+
+fn build_eval_summary(db: &Database, runs: Vec<EvalRunRecord>) -> anyhow::Result<EvalSummary> {
+    let mut all_scores = Vec::new();
+    let mut numeric_scores = Vec::new();
+    let mut low_score_examples = Vec::new();
+    let mut high_score_examples = Vec::new();
+    let mut results_considered = 0_usize;
+
+    for run in &runs {
+        let results = db
+            .eval_results_for_run(run.id)
+            .with_context(|| format!("failed to load eval results for run {}", run.id))?;
+        let run_context = eval_run_context(run);
+        for result in results {
+            results_considered += 1;
+            if let Some(score) = result.judge_score.as_deref() {
+                all_scores.push(score.to_string());
+                if let Some(numeric_score) = numeric_eval_score(score) {
+                    numeric_scores.push(numeric_score);
+                    let example = eval_summary_example(&run_context, &result, score);
+                    if numeric_score <= 2 && low_score_examples.len() < 5 {
+                        low_score_examples.push(example);
+                    } else if numeric_score >= 4 && high_score_examples.len() < 5 {
+                        high_score_examples.push(example);
+                    }
+                }
+            }
+        }
+    }
+
+    let judged_results = numeric_scores.len();
+    let average_score = if numeric_scores.is_empty() {
+        None
+    } else {
+        Some(
+            numeric_scores
+                .iter()
+                .map(|score| f64::from(*score))
+                .sum::<f64>()
+                / numeric_scores.len() as f64,
+        )
+    };
+
+    Ok(EvalSummary {
+        runs_considered: runs.len(),
+        results_considered,
+        judged_results,
+        average_score,
+        score_counts: score_counts(all_scores.iter().map(String::as_str)),
+        low_score_examples,
+        high_score_examples,
+    })
+}
+
+#[derive(Debug, Clone)]
+struct EvalRunContext {
+    run_id: i64,
+    session_id: Option<String>,
+    turn_ordinal: Option<u64>,
+}
+
+fn eval_run_context(run: &EvalRunRecord) -> EvalRunContext {
+    let config = serde_json::from_str::<serde_json::Value>(&run.config_json).ok();
+    EvalRunContext {
+        run_id: run.id,
+        session_id: config
+            .as_ref()
+            .and_then(|value| value.get("session_id"))
+            .and_then(serde_json::Value::as_str)
+            .map(str::to_string),
+        turn_ordinal: config
+            .as_ref()
+            .and_then(|value| value.get("turn_ordinal"))
+            .and_then(serde_json::Value::as_u64),
+    }
+}
+
+fn eval_summary_example(
+    run_context: &EvalRunContext,
+    result: &EvalResultRecord,
+    score: &str,
+) -> EvalSummaryExample {
+    EvalSummaryExample {
+        run_id: run_context.run_id,
+        result_id: result.id,
+        session_id: run_context.session_id.clone(),
+        turn_ordinal: run_context.turn_ordinal,
+        score: score.to_string(),
+        memory_id: result.memory_id,
+        memory_title: result.memory_title.clone(),
+        rationale: result.rationale.as_deref().map(eval_summary_snippet),
+    }
+}
+
+fn eval_summary_snippet(text: &str) -> String {
+    if text.chars().count() <= 240 {
+        text.to_string()
+    } else {
+        format!("{}...", text.chars().take(237).collect::<String>())
+    }
+}
+
+fn numeric_eval_score(score: &str) -> Option<u8> {
+    match score.trim() {
+        "1" => Some(1),
+        "2" => Some(2),
+        "3" => Some(3),
+        "4" => Some(4),
+        "5" => Some(5),
+        _ => None,
+    }
+}
+
+fn print_human_eval_summary(summary: &EvalSummary) {
+    println!("Eval summary");
+    println!("  runs: {}", summary.runs_considered);
+    println!("  results: {}", summary.results_considered);
+    println!("  judged results: {}", summary.judged_results);
+    match summary.average_score {
+        Some(score) => println!("  average score: {score:.2}"),
+        None => println!("  average score: n/a"),
+    }
+    if summary.score_counts.is_empty() {
+        println!("  scores: none");
+    } else {
+        let rendered = summary
+            .score_counts
+            .iter()
+            .map(|(score, count)| format!("{score}={count}"))
+            .collect::<Vec<_>>()
+            .join(", ");
+        println!("  scores: {rendered}");
+    }
+    print_eval_summary_examples("Low-score examples", &summary.low_score_examples);
+    print_eval_summary_examples("High-score examples", &summary.high_score_examples);
+}
+
+fn print_eval_summary_examples(label: &str, examples: &[EvalSummaryExample]) {
+    if examples.is_empty() {
+        return;
+    }
+    println!("{label}");
+    for example in examples {
+        let title = example.memory_title.as_deref().unwrap_or("no memory");
+        println!(
+            "  run={} result={} score={} memory={} title={}",
+            example.run_id,
+            example.result_id,
+            example.score,
+            example
+                .memory_id
+                .map(|id| id.to_string())
+                .unwrap_or_else(|| "-".to_string()),
+            title
+        );
+        if let Some(rationale) = &example.rationale {
+            println!("    {rationale}");
+        }
+    }
 }
 
 #[derive(Debug, Clone)]

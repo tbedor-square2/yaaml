@@ -989,7 +989,16 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
                 fs::read_to_string(&recall_path).context("failed to read recall file")?
             );
         } else {
-            println!("no recall file at {}", recall_path.display());
+            let project_recall_path = recall_file_path(&recall_dir, &project_id_path);
+            if project_recall_path != recall_path && project_recall_path.exists() {
+                print!(
+                    "{}",
+                    fs::read_to_string(&project_recall_path)
+                        .context("failed to read project recall file")?
+                );
+            } else {
+                println!("no recall file at {}", recall_path.display());
+            }
         }
         return Ok(());
     };

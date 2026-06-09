@@ -1,14 +1,17 @@
 use std::fs::{self, OpenOptions};
 use std::io::{Read, Write};
 use std::net::Shutdown;
+use std::net::TcpListener;
 use std::os::unix::net::UnixStream;
+use std::path::Path;
+use std::thread;
 
 use tempfile::TempDir;
 use yaaml::daemon::{
     dedupe_active_memories, ingest_codex_file, process_codex_backlog, process_codex_changes,
     queue_memory_formulation_if_due, queue_missing_memory_formulation_tasks, recover_running_tasks,
     refresh_recall_with_embedding, run_queued_tasks, start_signal_socket, DaemonShutdown,
-    PartialBatchPolicy, TASK_KIND_MEMORY_FORMULATION, TASK_KIND_RECALL_EVAL,
+    PartialBatchPolicy, TASK_KIND_MEMORY_FORMULATION, TASK_KIND_RECALL, TASK_KIND_RECALL_EVAL,
 };
 use yaaml_core::{
     session_recall_file_path, AgentType, Config, EmbeddingRecord, MemoryRecord, MemoryScope,
@@ -99,6 +102,71 @@ fn codex_change_processing_ingests_appended_cursored_file() {
     assert_eq!(db.completed_turn_count_for_session("session-1").unwrap(), 1);
     assert_eq!(db.status().unwrap().backlog.processed_files, 1);
     assert_eq!(db.status().unwrap().backlog.processed_turns, 1);
+}
+
+#[test]
+fn codex_change_processing_queues_and_runs_background_recall() {
+    let tmp = TempDir::new().unwrap();
+    let root = tmp.path().join("sessions");
+    let recall_dir = tmp.path().join("recall");
+    let dated = root.join("2026").join("06").join("08");
+    fs::create_dir_all(&dated).unwrap();
+    let transcript = dated.join("session.jsonl");
+    fs::write(&transcript, session_meta()).unwrap();
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+    ingest_codex_file(&db, &transcript).unwrap();
+
+    let server = fake_embedding_server();
+    let mut config = Config {
+        recall_dir: recall_dir.display().to_string(),
+        embedding_base_url: Some(server.base_url.clone()),
+        embedding_api_key_env: "YAAML_TEST_DAEMON_RECALL_KEY".to_string(),
+        ..Config::default()
+    };
+    config.recall_candidate_pool = 5;
+    config.turns_between_memory = 100;
+    std::env::set_var("YAAML_TEST_DAEMON_RECALL_KEY", "test-key");
+    let memory_id = db
+        .insert_memory(&memory(
+            "Background recall",
+            "Completed transcript turns should refresh the session recall file.",
+            Some("/tmp/yaaml"),
+        ))
+        .unwrap();
+    db.upsert_embedding(&EmbeddingRecord {
+        memory_id,
+        embedding_model: config.embedding_model.clone(),
+        dimensions: 2,
+        embedding_blob: encode_f32_embedding(&[1.0, 0.0]),
+        embedded_text_hash: "hash".to_string(),
+        updated_at: "2026-06-08T00:00:00Z".to_string(),
+    })
+    .unwrap();
+    append(&transcript, &completed_turn(1));
+
+    let report = process_codex_changes(&db, &config, &root).unwrap();
+
+    assert_eq!(report.processed_turns, 1);
+    assert_eq!(
+        db.count_tasks_by_status(TASK_KIND_RECALL, TaskStatus::Queued)
+            .unwrap(),
+        1
+    );
+
+    assert_eq!(run_queued_tasks(&db, &config, 1).unwrap(), 1);
+    let session = db.session_by_id("session-1").unwrap().unwrap();
+    let path = session_recall_file_path(&recall_dir, Path::new(&session.project_id), "session-1");
+    let markdown = fs::read_to_string(path).unwrap();
+
+    assert!(markdown.contains("## Background recall"));
+    assert_eq!(
+        db.count_tasks_by_status(TASK_KIND_RECALL_EVAL, TaskStatus::Queued)
+            .unwrap(),
+        1
+    );
+    server.join();
+    std::env::remove_var("YAAML_TEST_DAEMON_RECALL_KEY");
 }
 
 #[test]
@@ -587,6 +655,36 @@ fn session_meta() -> String {
     r#"{"timestamp":"2026-06-08T00:00:00Z","type":"session_meta","payload":{"id":"session-1","timestamp":"2026-06-08T00:00:00Z","cwd":"/tmp/yaaml"}}"#
         .to_string()
         + "\n"
+}
+
+struct FakeEmbeddingServer {
+    base_url: String,
+    handle: thread::JoinHandle<()>,
+}
+
+impl FakeEmbeddingServer {
+    fn join(self) {
+        self.handle.join().unwrap();
+    }
+}
+
+fn fake_embedding_server() -> FakeEmbeddingServer {
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let base_url = format!("http://{}", listener.local_addr().unwrap());
+    let handle = thread::spawn(move || {
+        let (mut stream, _) = listener.accept().unwrap();
+        let mut buffer = [0_u8; 8192];
+        let _ = stream.read(&mut buffer).unwrap();
+        let body = r#"{"data":[{"embedding":[1.0,0.0]}]}"#;
+        let response = format!(
+            "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+            body.len(),
+            body
+        );
+        stream.write_all(response.as_bytes()).unwrap();
+    });
+
+    FakeEmbeddingServer { base_url, handle }
 }
 
 fn session_meta_with(id: &str, cwd: &str) -> String {

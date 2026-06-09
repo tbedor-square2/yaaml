@@ -40,6 +40,7 @@ pub enum PartialBatchPolicy {
 pub struct IngestReport {
     pub session_id: String,
     pub inserted_turns: u64,
+    pub last_inserted_ordinal: Option<u64>,
     pub next_offset: u64,
 }
 
@@ -112,6 +113,7 @@ pub fn ingest_codex_file(db: &Database, transcript_path: &Path) -> anyhow::Resul
     db.upsert_session(&parsed.session)
         .context("failed to persist Codex session")?;
     let mut inserted_turns = 0;
+    let mut last_inserted_ordinal = None;
     for turn in &parsed.turns {
         let mut turn = turn.clone();
         turn.ordinal += ordinal_base;
@@ -120,6 +122,7 @@ pub fn ingest_codex_file(db: &Database, transcript_path: &Path) -> anyhow::Resul
             .context("failed to persist Codex turn")?
         {
             inserted_turns += 1;
+            last_inserted_ordinal = Some(turn.ordinal);
         }
     }
     let last_observed_at = parsed
@@ -136,6 +139,7 @@ pub fn ingest_codex_file(db: &Database, transcript_path: &Path) -> anyhow::Resul
     Ok(IngestReport {
         session_id: parsed.session.id,
         inserted_turns,
+        last_inserted_ordinal,
         next_offset: parsed.next_offset,
     })
 }
@@ -222,6 +226,10 @@ pub fn process_codex_changes(
                 if ingested.next_offset > previous_offset || ingested.inserted_turns > 0 {
                     report.changed_files += 1;
                     report.processed_turns += ingested.inserted_turns;
+                    if let Some(turn_ordinal) = ingested.last_inserted_ordinal {
+                        queue_recall_after_turn(db, &ingested.session_id, turn_ordinal, 20)
+                            .context("failed to queue Codex recall refresh")?;
+                    }
                     db.add_backlog_progress(
                         0,
                         1,
@@ -266,6 +274,7 @@ pub fn run_queued_tasks(db: &Database, config: &Config, limit: usize) -> anyhow:
             .context("failed to mark task running")?;
         let result = match task.kind.as_str() {
             TASK_KIND_MEMORY_FORMULATION => run_memory_formulation_task(db, config, &task),
+            TASK_KIND_RECALL => run_recall_task(db, config, &task),
             TASK_KIND_RECALL_EVAL => run_recall_eval_task(db, config, &task),
             _ => Ok(()),
         };
@@ -381,6 +390,55 @@ fn run_memory_formulation_task(
         .context("failed to persist embedding")?;
     }
     Ok(())
+}
+
+fn run_recall_task(db: &Database, config: &Config, task: &TaskRecord) -> anyhow::Result<()> {
+    let payload: serde_json::Value =
+        serde_json::from_str(&task.payload_json).context("failed to parse recall payload")?;
+    let session_id = payload
+        .get("session_id")
+        .and_then(serde_json::Value::as_str)
+        .context("recall task missing session_id")?;
+    let turn_ordinal = payload
+        .get("turn_ordinal")
+        .and_then(serde_json::Value::as_u64)
+        .context("recall task missing turn_ordinal")?;
+    let session = db
+        .session_by_id(session_id)
+        .context("failed to load recall task session")?
+        .context("recall task references missing session")?;
+    let start_ordinal = turn_ordinal.saturating_sub(2);
+    let recent_turns = db
+        .completed_turns_for_session_range(session_id, start_ordinal, turn_ordinal + 1)
+        .context("failed to load recall task turns")?;
+    if recent_turns.is_empty() {
+        return Ok(());
+    }
+    let query_text = build_recall_query(
+        &recent_turns,
+        config.recall_query_max_chars,
+        config.tool_call_truncation_chars,
+    );
+    if query_text.trim().is_empty() {
+        return Ok(());
+    }
+    let embedding_client = OpenAiEmbeddingClient::new(
+        OpenAiEmbeddingConfig::from_config(config),
+        ReqwestTransport::default(),
+    );
+    let query_embedding = embedding_client
+        .embed(&query_text)
+        .context("failed to embed recall task query")?;
+    refresh_recall_with_embedding(
+        db,
+        config,
+        Path::new(&session.project_id),
+        &recent_turns,
+        &query_embedding,
+        "background completed turns",
+    )
+    .context("failed to refresh recall")
+    .map(|_| ())
 }
 
 fn run_recall_eval_task(db: &Database, config: &Config, task: &TaskRecord) -> anyhow::Result<()> {
@@ -865,13 +923,20 @@ pub fn queue_recall_after_turn(
         "session_id": session_id,
         "turn_ordinal": turn_ordinal,
     });
+    let payload_json = payload.to_string();
+    if db
+        .task_payload_exists(TASK_KIND_RECALL, &payload_json)
+        .context("failed to check existing recall task")?
+    {
+        return Ok(0);
+    }
     let now = unix_timestamp();
     let task = TaskRecord {
         id: None,
         kind: TASK_KIND_RECALL.to_string(),
         status: TaskStatus::Queued,
         priority,
-        payload_json: payload.to_string(),
+        payload_json,
         attempts: 0,
         max_attempts: 5,
         next_run_at: None,

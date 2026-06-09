@@ -803,11 +803,11 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
     let write = write_recall_file(&recall_path, &rendered, &selected_ids)
         .context("failed to write recall file")?;
     if !selected_ids.is_empty() && matches!(write, RecallWrite::Written | RecallWrite::Unchanged) {
-        if let Some(anchor_turn) = recall_eval_anchor_turn(&db, &project_id)? {
+        if let Some(anchor) = recall_eval_anchor(&db, &project_id)? {
             yaaml::daemon::queue_recall_eval_after_turn(
                 &db,
-                &anchor_turn.session_id,
-                anchor_turn.ordinal,
+                &anchor.session_id,
+                anchor.turn_ordinal,
                 &rendered,
                 &selected_ids,
                 0,
@@ -831,12 +831,19 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn recall_eval_anchor_turn(db: &Database, project_id: &str) -> anyhow::Result<Option<TurnRecord>> {
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct RecallEvalAnchor {
+    session_id: String,
+    turn_ordinal: u64,
+}
+
+fn recall_eval_anchor(db: &Database, project_id: &str) -> anyhow::Result<Option<RecallEvalAnchor>> {
     if let Some(session_id) = current_session_id() {
-        return db
-            .turns_for_session(&session_id, 1)
-            .context("failed to load current session turns")
-            .map(|turns| turns.into_iter().last());
+        let turn_ordinal = latest_turn_ordinal(db, &session_id)?.unwrap_or(0);
+        return Ok(Some(RecallEvalAnchor {
+            session_id,
+            turn_ordinal,
+        }));
     }
     let Some(session) = db
         .latest_session_for_project(project_id)
@@ -844,9 +851,17 @@ fn recall_eval_anchor_turn(db: &Database, project_id: &str) -> anyhow::Result<Op
     else {
         return Ok(None);
     };
-    db.turns_for_session(&session.id, 1)
-        .context("failed to load latest project session turns")
-        .map(|turns| turns.into_iter().last())
+    let turn_ordinal = latest_turn_ordinal(db, &session.id)?.unwrap_or(0);
+    Ok(Some(RecallEvalAnchor {
+        session_id: session.id,
+        turn_ordinal,
+    }))
+}
+
+fn latest_turn_ordinal(db: &Database, session_id: &str) -> anyhow::Result<Option<u64>> {
+    db.turns_for_session(session_id, 1)
+        .context("failed to load session turns")
+        .map(|turns| turns.into_iter().next().map(|turn| turn.ordinal))
 }
 
 fn contextual_recall_file_path(

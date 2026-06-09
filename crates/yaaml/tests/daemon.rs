@@ -12,7 +12,7 @@ use yaaml::daemon::{
 };
 use yaaml_core::{
     session_recall_file_path, AgentType, Config, EmbeddingRecord, MemoryRecord, MemoryScope,
-    SessionRecord, SourceTurnRef, TurnRecord,
+    SessionRecord, SourceTurnRef, TaskRecord, TaskStatus, TurnRecord,
 };
 use yaaml_store::database::encode_f32_embedding;
 use yaaml_store::Database;
@@ -487,6 +487,52 @@ fn recall_file_is_written_after_memory_exists_and_new_turn_completes() {
         1
     );
     assert_eq!(run_queued_tasks(&db, &config, 1).unwrap(), 0);
+}
+
+#[test]
+fn recall_eval_task_defers_until_anchor_turn_is_ingested() {
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+    let config = Config::default();
+    db.enqueue_task(&TaskRecord {
+        id: None,
+        kind: TASK_KIND_RECALL_EVAL.to_string(),
+        status: TaskStatus::Queued,
+        priority: 0,
+        payload_json: r##"{
+            "session_id":"session-1",
+            "turn_ordinal":0,
+            "recall_text":"# YAAML Recall\n\nmemory_ids: 1\n\n## Relevant memory\n\nUse YAAML recall.",
+            "memory_ids":[1],
+            "recall_at":"unix:1",
+            "eval_after":"unix:1"
+        }"##
+        .to_string(),
+        attempts: 0,
+        max_attempts: 5,
+        next_run_at: None,
+        last_error: None,
+        created_at: "unix:1".to_string(),
+        updated_at: "unix:1".to_string(),
+    })
+    .unwrap();
+
+    assert_eq!(run_queued_tasks(&db, &config, 1).unwrap(), 1);
+    assert_eq!(
+        db.count_tasks_by_status(TASK_KIND_RECALL_EVAL, TaskStatus::Completed)
+            .unwrap(),
+        1
+    );
+    assert_eq!(
+        db.count_tasks_by_status(TASK_KIND_RECALL_EVAL, TaskStatus::Queued)
+            .unwrap(),
+        1
+    );
+    assert_eq!(
+        db.count_tasks_by_status(TASK_KIND_RECALL_EVAL, TaskStatus::Parked)
+            .unwrap(),
+        0
+    );
 }
 
 #[test]

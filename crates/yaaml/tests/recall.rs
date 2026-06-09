@@ -5,9 +5,10 @@ use std::process::Command;
 use std::thread;
 
 use tempfile::TempDir;
+use yaaml::daemon::TASK_KIND_RECALL_EVAL;
 use yaaml_core::{
     recall_file_path, session_recall_file_path, AgentType, EmbeddingRecord, MemoryRecord,
-    MemoryScope, SessionRecord,
+    MemoryScope, SessionRecord, TaskStatus,
 };
 use yaaml_store::database::encode_f32_embedding;
 use yaaml_store::Database;
@@ -188,6 +189,13 @@ embedding_base_url = "{}"
 
     assert!(markdown.contains("## Session recall"));
     assert!(String::from_utf8_lossy(&output.stdout).contains("## Session recall"));
+
+    let db = Database::open(&db_path).unwrap();
+    assert_eq!(
+        db.count_tasks_by_status(TASK_KIND_RECALL_EVAL, TaskStatus::Queued)
+            .unwrap(),
+        1
+    );
 }
 
 #[test]
@@ -288,6 +296,13 @@ embedding_base_url = "{}"
 
     assert!(markdown.contains("## Fallback session recall"));
     assert!(String::from_utf8_lossy(&output.stdout).contains("## Fallback session recall"));
+
+    let db = Database::open(&db_path).unwrap();
+    assert_eq!(
+        db.count_tasks_by_status(TASK_KIND_RECALL_EVAL, TaskStatus::Queued)
+            .unwrap(),
+        1
+    );
 }
 
 struct FakeServer {

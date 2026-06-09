@@ -407,10 +407,14 @@ fn run_recall_eval_task(db: &Database, config: &Config, task: &TaskRecord) -> an
                 .collect::<Vec<_>>()
         })
         .unwrap_or_default();
-    let turn_row_id = db
+    let Some(turn_row_id) = db
         .turn_row_id_for_session_ordinal(session_id, turn_ordinal)
         .context("failed to load recall eval anchor turn")?
-        .context("recall eval anchor turn is missing")?;
+    else {
+        defer_recall_eval_until_anchor_exists(db, task)
+            .context("failed to defer recall eval task")?;
+        return Ok(());
+    };
     let later_turns = db
         .completed_turns_for_session_after_ordinal(session_id, turn_ordinal, 20)
         .context("failed to load turns after recall")?;
@@ -450,6 +454,26 @@ fn run_recall_eval_task(db: &Database, config: &Config, task: &TaskRecord) -> an
     db.complete_eval_run(run_id, &unix_timestamp())
         .context("failed to complete recall eval run")?;
     Ok(())
+}
+
+fn defer_recall_eval_until_anchor_exists(db: &Database, task: &TaskRecord) -> anyhow::Result<i64> {
+    let next_run_seconds = unix_timestamp_seconds() + 60;
+    let now = format!("unix:{}", unix_timestamp_seconds());
+    let deferred = TaskRecord {
+        id: None,
+        kind: task.kind.clone(),
+        status: TaskStatus::Queued,
+        priority: task.priority,
+        payload_json: task.payload_json.clone(),
+        attempts: task.attempts.saturating_add(1),
+        max_attempts: task.max_attempts,
+        next_run_at: Some(format!("unix:{next_run_seconds}")),
+        last_error: Some("waiting for recall eval anchor turn".to_string()),
+        created_at: task.created_at.clone(),
+        updated_at: now,
+    };
+    db.enqueue_task(&deferred)
+        .context("failed to enqueue deferred recall eval task")
 }
 
 fn formulation_system_prompt() -> &'static str {

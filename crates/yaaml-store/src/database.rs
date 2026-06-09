@@ -1,5 +1,6 @@
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::time::Duration;
 
 use rusqlite::{params, Connection, OptionalExtension};
 use serde::Serialize;
@@ -63,12 +64,15 @@ impl Database {
         }
 
         let conn = Connection::open(&path)?;
+        configure_connection(&conn, true)?;
         Ok(Self { conn, path })
     }
 
     pub fn in_memory() -> Result<Self, DatabaseError> {
+        let conn = Connection::open_in_memory()?;
+        configure_connection(&conn, false)?;
         Ok(Self {
-            conn: Connection::open_in_memory()?,
+            conn,
             path: PathBuf::from(":memory:"),
         })
     }
@@ -956,6 +960,16 @@ impl Database {
     }
 }
 
+fn configure_connection(conn: &Connection, enable_wal: bool) -> Result<(), DatabaseError> {
+    conn.busy_timeout(Duration::from_secs(5))?;
+    conn.pragma_update(None, "foreign_keys", "ON")?;
+    if enable_wal {
+        conn.pragma_update(None, "journal_mode", "WAL")?;
+        conn.pragma_update(None, "synchronous", "NORMAL")?;
+    }
+    Ok(())
+}
+
 fn i64_to_u64(value: i64) -> u64 {
     value.try_into().unwrap_or(0)
 }
@@ -1129,6 +1143,29 @@ mod tests {
                 "missing {expected}"
             );
         }
+    }
+
+    #[test]
+    fn file_database_uses_wal_and_busy_timeout() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let db = Database::open(tmp.path().join("yaaml.db")).unwrap();
+
+        let busy_timeout_ms: i64 = db
+            .conn
+            .query_row("PRAGMA busy_timeout", [], |row| row.get(0))
+            .unwrap();
+        let journal_mode: String = db
+            .conn
+            .query_row("PRAGMA journal_mode", [], |row| row.get(0))
+            .unwrap();
+        let synchronous: i64 = db
+            .conn
+            .query_row("PRAGMA synchronous", [], |row| row.get(0))
+            .unwrap();
+
+        assert_eq!(busy_timeout_ms, 5_000);
+        assert_eq!(journal_mode.to_ascii_lowercase(), "wal");
+        assert_eq!(synchronous, 1);
     }
 
     #[test]

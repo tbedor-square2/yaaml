@@ -11,6 +11,8 @@ pub struct ServicePaths {
     pub home: PathBuf,
     pub binary_path: PathBuf,
     pub config_path: PathBuf,
+    pub stdout_log_path: PathBuf,
+    pub stderr_log_path: PathBuf,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -21,10 +23,13 @@ pub struct ServiceInstallReport {
 
 impl ServicePaths {
     pub fn for_home(home: &Path, binary_path: PathBuf) -> Self {
+        let data_dir = home.join(".yaaml");
         Self {
             home: home.to_path_buf(),
             binary_path,
-            config_path: home.join(".yaaml").join("config.toml"),
+            config_path: data_dir.join("config.toml"),
+            stdout_log_path: data_dir.join("daemon.log"),
+            stderr_log_path: data_dir.join("daemon.err.log"),
         }
     }
 
@@ -251,11 +256,17 @@ pub fn render_launch_agent(paths: &ServicePaths) -> String {
   <true/>
   <key>KeepAlive</key>
   <true/>
+  <key>StandardOutPath</key>
+  <string>{}</string>
+  <key>StandardErrorPath</key>
+  <string>{}</string>
 </dict>
 </plist>
 "#,
         paths.binary_path.display(),
-        paths.config_path.display()
+        paths.config_path.display(),
+        paths.stdout_log_path.display(),
+        paths.stderr_log_path.display()
     )
 }
 
@@ -267,12 +278,16 @@ Description=YAAML daemon
 [Service]
 ExecStart={} daemon --config {}
 Restart=on-failure
+StandardOutput=append:{}
+StandardError=append:{}
 
 [Install]
 WantedBy=default.target
 "#,
         paths.binary_path.display(),
-        paths.config_path.display()
+        paths.config_path.display(),
+        paths.stdout_log_path.display(),
+        paths.stderr_log_path.display()
     )
 }
 
@@ -301,6 +316,10 @@ mod tests {
         assert!(plist.contains("com.yaaml.daemon"));
         assert!(plist.contains("/usr/local/bin/yaaml"));
         assert!(plist.contains("/Users/test/.yaaml/config.toml"));
+        assert!(plist.contains("<key>StandardOutPath</key>"));
+        assert!(plist.contains("/Users/test/.yaaml/daemon.log"));
+        assert!(plist.contains("<key>StandardErrorPath</key>"));
+        assert!(plist.contains("/Users/test/.yaaml/daemon.err.log"));
     }
 
     #[test]
@@ -309,6 +328,8 @@ mod tests {
         let unit = render_systemd_user_unit(&paths);
 
         assert!(unit.contains("ExecStart=/bin/yaaml daemon --config /home/test/.yaaml/config.toml"));
+        assert!(unit.contains("StandardOutput=append:/home/test/.yaaml/daemon.log"));
+        assert!(unit.contains("StandardError=append:/home/test/.yaaml/daemon.err.log"));
     }
 
     #[test]

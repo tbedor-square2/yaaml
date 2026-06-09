@@ -348,6 +348,8 @@ mod tests {
 
         assert!(report.service_file.exists());
         assert!(report.init.codex_skill.exists());
+        assert!(report.init.codex_remember_skill.exists());
         assert!(report.init.claude_skill.exists());
+        assert!(report.init.claude_remember_skill.exists());
     }
 }

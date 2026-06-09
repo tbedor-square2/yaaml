@@ -5,11 +5,13 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use std::{env, fs};
 
 use anyhow::{bail, Context};
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use yaaml_core::{
-    apply_project_bonus, counterfactual_citation_score, parse_eval_judge_response,
-    recall_file_path, render_recall_markdown, session_recall_file_path, write_recall_file, Config,
-    ConfigPaths, MemoryRecord, RecallCandidate, RecallMemory, RecallWrite, TurnRecord, VectorIndex,
+    apply_project_bonus, counterfactual_citation_score, derive_project_descriptor,
+    embedded_text_hash, embedding_text, parse_eval_judge_response, recall_file_path,
+    render_recall_markdown, session_recall_file_path, write_recall_file, Config, ConfigPaths,
+    EmbeddingRecord, MemoryRecord, MemoryScope, RecallCandidate, RecallMemory, RecallWrite,
+    TurnRecord, VectorIndex,
 };
 use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
@@ -43,6 +45,8 @@ enum Command {
     Path,
     /// Print existing recall, or update it from user input.
     Recall(RecallArgs),
+    /// Store a concise durable memory.
+    Remember(RememberArgs),
 }
 
 #[derive(Debug, Parser)]
@@ -139,6 +143,37 @@ struct RecallArgs {
     query: Option<String>,
 }
 
+#[derive(Debug, Parser)]
+struct RememberArgs {
+    /// Short title for the memory.
+    #[arg(long)]
+    title: String,
+    /// Concise durable lesson, preference, or problem-solving insight.
+    #[arg(long)]
+    body: String,
+    /// Recall scope for this memory.
+    #[arg(long, value_enum, default_value = "project")]
+    scope: RememberScopeArg,
+    /// Optional human-readable project origin override.
+    #[arg(long)]
+    project_descriptor: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum RememberScopeArg {
+    Project,
+    Global,
+}
+
+impl From<RememberScopeArg> for MemoryScope {
+    fn from(value: RememberScopeArg) -> Self {
+        match value {
+            RememberScopeArg::Project => Self::Project,
+            RememberScopeArg::Global => Self::Global,
+        }
+    }
+}
+
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
@@ -154,6 +189,7 @@ fn main() -> anyhow::Result<()> {
         Command::Status(args) => status(args),
         Command::Path => path(),
         Command::Recall(args) => recall(args),
+        Command::Remember(args) => remember(args),
     }
 }
 
@@ -274,8 +310,22 @@ fn init() -> anyhow::Result<()> {
     let paths = yaaml::skills::InitPaths::for_home(&home);
     let report = yaaml::skills::init(&paths)?;
 
-    println!("installed Codex skill: {}", report.codex_skill.display());
-    println!("installed Claude skill: {}", report.claude_skill.display());
+    println!(
+        "installed Codex recall skill: {}",
+        report.codex_skill.display()
+    );
+    println!(
+        "installed Codex remember skill: {}",
+        report.codex_remember_skill.display()
+    );
+    println!(
+        "installed Claude recall skill: {}",
+        report.claude_skill.display()
+    );
+    println!(
+        "installed Claude remember skill: {}",
+        report.claude_remember_skill.display()
+    );
     Ok(())
 }
 
@@ -829,6 +879,86 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
         }
     }
     Ok(())
+}
+
+fn remember(args: RememberArgs) -> anyhow::Result<()> {
+    let title = args.title.trim();
+    let body = args.body.trim();
+    if title.is_empty() {
+        bail!("memory title cannot be empty");
+    }
+    if body.is_empty() {
+        bail!("memory body cannot be empty");
+    }
+
+    let cwd = env::current_dir().context("failed to determine current directory")?;
+    let config = Config::load_for_cwd(&cwd).context("failed to load config")?;
+    if config.embedding_provider != "openai" {
+        bail!(
+            "unsupported embedding_provider {}; only openai is implemented",
+            config.embedding_provider
+        );
+    }
+    let project_id_path = yaaml_core::paths::normalize_project_id(&cwd);
+    let project_id = project_id_path.display().to_string();
+    let project_descriptor = args
+        .project_descriptor
+        .as_deref()
+        .map(str::trim)
+        .filter(|descriptor| !descriptor.is_empty())
+        .map(str::to_string)
+        .unwrap_or_else(|| derive_project_descriptor(&project_id_path, None));
+    let db_path = config.db_path().context("failed to resolve db_path")?;
+    let mut db = Database::open(&db_path)
+        .with_context(|| format!("failed to open {}", display(&db_path)))?;
+    db.migrate().context("failed to migrate database")?;
+
+    let now = unix_timestamp();
+    let memory = MemoryRecord {
+        id: None,
+        title: truncate_chars(title, 200),
+        body: truncate_chars(body, config.max_memory_length),
+        scope: args.scope.into(),
+        source_turn_refs: Vec::new(),
+        created_at: now.clone(),
+        updated_at: now.clone(),
+        is_active: true,
+        session_id: current_session_id(),
+        project_id: Some(project_id),
+        project_descriptor: Some(project_descriptor),
+        lineage_refs: Vec::new(),
+    };
+    let text = embedding_text(&memory);
+    let embedding_client = OpenAiEmbeddingClient::new(
+        OpenAiEmbeddingConfig::from_config(&config),
+        ReqwestTransport::default(),
+    );
+    let vector = embedding_client
+        .embed(&text)
+        .context("failed to embed memory")?;
+    let memory_id = db
+        .insert_memory(&memory)
+        .context("failed to insert memory")?;
+    db.upsert_embedding(&EmbeddingRecord {
+        memory_id,
+        embedding_model: config.embedding_model.clone(),
+        dimensions: vector.len() as u64,
+        embedding_blob: yaaml_store::database::encode_f32_embedding(&vector),
+        embedded_text_hash: embedded_text_hash(&text),
+        updated_at: now,
+    })
+    .context("failed to persist embedding")?;
+
+    println!("remembered memory {memory_id} ({})", memory.scope.as_str());
+    Ok(())
+}
+
+fn truncate_chars(text: &str, max_chars: usize) -> String {
+    if text.chars().count() <= max_chars {
+        text.to_string()
+    } else {
+        text.chars().take(max_chars).collect()
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

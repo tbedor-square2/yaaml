@@ -604,6 +604,75 @@ fn recall_eval_task_defers_until_anchor_turn_is_ingested() {
 }
 
 #[test]
+fn recall_eval_records_insufficient_context_without_later_turns() {
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+    db.upsert_session(&SessionRecord {
+        id: "session-1".to_string(),
+        agent_type: AgentType::Codex,
+        project_id: "/tmp/project".to_string(),
+        transcript_file_path: "/tmp/session.jsonl".to_string(),
+        started_at: Some("2026-06-08T00:00:00Z".to_string()),
+        last_seen_at: Some("2026-06-08T00:00:01Z".to_string()),
+    })
+    .unwrap();
+    db.insert_turn(&TurnRecord {
+        session_id: "session-1".to_string(),
+        turn_id: Some("turn-1".to_string()),
+        ordinal: 0,
+        byte_start: 0,
+        byte_end: 10,
+        observed_at: Some("2026-06-08T00:00:01Z".to_string()),
+        status: yaaml_core::TurnStatus::Completed,
+        display_text: Some("use recall".to_string()),
+    })
+    .unwrap();
+    let config = Config::default();
+    db.enqueue_task(&TaskRecord {
+        id: None,
+        kind: TASK_KIND_RECALL_EVAL.to_string(),
+        status: TaskStatus::Queued,
+        priority: 0,
+        payload_json: r##"{
+            "session_id":"session-1",
+            "turn_ordinal":0,
+            "recall_text":"# YAAML Recall\n\nmemory_ids: 1\n\n## Relevant memory\n\nUse YAAML recall.",
+            "memory_ids":[1],
+            "recall_at":"unix:1",
+            "eval_after":"unix:1"
+        }"##
+        .to_string(),
+        attempts: 0,
+        max_attempts: 5,
+        next_run_at: None,
+        last_error: None,
+        created_at: "unix:1".to_string(),
+        updated_at: "unix:1".to_string(),
+    })
+    .unwrap();
+
+    assert_eq!(run_queued_tasks(&db, &config, 1).unwrap(), 1);
+    let runs = db.list_eval_runs(1).unwrap();
+    assert_eq!(runs.len(), 1);
+    let results = db.eval_results_for_run(runs[0].id).unwrap();
+
+    assert_eq!(
+        results[0].judge_score.as_deref(),
+        Some("insufficient_context")
+    );
+    assert!(results[0]
+        .rationale
+        .as_deref()
+        .unwrap()
+        .contains("No subsequent completed turns"));
+    assert_eq!(
+        db.count_tasks_by_status(TASK_KIND_RECALL_EVAL, TaskStatus::Parked)
+            .unwrap(),
+        0
+    );
+}
+
+#[test]
 fn graceful_recovery_requeues_running_tasks() {
     let mut db = Database::in_memory().unwrap();
     db.migrate().unwrap();

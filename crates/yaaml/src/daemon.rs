@@ -491,6 +491,20 @@ fn run_recall_eval_task(db: &Database, config: &Config, task: &TaskRecord) -> an
             .to_string(),
         )
         .context("failed to create recall eval run")?;
+    if later_turns.is_empty() {
+        db.insert_eval_result(
+            run_id,
+            turn_row_id,
+            memory_ids.first().copied(),
+            "insufficient_context",
+            "No subsequent completed turns were captured after recall, so recall usefulness cannot be scored.",
+            &now,
+        )
+        .context("failed to insert insufficient-context recall eval result")?;
+        db.complete_eval_run(run_id, &unix_timestamp())
+            .context("failed to complete recall eval run")?;
+        return Ok(());
+    }
     let judge_client = AnthropicMessageClient::new(
         AnthropicMessageConfig::judge_from_config(config),
         ReqwestTransport::default(),

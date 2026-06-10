@@ -7,13 +7,14 @@ use std::{env, fs};
 use anyhow::{bail, Context};
 use clap::{Parser, Subcommand, ValueEnum};
 use serde::Serialize;
+use yaaml::turn_hydration::{context_from_turns, hydrate_turns};
 use yaaml_core::{
     apply_project_bonus, context_score, counterfactual_citation_score, derive_project_descriptor,
     embedded_text_hash, embedding_text, infer_context_from_memory, infer_context_from_path,
     infer_context_from_text, merge_contexts, parse_eval_judge_response, recall_file_path,
     render_recall_markdown, session_recall_file_path, write_recall_file, Config, ConfigPaths,
-    EmbeddingRecord, MemoryRecord, MemoryScope, RecallCandidate, RecallMemory, RecallWrite,
-    SessionRecord, TurnRecord, VectorIndex,
+    ContextMetadata, EmbeddingRecord, MemoryRecord, MemoryScope, RecallCandidate, RecallMemory,
+    RecallWrite, SessionRecord, TurnRecord, VectorIndex,
 };
 use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
@@ -405,6 +406,12 @@ fn eval_recall(args: EvalRecallArgs) -> anyhow::Result<()> {
     let turns = db
         .list_turns_with_ids(args.limit)
         .context("failed to load replay turns")?;
+    let raw_turns = turns
+        .iter()
+        .map(|(_, turn)| turn.clone())
+        .collect::<Vec<_>>();
+    let hydrated_turns =
+        hydrate_turns(&db, &raw_turns).context("failed to hydrate replay turns")?;
     let embedding_client = OpenAiEmbeddingClient::new(
         OpenAiEmbeddingConfig::from_config(&config),
         ReqwestTransport::default(),
@@ -413,7 +420,7 @@ fn eval_recall(args: EvalRecallArgs) -> anyhow::Result<()> {
         SqliteExactVectorIndex::new(&db, config.embedding_model.clone(), now.clone());
     let judge_client = eval_judge_client(&config, args.no_judge);
     let mut evaluated_memories = 0_u64;
-    for (turn_row_id, turn) in &turns {
+    for ((turn_row_id, _), turn) in turns.iter().zip(hydrated_turns.iter()) {
         let memories = match turn.observed_at.as_deref() {
             Some(observed_at) => db
                 .list_active_memories_created_before(observed_at)
@@ -421,8 +428,20 @@ fn eval_recall(args: EvalRecallArgs) -> anyhow::Result<()> {
             None => Vec::new(),
         };
         let query = turn.display_text.clone().unwrap_or_default();
-        let candidates =
-            select_eval_candidates(&config, &embedding_client, &vector_index, &query, &memories);
+        let fallback_project = turn.cwd.as_deref().unwrap_or("");
+        let query_context = context_from_turns(
+            std::slice::from_ref(turn),
+            std::path::Path::new(fallback_project),
+            &query,
+        );
+        let candidates = select_eval_candidates(
+            &config,
+            &embedding_client,
+            &vector_index,
+            &query,
+            &query_context,
+            &memories,
+        );
         if candidates.is_empty() {
             db.insert_eval_result(
                 run_id,
@@ -803,12 +822,12 @@ fn select_eval_candidates(
     embedding_client: &OpenAiEmbeddingClient<ReqwestTransport>,
     vector_index: &SqliteExactVectorIndex<'_>,
     query: &str,
+    query_context: &ContextMetadata,
     eligible_memories: &[MemoryRecord],
 ) -> Vec<EvalCandidate> {
     if eligible_memories.is_empty() {
         return Vec::new();
     }
-    let query_context = infer_context_from_text(query);
     if let Ok(embedding) = embedding_client.embed(query) {
         let eligible_ids = eligible_memories
             .iter()
@@ -827,7 +846,7 @@ fn select_eval_candidates(
                             let memory_context = infer_context_from_memory(memory);
                             (
                                 memory.clone(),
-                                hit.similarity + context_score(&query_context, &memory_context),
+                                hit.similarity + context_score(query_context, &memory_context),
                             )
                         })
                 })
@@ -855,16 +874,16 @@ fn select_eval_candidates(
             }
         }
     }
-    lexical_eval_candidates(config, query, eligible_memories)
+    lexical_eval_candidates(config, query, query_context, eligible_memories)
 }
 
 fn lexical_eval_candidates(
     config: &Config,
     query: &str,
+    query_context: &ContextMetadata,
     eligible_memories: &[MemoryRecord],
 ) -> Vec<EvalCandidate> {
     let query_terms = terms(query);
-    let query_context = infer_context_from_text(query);
     let mut candidates = eligible_memories
         .iter()
         .cloned()
@@ -872,7 +891,7 @@ fn lexical_eval_candidates(
             let memory_text = format!("{} {}", memory.title, memory.body);
             let memory_context = infer_context_from_memory(&memory);
             let score = lexical_score(&query_terms, &memory_text)
-                + context_score(&query_context, &memory_context);
+                + context_score(query_context, &memory_context);
             (memory, score)
         })
         .collect::<Vec<_>>();
@@ -1067,6 +1086,7 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
         &query_embedding,
         &project_id,
         &query,
+        None,
         "user input".to_string(),
         now.clone(),
     )?;
@@ -1128,6 +1148,7 @@ fn refresh_missing_recall_file(
             turn_ordinal.saturating_add(1),
         )
         .context("failed to load turns for missing recall file")?;
+    let turns = hydrate_turns(db, &turns).context("failed to hydrate missing recall turns")?;
     if turns.is_empty() {
         return Ok(None);
     }
@@ -1151,12 +1172,15 @@ fn refresh_missing_recall_file(
         "on-demand completed turns {start_ordinal}..={turn_ordinal}: {} chars",
         query.len()
     );
+    let query_context =
+        context_from_turns(&turns, std::path::Path::new(&session.project_id), &query);
     let result = recall_from_embedding(
         db,
         config,
         &query_embedding,
         &session.project_id,
         &query,
+        Some(query_context),
         query_source,
         now,
     )?;
@@ -1241,6 +1265,7 @@ fn recall_for_historical_turn(
             turn_ordinal.saturating_add(1),
         )
         .context("failed to load recall turns")?;
+    let turns = hydrate_turns(db, &turns).context("failed to hydrate historical recall turns")?;
     if turns.is_empty() {
         bail!("no completed turns found for session {session_id} through turn {turn_ordinal}");
     }
@@ -1272,12 +1297,15 @@ fn recall_for_historical_turn(
         "session {session_id} completed turns {start_ordinal}..={turn_ordinal}: {} chars",
         query.len()
     );
+    let query_context =
+        context_from_turns(&turns, std::path::Path::new(&session.project_id), &query);
     let result = recall_from_embedding(
         db,
         config,
         &query_embedding,
         &session.project_id,
         &query,
+        Some(query_context),
         query_source,
         now,
     )?;
@@ -1310,6 +1338,7 @@ fn recall_from_embedding(
     query_embedding: &[f32],
     project_id: &str,
     query_text: &str,
+    query_context: Option<ContextMetadata>,
     query_source: String,
     query_timestamp: String,
 ) -> anyhow::Result<RecallSearchResult> {
@@ -1326,8 +1355,11 @@ fn recall_from_embedding(
     let memories = db
         .list_active_memories_by_ids(&hit_ids)
         .context("failed to load matching memories")?;
-    let mut query_context = infer_context_from_path(std::path::Path::new(project_id));
-    merge_contexts(&mut query_context, infer_context_from_text(query_text));
+    let query_context = query_context.unwrap_or_else(|| {
+        let mut query_context = infer_context_from_path(std::path::Path::new(project_id));
+        merge_contexts(&mut query_context, infer_context_from_text(query_text));
+        query_context
+    });
     let mut candidates = hits
         .iter()
         .filter_map(|hit| {

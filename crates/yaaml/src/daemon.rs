@@ -15,11 +15,10 @@ use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use serde_json::json;
 use yaaml_core::{
     apply_project_bonus, build_recall_query, context_score, derive_project_descriptor,
-    embedded_text_hash, embedding_text, infer_context_from_memory, infer_context_from_path,
-    infer_context_from_text, merge_contexts, parse_eval_judge_response, parse_formulation_response,
-    recall_file_path, render_recall_markdown, session_recall_file_path, write_recall_file, Config,
-    EmbeddingRecord, RecallCandidate, RecallMemory, SourceTurnRef, TaskRecord, TaskStatus,
-    VectorIndex,
+    embedded_text_hash, embedding_text, infer_context_from_memory, parse_eval_judge_response,
+    parse_formulation_response, recall_file_path, render_recall_markdown, session_recall_file_path,
+    write_recall_file, Config, EmbeddingRecord, RecallCandidate, RecallMemory, SourceTurnRef,
+    TaskRecord, TaskStatus, VectorIndex,
 };
 use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
@@ -27,6 +26,8 @@ use yaaml_llm::{ProviderError, ReqwestTransport};
 use yaaml_store::{Database, SqliteExactVectorIndex};
 use yaaml_transcript::codex::parse_codex_file_from_offset_with_session;
 use yaaml_transcript::discovery::discover_codex_backlog;
+
+use crate::turn_hydration::{context_from_turns, hydrate_turns};
 
 pub const TASK_KIND_MEMORY_FORMULATION: &str = "memory_formulation";
 pub const TASK_KIND_RECALL: &str = "recall";
@@ -119,6 +120,7 @@ pub fn ingest_codex_file(db: &Database, transcript_path: &Path) -> anyhow::Resul
     for turn in &parsed.turns {
         let mut turn = turn.clone();
         turn.ordinal += ordinal_base;
+        turn.display_text = None;
         if db
             .insert_turn(&turn)
             .context("failed to persist Codex turn")?
@@ -337,6 +339,7 @@ fn run_memory_formulation_task(
         db.completed_turns_for_source_refs(&requested_source_turn_refs)
             .context("failed to load task source turns")?
     };
+    let turns = hydrate_turns(db, &turns).context("failed to hydrate formulation turns")?;
     if turns.is_empty() {
         return Ok(());
     }
@@ -414,6 +417,8 @@ fn run_recall_task(db: &Database, config: &Config, task: &TaskRecord) -> anyhow:
     let recent_turns = db
         .completed_turns_for_session_range(session_id, start_ordinal, turn_ordinal + 1)
         .context("failed to load recall task turns")?;
+    let recent_turns =
+        hydrate_turns(db, &recent_turns).context("failed to hydrate recall turns")?;
     if recent_turns.is_empty() {
         return Ok(());
     }
@@ -479,6 +484,8 @@ fn run_recall_eval_task(db: &Database, config: &Config, task: &TaskRecord) -> an
     let later_turns = db
         .completed_turns_for_session_after_ordinal(session_id, turn_ordinal, 20)
         .context("failed to load turns after recall")?;
+    let later_turns =
+        hydrate_turns(db, &later_turns).context("failed to hydrate recall eval turns")?;
     let now = unix_timestamp();
     let run_id = db
         .insert_eval_run(
@@ -1022,13 +1029,12 @@ pub fn refresh_recall_with_embedding(
         .list_active_memories_by_ids(&hit_ids)
         .context("failed to load active memories")?;
     let project_id_string = project_id.display().to_string();
-    let mut query_context = infer_context_from_path(project_id);
     let query_text = build_recall_query(
         recent_turns,
         config.recall_query_max_chars,
         config.tool_call_truncation_chars,
     );
-    merge_contexts(&mut query_context, infer_context_from_text(&query_text));
+    let query_context = context_from_turns(recent_turns, project_id, &query_text);
     let mut candidates = hits
         .iter()
         .filter_map(|hit| {
@@ -1225,6 +1231,8 @@ mod tests {
             observed_at: None,
             status: yaaml_core::TurnStatus::Completed,
             display_text: Some(format!("user text\ntool output: {}", "x".repeat(10_000))),
+            cwd: None,
+            context: None,
         }];
 
         let prompt = formulation_prompt(&config, "yaaml", &turns);

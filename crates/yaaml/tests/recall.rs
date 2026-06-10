@@ -265,6 +265,8 @@ embedding_base_url = "{}"
         observed_at: Some("2026-06-08T00:00:03Z".to_string()),
         status: TurnStatus::Completed,
         display_text: Some("agent should recall missing session files".to_string()),
+        cwd: None,
+        context: None,
     })
     .unwrap();
     let memory = MemoryRecord {
@@ -479,6 +481,8 @@ recall_live_turn_window = 2
             observed_at: Some(format!("2026-06-08T00:00:0{ordinal}Z")),
             status: TurnStatus::Completed,
             display_text: Some(format!("completed context turn {ordinal}")),
+            cwd: None,
+            context: None,
         })
         .unwrap();
     }

@@ -83,6 +83,29 @@ impl Database {
             tx.execute_batch(migration)?;
         }
         tx.commit()?;
+        self.ensure_column("turns", "cwd", "ALTER TABLE turns ADD COLUMN cwd TEXT")?;
+        self.ensure_column(
+            "turns",
+            "context_json",
+            "ALTER TABLE turns ADD COLUMN context_json TEXT",
+        )?;
+        Ok(())
+    }
+
+    fn ensure_column(
+        &self,
+        table: &str,
+        column: &str,
+        alter_sql: &str,
+    ) -> Result<(), DatabaseError> {
+        let mut stmt = self.conn.prepare(&format!("PRAGMA table_info({table})"))?;
+        let rows = stmt.query_map([], |row| row.get::<_, String>(1))?;
+        for row in rows {
+            if row? == column {
+                return Ok(());
+            }
+        }
+        self.conn.execute_batch(alter_sql)?;
         Ok(())
     }
 
@@ -246,10 +269,16 @@ impl Database {
     }
 
     pub fn insert_turn(&self, turn: &TurnRecord) -> Result<bool, DatabaseError> {
+        let context_json = turn
+            .context
+            .as_ref()
+            .map(serde_json::to_string)
+            .transpose()?;
         let inserted = self.conn.execute(
             "INSERT OR IGNORE INTO turns (
-                session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text
-             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+                session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status,
+                display_text, cwd, context_json
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
             params![
                 turn.session_id,
                 turn.turn_id,
@@ -258,7 +287,9 @@ impl Database {
                 u64_to_i64(turn.byte_end),
                 turn.observed_at,
                 turn.status.as_str(),
-                turn.display_text
+                turn.display_text,
+                turn.cwd,
+                context_json,
             ],
         )?;
         Ok(inserted > 0)
@@ -270,7 +301,7 @@ impl Database {
         limit: usize,
     ) -> Result<Vec<TurnRecord>, DatabaseError> {
         let mut stmt = self.conn.prepare(
-            "SELECT session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text
+            "SELECT session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text, cwd, context_json
              FROM turns
              WHERE session_id = ?1
              ORDER BY ordinal DESC
@@ -295,7 +326,7 @@ impl Database {
         end_ordinal: u64,
     ) -> Result<Vec<TurnRecord>, DatabaseError> {
         let mut stmt = self.conn.prepare(
-            "SELECT session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text
+            "SELECT session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text, cwd, context_json
              FROM turns
              WHERE session_id = ?1
                AND status = 'completed'
@@ -327,7 +358,7 @@ impl Database {
             let turn = self
                 .conn
                 .query_row(
-                    "SELECT session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text
+                    "SELECT session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text, cwd, context_json
                      FROM turns
                      WHERE session_id = ?1
                        AND status = 'completed'
@@ -379,7 +410,7 @@ impl Database {
         limit: usize,
     ) -> Result<Vec<TurnRecord>, DatabaseError> {
         let mut stmt = self.conn.prepare(
-            "SELECT session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text
+            "SELECT session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text, cwd, context_json
              FROM turns
              WHERE session_id = ?1
                AND status = 'completed'
@@ -584,7 +615,7 @@ impl Database {
 
     pub fn list_turns(&self, limit: usize) -> Result<Vec<TurnRecord>, DatabaseError> {
         let mut stmt = self.conn.prepare(
-            "SELECT session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text
+            "SELECT session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text, cwd, context_json
              FROM turns
              ORDER BY observed_at, id
              LIMIT ?1",
@@ -602,7 +633,7 @@ impl Database {
         limit: usize,
     ) -> Result<Vec<(i64, TurnRecord)>, DatabaseError> {
         let mut stmt = self.conn.prepare(
-            "SELECT id, session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text
+            "SELECT id, session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text, cwd, context_json
              FROM turns
              ORDER BY observed_at, id
              LIMIT ?1",
@@ -1100,6 +1131,11 @@ fn read_turn_record_from_offset(
     offset: usize,
 ) -> rusqlite::Result<TurnRecord> {
     let status: String = row.get(offset + 6)?;
+    let context_json: Option<String> = row.get(offset + 9)?;
+    let context = match context_json {
+        Some(json) => Some(serde_json::from_str(&json).map_err(json_decode_error)?),
+        None => None,
+    };
     Ok(TurnRecord {
         session_id: row.get(offset)?,
         turn_id: row.get(offset + 1)?,
@@ -1112,6 +1148,8 @@ fn read_turn_record_from_offset(
             _ => yaaml_core::TurnStatus::Completed,
         },
         display_text: row.get(offset + 7)?,
+        cwd: row.get(offset + 8)?,
+        context,
     })
 }
 
@@ -1258,6 +1296,8 @@ mod tests {
             observed_at: Some("2026-06-08T00:01:00Z".to_string()),
             status: yaaml_core::TurnStatus::Completed,
             display_text: Some("hello".to_string()),
+            cwd: None,
+            context: None,
         };
 
         assert!(db.insert_turn(&turn).unwrap());

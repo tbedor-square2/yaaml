@@ -1,9 +1,13 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use crate::TurnHydration;
 use serde_json::Value;
 use thiserror::Error;
-use yaaml_core::{paths::normalize_project_id, AgentType, SessionRecord, TurnRecord, TurnStatus};
+use yaaml_core::{
+    infer_context_from_path, paths::normalize_project_id, AgentType, ContextMetadata,
+    SessionRecord, TurnRecord, TurnStatus,
+};
 
 #[derive(Debug, Error)]
 pub enum ClaudeParseError {
@@ -31,6 +35,8 @@ struct CurrentTurn {
     byte_start: u64,
     byte_end: u64,
     observed_at: Option<String>,
+    cwd: Option<String>,
+    context: Option<ContextMetadata>,
     display_parts: Vec<String>,
 }
 
@@ -75,6 +81,7 @@ pub fn parse_claude_jsonl(
         last_seen_at: None,
     };
     let mut current: Option<CurrentTurn> = None;
+    let mut current_cwd: Option<String> = None;
     let mut turns = Vec::new();
     let mut next_offset = start_offset;
     let mut line_offset = start_offset;
@@ -104,6 +111,11 @@ pub fn parse_claude_jsonl(
         session.last_seen_at = timestamp.clone().or_else(|| session.last_seen_at.clone());
         if let Some(cwd) = value.get("cwd").and_then(Value::as_str) {
             session.project_id = normalized_project_id(cwd);
+            current_cwd = Some(cwd.to_string());
+            if let Some(turn) = current.as_mut() {
+                turn.cwd = Some(cwd.to_string());
+                turn.context = Some(infer_context_from_path(Path::new(cwd)));
+            }
         }
         let role = value
             .get("role")
@@ -121,6 +133,10 @@ pub fn parse_claude_jsonl(
                         byte_start: line_start,
                         byte_end: line_end,
                         observed_at: timestamp.clone(),
+                        cwd: current_cwd.clone(),
+                        context: current_cwd
+                            .as_deref()
+                            .map(|cwd| infer_context_from_path(Path::new(cwd))),
                         display_parts: Vec::new(),
                     });
                 }
@@ -136,6 +152,10 @@ pub fn parse_claude_jsonl(
                         byte_start: line_start,
                         byte_end: line_end,
                         observed_at: timestamp.clone(),
+                        cwd: current_cwd.clone(),
+                        context: current_cwd
+                            .as_deref()
+                            .map(|cwd| infer_context_from_path(Path::new(cwd))),
                         display_parts: Vec::new(),
                     });
                 }
@@ -181,7 +201,48 @@ fn finish_turn(
         observed_at: turn.observed_at,
         status: TurnStatus::Completed,
         display_text: (!turn.display_parts.is_empty()).then(|| turn.display_parts.join("\n")),
+        cwd: turn.cwd,
+        context: turn.context,
     });
+}
+
+pub fn hydrate_claude_turn_bytes(bytes: &[u8]) -> Result<TurnHydration, ClaudeParseError> {
+    let mut display_parts = Vec::new();
+    let mut cwd = None;
+    let mut context = None;
+    let mut line_offset = 0_u64;
+    for raw_line in complete_lines(bytes) {
+        let line_start = line_offset;
+        line_offset += u64::try_from(raw_line.len()).unwrap_or(u64::MAX);
+        let line = trim_line_ending(raw_line);
+        if line.is_empty() {
+            continue;
+        }
+        let value: Value =
+            serde_json::from_slice(line).map_err(|source| ClaudeParseError::MalformedJson {
+                offset: line_start,
+                source,
+            })?;
+        if let Some(line_cwd) = value.get("cwd").and_then(Value::as_str) {
+            cwd = Some(line_cwd.to_string());
+            context = Some(infer_context_from_path(Path::new(line_cwd)));
+        }
+        let content = value
+            .get("content")
+            .or_else(|| value.pointer("/message/content"));
+        extract_content_text(content, &mut display_parts);
+    }
+    Ok(TurnHydration {
+        display_text: (!display_parts.is_empty()).then(|| display_parts.join("\n")),
+        cwd,
+        context,
+    })
+}
+
+pub fn display_text_from_claude_turn_bytes(
+    bytes: &[u8],
+) -> Result<Option<String>, ClaudeParseError> {
+    hydrate_claude_turn_bytes(bytes).map(|hydration| hydration.display_text)
 }
 
 fn extract_content_text(content: Option<&Value>, output: &mut Vec<String>) {

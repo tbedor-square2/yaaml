@@ -34,6 +34,8 @@ CREATE TABLE IF NOT EXISTS turns (
     observed_at TEXT,
     status TEXT NOT NULL,
     display_text TEXT,
+    cwd TEXT,
+    context_json TEXT,
     FOREIGN KEY(session_id) REFERENCES sessions(id)
 );
 

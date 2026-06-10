@@ -289,6 +289,8 @@ mod tests {
                 "user: fix it\ntool output: {}\nassistant: done",
                 "x".repeat(1_000)
             )),
+            cwd: None,
+            context: None,
         };
 
         let query = build_recall_query(&[turn], 2_000, 80);

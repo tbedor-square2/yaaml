@@ -12,6 +12,7 @@ use yaaml::daemon::{
     refresh_recall_with_embedding, run_queued_tasks, start_signal_socket, DaemonShutdown,
     PartialBatchPolicy, TASK_KIND_MEMORY_FORMULATION, TASK_KIND_RECALL, TASK_KIND_RECALL_EVAL,
 };
+use yaaml::turn_hydration::hydrate_turns;
 use yaaml_core::{
     session_recall_file_path, AgentType, Config, EmbeddingRecord, MemoryRecord, MemoryScope,
     SessionRecord, SourceTurnRef, TaskRecord, TaskStatus, TurnRecord,
@@ -210,7 +211,9 @@ fn codex_cursor_waits_for_incomplete_turn_before_advancing() {
         .completed_turns_for_session_range("session-1", 0, u64::MAX)
         .unwrap();
     assert_eq!(turns.len(), 1);
-    assert!(turns[0]
+    assert!(turns[0].display_text.is_none());
+    let hydrated = hydrate_turns(&db, &turns).unwrap();
+    assert!(hydrated[0]
         .display_text
         .as_ref()
         .unwrap()
@@ -527,6 +530,8 @@ fn recall_file_is_written_after_memory_exists_and_new_turn_completes() {
         observed_at: None,
         status: yaaml_core::TurnStatus::Completed,
         display_text: Some("where is recall written?".to_string()),
+        cwd: None,
+        context: None,
     };
     db.insert_turn(&turn).unwrap();
 
@@ -619,6 +624,8 @@ fn recall_eval_records_insufficient_context_without_later_turns() {
         observed_at: Some("2026-06-08T00:00:01Z".to_string()),
         status: yaaml_core::TurnStatus::Completed,
         display_text: Some("use recall".to_string()),
+        cwd: None,
+        context: None,
     })
     .unwrap();
     let config = Config::default();

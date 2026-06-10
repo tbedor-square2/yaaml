@@ -47,6 +47,8 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
         observed_at: Some("2026-06-08T00:00:02Z".to_string()),
         status: TurnStatus::Completed,
         display_text: Some("use recall".to_string()),
+        cwd: None,
+        context: None,
     })
     .unwrap();
     db.insert_memory(&MemoryRecord {
@@ -189,6 +191,8 @@ eval_judge_api_key_env = "YAAML_TEST_ANTHROPIC_KEY"
         observed_at: Some("2026-06-08T00:00:02Z".to_string()),
         status: TurnStatus::Completed,
         display_text: Some("use recall".to_string()),
+        cwd: None,
+        context: None,
     })
     .unwrap();
     db.insert_memory(&MemoryRecord {
@@ -269,6 +273,8 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
         observed_at: Some("2026-06-08T00:00:02Z".to_string()),
         status: TurnStatus::Completed,
         display_text: Some("use recall".to_string()),
+        cwd: None,
+        context: None,
     })
     .unwrap();
     let turn_row_id = db

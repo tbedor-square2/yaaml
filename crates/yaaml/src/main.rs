@@ -1520,22 +1520,14 @@ fn contextual_recall_file_path(
     db: &Database,
 ) -> anyhow::Result<PathBuf> {
     if let Some(session_id) = current_session_id() {
-        return Ok(session_recall_file_path(
-            recall_dir,
-            project_id,
-            &session_id,
-        ));
+        return Ok(session_recall_file_path(recall_dir, &session_id));
     }
     let project_id_string = project_id.display().to_string();
     if let Some(session) = db
         .latest_session_for_project(&project_id_string)
         .context("failed to load latest project session")?
     {
-        return Ok(session_recall_file_path(
-            recall_dir,
-            project_id,
-            &session.id,
-        ));
+        return Ok(session_recall_file_path(recall_dir, &session.id));
     }
     Ok(recall_file_path(recall_dir, project_id))
 }

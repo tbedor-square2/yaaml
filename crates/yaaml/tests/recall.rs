@@ -205,8 +205,7 @@ embedding_base_url = "{}"
         String::from_utf8_lossy(&output.stderr)
     );
     server.join();
-    let recall_path =
-        session_recall_file_path(&recall_dir, &project.canonicalize().unwrap(), "session-1");
+    let recall_path = session_recall_file_path(&recall_dir, "session-1");
     let markdown = fs::read_to_string(recall_path).unwrap();
 
     assert!(markdown.contains("## Session recall"));
@@ -315,11 +314,7 @@ embedding_base_url = "{}"
     assert!(!stdout.contains("Stale Project Recall"));
     assert!(!stdout.contains("no recall file"));
 
-    let recall_path = session_recall_file_path(
-        &recall_dir,
-        &project.canonicalize().unwrap(),
-        "session-without-recall-file",
-    );
+    let recall_path = session_recall_file_path(&recall_dir, "session-without-recall-file");
     let markdown = fs::read_to_string(recall_path).unwrap();
     assert!(markdown.contains("## On-demand recall"));
     let db = Database::open(&db_path).unwrap();
@@ -422,8 +417,7 @@ embedding_base_url = "{}"
         String::from_utf8_lossy(&output.stderr)
     );
     server.join();
-    let recall_path =
-        session_recall_file_path(&recall_dir, &project.canonicalize().unwrap(), "new-session");
+    let recall_path = session_recall_file_path(&recall_dir, "new-session");
     let markdown = fs::read_to_string(recall_path).unwrap();
 
     assert!(markdown.contains("## Fallback session recall"));
@@ -547,11 +541,7 @@ recall_live_turn_window = 2
         .unwrap()
         .contains("completed turns 1..=2"));
 
-    let recall_path = session_recall_file_path(
-        &recall_dir,
-        &project.canonicalize().unwrap(),
-        "replay-session",
-    );
+    let recall_path = session_recall_file_path(&recall_dir, "replay-session");
     assert!(!recall_path.exists());
     let db = Database::open(&db_path).unwrap();
     assert_eq!(

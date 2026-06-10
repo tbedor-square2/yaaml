@@ -3,7 +3,6 @@ use std::io::{Read, Write};
 use std::net::Shutdown;
 use std::net::TcpListener;
 use std::os::unix::net::UnixStream;
-use std::path::Path;
 use std::thread;
 
 use tempfile::TempDir;
@@ -155,8 +154,7 @@ fn codex_change_processing_queues_and_runs_background_recall() {
     );
 
     assert_eq!(run_queued_tasks(&db, &config, 1).unwrap(), 1);
-    let session = db.session_by_id("session-1").unwrap().unwrap();
-    let path = session_recall_file_path(&recall_dir, Path::new(&session.project_id), "session-1");
+    let path = session_recall_file_path(&recall_dir, "session-1");
     let markdown = fs::read_to_string(path).unwrap();
 
     assert!(markdown.contains("## Background recall"));
@@ -541,11 +539,7 @@ fn recall_file_is_written_after_memory_exists_and_new_turn_completes() {
         "new completed turn",
     )
     .unwrap();
-    let path = session_recall_file_path(
-        &config.recall_dir().unwrap(),
-        &project.canonicalize().unwrap(),
-        "session-1",
-    );
+    let path = session_recall_file_path(&config.recall_dir().unwrap(), "session-1");
     let markdown = fs::read_to_string(path).unwrap();
 
     assert!(markdown.contains("## Recall file location"));

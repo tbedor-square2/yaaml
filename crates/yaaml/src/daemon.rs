@@ -1104,7 +1104,7 @@ pub fn refresh_recall_with_embedding(
     let recall_dir = config.recall_dir()?;
     let path = recent_turns
         .last()
-        .map(|turn| session_recall_file_path(&recall_dir, project_id, &turn.session_id))
+        .map(|turn| session_recall_file_path(&recall_dir, &turn.session_id))
         .unwrap_or_else(|| recall_file_path(&recall_dir, project_id));
     let write = write_recall_file(&path, &rendered, &selected_ids)
         .context("failed to write recall file")?;

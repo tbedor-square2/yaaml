@@ -128,12 +128,8 @@ pub fn recall_file_path(recall_dir: &Path, project_id: &Path) -> PathBuf {
     recall_dir.join(format!("{}.md", project_hash(project_id)))
 }
 
-pub fn session_recall_file_path(recall_dir: &Path, project_id: &Path, session_id: &str) -> PathBuf {
-    recall_dir.join(format!(
-        "{}-{}.md",
-        project_hash(project_id),
-        safe_session_id(session_id)
-    ))
+pub fn session_recall_file_path(recall_dir: &Path, session_id: &str) -> PathBuf {
+    recall_dir.join(format!("session-{}.md", safe_session_id(session_id)))
 }
 
 fn safe_session_id(session_id: &str) -> String {
@@ -328,13 +324,9 @@ mod tests {
     }
 
     #[test]
-    fn session_recall_path_includes_project_and_session() {
-        let path =
-            session_recall_file_path(Path::new("/tmp/recall"), Path::new("/tmp/project"), "a/b");
+    fn session_recall_path_uses_only_session_id() {
+        let path = session_recall_file_path(Path::new("/tmp/recall"), "a/b");
 
-        assert!(path.ends_with(format!(
-            "{}-a_b.md",
-            project_hash(Path::new("/tmp/project"))
-        )));
+        assert_eq!(path, Path::new("/tmp/recall/session-a_b.md"));
     }
 }

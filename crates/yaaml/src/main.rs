@@ -155,6 +155,15 @@ struct RecallArgs {
     /// User input to embed and search against stored memories. Omit to print existing recall.
     #[arg(long)]
     query: Option<String>,
+    /// Session id to replay recall for.
+    #[arg(long)]
+    session: Option<String>,
+    /// Completed turn ordinal to use as the recall anchor.
+    #[arg(long)]
+    turn: Option<u64>,
+    /// Emit machine-readable JSON.
+    #[arg(long)]
+    json: bool,
 }
 
 #[derive(Debug, Parser)]
@@ -981,7 +990,15 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
     let mut db = Database::open(&db_path)
         .with_context(|| format!("failed to open {}", display(&db_path)))?;
     db.migrate().context("failed to migrate database")?;
+
+    if args.session.is_some() || args.turn.is_some() {
+        return recall_for_historical_turn(args, &config, &db);
+    }
+
     let recall_path = contextual_recall_file_path(&recall_dir, &project_id_path, &db)?;
+    if args.json {
+        bail!("--json is only supported with --session and --turn");
+    }
     let Some(query) = args.query else {
         if recall_path.exists() {
             print!(
@@ -1016,67 +1033,17 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
         .embed(&query)
         .context("failed to embed recall query")?;
     let now = unix_timestamp();
-    let index = SqliteExactVectorIndex::new(&db, config.embedding_model.clone(), now.clone());
-    let hits = index
-        .search(
-            &query_embedding,
-            config.recall_candidate_pool,
-            config.recall_similarity_threshold,
-        )
-        .context("failed to search vector index")?;
-    let hit_ids = hits.iter().map(|hit| hit.memory_id).collect::<Vec<_>>();
-    let memories = db
-        .list_active_memories_by_ids(&hit_ids)
-        .context("failed to load matching memories")?;
-    let candidates = hits
-        .iter()
-        .filter_map(|hit| {
-            memories
-                .iter()
-                .find(|memory| memory.id == Some(hit.memory_id))
-                .map(|memory| RecallCandidate {
-                    memory_id: hit.memory_id,
-                    similarity: hit.similarity,
-                    score: hit.similarity,
-                    project_id: memory.project_id.clone(),
-                })
-        })
-        .collect::<Vec<_>>();
     let project_id = project_id_path.display().to_string();
-    let candidates = if config.recall_project_tiebreaker {
-        apply_project_bonus(candidates, &project_id, config.recall_project_score_bonus)
-    } else {
-        candidates
-    };
-    let selected = candidates
-        .into_iter()
-        .take(config.recall_result_limit)
-        .collect::<Vec<_>>();
-    let selected_ids = selected
-        .iter()
-        .map(|candidate| candidate.memory_id)
-        .collect::<Vec<_>>();
-    let selected_memories = db
-        .list_active_memories_by_ids(&selected_ids)
-        .context("failed to load selected memories")?;
-    let recall_memories = selected
-        .iter()
-        .filter_map(|candidate| {
-            selected_memories
-                .iter()
-                .find(|memory| memory.id == Some(candidate.memory_id))
-                .map(|memory| RecallMemory {
-                    memory_id: candidate.memory_id,
-                    title: memory.title.clone(),
-                    body: memory.body.clone(),
-                    created_at: memory.created_at.clone(),
-                    project_id: memory.project_id.clone(),
-                    project_descriptor: memory.project_descriptor.clone(),
-                    score: candidate.score,
-                })
-        })
-        .collect::<Vec<_>>();
-    let rendered = render_recall_markdown(&now, "user input", &project_id, &recall_memories);
+    let recall_result = recall_from_embedding(
+        &db,
+        &config,
+        &query_embedding,
+        &project_id,
+        "user input".to_string(),
+        now.clone(),
+    )?;
+    let rendered = recall_result.markdown;
+    let selected_ids = recall_result.selected_memory_ids;
     let write = write_recall_file(&recall_path, &rendered, &selected_ids)
         .context("failed to write recall file")?;
     if !selected_ids.is_empty() && matches!(write, RecallWrite::Written | RecallWrite::Unchanged) {
@@ -1106,6 +1073,202 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
         }
     }
     Ok(())
+}
+
+#[derive(Debug, Serialize)]
+struct RecallCommandOutput {
+    session_id: String,
+    turn_ordinal: u64,
+    query_timestamp: String,
+    query_source: String,
+    project_id: String,
+    selected_memory_ids: Vec<i64>,
+    memories: Vec<RecallMemory>,
+    markdown: String,
+}
+
+#[derive(Debug)]
+struct RecallSearchResult {
+    query_timestamp: String,
+    query_source: String,
+    project_id: String,
+    selected_memory_ids: Vec<i64>,
+    memories: Vec<RecallMemory>,
+    markdown: String,
+}
+
+fn recall_for_historical_turn(
+    args: RecallArgs,
+    config: &Config,
+    db: &Database,
+) -> anyhow::Result<()> {
+    if args.query.is_some() {
+        bail!("--query cannot be combined with --session/--turn");
+    }
+    let session_id = args
+        .session
+        .as_deref()
+        .context("--session is required when using --turn")?;
+    let turn_ordinal = args
+        .turn
+        .context("--turn is required when using --session")?;
+    let session = db
+        .session_by_id(session_id)
+        .context("failed to load session")?
+        .with_context(|| format!("session {session_id} not found"))?;
+    let window = u64::try_from(config.recall_live_turn_window).unwrap_or(u64::MAX);
+    let start_ordinal = turn_ordinal.saturating_add(1).saturating_sub(window.max(1));
+    let turns = db
+        .completed_turns_for_session_range(
+            session_id,
+            start_ordinal,
+            turn_ordinal.saturating_add(1),
+        )
+        .context("failed to load recall turns")?;
+    if turns.is_empty() {
+        bail!("no completed turns found for session {session_id} through turn {turn_ordinal}");
+    }
+    let query = yaaml_core::build_recall_query(
+        &turns,
+        config.recall_query_max_chars,
+        config.tool_call_truncation_chars,
+    );
+    if query.trim().is_empty() {
+        bail!(
+            "turn window for session {session_id} through turn {turn_ordinal} has no recall text"
+        );
+    }
+    if config.embedding_provider != "openai" {
+        bail!(
+            "unsupported embedding_provider {}; only openai is implemented",
+            config.embedding_provider
+        );
+    }
+    let embedding_client = OpenAiEmbeddingClient::new(
+        OpenAiEmbeddingConfig::from_config(config),
+        ReqwestTransport::default(),
+    );
+    let query_embedding = embedding_client
+        .embed(&query)
+        .context("failed to embed historical recall query")?;
+    let now = unix_timestamp();
+    let query_source = format!(
+        "session {session_id} completed turns {start_ordinal}..={turn_ordinal}: {} chars",
+        query.len()
+    );
+    let result = recall_from_embedding(
+        db,
+        config,
+        &query_embedding,
+        &session.project_id,
+        query_source,
+        now,
+    )?;
+
+    if args.json {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&RecallCommandOutput {
+                session_id: session_id.to_string(),
+                turn_ordinal,
+                query_timestamp: result.query_timestamp,
+                query_source: result.query_source,
+                project_id: result.project_id,
+                selected_memory_ids: result.selected_memory_ids,
+                memories: result.memories,
+                markdown: result.markdown,
+            })?
+        );
+    } else if result.selected_memory_ids.is_empty() {
+        println!("no recall results");
+    } else {
+        print!("{}", result.markdown);
+    }
+    Ok(())
+}
+
+fn recall_from_embedding(
+    db: &Database,
+    config: &Config,
+    query_embedding: &[f32],
+    project_id: &str,
+    query_source: String,
+    query_timestamp: String,
+) -> anyhow::Result<RecallSearchResult> {
+    let index =
+        SqliteExactVectorIndex::new(db, config.embedding_model.clone(), query_timestamp.clone());
+    let hits = index
+        .search(
+            query_embedding,
+            config.recall_candidate_pool,
+            config.recall_similarity_threshold,
+        )
+        .context("failed to search vector index")?;
+    let hit_ids = hits.iter().map(|hit| hit.memory_id).collect::<Vec<_>>();
+    let memories = db
+        .list_active_memories_by_ids(&hit_ids)
+        .context("failed to load matching memories")?;
+    let candidates = hits
+        .iter()
+        .filter_map(|hit| {
+            memories
+                .iter()
+                .find(|memory| memory.id == Some(hit.memory_id))
+                .map(|memory| RecallCandidate {
+                    memory_id: hit.memory_id,
+                    similarity: hit.similarity,
+                    score: hit.similarity,
+                    project_id: memory.project_id.clone(),
+                })
+        })
+        .collect::<Vec<_>>();
+    let candidates = if config.recall_project_tiebreaker {
+        apply_project_bonus(candidates, project_id, config.recall_project_score_bonus)
+    } else {
+        candidates
+    };
+    let selected = candidates
+        .into_iter()
+        .take(config.recall_result_limit)
+        .collect::<Vec<_>>();
+    let selected_memory_ids = selected
+        .iter()
+        .map(|candidate| candidate.memory_id)
+        .collect::<Vec<_>>();
+    let selected_memories = db
+        .list_active_memories_by_ids(&selected_memory_ids)
+        .context("failed to load selected memories")?;
+    let recall_memories = selected
+        .iter()
+        .filter_map(|candidate| {
+            selected_memories
+                .iter()
+                .find(|memory| memory.id == Some(candidate.memory_id))
+                .map(|memory| RecallMemory {
+                    memory_id: candidate.memory_id,
+                    title: memory.title.clone(),
+                    body: memory.body.clone(),
+                    created_at: memory.created_at.clone(),
+                    project_id: memory.project_id.clone(),
+                    project_descriptor: memory.project_descriptor.clone(),
+                    score: candidate.score,
+                })
+        })
+        .collect::<Vec<_>>();
+    let markdown = render_recall_markdown(
+        &query_timestamp,
+        &query_source,
+        project_id,
+        &recall_memories,
+    );
+    Ok(RecallSearchResult {
+        query_timestamp,
+        query_source,
+        project_id: project_id.to_string(),
+        selected_memory_ids,
+        memories: recall_memories,
+        markdown,
+    })
 }
 
 fn remember(args: RememberArgs) -> anyhow::Result<()> {

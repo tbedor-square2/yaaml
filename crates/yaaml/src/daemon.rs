@@ -407,7 +407,8 @@ fn run_recall_task(db: &Database, config: &Config, task: &TaskRecord) -> anyhow:
         .session_by_id(session_id)
         .context("failed to load recall task session")?
         .context("recall task references missing session")?;
-    let start_ordinal = turn_ordinal.saturating_sub(2);
+    let window = u64::try_from(config.recall_live_turn_window).unwrap_or(u64::MAX);
+    let start_ordinal = turn_ordinal.saturating_add(1).saturating_sub(window.max(1));
     let recent_turns = db
         .completed_turns_for_session_range(session_id, start_ordinal, turn_ordinal + 1)
         .context("failed to load recall task turns")?;

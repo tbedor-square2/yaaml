@@ -2,6 +2,8 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
+use serde::Serialize;
+
 use crate::paths::project_hash;
 use crate::TurnRecord;
 
@@ -19,7 +21,7 @@ pub struct RecallCandidate {
     pub project_id: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct RecallMemory {
     pub memory_id: i64,
     pub title: String,

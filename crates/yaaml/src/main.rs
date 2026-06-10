@@ -13,7 +13,7 @@ use yaaml_core::{
     infer_context_from_text, merge_contexts, parse_eval_judge_response, recall_file_path,
     render_recall_markdown, session_recall_file_path, write_recall_file, Config, ConfigPaths,
     EmbeddingRecord, MemoryRecord, MemoryScope, RecallCandidate, RecallMemory, RecallWrite,
-    TurnRecord, VectorIndex,
+    SessionRecord, TurnRecord, VectorIndex,
 };
 use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
@@ -1027,6 +1027,12 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
                 fs::read_to_string(&recall_path).context("failed to read recall file")?
             );
         } else {
+            if let Some(rendered) =
+                refresh_missing_recall_file(&db, &config, &project_id_path, &recall_path)?
+            {
+                print!("{rendered}");
+                return Ok(());
+            }
             let project_recall_path = recall_file_path(&recall_dir, &project_id_path);
             if project_recall_path != recall_path && project_recall_path.exists() {
                 print!(
@@ -1095,6 +1101,94 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
         }
     }
     Ok(())
+}
+
+fn refresh_missing_recall_file(
+    db: &Database,
+    config: &Config,
+    project_id_path: &std::path::Path,
+    recall_path: &std::path::Path,
+) -> anyhow::Result<Option<String>> {
+    if config.embedding_provider != "openai" {
+        return Ok(None);
+    }
+    let project_id = project_id_path.display().to_string();
+    let Some(session) = recall_session(db, &project_id)? else {
+        return Ok(None);
+    };
+    let Some(turn_ordinal) = latest_turn_ordinal(db, &session.id)? else {
+        return Ok(None);
+    };
+    let window = u64::try_from(config.recall_live_turn_window).unwrap_or(u64::MAX);
+    let start_ordinal = turn_ordinal.saturating_add(1).saturating_sub(window.max(1));
+    let turns = db
+        .completed_turns_for_session_range(
+            &session.id,
+            start_ordinal,
+            turn_ordinal.saturating_add(1),
+        )
+        .context("failed to load turns for missing recall file")?;
+    if turns.is_empty() {
+        return Ok(None);
+    }
+    let query = yaaml_core::build_recall_query(
+        &turns,
+        config.recall_query_max_chars,
+        config.tool_call_truncation_chars,
+    );
+    if query.trim().is_empty() {
+        return Ok(None);
+    }
+    let embedding_client = OpenAiEmbeddingClient::new(
+        OpenAiEmbeddingConfig::from_config(config),
+        ReqwestTransport::default(),
+    );
+    let query_embedding = embedding_client
+        .embed(&query)
+        .context("failed to embed missing recall query")?;
+    let now = unix_timestamp();
+    let query_source = format!(
+        "on-demand completed turns {start_ordinal}..={turn_ordinal}: {} chars",
+        query.len()
+    );
+    let result = recall_from_embedding(
+        db,
+        config,
+        &query_embedding,
+        &session.project_id,
+        &query,
+        query_source,
+        now,
+    )?;
+    if result.selected_memory_ids.is_empty() {
+        return Ok(None);
+    }
+    let write = write_recall_file(recall_path, &result.markdown, &result.selected_memory_ids)
+        .context("failed to write missing recall file")?;
+    if matches!(write, RecallWrite::Written | RecallWrite::Unchanged) {
+        yaaml::daemon::queue_recall_eval_after_turn(
+            db,
+            &session.id,
+            turn_ordinal,
+            &result.markdown,
+            &result.selected_memory_ids,
+            0,
+        )?;
+    }
+    Ok(Some(result.markdown))
+}
+
+fn recall_session(db: &Database, project_id: &str) -> anyhow::Result<Option<SessionRecord>> {
+    if let Some(session_id) = current_session_id() {
+        if let Some(session) = db
+            .session_by_id(&session_id)
+            .context("failed to load current recall session")?
+        {
+            return Ok(Some(session));
+        }
+    }
+    db.latest_session_for_project(project_id)
+        .context("failed to load latest project session")
 }
 
 #[derive(Debug, Serialize)]

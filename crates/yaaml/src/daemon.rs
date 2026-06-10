@@ -14,10 +14,12 @@ use anyhow::Context;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use serde_json::json;
 use yaaml_core::{
-    apply_project_bonus, build_recall_query, derive_project_descriptor, embedded_text_hash,
-    embedding_text, parse_eval_judge_response, parse_formulation_response, recall_file_path,
-    render_recall_markdown, session_recall_file_path, write_recall_file, Config, EmbeddingRecord,
-    RecallCandidate, RecallMemory, SourceTurnRef, TaskRecord, TaskStatus, VectorIndex,
+    apply_project_bonus, build_recall_query, context_score, derive_project_descriptor,
+    embedded_text_hash, embedding_text, infer_context_from_memory, infer_context_from_path,
+    infer_context_from_text, merge_contexts, parse_eval_judge_response, parse_formulation_response,
+    recall_file_path, render_recall_markdown, session_recall_file_path, write_recall_file, Config,
+    EmbeddingRecord, RecallCandidate, RecallMemory, SourceTurnRef, TaskRecord, TaskStatus,
+    VectorIndex,
 };
 use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
@@ -1020,21 +1022,31 @@ pub fn refresh_recall_with_embedding(
         .list_active_memories_by_ids(&hit_ids)
         .context("failed to load active memories")?;
     let project_id_string = project_id.display().to_string();
-    let candidates = hits
+    let mut query_context = infer_context_from_path(project_id);
+    let query_text = build_recall_query(
+        recent_turns,
+        config.recall_query_max_chars,
+        config.tool_call_truncation_chars,
+    );
+    merge_contexts(&mut query_context, infer_context_from_text(&query_text));
+    let mut candidates = hits
         .iter()
         .filter_map(|hit| {
             memories
                 .iter()
                 .find(|memory| memory.id == Some(hit.memory_id))
-                .map(|memory| RecallCandidate {
-                    memory_id: hit.memory_id,
-                    similarity: hit.similarity,
-                    score: hit.similarity,
-                    project_id: memory.project_id.clone(),
+                .map(|memory| {
+                    let memory_context = infer_context_from_memory(memory);
+                    RecallCandidate {
+                        memory_id: hit.memory_id,
+                        similarity: hit.similarity,
+                        score: hit.similarity + context_score(&query_context, &memory_context),
+                        project_id: memory.project_id.clone(),
+                    }
                 })
         })
         .collect::<Vec<_>>();
-    let candidates = if config.recall_project_tiebreaker {
+    candidates = if config.recall_project_tiebreaker {
         apply_project_bonus(
             candidates,
             &project_id_string,
@@ -1043,6 +1055,13 @@ pub fn refresh_recall_with_embedding(
     } else {
         candidates
     };
+    candidates.sort_by(|left, right| {
+        right
+            .score
+            .partial_cmp(&left.score)
+            .unwrap_or(std::cmp::Ordering::Equal)
+            .then_with(|| left.memory_id.cmp(&right.memory_id))
+    });
     let selected = candidates
         .into_iter()
         .take(config.recall_result_limit)

@@ -82,7 +82,6 @@ pub fn apply_project_bonus(
     bonus: f32,
 ) -> Vec<RecallCandidate> {
     for candidate in &mut candidates {
-        candidate.score = candidate.similarity;
         if candidate.project_id.as_deref() == Some(current_project_id) {
             candidate.score += bonus;
         }
@@ -262,6 +261,22 @@ mod tests {
         );
 
         assert_eq!(candidates[0].memory_id, 1);
+    }
+
+    #[test]
+    fn project_bonus_preserves_existing_score_adjustments() {
+        let candidates = apply_project_bonus(
+            vec![RecallCandidate {
+                memory_id: 1,
+                similarity: 0.7,
+                score: 0.9,
+                project_id: Some("/tmp/current".to_string()),
+            }],
+            "/tmp/current",
+            0.05,
+        );
+
+        assert_eq!(candidates[0].score, 0.95);
     }
 
     #[test]

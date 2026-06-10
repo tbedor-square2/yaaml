@@ -7,8 +7,8 @@ use serde::Serialize;
 use thiserror::Error;
 use yaaml_core::status::{BacklogStatus, Status, TaskFailure, WorkerStatus};
 use yaaml_core::{
-    EmbeddingRecord, MemoryRecord, MemoryScope, SessionRecord, SourceTurnRef, TaskRecord,
-    TaskStatus, TurnRecord,
+    infer_context_from_memory, infer_context_from_path, ContextMetadata, EmbeddingRecord,
+    MemoryRecord, MemoryScope, SessionRecord, SourceTurnRef, TaskRecord, TaskStatus, TurnRecord,
 };
 
 use crate::migrations::MIGRATIONS;
@@ -164,6 +164,13 @@ impl Database {
                 session.started_at,
                 session.last_seen_at
             ],
+        )?;
+        let context = infer_context_from_path(Path::new(&session.project_id));
+        self.upsert_context_metadata(
+            "session",
+            &session.id,
+            &context,
+            session.last_seen_at.as_deref().unwrap_or("unknown"),
         )?;
         Ok(())
     }
@@ -439,7 +446,52 @@ impl Database {
                 lineage_refs
             ],
         )?;
-        Ok(self.conn.last_insert_rowid())
+        let memory_id = self.conn.last_insert_rowid();
+        let context = infer_context_from_memory(memory);
+        self.upsert_context_metadata(
+            "memory",
+            &memory_id.to_string(),
+            &context,
+            &memory.updated_at,
+        )?;
+        Ok(memory_id)
+    }
+
+    pub fn upsert_context_metadata(
+        &self,
+        entity_type: &str,
+        entity_key: &str,
+        context: &ContextMetadata,
+        updated_at: &str,
+    ) -> Result<(), DatabaseError> {
+        let context_json = serde_json::to_string(context)?;
+        self.conn.execute(
+            "INSERT INTO context_metadata (entity_type, entity_key, context_json, updated_at)
+             VALUES (?1, ?2, ?3, ?4)
+             ON CONFLICT(entity_type, entity_key) DO UPDATE SET
+                context_json = excluded.context_json,
+                updated_at = excluded.updated_at",
+            params![entity_type, entity_key, context_json, updated_at],
+        )?;
+        Ok(())
+    }
+
+    pub fn context_metadata(
+        &self,
+        entity_type: &str,
+        entity_key: &str,
+    ) -> Result<Option<ContextMetadata>, DatabaseError> {
+        let json = self
+            .conn
+            .query_row(
+                "SELECT context_json FROM context_metadata
+                 WHERE entity_type = ?1 AND entity_key = ?2",
+                params![entity_type, entity_key],
+                |row| row.get::<_, String>(0),
+            )
+            .optional()?;
+        json.map(|json| serde_json::from_str(&json).map_err(DatabaseError::from))
+            .transpose()
     }
 
     pub fn consolidate_memories(
@@ -1413,6 +1465,37 @@ mod tests {
         assert_eq!(memories[1].source_turn_refs, source_refs);
         assert_eq!(memories[0].scope, MemoryScope::Project);
         assert_eq!(memories[1].scope, MemoryScope::Global);
+    }
+
+    #[test]
+    fn memory_insert_persists_context_metadata() {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+        let memory = MemoryRecord {
+            id: None,
+            title: "Sad Sack Signals".to_string(),
+            body: "forge-signalsmith lifecycle job context.".to_string(),
+            scope: MemoryScope::Project,
+            source_turn_refs: Vec::new(),
+            created_at: "2026-06-08T00:00:00Z".to_string(),
+            updated_at: "2026-06-08T00:00:00Z".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some("/Users/tbedor".to_string()),
+            project_descriptor: Some("tbedor, Node".to_string()),
+            lineage_refs: Vec::new(),
+        };
+
+        let memory_id = db.insert_memory(&memory).unwrap();
+        let context = db
+            .context_metadata("memory", &memory_id.to_string())
+            .unwrap()
+            .unwrap();
+
+        assert_eq!(context.work_area.as_deref(), Some("sad-sack-signals"));
+        assert!(context
+            .subject_tags
+            .contains(&"forge-signalsmith".to_string()));
     }
 
     #[test]

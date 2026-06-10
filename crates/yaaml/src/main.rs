@@ -8,8 +8,9 @@ use anyhow::{bail, Context};
 use clap::{Parser, Subcommand, ValueEnum};
 use serde::Serialize;
 use yaaml_core::{
-    apply_project_bonus, counterfactual_citation_score, derive_project_descriptor,
-    embedded_text_hash, embedding_text, parse_eval_judge_response, recall_file_path,
+    apply_project_bonus, context_score, counterfactual_citation_score, derive_project_descriptor,
+    embedded_text_hash, embedding_text, infer_context_from_memory, infer_context_from_path,
+    infer_context_from_text, merge_contexts, parse_eval_judge_response, recall_file_path,
     render_recall_markdown, session_recall_file_path, write_recall_file, Config, ConfigPaths,
     EmbeddingRecord, MemoryRecord, MemoryScope, RecallCandidate, RecallMemory, RecallWrite,
     TurnRecord, VectorIndex,
@@ -807,6 +808,7 @@ fn select_eval_candidates(
     if eligible_memories.is_empty() {
         return Vec::new();
     }
+    let query_context = infer_context_from_text(query);
     if let Ok(embedding) = embedding_client.embed(query) {
         let eligible_ids = eligible_memories
             .iter()
@@ -814,23 +816,39 @@ fn select_eval_candidates(
             .collect::<HashSet<_>>();
         let search_limit = eligible_ids.len().max(config.recall_candidate_pool);
         if let Ok(hits) = vector_index.search(&embedding, search_limit, 0.0) {
-            let candidates = hits
+            let mut candidates = hits
                 .into_iter()
                 .filter(|hit| eligible_ids.contains(&hit.memory_id))
                 .filter_map(|hit| {
                     eligible_memories
                         .iter()
                         .find(|memory| memory.id == Some(hit.memory_id))
-                        .map(|memory| (memory.clone(), hit.similarity))
+                        .map(|memory| {
+                            let memory_context = infer_context_from_memory(memory);
+                            (
+                                memory.clone(),
+                                hit.similarity + context_score(&query_context, &memory_context),
+                            )
+                        })
                 })
+                .collect::<Vec<_>>();
+            candidates.sort_by(|(left_memory, left_score), (right_memory, right_score)| {
+                right_score
+                    .partial_cmp(left_score)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+                    .then_with(|| right_memory.created_at.cmp(&left_memory.created_at))
+                    .then_with(|| right_memory.id.cmp(&left_memory.id))
+            });
+            let candidates = candidates
+                .into_iter()
+                .take(config.recall_result_limit)
                 .enumerate()
-                .map(|(index, (memory, similarity))| EvalCandidate {
+                .map(|(index, (memory, score))| EvalCandidate {
                     memory,
                     rank: index + 1,
-                    retrieval_score: similarity,
-                    retrieval_strategy: "vector",
+                    retrieval_score: score,
+                    retrieval_strategy: "vector_context",
                 })
-                .take(config.recall_result_limit)
                 .collect::<Vec<_>>();
             if !candidates.is_empty() {
                 return candidates;
@@ -846,12 +864,15 @@ fn lexical_eval_candidates(
     eligible_memories: &[MemoryRecord],
 ) -> Vec<EvalCandidate> {
     let query_terms = terms(query);
+    let query_context = infer_context_from_text(query);
     let mut candidates = eligible_memories
         .iter()
         .cloned()
         .map(|memory| {
             let memory_text = format!("{} {}", memory.title, memory.body);
-            let score = lexical_score(&query_terms, &memory_text);
+            let memory_context = infer_context_from_memory(&memory);
+            let score = lexical_score(&query_terms, &memory_text)
+                + context_score(&query_context, &memory_context);
             (memory, score)
         })
         .collect::<Vec<_>>();
@@ -1039,6 +1060,7 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
         &config,
         &query_embedding,
         &project_id,
+        &query,
         "user input".to_string(),
         now.clone(),
     )?;
@@ -1161,6 +1183,7 @@ fn recall_for_historical_turn(
         config,
         &query_embedding,
         &session.project_id,
+        &query,
         query_source,
         now,
     )?;
@@ -1192,6 +1215,7 @@ fn recall_from_embedding(
     config: &Config,
     query_embedding: &[f32],
     project_id: &str,
+    query_text: &str,
     query_source: String,
     query_timestamp: String,
 ) -> anyhow::Result<RecallSearchResult> {
@@ -1208,25 +1232,37 @@ fn recall_from_embedding(
     let memories = db
         .list_active_memories_by_ids(&hit_ids)
         .context("failed to load matching memories")?;
-    let candidates = hits
+    let mut query_context = infer_context_from_path(std::path::Path::new(project_id));
+    merge_contexts(&mut query_context, infer_context_from_text(query_text));
+    let mut candidates = hits
         .iter()
         .filter_map(|hit| {
             memories
                 .iter()
                 .find(|memory| memory.id == Some(hit.memory_id))
-                .map(|memory| RecallCandidate {
-                    memory_id: hit.memory_id,
-                    similarity: hit.similarity,
-                    score: hit.similarity,
-                    project_id: memory.project_id.clone(),
+                .map(|memory| {
+                    let memory_context = infer_context_from_memory(memory);
+                    RecallCandidate {
+                        memory_id: hit.memory_id,
+                        similarity: hit.similarity,
+                        score: hit.similarity + context_score(&query_context, &memory_context),
+                        project_id: memory.project_id.clone(),
+                    }
                 })
         })
         .collect::<Vec<_>>();
-    let candidates = if config.recall_project_tiebreaker {
+    candidates = if config.recall_project_tiebreaker {
         apply_project_bonus(candidates, project_id, config.recall_project_score_bonus)
     } else {
         candidates
     };
+    candidates.sort_by(|left, right| {
+        right
+            .score
+            .partial_cmp(&left.score)
+            .unwrap_or(std::cmp::Ordering::Equal)
+            .then_with(|| left.memory_id.cmp(&right.memory_id))
+    });
     let selected = candidates
         .into_iter()
         .take(config.recall_result_limit)

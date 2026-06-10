@@ -58,6 +58,14 @@ CREATE TABLE IF NOT EXISTS memories (
 CREATE INDEX IF NOT EXISTS idx_memories_active ON memories(is_active);
 CREATE INDEX IF NOT EXISTS idx_memories_project ON memories(project_id);
 
+CREATE TABLE IF NOT EXISTS context_metadata (
+    entity_type TEXT NOT NULL,
+    entity_key TEXT NOT NULL,
+    context_json TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    PRIMARY KEY(entity_type, entity_key)
+);
+
 CREATE TABLE IF NOT EXISTS embeddings (
     memory_id INTEGER PRIMARY KEY NOT NULL,
     embedding_model TEXT NOT NULL,

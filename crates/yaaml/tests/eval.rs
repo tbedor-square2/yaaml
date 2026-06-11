@@ -108,10 +108,9 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     assert_eq!(runs[0]["id"], run_id);
     assert_eq!(runs[0]["result_count"], 1);
     assert_eq!(runs[0]["score"], "unjudged");
-    assert!(runs[0]["started_at_human"]
-        .as_str()
-        .unwrap()
-        .ends_with(" UTC"));
+    let started_at_human = runs[0]["started_at_human"].as_str().unwrap();
+    assert!(!started_at_human.starts_with("unix:"));
+    assert!(started_at_human.contains("2026-"));
 
     let show = Command::new(binary)
         .arg("eval")
@@ -230,8 +229,12 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     assert_eq!(runs[0]["session_id"], "session-1");
     assert_eq!(runs[0]["turn_ordinal"], 7);
     assert_eq!(runs[0]["score"], "5");
-    assert_eq!(runs[0]["started_at_human"], "2026-06-11 19:15:26 UTC");
-    assert_eq!(runs[0]["completed_at_human"], "2026-06-11 19:15:31 UTC");
+    let started_at_human = runs[0]["started_at_human"].as_str().unwrap();
+    let completed_at_human = runs[0]["completed_at_human"].as_str().unwrap();
+    assert!(!started_at_human.starts_with("unix:"));
+    assert!(!completed_at_human.starts_with("unix:"));
+    assert!(started_at_human.contains(":26 "));
+    assert!(completed_at_human.contains(":31 "));
 
     let text_output = Command::new(binary)
         .arg("eval")
@@ -249,7 +252,7 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     assert!(stdout.contains("score=5"));
     assert!(stdout.contains("session=session-1"));
     assert!(stdout.contains("turn=7"));
-    assert!(stdout.contains("started=2026-06-11 19:15:26 UTC"));
+    assert!(stdout.contains("started=20"));
 }
 
 #[test]

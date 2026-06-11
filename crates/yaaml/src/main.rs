@@ -4,6 +4,9 @@ use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use std::{env, fs};
 
+#[cfg(unix)]
+use std::ffi::CStr;
+
 use anyhow::{bail, Context};
 use clap::{Parser, Subcommand, ValueEnum};
 use serde::Serialize;
@@ -1669,28 +1672,39 @@ fn human_timestamp(timestamp: &str) -> String {
     else {
         return timestamp.to_string();
     };
-    let days = seconds.div_euclid(86_400);
-    let seconds_of_day = seconds.rem_euclid(86_400);
-    let hour = seconds_of_day / 3_600;
-    let minute = (seconds_of_day % 3_600) / 60;
-    let second = seconds_of_day % 60;
-    let (year, month, day) = civil_from_days(days);
-    format!("{year:04}-{month:02}-{day:02} {hour:02}:{minute:02}:{second:02} UTC")
+    local_human_timestamp(seconds).unwrap_or_else(|| timestamp.to_string())
 }
 
-fn civil_from_days(days_since_epoch: i64) -> (i64, i64, i64) {
-    let z = days_since_epoch + 719_468;
-    let era = if z >= 0 { z } else { z - 146_096 } / 146_097;
-    let day_of_era = z - era * 146_097;
-    let year_of_era =
-        (day_of_era - day_of_era / 1_460 + day_of_era / 36_524 - day_of_era / 146_096) / 365;
-    let year = year_of_era + era * 400;
-    let day_of_year = day_of_era - (365 * year_of_era + year_of_era / 4 - year_of_era / 100);
-    let month_prime = (5 * day_of_year + 2) / 153;
-    let day = day_of_year - (153 * month_prime + 2) / 5 + 1;
-    let month = month_prime + if month_prime < 10 { 3 } else { -9 };
-    let year = year + i64::from(month <= 2);
-    (year, month, day)
+#[cfg(unix)]
+fn local_human_timestamp(seconds: i64) -> Option<String> {
+    let time: libc::time_t = seconds.try_into().ok()?;
+    let mut local_time = std::mem::MaybeUninit::<libc::tm>::uninit();
+    let format = b"%Y-%m-%d %H:%M:%S %Z\0";
+    let mut buffer = [0 as libc::c_char; 64];
+    unsafe {
+        if libc::localtime_r(&time, local_time.as_mut_ptr()).is_null() {
+            return None;
+        }
+        let local_time = local_time.assume_init();
+        let len = libc::strftime(
+            buffer.as_mut_ptr(),
+            buffer.len(),
+            format.as_ptr().cast(),
+            &local_time,
+        );
+        if len == 0 {
+            return None;
+        }
+        CStr::from_ptr(buffer.as_ptr())
+            .to_str()
+            .ok()
+            .map(str::to_string)
+    }
+}
+
+#[cfg(not(unix))]
+fn local_human_timestamp(_seconds: i64) -> Option<String> {
+    None
 }
 
 #[cfg(test)]
@@ -1698,11 +1712,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn human_timestamp_formats_unix_seconds_as_utc() {
-        assert_eq!(
-            human_timestamp("unix:1781205326"),
-            "2026-06-11 19:15:26 UTC"
-        );
+    fn human_timestamp_formats_unix_seconds_in_local_timezone() {
+        let formatted = human_timestamp("unix:1781205326");
+        assert!(!formatted.starts_with("unix:"));
+        assert!(formatted.contains("2026-"));
+        assert!(formatted.contains(":26 "));
         assert_eq!(
             human_timestamp("2026-06-11T00:00:00Z"),
             "2026-06-11T00:00:00Z"

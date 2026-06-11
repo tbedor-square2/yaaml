@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::PathBuf;
 use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -22,7 +22,7 @@ use yaaml_core::{
 use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
 use yaaml_llm::ReqwestTransport;
-use yaaml_store::database::{EvalResultRecord, EvalRunRecord};
+use yaaml_store::database::{EvalResultRecord, EvalRunRecord, RecallEvalTaskRecord};
 use yaaml_store::lock::DaemonLock;
 use yaaml_store::{Database, SqliteExactVectorIndex};
 
@@ -567,6 +567,15 @@ impl From<EvalRunRecord> for EvalListRun {
     }
 }
 
+#[derive(Debug, Serialize)]
+struct EvalShowMemory {
+    memory_id: i64,
+    title: Option<String>,
+    is_active: bool,
+    project_id: Option<String>,
+    project_descriptor: Option<String>,
+}
+
 fn display_eval_score(score: String) -> String {
     if score == "insufficient_context" {
         "n/a".to_string()
@@ -589,12 +598,19 @@ fn eval_show(args: EvalShowArgs) -> anyhow::Result<()> {
     let results = db
         .eval_results_for_run(args.run_id)
         .context("failed to load eval results")?;
+    let run_context = eval_run_context(&run);
+    let recalled_memories =
+        recalled_memories_for_run(&db, &run_context).context("failed to load recalled memories")?;
+    let later_completed_turns = later_completed_turn_count(&db, &run_context)
+        .context("failed to count later completed turns")?;
     if args.json {
         println!(
             "{}",
             serde_json::to_string_pretty(&serde_json::json!({
                 "run": run,
                 "score_counts": score_counts(results.iter().filter_map(|result| result.judge_score.as_deref())),
+                "recalled_memories": recalled_memories,
+                "later_completed_turns": later_completed_turns,
                 "results": results,
             }))?
         );
@@ -607,6 +623,26 @@ fn eval_show(args: EvalShowArgs) -> anyhow::Result<()> {
             run.completed_at.as_deref().unwrap_or("running"),
             run.result_count
         );
+        if let (Some(session_id), Some(turn_ordinal)) =
+            (run_context.session_id.as_deref(), run_context.turn_ordinal)
+        {
+            println!("Anchor: session={session_id} turn={turn_ordinal}");
+        }
+        if let Some(later_completed_turns) = later_completed_turns {
+            println!("Later completed turns: {later_completed_turns}");
+        }
+        if !recalled_memories.is_empty() {
+            println!("Recalled memories:");
+            for memory in &recalled_memories {
+                let title = memory.title.as_deref().unwrap_or("missing");
+                let active = if memory.is_active {
+                    "active"
+                } else {
+                    "inactive"
+                };
+                println!("  memory={} {} title={}", memory.memory_id, active, title);
+            }
+        }
         let counts = score_counts(
             results
                 .iter()
@@ -622,6 +658,11 @@ fn eval_show(args: EvalShowArgs) -> anyhow::Result<()> {
         }
         for result in results {
             let title = result.memory_title.as_deref().unwrap_or("no memory");
+            let score = result
+                .judge_score
+                .as_deref()
+                .map(|score| display_eval_score(score.to_string()))
+                .unwrap_or_else(|| "unknown".to_string());
             println!(
                 "  result={} turn={} memory={} score={} title={}",
                 result.id,
@@ -630,7 +671,7 @@ fn eval_show(args: EvalShowArgs) -> anyhow::Result<()> {
                     .memory_id
                     .map(|id| id.to_string())
                     .unwrap_or_else(|| "-".to_string()),
-                result.judge_score.as_deref().unwrap_or("unknown"),
+                score,
                 title
             );
             if let Some(rationale) = result.rationale {
@@ -668,8 +709,46 @@ struct EvalSummary {
     judged_results: usize,
     average_score: Option<f64>,
     score_counts: BTreeMap<String, u64>,
+    session_breakdown: Vec<EvalSessionSummary>,
+    stale_insufficient_context: Vec<EvalStaleInsufficientContext>,
+    queued_recall_evals: Vec<EvalQueuedRecallTask>,
     low_score_examples: Vec<EvalSummaryExample>,
     high_score_examples: Vec<EvalSummaryExample>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct EvalSessionSummary {
+    session_id: Option<String>,
+    project_id: Option<String>,
+    runs: usize,
+    results: usize,
+    judged_results: usize,
+    average_score: Option<f64>,
+    score_counts: BTreeMap<String, u64>,
+    latest_run_id: i64,
+    latest_turn_ordinal: Option<u64>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct EvalStaleInsufficientContext {
+    run_id: i64,
+    session_id: String,
+    turn_ordinal: u64,
+    score: String,
+    later_completed_turns: u64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct EvalQueuedRecallTask {
+    task_id: i64,
+    status: String,
+    attempts: u64,
+    max_attempts: u64,
+    next_run_at: Option<String>,
+    next_run_at_human: Option<String>,
+    session_id: Option<String>,
+    turn_ordinal: Option<u64>,
+    last_error: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -684,11 +763,25 @@ struct EvalSummaryExample {
     rationale: Option<String>,
 }
 
+#[derive(Debug, Default)]
+struct EvalSessionAccumulator {
+    session_id: Option<String>,
+    project_id: Option<String>,
+    runs: usize,
+    results: usize,
+    numeric_scores: Vec<u8>,
+    all_scores: Vec<String>,
+    latest_run_id: i64,
+    latest_turn_ordinal: Option<u64>,
+}
+
 fn build_eval_summary(db: &Database, runs: Vec<EvalRunRecord>) -> anyhow::Result<EvalSummary> {
     let mut all_scores = Vec::new();
     let mut numeric_scores = Vec::new();
     let mut low_score_examples = Vec::new();
     let mut high_score_examples = Vec::new();
+    let mut stale_insufficient_context = Vec::new();
+    let mut session_accumulators = BTreeMap::<String, EvalSessionAccumulator>::new();
     let mut results_considered = 0_usize;
 
     for run in &runs {
@@ -696,12 +789,62 @@ fn build_eval_summary(db: &Database, runs: Vec<EvalRunRecord>) -> anyhow::Result
             .eval_results_for_run(run.id)
             .with_context(|| format!("failed to load eval results for run {}", run.id))?;
         let run_context = eval_run_context(run);
+        let session_key = run_context
+            .session_id
+            .clone()
+            .unwrap_or_else(|| "(unknown)".to_string());
+        let project_id = run_context
+            .session_id
+            .as_deref()
+            .and_then(|session_id| db.session_by_id(session_id).ok().flatten())
+            .map(|session| session.project_id);
+        let accumulator =
+            session_accumulators
+                .entry(session_key)
+                .or_insert_with(|| EvalSessionAccumulator {
+                    session_id: run_context.session_id.clone(),
+                    project_id,
+                    latest_run_id: run.id,
+                    latest_turn_ordinal: run_context.turn_ordinal,
+                    ..EvalSessionAccumulator::default()
+                });
+        accumulator.runs += 1;
+        if run.id > accumulator.latest_run_id {
+            accumulator.latest_run_id = run.id;
+            accumulator.latest_turn_ordinal = run_context.turn_ordinal;
+        }
+
+        let has_insufficient_context = results
+            .iter()
+            .any(|result| result.judge_score.as_deref() == Some("insufficient_context"));
+        if has_insufficient_context && stale_insufficient_context.len() < 10 {
+            if let (Some(session_id), Some(turn_ordinal)) =
+                (run_context.session_id.as_deref(), run_context.turn_ordinal)
+            {
+                let later_turn_count = later_completed_turn_count(db, &run_context)?.unwrap_or(0);
+                if later_turn_count > 0 {
+                    stale_insufficient_context.push(EvalStaleInsufficientContext {
+                        run_id: run.id,
+                        session_id: session_id.to_string(),
+                        turn_ordinal,
+                        score: "n/a".to_string(),
+                        later_completed_turns: later_turn_count,
+                    });
+                }
+            }
+        }
+
         for result in results {
             results_considered += 1;
+            accumulator.results += 1;
             if let Some(score) = result.judge_score.as_deref() {
-                all_scores.push(score.to_string());
+                all_scores.push(display_eval_score(score.to_string()));
+                accumulator
+                    .all_scores
+                    .push(display_eval_score(score.to_string()));
                 if let Some(numeric_score) = numeric_eval_score(score) {
                     numeric_scores.push(numeric_score);
+                    accumulator.numeric_scores.push(numeric_score);
                     let example = eval_summary_example(&run_context, &result, score);
                     if numeric_score <= 2 && low_score_examples.len() < 5 {
                         low_score_examples.push(example);
@@ -725,6 +868,41 @@ fn build_eval_summary(db: &Database, runs: Vec<EvalRunRecord>) -> anyhow::Result
                 / numeric_scores.len() as f64,
         )
     };
+    let mut session_breakdown = session_accumulators
+        .into_values()
+        .map(|accumulator| {
+            let average_score = if accumulator.numeric_scores.is_empty() {
+                None
+            } else {
+                Some(
+                    accumulator
+                        .numeric_scores
+                        .iter()
+                        .map(|score| f64::from(*score))
+                        .sum::<f64>()
+                        / accumulator.numeric_scores.len() as f64,
+                )
+            };
+            EvalSessionSummary {
+                session_id: accumulator.session_id,
+                project_id: accumulator.project_id,
+                runs: accumulator.runs,
+                results: accumulator.results,
+                judged_results: accumulator.numeric_scores.len(),
+                average_score,
+                score_counts: score_counts(accumulator.all_scores.iter().map(String::as_str)),
+                latest_run_id: accumulator.latest_run_id,
+                latest_turn_ordinal: accumulator.latest_turn_ordinal,
+            }
+        })
+        .collect::<Vec<_>>();
+    session_breakdown.sort_by(|left, right| right.latest_run_id.cmp(&left.latest_run_id));
+    let queued_recall_evals = db
+        .list_recall_eval_tasks(20)
+        .context("failed to list recall eval tasks")?
+        .into_iter()
+        .map(EvalQueuedRecallTask::from)
+        .collect::<Vec<_>>();
 
     Ok(EvalSummary {
         runs_considered: runs.len(),
@@ -732,6 +910,9 @@ fn build_eval_summary(db: &Database, runs: Vec<EvalRunRecord>) -> anyhow::Result
         judged_results,
         average_score,
         score_counts: score_counts(all_scores.iter().map(String::as_str)),
+        session_breakdown,
+        stale_insufficient_context,
+        queued_recall_evals,
         low_score_examples,
         high_score_examples,
     })
@@ -742,21 +923,99 @@ struct EvalRunContext {
     run_id: i64,
     session_id: Option<String>,
     turn_ordinal: Option<u64>,
+    memory_ids: Vec<i64>,
 }
 
 fn eval_run_context(run: &EvalRunRecord) -> EvalRunContext {
     let config = serde_json::from_str::<serde_json::Value>(&run.config_json).ok();
     EvalRunContext {
         run_id: run.id,
-        session_id: config
+        session_id: run.session_id.clone().or_else(|| {
+            config
+                .as_ref()
+                .and_then(|value| value.get("session_id"))
+                .and_then(serde_json::Value::as_str)
+                .map(str::to_string)
+        }),
+        turn_ordinal: run.turn_ordinal.or_else(|| {
+            config
+                .as_ref()
+                .and_then(|value| value.get("turn_ordinal"))
+                .and_then(serde_json::Value::as_u64)
+        }),
+        memory_ids: config
             .as_ref()
-            .and_then(|value| value.get("session_id"))
-            .and_then(serde_json::Value::as_str)
-            .map(str::to_string),
-        turn_ordinal: config
-            .as_ref()
-            .and_then(|value| value.get("turn_ordinal"))
-            .and_then(serde_json::Value::as_u64),
+            .and_then(|value| value.get("memory_ids"))
+            .and_then(serde_json::Value::as_array)
+            .map(|values| {
+                values
+                    .iter()
+                    .filter_map(serde_json::Value::as_i64)
+                    .collect()
+            })
+            .unwrap_or_default(),
+    }
+}
+
+fn recalled_memories_for_run(
+    db: &Database,
+    run_context: &EvalRunContext,
+) -> anyhow::Result<Vec<EvalShowMemory>> {
+    if run_context.memory_ids.is_empty() {
+        return Ok(Vec::new());
+    }
+    let memories = db
+        .list_memories_by_ids(&run_context.memory_ids)
+        .context("failed to load memories by id")?;
+    let memory_by_id = memories
+        .into_iter()
+        .filter_map(|memory| memory.id.map(|id| (id, memory)))
+        .collect::<HashMap<_, _>>();
+    Ok(run_context
+        .memory_ids
+        .iter()
+        .map(|memory_id| {
+            let memory = memory_by_id.get(memory_id);
+            EvalShowMemory {
+                memory_id: *memory_id,
+                title: memory.map(|memory| memory.title.clone()),
+                is_active: memory.map(|memory| memory.is_active).unwrap_or(false),
+                project_id: memory.and_then(|memory| memory.project_id.clone()),
+                project_descriptor: memory.and_then(|memory| memory.project_descriptor.clone()),
+            }
+        })
+        .collect())
+}
+
+fn later_completed_turn_count(
+    db: &Database,
+    run_context: &EvalRunContext,
+) -> anyhow::Result<Option<u64>> {
+    let (Some(session_id), Some(turn_ordinal)) =
+        (run_context.session_id.as_deref(), run_context.turn_ordinal)
+    else {
+        return Ok(None);
+    };
+    let later_turns = db
+        .completed_turns_for_session_after_ordinal(session_id, turn_ordinal, 10_000)
+        .context("failed to load later completed turns")?;
+    Ok(Some(later_turns.len() as u64))
+}
+
+impl From<RecallEvalTaskRecord> for EvalQueuedRecallTask {
+    fn from(task: RecallEvalTaskRecord) -> Self {
+        let next_run_at_human = task.next_run_at.as_deref().map(human_timestamp);
+        Self {
+            task_id: task.id,
+            status: task.status,
+            attempts: task.attempts,
+            max_attempts: task.max_attempts,
+            next_run_at: task.next_run_at,
+            next_run_at_human,
+            session_id: task.session_id,
+            turn_ordinal: task.turn_ordinal,
+            last_error: task.last_error,
+        }
     }
 }
 
@@ -816,8 +1075,89 @@ fn print_human_eval_summary(summary: &EvalSummary) {
             .join(", ");
         println!("  scores: {rendered}");
     }
+    print_eval_session_breakdown(&summary.session_breakdown);
+    print_stale_insufficient_context(&summary.stale_insufficient_context);
+    print_queued_recall_evals(&summary.queued_recall_evals);
     print_eval_summary_examples("Low-score examples", &summary.low_score_examples);
     print_eval_summary_examples("High-score examples", &summary.high_score_examples);
+}
+
+fn print_eval_session_breakdown(sessions: &[EvalSessionSummary]) {
+    if sessions.is_empty() {
+        return;
+    }
+    println!("Session breakdown");
+    for session in sessions.iter().take(10) {
+        let session_id = session.session_id.as_deref().unwrap_or("-");
+        let project_id = session.project_id.as_deref().unwrap_or("-");
+        let average_score = session
+            .average_score
+            .map(|score| format!("{score:.2}"))
+            .unwrap_or_else(|| "n/a".to_string());
+        let rendered_scores = if session.score_counts.is_empty() {
+            "none".to_string()
+        } else {
+            session
+                .score_counts
+                .iter()
+                .map(|(score, count)| format!("{score}={count}"))
+                .collect::<Vec<_>>()
+                .join(", ")
+        };
+        println!(
+            "  session={} project={} runs={} avg={} scores={} latest_run={} latest_turn={}",
+            session_id,
+            project_id,
+            session.runs,
+            average_score,
+            rendered_scores,
+            session.latest_run_id,
+            session
+                .latest_turn_ordinal
+                .map(|ordinal| ordinal.to_string())
+                .unwrap_or_else(|| "-".to_string())
+        );
+    }
+}
+
+fn print_stale_insufficient_context(stale: &[EvalStaleInsufficientContext]) {
+    if stale.is_empty() {
+        return;
+    }
+    println!("N/a evals with later turns");
+    for eval in stale {
+        println!(
+            "  run={} session={} turn={} later_turns={}",
+            eval.run_id, eval.session_id, eval.turn_ordinal, eval.later_completed_turns
+        );
+    }
+}
+
+fn print_queued_recall_evals(tasks: &[EvalQueuedRecallTask]) {
+    if tasks.is_empty() {
+        return;
+    }
+    println!("Queued recall evals");
+    for task in tasks {
+        println!(
+            "  task={} status={} attempts={}/{} session={} turn={} next_run={}",
+            task.task_id,
+            task.status,
+            task.attempts,
+            task.max_attempts,
+            task.session_id.as_deref().unwrap_or("-"),
+            task.turn_ordinal
+                .map(|ordinal| ordinal.to_string())
+                .unwrap_or_else(|| "-".to_string()),
+            task.next_run_at_human
+                .as_deref()
+                .or(task.next_run_at.as_deref())
+                .unwrap_or("-")
+        );
+        if let Some(error) = &task.last_error {
+            println!("    {error}");
+        }
+    }
 }
 
 fn print_eval_summary_examples(label: &str, examples: &[EvalSummaryExample]) {
@@ -1048,7 +1388,9 @@ fn truncate_eval_text(text: &str, max_chars: usize) -> String {
 fn score_counts<'a>(scores: impl Iterator<Item = &'a str>) -> BTreeMap<String, u64> {
     let mut counts = BTreeMap::new();
     for score in scores {
-        *counts.entry(score.to_string()).or_insert(0) += 1;
+        *counts
+            .entry(display_eval_score(score.to_string()))
+            .or_insert(0) += 1;
     }
     counts
 }

@@ -56,6 +56,18 @@ pub struct EvalResultRecord {
     pub created_at: String,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct RecallEvalTaskRecord {
+    pub id: i64,
+    pub status: String,
+    pub attempts: u64,
+    pub max_attempts: u64,
+    pub next_run_at: Option<String>,
+    pub last_error: Option<String>,
+    pub session_id: Option<String>,
+    pub turn_ordinal: Option<u64>,
+}
+
 impl Database {
     pub fn open(path: impl AsRef<Path>) -> Result<Self, DatabaseError> {
         let path = path.as_ref().to_path_buf();
@@ -629,6 +641,30 @@ impl Database {
         Ok(memories)
     }
 
+    pub fn list_memories_by_ids(
+        &self,
+        memory_ids: &[i64],
+    ) -> Result<Vec<MemoryRecord>, DatabaseError> {
+        let mut memories = Vec::new();
+        for memory_id in memory_ids {
+            let memory = self
+                .conn
+                .query_row(
+                    "SELECT id, title, body, scope, source_turn_refs, created_at, updated_at,
+                            is_active, session_id, project_id, project_descriptor, lineage_refs
+                     FROM memories
+                     WHERE id = ?1",
+                    params![memory_id],
+                    read_memory_record,
+                )
+                .optional()?;
+            if let Some(memory) = memory {
+                memories.push(memory);
+            }
+        }
+        Ok(memories)
+    }
+
     pub fn list_active_memories_created_before(
         &self,
         observed_at: &str,
@@ -833,6 +869,40 @@ impl Database {
             |row| row.get(0),
         )?;
         Ok(i64_to_u64(count))
+    }
+
+    pub fn list_recall_eval_tasks(
+        &self,
+        limit: usize,
+    ) -> Result<Vec<RecallEvalTaskRecord>, DatabaseError> {
+        let mut stmt = self.conn.prepare(
+            "SELECT id, status, attempts, max_attempts, next_run_at, last_error,
+                    json_extract(payload_json, '$.session_id') AS session_id,
+                    CAST(json_extract(payload_json, '$.turn_ordinal') AS INTEGER) AS turn_ordinal
+             FROM tasks
+             WHERE kind = 'recall_eval'
+               AND status IN ('queued', 'running')
+             ORDER BY id DESC
+             LIMIT ?1",
+        )?;
+        let rows = stmt.query_map(params![u64_to_i64(limit as u64)], |row| {
+            let turn_ordinal: Option<i64> = row.get(7)?;
+            Ok(RecallEvalTaskRecord {
+                id: row.get(0)?,
+                status: row.get(1)?,
+                attempts: i64_to_u64(row.get(2)?),
+                max_attempts: i64_to_u64(row.get(3)?),
+                next_run_at: row.get(4)?,
+                last_error: row.get(5)?,
+                session_id: row.get(6)?,
+                turn_ordinal: turn_ordinal.map(i64_to_u64),
+            })
+        })?;
+        let mut tasks = Vec::new();
+        for row in rows {
+            tasks.push(row?);
+        }
+        Ok(tasks)
     }
 
     pub fn mark_task_running(&self, task_id: i64, updated_at: &str) -> Result<(), DatabaseError> {

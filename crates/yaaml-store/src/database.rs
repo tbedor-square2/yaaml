@@ -871,6 +871,40 @@ impl Database {
         Ok(i64_to_u64(count))
     }
 
+    pub fn latest_task_updated_at(
+        &self,
+        kind: &str,
+        status: TaskStatus,
+    ) -> Result<Option<String>, DatabaseError> {
+        self.conn
+            .query_row(
+                "SELECT updated_at
+                 FROM tasks
+                 WHERE kind = ?1 AND status = ?2
+                 ORDER BY id DESC
+                 LIMIT 1",
+                params![kind, status.as_str()],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(DatabaseError::from)
+    }
+
+    pub fn latest_active_memory_created_at(&self) -> Result<Option<String>, DatabaseError> {
+        self.conn
+            .query_row(
+                "SELECT created_at
+                 FROM memories
+                 WHERE is_active = 1
+                 ORDER BY id DESC
+                 LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(DatabaseError::from)
+    }
+
     pub fn list_recall_eval_tasks(
         &self,
         limit: usize,

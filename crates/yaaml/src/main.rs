@@ -258,6 +258,8 @@ fn daemon(args: DaemonArgs) -> anyhow::Result<()> {
         .join(".codex")
         .join("sessions");
     let report = yaaml::daemon::process_codex_backlog(&db, &config, &codex_root)?;
+    yaaml::daemon::queue_memory_consolidation_if_due(&db, &config)
+        .context("failed to queue memory consolidation")?;
     let completed_tasks = yaaml::daemon::run_queued_tasks(&db, &config, remote_task_limit)?;
     println!(
         "processed Codex backlog: {} files, {} turns, {} tasks, {} failures",
@@ -269,6 +271,8 @@ fn daemon(args: DaemonArgs) -> anyhow::Result<()> {
 
     while !shutdown.is_requested() {
         let changes = yaaml::daemon::process_codex_changes(&db, &config, &codex_root)?;
+        yaaml::daemon::queue_memory_consolidation_if_due(&db, &config)
+            .context("failed to queue memory consolidation")?;
         let completed_tasks = yaaml::daemon::run_queued_tasks(&db, &config, remote_task_limit)?;
         if changes.changed_files > 0 || completed_tasks > 0 || changes.failures > 0 {
             println!(
@@ -300,6 +304,8 @@ fn ingest(args: IngestArgs) -> anyhow::Result<()> {
     };
     let backlog_report = yaaml::daemon::process_codex_backlog(&db, &config, &codex_root)?;
     let change_report = yaaml::daemon::process_codex_changes(&db, &config, &codex_root)?;
+    yaaml::daemon::queue_memory_consolidation_if_due(&db, &config)
+        .context("failed to queue memory consolidation")?;
     let completed_tasks = yaaml::daemon::run_queued_tasks(
         &db,
         &config,

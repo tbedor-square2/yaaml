@@ -9,9 +9,11 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use tempfile::TempDir;
 use yaaml::daemon::{
     dedupe_active_memories, ingest_codex_file, process_codex_backlog, process_codex_changes,
-    queue_memory_formulation_if_due, queue_missing_memory_formulation_tasks, recover_running_tasks,
-    refresh_recall_with_embedding, run_queued_tasks, start_signal_socket, DaemonShutdown,
-    PartialBatchPolicy, TASK_KIND_MEMORY_FORMULATION, TASK_KIND_RECALL, TASK_KIND_RECALL_EVAL,
+    queue_memory_consolidation_if_due, queue_memory_formulation_if_due,
+    queue_missing_memory_formulation_tasks, recover_running_tasks, refresh_recall_with_embedding,
+    run_queued_tasks, start_signal_socket, DaemonShutdown, PartialBatchPolicy,
+    TASK_KIND_MEMORY_CONSOLIDATION, TASK_KIND_MEMORY_FORMULATION, TASK_KIND_RECALL,
+    TASK_KIND_RECALL_EVAL,
 };
 use yaaml::turn_hydration::hydrate_turns;
 use yaaml_core::{
@@ -443,6 +445,117 @@ fn dedupe_keeps_related_but_distinct_same_project_memories() {
 }
 
 #[test]
+fn consolidation_scheduler_queues_one_delayed_task_for_new_memories() {
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+    db.insert_memory(&memory(
+        "YAAML recall task dispatch",
+        "Recall tasks are dispatched by the daemon.",
+        Some("/tmp/yaaml"),
+    ))
+    .unwrap();
+    let mut config = Config::default();
+    config.consolidation_dark_period_seconds = 300;
+
+    let queued = queue_memory_consolidation_if_due(&db, &config).unwrap();
+    let duplicate = queue_memory_consolidation_if_due(&db, &config).unwrap();
+
+    assert!(queued.is_some());
+    assert!(duplicate.is_none());
+    assert_eq!(
+        db.count_tasks_by_status(TASK_KIND_MEMORY_CONSOLIDATION, TaskStatus::Queued)
+            .unwrap(),
+        1
+    );
+}
+
+#[test]
+fn consolidation_task_merges_top_cluster_and_preserves_lineage() {
+    std::env::set_var("YAAML_TEST_CONSOLIDATION_KEY", "test-key");
+    std::env::set_var("YAAML_TEST_OPENAI_KEY", "test-key");
+    let anthropic = fake_anthropic_server(
+        r#"{"memories":[{"title":"YAAML background recall consolidation","body":"Background recall now enqueues and dispatches recall tasks, falls back gracefully when session files are missing, and schedules delayed recall evals after transcript catch-up.","scope":"project","project_descriptor":"yaaml, Rust"}]}"#,
+    );
+    let embedding = fake_embedding_server();
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+    let first = db
+        .insert_memory(&memory(
+            "YAAML background recall file generation gap",
+            "Session-specific recall files were not auto-generated because recall tasks were not enqueued or dispatched.",
+            Some("/tmp/yaaml"),
+        ))
+        .unwrap();
+    let second = db
+        .insert_memory(&memory(
+            "YAAML background recall task dispatch and fallback",
+            "The daemon now dispatches TASK_KIND_RECALL and bare recall falls back to a project recall file.",
+            Some("/tmp/yaaml"),
+        ))
+        .unwrap();
+    let third = db
+        .insert_memory(&memory(
+            "YAAML bare recall degrades gracefully",
+            "Bare yaaml recall falls back to project recall and new completed Codex turns enqueue background recall tasks.",
+            Some("/tmp/yaaml"),
+        ))
+        .unwrap();
+    for (memory_id, vector) in [
+        (first, vec![1.0_f32, 0.0]),
+        (second, vec![0.99_f32, 0.01]),
+        (third, vec![0.98_f32, 0.02]),
+    ] {
+        db.upsert_embedding(&EmbeddingRecord {
+            memory_id,
+            embedding_model: "text-embedding-3-small".to_string(),
+            dimensions: vector.len() as u64,
+            embedding_blob: encode_f32_embedding(&vector),
+            embedded_text_hash: format!("hash-{memory_id}"),
+            updated_at: "2026-06-08T00:00:00Z".to_string(),
+        })
+        .unwrap();
+    }
+    db.enqueue_task(&TaskRecord {
+        id: None,
+        kind: TASK_KIND_MEMORY_CONSOLIDATION.to_string(),
+        status: TaskStatus::Queued,
+        priority: 0,
+        payload_json: "{}".to_string(),
+        attempts: 0,
+        max_attempts: 5,
+        next_run_at: None,
+        last_error: None,
+        created_at: "2026-06-08T00:00:00Z".to_string(),
+        updated_at: "2026-06-08T00:00:00Z".to_string(),
+    })
+    .unwrap();
+    let mut config = Config::default();
+    config.consolidation_api_key_env = "YAAML_TEST_CONSOLIDATION_KEY".to_string();
+    config.consolidation_base_url = Some(anthropic.base_url.clone());
+    config.embedding_api_key_env = "YAAML_TEST_OPENAI_KEY".to_string();
+    config.embedding_base_url = Some(embedding.base_url.clone());
+
+    assert_eq!(run_queued_tasks(&db, &config, 1).unwrap(), 1);
+    anthropic.join();
+    embedding.join();
+
+    let memories = db.list_memories().unwrap();
+    let active = memories
+        .iter()
+        .filter(|memory| memory.is_active)
+        .collect::<Vec<_>>();
+    assert_eq!(active.len(), 1);
+    assert_eq!(active[0].title, "YAAML background recall consolidation");
+    assert_eq!(active[0].lineage_refs, vec![first, second, third]);
+    assert!(db.get_embedding(active[0].id.unwrap()).unwrap().is_some());
+    assert_eq!(
+        db.count_tasks_by_status(TASK_KIND_MEMORY_CONSOLIDATION, TaskStatus::Completed)
+            .unwrap(),
+        1
+    );
+}
+
+#[test]
 fn queued_memory_task_parks_when_provider_is_unavailable() {
     std::env::remove_var("YAAML_TEST_MISSING_ANTHROPIC_KEY");
     let tmp = TempDir::new().unwrap();
@@ -819,6 +932,39 @@ impl FakeEmbeddingServer {
     fn join(self) {
         self.handle.join().unwrap();
     }
+}
+
+struct FakeAnthropicServer {
+    base_url: String,
+    handle: thread::JoinHandle<()>,
+}
+
+impl FakeAnthropicServer {
+    fn join(self) {
+        self.handle.join().unwrap();
+    }
+}
+
+fn fake_anthropic_server(json_text: &'static str) -> FakeAnthropicServer {
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let base_url = format!("http://{}", listener.local_addr().unwrap());
+    let handle = thread::spawn(move || {
+        let (mut stream, _) = listener.accept().unwrap();
+        let mut buffer = [0_u8; 8192];
+        let _ = stream.read(&mut buffer).unwrap();
+        let body = format!(
+            r#"{{"content":[{{"type":"text","text":{}}}]}}"#,
+            serde_json::to_string(json_text).unwrap()
+        );
+        let response = format!(
+            "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+            body.len(),
+            body
+        );
+        stream.write_all(response.as_bytes()).unwrap();
+    });
+
+    FakeAnthropicServer { base_url, handle }
 }
 
 fn fake_embedding_server() -> FakeEmbeddingServer {

@@ -487,6 +487,13 @@ fn run_recall_eval_task(db: &Database, config: &Config, task: &TaskRecord) -> an
     let later_turns =
         hydrate_turns(db, &later_turns).context("failed to hydrate recall eval turns")?;
     let now = unix_timestamp();
+    if later_turns.is_empty()
+        && should_defer_recall_eval_for_later_turns(db, config, task, session_id)?
+    {
+        defer_recall_eval_until_later_turns_exist(db, task)
+            .context("failed to defer recall eval task")?;
+        return Ok(());
+    }
     let run_id = db
         .insert_eval_run(
             "recall_1_to_5",
@@ -551,6 +558,47 @@ fn defer_recall_eval_until_anchor_exists(db: &Database, task: &TaskRecord) -> an
         max_attempts: task.max_attempts,
         next_run_at: Some(format!("unix:{next_run_seconds}")),
         last_error: Some("waiting for recall eval anchor turn".to_string()),
+        created_at: task.created_at.clone(),
+        updated_at: now,
+    };
+    db.enqueue_task(&deferred)
+        .context("failed to enqueue deferred recall eval task")
+}
+
+fn should_defer_recall_eval_for_later_turns(
+    db: &Database,
+    config: &Config,
+    task: &TaskRecord,
+    session_id: &str,
+) -> anyhow::Result<bool> {
+    if task.attempts.saturating_add(1) >= task.max_attempts {
+        return Ok(false);
+    }
+    let Some(session) = db
+        .session_by_id(session_id)
+        .context("failed to load recall eval session")?
+    else {
+        return Ok(false);
+    };
+    Ok(!session_is_idle(&session, config))
+}
+
+fn defer_recall_eval_until_later_turns_exist(
+    db: &Database,
+    task: &TaskRecord,
+) -> anyhow::Result<i64> {
+    let next_run_seconds = unix_timestamp_seconds() + 600;
+    let now = format!("unix:{}", unix_timestamp_seconds());
+    let deferred = TaskRecord {
+        id: None,
+        kind: task.kind.clone(),
+        status: TaskStatus::Queued,
+        priority: task.priority,
+        payload_json: task.payload_json.clone(),
+        attempts: task.attempts.saturating_add(1),
+        max_attempts: task.max_attempts,
+        next_run_at: Some(format!("unix:{next_run_seconds}")),
+        last_error: Some("waiting for subsequent turns before recall eval".to_string()),
         created_at: task.created_at.clone(),
         updated_at: now,
     };

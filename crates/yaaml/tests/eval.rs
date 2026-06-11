@@ -209,6 +209,24 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     db.insert_eval_result(run_id, turn_row_id, None, "5", "great", "unix:1781205330")
         .unwrap();
     db.complete_eval_run(run_id, "unix:1781205331").unwrap();
+    let insufficient_run_id = db
+        .insert_eval_run(
+            "recall_1_to_5",
+            "unix:1781205400",
+            r#"{"session_id":"session-1","turn_ordinal":8,"memory_ids":[1]}"#,
+        )
+        .unwrap();
+    db.insert_eval_result(
+        insufficient_run_id,
+        turn_row_id,
+        None,
+        "insufficient_context",
+        "not enough later turns",
+        "unix:1781205400",
+    )
+    .unwrap();
+    db.complete_eval_run(insufficient_run_id, "unix:1781205400")
+        .unwrap();
 
     let binary = env!("CARGO_BIN_EXE_yaaml");
     let json_output = Command::new(binary)
@@ -225,12 +243,14 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
         String::from_utf8_lossy(&json_output.stderr)
     );
     let runs: serde_json::Value = serde_json::from_slice(&json_output.stdout).unwrap();
-    assert_eq!(runs[0]["id"], run_id);
+    assert_eq!(runs[0]["id"], insufficient_run_id);
     assert_eq!(runs[0]["session_id"], "session-1");
-    assert_eq!(runs[0]["turn_ordinal"], 7);
-    assert_eq!(runs[0]["score"], "5");
-    let started_at_human = runs[0]["started_at_human"].as_str().unwrap();
-    let completed_at_human = runs[0]["completed_at_human"].as_str().unwrap();
+    assert_eq!(runs[0]["turn_ordinal"], 8);
+    assert_eq!(runs[0]["score"], "n/a");
+    assert_eq!(runs[1]["id"], run_id);
+    assert_eq!(runs[1]["score"], "5");
+    let started_at_human = runs[1]["started_at_human"].as_str().unwrap();
+    let completed_at_human = runs[1]["completed_at_human"].as_str().unwrap();
     assert!(!started_at_human.starts_with("unix:"));
     assert!(!completed_at_human.starts_with("unix:"));
     assert!(started_at_human.contains(":26 "));
@@ -249,10 +269,12 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
         String::from_utf8_lossy(&text_output.stderr)
     );
     let stdout = String::from_utf8_lossy(&text_output.stdout);
+    assert!(stdout.contains("score=n/a"));
     assert!(stdout.contains("score=5"));
     assert!(stdout.contains("session=session-1"));
     assert!(stdout.contains("turn=7"));
     assert!(stdout.contains("started=20"));
+    assert!(!stdout.contains("recall_1_to_5"));
 }
 
 #[test]

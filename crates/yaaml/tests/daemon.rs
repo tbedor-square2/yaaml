@@ -4,6 +4,7 @@ use std::net::Shutdown;
 use std::net::TcpListener;
 use std::os::unix::net::UnixStream;
 use std::thread;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use tempfile::TempDir;
 use yaaml::daemon::{
@@ -684,6 +685,74 @@ fn recall_eval_records_insufficient_context_without_later_turns() {
         db.count_tasks_by_status(TASK_KIND_RECALL_EVAL, TaskStatus::Parked)
             .unwrap(),
         0
+    );
+}
+
+#[test]
+fn recall_eval_defers_without_later_turns_while_session_is_active() {
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+    let now_seconds = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    db.upsert_session(&SessionRecord {
+        id: "session-1".to_string(),
+        agent_type: AgentType::Codex,
+        project_id: "/tmp/project".to_string(),
+        transcript_file_path: "/tmp/session.jsonl".to_string(),
+        started_at: Some(format!("unix:{now_seconds}")),
+        last_seen_at: Some(format!("unix:{now_seconds}")),
+    })
+    .unwrap();
+    db.insert_turn(&TurnRecord {
+        session_id: "session-1".to_string(),
+        turn_id: Some("turn-1".to_string()),
+        ordinal: 0,
+        byte_start: 0,
+        byte_end: 10,
+        observed_at: Some(format!("unix:{now_seconds}")),
+        status: yaaml_core::TurnStatus::Completed,
+        display_text: Some("use recall".to_string()),
+        cwd: None,
+        context: None,
+    })
+    .unwrap();
+    let config = Config::default();
+    db.enqueue_task(&TaskRecord {
+        id: None,
+        kind: TASK_KIND_RECALL_EVAL.to_string(),
+        status: TaskStatus::Queued,
+        priority: 0,
+        payload_json: r##"{
+            "session_id":"session-1",
+            "turn_ordinal":0,
+            "recall_text":"# YAAML Recall\n\nmemory_ids: 1\n\n## Relevant memory\n\nUse YAAML recall.",
+            "memory_ids":[1],
+            "recall_at":"unix:1",
+            "eval_after":"unix:1"
+        }"##
+        .to_string(),
+        attempts: 0,
+        max_attempts: 5,
+        next_run_at: None,
+        last_error: None,
+        created_at: "unix:1".to_string(),
+        updated_at: "unix:1".to_string(),
+    })
+    .unwrap();
+
+    assert_eq!(run_queued_tasks(&db, &config, 1).unwrap(), 1);
+    assert_eq!(db.list_eval_runs(1).unwrap().len(), 0);
+    assert_eq!(
+        db.count_tasks_by_status(TASK_KIND_RECALL_EVAL, TaskStatus::Completed)
+            .unwrap(),
+        1
+    );
+    assert_eq!(
+        db.count_tasks_by_status(TASK_KIND_RECALL_EVAL, TaskStatus::Queued)
+            .unwrap(),
+        1
     );
 }
 

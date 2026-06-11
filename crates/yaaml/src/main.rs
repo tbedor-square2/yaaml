@@ -526,15 +526,8 @@ fn eval_list(args: EvalListArgs) -> anyhow::Result<()> {
                 .unwrap_or_else(|| "-".to_string());
             let score = run.score.as_deref().unwrap_or("-");
             println!(
-                "  {}  {}  score={}  session={}  turn={}  started={}  completed={}  results={}",
-                run.id,
-                run.strategy,
-                score,
-                session,
-                turn,
-                run.started_at_human,
-                completed,
-                run.result_count
+                "  {}  score={}  session={}  turn={}  started={}  completed={}  results={}",
+                run.id, score, session, turn, run.started_at_human, completed, run.result_count
             );
         }
     }
@@ -568,9 +561,17 @@ impl From<EvalRunRecord> for EvalListRun {
             completed_at_human,
             session_id: run.session_id,
             turn_ordinal: run.turn_ordinal,
-            score: run.score,
+            score: run.score.map(display_eval_score),
             result_count: run.result_count,
         }
+    }
+}
+
+fn display_eval_score(score: String) -> String {
+    if score == "insufficient_context" {
+        "n/a".to_string()
+    } else {
+        score
     }
 }
 

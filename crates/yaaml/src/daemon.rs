@@ -981,6 +981,12 @@ pub fn queue_recall_eval_after_turn(
     priority: i64,
 ) -> anyhow::Result<i64> {
     let now_seconds = unix_timestamp_seconds();
+    if db
+        .recall_eval_exists_for_anchor(session_id, turn_ordinal)
+        .context("failed to check existing recall eval task")?
+    {
+        return Ok(0);
+    }
     let payload = json!({
         "session_id": session_id,
         "turn_ordinal": turn_ordinal,

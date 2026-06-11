@@ -539,7 +539,7 @@ fn recall_file_is_written_after_memory_exists_and_new_turn_completes() {
         &db,
         &config,
         &project.canonicalize().unwrap(),
-        &[turn],
+        std::slice::from_ref(&turn),
         &[1.0, 0.0],
         "new completed turn",
     )
@@ -548,6 +548,20 @@ fn recall_file_is_written_after_memory_exists_and_new_turn_completes() {
     let markdown = fs::read_to_string(path).unwrap();
 
     assert!(markdown.contains("## Recall file location"));
+    assert_eq!(
+        db.count_tasks_by_status(TASK_KIND_RECALL_EVAL, yaaml_core::TaskStatus::Queued)
+            .unwrap(),
+        1
+    );
+    refresh_recall_with_embedding(
+        &db,
+        &config,
+        &project.canonicalize().unwrap(),
+        std::slice::from_ref(&turn),
+        &[1.0, 0.0],
+        "unchanged completed turn",
+    )
+    .unwrap();
     assert_eq!(
         db.count_tasks_by_status(TASK_KIND_RECALL_EVAL, yaaml_core::TaskStatus::Queued)
             .unwrap(),

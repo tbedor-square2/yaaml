@@ -455,6 +455,38 @@ impl Database {
         Ok(exists != 0)
     }
 
+    pub fn recall_eval_exists_for_anchor(
+        &self,
+        session_id: &str,
+        turn_ordinal: u64,
+    ) -> Result<bool, DatabaseError> {
+        let turn_ordinal = u64_to_i64(turn_ordinal);
+        let task_exists: i64 = self.conn.query_row(
+            "SELECT EXISTS(
+                SELECT 1 FROM tasks
+                WHERE kind = 'recall_eval'
+                  AND json_extract(payload_json, '$.session_id') = ?1
+                  AND CAST(json_extract(payload_json, '$.turn_ordinal') AS INTEGER) = ?2
+             )",
+            params![session_id, turn_ordinal],
+            |row| row.get(0),
+        )?;
+        if task_exists != 0 {
+            return Ok(true);
+        }
+        let eval_exists: i64 = self.conn.query_row(
+            "SELECT EXISTS(
+                SELECT 1 FROM eval_runs
+                WHERE strategy = 'recall_1_to_5'
+                  AND json_extract(config_json, '$.session_id') = ?1
+                  AND CAST(json_extract(config_json, '$.turn_ordinal') AS INTEGER) = ?2
+             )",
+            params![session_id, turn_ordinal],
+            |row| row.get(0),
+        )?;
+        Ok(eval_exists != 0)
+    }
+
     pub fn insert_memory(&self, memory: &MemoryRecord) -> Result<i64, DatabaseError> {
         let source_turn_refs = serde_json::to_string(&memory.source_turn_refs)?;
         let lineage_refs = serde_json::to_string(&memory.lineage_refs)?;

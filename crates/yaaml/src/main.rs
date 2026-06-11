@@ -507,6 +507,7 @@ fn eval_list(args: EvalListArgs) -> anyhow::Result<()> {
     let runs = db
         .list_eval_runs(args.limit)
         .context("failed to list eval runs")?;
+    let runs = runs.into_iter().map(EvalListRun::from).collect::<Vec<_>>();
     if args.json {
         println!("{}", serde_json::to_string_pretty(&runs)?);
     } else if runs.is_empty() {
@@ -514,14 +515,60 @@ fn eval_list(args: EvalListArgs) -> anyhow::Result<()> {
     } else {
         println!("Eval runs");
         for run in runs {
-            let completed = run.completed_at.as_deref().unwrap_or("running");
+            let completed = run.completed_at_human.as_deref().unwrap_or("running");
+            let session = run.session_id.as_deref().unwrap_or("-");
+            let turn = run
+                .turn_ordinal
+                .map(|ordinal| ordinal.to_string())
+                .unwrap_or_else(|| "-".to_string());
+            let score = run.score.as_deref().unwrap_or("-");
             println!(
-                "  {}  {}  started={}  completed={}  results={}",
-                run.id, run.strategy, run.started_at, completed, run.result_count
+                "  {}  {}  score={}  session={}  turn={}  started={}  completed={}  results={}",
+                run.id,
+                run.strategy,
+                score,
+                session,
+                turn,
+                run.started_at_human,
+                completed,
+                run.result_count
             );
         }
     }
     Ok(())
+}
+
+#[derive(Debug, Serialize)]
+struct EvalListRun {
+    id: i64,
+    strategy: String,
+    started_at: String,
+    started_at_human: String,
+    completed_at: Option<String>,
+    completed_at_human: Option<String>,
+    session_id: Option<String>,
+    turn_ordinal: Option<u64>,
+    score: Option<String>,
+    result_count: u64,
+}
+
+impl From<EvalRunRecord> for EvalListRun {
+    fn from(run: EvalRunRecord) -> Self {
+        let started_at_human = human_timestamp(&run.started_at);
+        let completed_at_human = run.completed_at.as_deref().map(human_timestamp);
+        Self {
+            id: run.id,
+            strategy: run.strategy,
+            started_at: run.started_at,
+            started_at_human,
+            completed_at: run.completed_at,
+            completed_at_human,
+            session_id: run.session_id,
+            turn_ordinal: run.turn_ordinal,
+            score: run.score,
+            result_count: run.result_count,
+        }
+    }
 }
 
 fn eval_show(args: EvalShowArgs) -> anyhow::Result<()> {
@@ -1613,4 +1660,52 @@ fn unix_timestamp() -> String {
         .map(|duration| duration.as_secs())
         .unwrap_or(0);
     format!("unix:{seconds}")
+}
+
+fn human_timestamp(timestamp: &str) -> String {
+    let Some(seconds) = timestamp
+        .strip_prefix("unix:")
+        .and_then(|value| value.parse::<i64>().ok())
+    else {
+        return timestamp.to_string();
+    };
+    let days = seconds.div_euclid(86_400);
+    let seconds_of_day = seconds.rem_euclid(86_400);
+    let hour = seconds_of_day / 3_600;
+    let minute = (seconds_of_day % 3_600) / 60;
+    let second = seconds_of_day % 60;
+    let (year, month, day) = civil_from_days(days);
+    format!("{year:04}-{month:02}-{day:02} {hour:02}:{minute:02}:{second:02} UTC")
+}
+
+fn civil_from_days(days_since_epoch: i64) -> (i64, i64, i64) {
+    let z = days_since_epoch + 719_468;
+    let era = if z >= 0 { z } else { z - 146_096 } / 146_097;
+    let day_of_era = z - era * 146_097;
+    let year_of_era =
+        (day_of_era - day_of_era / 1_460 + day_of_era / 36_524 - day_of_era / 146_096) / 365;
+    let year = year_of_era + era * 400;
+    let day_of_year = day_of_era - (365 * year_of_era + year_of_era / 4 - year_of_era / 100);
+    let month_prime = (5 * day_of_year + 2) / 153;
+    let day = day_of_year - (153 * month_prime + 2) / 5 + 1;
+    let month = month_prime + if month_prime < 10 { 3 } else { -9 };
+    let year = year + i64::from(month <= 2);
+    (year, month, day)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn human_timestamp_formats_unix_seconds_as_utc() {
+        assert_eq!(
+            human_timestamp("unix:1781205326"),
+            "2026-06-11 19:15:26 UTC"
+        );
+        assert_eq!(
+            human_timestamp("2026-06-11T00:00:00Z"),
+            "2026-06-11T00:00:00Z"
+        );
+    }
 }

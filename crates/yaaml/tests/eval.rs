@@ -107,6 +107,11 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     let runs: serde_json::Value = serde_json::from_slice(&list.stdout).unwrap();
     assert_eq!(runs[0]["id"], run_id);
     assert_eq!(runs[0]["result_count"], 1);
+    assert_eq!(runs[0]["score"], "unjudged");
+    assert!(runs[0]["started_at_human"]
+        .as_str()
+        .unwrap()
+        .ends_with(" UTC"));
 
     let show = Command::new(binary)
         .arg("eval")
@@ -146,6 +151,105 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     assert_eq!(summary_value["judged_results"], 0);
     assert_eq!(summary_value["average_score"], serde_json::Value::Null);
     assert_eq!(summary_value["score_counts"]["unjudged"], 1);
+}
+
+#[test]
+fn eval_list_includes_session_turn_score_and_human_timestamps() {
+    let tmp = TempDir::new().unwrap();
+    let home = tmp.path().join("home");
+    let project = tmp.path().join("project");
+    fs::create_dir_all(home.join(".yaaml")).unwrap();
+    fs::create_dir_all(&project).unwrap();
+    let db_path = home.join(".yaaml").join("yaaml.db");
+    fs::write(
+        home.join(".yaaml").join("config.toml"),
+        format!(
+            r#"
+db_path = "{}"
+embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
+"#,
+            db_path.display()
+        ),
+    )
+    .unwrap();
+    let mut db = Database::open(&db_path).unwrap();
+    db.migrate().unwrap();
+    db.upsert_session(&SessionRecord {
+        id: "session-1".to_string(),
+        agent_type: AgentType::Codex,
+        project_id: project.display().to_string(),
+        transcript_file_path: "/tmp/session.jsonl".to_string(),
+        started_at: Some("2026-06-08T00:00:00Z".to_string()),
+        last_seen_at: Some("2026-06-08T00:00:01Z".to_string()),
+    })
+    .unwrap();
+    db.insert_turn(&TurnRecord {
+        session_id: "session-1".to_string(),
+        turn_id: Some("turn-7".to_string()),
+        ordinal: 7,
+        byte_start: 0,
+        byte_end: 10,
+        observed_at: Some("2026-06-08T00:00:02Z".to_string()),
+        status: TurnStatus::Completed,
+        display_text: Some("use recall".to_string()),
+        cwd: None,
+        context: None,
+    })
+    .unwrap();
+    let turn_row_id = db
+        .turn_row_id_for_session_ordinal("session-1", 7)
+        .unwrap()
+        .unwrap();
+    let run_id = db
+        .insert_eval_run(
+            "recall_1_to_5",
+            "unix:1781205326",
+            r#"{"session_id":"session-1","turn_ordinal":7,"memory_ids":[1]}"#,
+        )
+        .unwrap();
+    db.insert_eval_result(run_id, turn_row_id, None, "5", "great", "unix:1781205330")
+        .unwrap();
+    db.complete_eval_run(run_id, "unix:1781205331").unwrap();
+
+    let binary = env!("CARGO_BIN_EXE_yaaml");
+    let json_output = Command::new(binary)
+        .arg("eval")
+        .arg("list")
+        .arg("--json")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .output()
+        .unwrap();
+    assert!(
+        json_output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&json_output.stderr)
+    );
+    let runs: serde_json::Value = serde_json::from_slice(&json_output.stdout).unwrap();
+    assert_eq!(runs[0]["id"], run_id);
+    assert_eq!(runs[0]["session_id"], "session-1");
+    assert_eq!(runs[0]["turn_ordinal"], 7);
+    assert_eq!(runs[0]["score"], "5");
+    assert_eq!(runs[0]["started_at_human"], "2026-06-11 19:15:26 UTC");
+    assert_eq!(runs[0]["completed_at_human"], "2026-06-11 19:15:31 UTC");
+
+    let text_output = Command::new(binary)
+        .arg("eval")
+        .arg("list")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .output()
+        .unwrap();
+    assert!(
+        text_output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&text_output.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&text_output.stdout);
+    assert!(stdout.contains("score=5"));
+    assert!(stdout.contains("session=session-1"));
+    assert!(stdout.contains("turn=7"));
+    assert!(stdout.contains("started=2026-06-11 19:15:26 UTC"));
 }
 
 #[test]

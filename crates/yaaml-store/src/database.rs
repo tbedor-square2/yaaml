@@ -39,6 +39,9 @@ pub struct EvalRunRecord {
     pub completed_at: Option<String>,
     pub config_json: String,
     pub result_count: u64,
+    pub session_id: Option<String>,
+    pub turn_ordinal: Option<u64>,
+    pub score: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -978,7 +981,14 @@ impl Database {
     pub fn list_eval_runs(&self, limit: usize) -> Result<Vec<EvalRunRecord>, DatabaseError> {
         let mut stmt = self.conn.prepare(
             "SELECT r.id, r.strategy, r.started_at, r.completed_at, r.config_json,
-                    COUNT(er.id) AS result_count
+                    COUNT(er.id) AS result_count,
+                    json_extract(r.config_json, '$.session_id') AS session_id,
+                    CAST(json_extract(r.config_json, '$.turn_ordinal') AS INTEGER) AS turn_ordinal,
+                    CASE
+                        WHEN COUNT(er.judge_score) = 0 THEN NULL
+                        WHEN COUNT(DISTINCT er.judge_score) = 1 THEN MAX(er.judge_score)
+                        ELSE group_concat(DISTINCT er.judge_score)
+                    END AS score
              FROM eval_runs r
              LEFT JOIN eval_results er ON er.eval_run_id = r.id
              GROUP BY r.id, r.strategy, r.started_at, r.completed_at, r.config_json
@@ -997,7 +1007,14 @@ impl Database {
         self.conn
             .query_row(
                 "SELECT r.id, r.strategy, r.started_at, r.completed_at, r.config_json,
-                        COUNT(er.id) AS result_count
+                        COUNT(er.id) AS result_count,
+                        json_extract(r.config_json, '$.session_id') AS session_id,
+                        CAST(json_extract(r.config_json, '$.turn_ordinal') AS INTEGER) AS turn_ordinal,
+                        CASE
+                            WHEN COUNT(er.judge_score) = 0 THEN NULL
+                            WHEN COUNT(DISTINCT er.judge_score) = 1 THEN MAX(er.judge_score)
+                            ELSE group_concat(DISTINCT er.judge_score)
+                        END AS score
                  FROM eval_runs r
                  LEFT JOIN eval_results er ON er.eval_run_id = r.id
                  WHERE r.id = ?1
@@ -1131,6 +1148,7 @@ fn read_session_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<SessionRecor
 }
 
 fn read_eval_run_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<EvalRunRecord> {
+    let turn_ordinal: Option<i64> = row.get(7)?;
     Ok(EvalRunRecord {
         id: row.get(0)?,
         strategy: row.get(1)?,
@@ -1138,6 +1156,9 @@ fn read_eval_run_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<EvalRunReco
         completed_at: row.get(3)?,
         config_json: row.get(4)?,
         result_count: i64_to_u64(row.get(5)?),
+        session_id: row.get(6)?,
+        turn_ordinal: turn_ordinal.map(i64_to_u64),
+        score: row.get(8)?,
     })
 }
 

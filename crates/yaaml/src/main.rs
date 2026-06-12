@@ -1830,7 +1830,10 @@ fn recall_from_embedding(
             .unwrap_or(std::cmp::Ordering::Equal)
             .then_with(|| left.memory_id.cmp(&right.memory_id))
     });
-    let selected = diversify_recall_candidates(candidates, &memories, config.recall_result_limit);
+    let selected = candidates
+        .into_iter()
+        .take(config.recall_result_limit)
+        .collect::<Vec<_>>();
     let selected_memory_ids = selected
         .iter()
         .map(|candidate| candidate.memory_id)
@@ -1870,83 +1873,6 @@ fn recall_from_embedding(
         markdown,
     })
 }
-
-fn diversify_recall_candidates(
-    candidates: Vec<RecallCandidate>,
-    memories: &[MemoryRecord],
-    limit: usize,
-) -> Vec<RecallCandidate> {
-    let memory_by_id = memories
-        .iter()
-        .filter_map(|memory| memory.id.map(|id| (id, memory)))
-        .collect::<HashMap<_, _>>();
-    let mut selected = Vec::new();
-    for candidate in candidates {
-        let Some(candidate_memory) = memory_by_id.get(&candidate.memory_id) else {
-            continue;
-        };
-        let too_similar = selected.iter().any(|selected_candidate: &RecallCandidate| {
-            memory_by_id
-                .get(&selected_candidate.memory_id)
-                .map(|selected_memory| {
-                    recall_memories_too_similar(candidate_memory, selected_memory)
-                })
-                .unwrap_or(false)
-        });
-        if too_similar {
-            continue;
-        }
-        selected.push(candidate);
-        if selected.len() >= limit {
-            break;
-        }
-    }
-    selected
-}
-
-fn recall_memories_too_similar(left: &MemoryRecord, right: &MemoryRecord) -> bool {
-    if left.scope != right.scope || left.project_id != right.project_id {
-        return false;
-    }
-    if !left.lineage_refs.is_empty()
-        && !right.lineage_refs.is_empty()
-        && left
-            .lineage_refs
-            .iter()
-            .any(|left_ref| right.lineage_refs.contains(left_ref))
-    {
-        return true;
-    }
-    let title_similarity = recall_token_jaccard(&left.title, &right.title);
-    let combined_similarity = recall_token_jaccard(
-        &format!("{} {}", left.title, left.body),
-        &format!("{} {}", right.title, right.body),
-    );
-    title_similarity >= 0.45 || combined_similarity >= 0.5
-}
-
-fn recall_token_jaccard(left: &str, right: &str) -> f32 {
-    let left_tokens = recall_similarity_tokens(left);
-    let right_tokens = recall_similarity_tokens(right);
-    if left_tokens.is_empty() || right_tokens.is_empty() {
-        return 0.0;
-    }
-    let intersection = left_tokens.intersection(&right_tokens).count();
-    let union = left_tokens.union(&right_tokens).count();
-    intersection as f32 / union as f32
-}
-
-fn recall_similarity_tokens(text: &str) -> HashSet<String> {
-    text.split(|character: char| !character.is_ascii_alphanumeric())
-        .map(str::to_ascii_lowercase)
-        .filter(|token| token.len() > 1 && !RECALL_DIVERSITY_STOP_WORDS.contains(&token.as_str()))
-        .collect()
-}
-
-const RECALL_DIVERSITY_STOP_WORDS: &[&str] = &[
-    "and", "are", "but", "for", "from", "has", "have", "into", "not", "the", "this", "that", "use",
-    "uses", "with",
-];
 
 fn remember(args: RememberArgs) -> anyhow::Result<()> {
     let title = args.title.trim();

@@ -984,6 +984,9 @@ fn consolidation_cluster_memories(
             memory_id,
             scope: memory.scope,
             project_id: memory.project_id,
+            title: memory.title,
+            body: memory.body,
+            lineage_refs: memory.lineage_refs,
             embedding: vector,
         });
     }

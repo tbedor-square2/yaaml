@@ -204,7 +204,7 @@ pub fn write_recall_file(
     Ok(RecallWrite::Written)
 }
 
-fn parse_memory_ids(contents: &str) -> Vec<i64> {
+pub fn parse_memory_ids(contents: &str) -> Vec<i64> {
     contents
         .lines()
         .find_map(|line| line.strip_prefix("memory_ids: "))

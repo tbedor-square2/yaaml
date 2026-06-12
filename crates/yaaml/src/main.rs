@@ -14,10 +14,10 @@ use yaaml::turn_hydration::{context_from_turns, hydrate_turns};
 use yaaml_core::{
     apply_project_bonus, context_score, counterfactual_citation_score, derive_project_descriptor,
     embedded_text_hash, embedding_text, infer_context_from_memory, infer_context_from_path,
-    infer_context_from_text, merge_contexts, parse_eval_judge_response, recall_file_path,
-    render_recall_markdown, session_recall_file_path, write_recall_file, Config, ConfigPaths,
-    ContextMetadata, EmbeddingRecord, MemoryRecord, MemoryScope, RecallCandidate, RecallMemory,
-    RecallWrite, SessionRecord, TurnRecord, VectorIndex,
+    infer_context_from_text, merge_contexts, parse_eval_judge_response, parse_memory_ids,
+    recall_file_path, render_recall_markdown, session_recall_file_path, write_recall_file, Config,
+    ConfigPaths, ContextMetadata, EmbeddingRecord, MemoryRecord, MemoryScope, RecallCandidate,
+    RecallMemory, RecallWrite, SessionRecord, TurnRecord, VectorIndex,
 };
 use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
@@ -1439,29 +1439,24 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
         bail!("--json is only supported with --session and --turn");
     }
     let Some(query) = args.query else {
-        if recall_path.exists() {
-            print!(
-                "{}",
-                fs::read_to_string(&recall_path).context("failed to read recall file")?
-            );
-        } else {
-            if let Some(rendered) =
-                refresh_missing_recall_file(&db, &config, &project_id_path, &recall_path)?
-            {
-                print!("{rendered}");
+        if let Some(contents) = read_active_recall_file(&db, &recall_path)? {
+            print!("{contents}");
+            return Ok(());
+        }
+        if let Some(rendered) =
+            refresh_missing_recall_file(&db, &config, &project_id_path, &recall_path)?
+        {
+            print!("{rendered}");
+            return Ok(());
+        }
+        let project_recall_path = recall_file_path(&recall_dir, &project_id_path);
+        if project_recall_path != recall_path {
+            if let Some(contents) = read_active_recall_file(&db, &project_recall_path)? {
+                print!("{contents}");
                 return Ok(());
             }
-            let project_recall_path = recall_file_path(&recall_dir, &project_id_path);
-            if project_recall_path != recall_path && project_recall_path.exists() {
-                print!(
-                    "{}",
-                    fs::read_to_string(&project_recall_path)
-                        .context("failed to read project recall file")?
-                );
-            } else {
-                println!("no recall file at {}", recall_path.display());
-            }
         }
+        println!("no recall file at {}", recall_path.display());
         return Ok(());
     };
     if config.embedding_provider != "openai" {
@@ -1509,11 +1504,8 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
     match write {
         RecallWrite::Written | RecallWrite::Unchanged => print!("{rendered}"),
         RecallWrite::NoopEmptyResults => {
-            if recall_path.exists() {
-                print!(
-                    "{}",
-                    fs::read_to_string(&recall_path).context("failed to read recall file")?
-                );
+            if let Some(contents) = read_active_recall_file(&db, &recall_path)? {
+                print!("{contents}");
             } else {
                 println!("no recall results");
             }
@@ -1599,6 +1591,50 @@ fn refresh_missing_recall_file(
         )?;
     }
     Ok(Some(result.markdown))
+}
+
+fn read_active_recall_file(
+    db: &Database,
+    recall_path: &std::path::Path,
+) -> anyhow::Result<Option<String>> {
+    if !recall_path.exists() {
+        return Ok(None);
+    }
+    let contents = fs::read_to_string(recall_path).context("failed to read recall file")?;
+    let memory_ids = parse_memory_ids(&contents);
+    if memory_ids.is_empty() {
+        invalidate_recall_file(recall_path)?;
+        return Ok(None);
+    }
+    let active_memories = db
+        .list_active_memories_by_ids(&memory_ids)
+        .context("failed to validate recall memory ids")?;
+    let active_ids = active_memories
+        .into_iter()
+        .filter_map(|memory| memory.id)
+        .collect::<HashSet<_>>();
+    if memory_ids
+        .iter()
+        .all(|memory_id| active_ids.contains(memory_id))
+    {
+        Ok(Some(contents))
+    } else {
+        invalidate_recall_file(recall_path)?;
+        Ok(None)
+    }
+}
+
+fn invalidate_recall_file(recall_path: &std::path::Path) -> anyhow::Result<()> {
+    match fs::remove_file(recall_path) {
+        Ok(()) => Ok(()),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(error) => Err(error).with_context(|| {
+            format!(
+                "failed to remove stale recall file {}",
+                recall_path.display()
+            )
+        }),
+    }
 }
 
 fn recall_session(db: &Database, project_id: &str) -> anyhow::Result<Option<SessionRecord>> {

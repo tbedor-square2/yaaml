@@ -27,7 +27,7 @@ pub use model::{
     TaskRecord, TaskStatus, TurnRecord, TurnStatus,
 };
 pub use recall::{
-    apply_project_bonus, build_recall_query, cosine_similarity, recall_file_path,
+    apply_project_bonus, build_recall_query, cosine_similarity, parse_memory_ids, recall_file_path,
     render_recall_markdown, session_recall_file_path, write_recall_file, RecallCandidate,
     RecallMemory, RecallWrite, VectorHit, VectorIndex,
 };

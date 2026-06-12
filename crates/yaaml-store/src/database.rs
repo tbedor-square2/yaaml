@@ -502,6 +502,32 @@ impl Database {
         Ok(eval_exists != 0)
     }
 
+    pub fn recall_eval_rerun_exists(&self, source_eval_run_id: i64) -> Result<bool, DatabaseError> {
+        let task_exists: i64 = self.conn.query_row(
+            "SELECT EXISTS(
+                SELECT 1 FROM tasks
+                WHERE kind = 'recall_eval'
+                  AND CAST(json_extract(payload_json, '$.rerun_for_eval_run_id') AS INTEGER) = ?1
+                  AND status IN ('queued', 'running', 'completed')
+             )",
+            params![source_eval_run_id],
+            |row| row.get(0),
+        )?;
+        if task_exists != 0 {
+            return Ok(true);
+        }
+        let eval_exists: i64 = self.conn.query_row(
+            "SELECT EXISTS(
+                SELECT 1 FROM eval_runs
+                WHERE strategy = 'recall_1_to_5'
+                  AND CAST(json_extract(config_json, '$.rerun_for_eval_run_id') AS INTEGER) = ?1
+             )",
+            params![source_eval_run_id],
+            |row| row.get(0),
+        )?;
+        Ok(eval_exists != 0)
+    }
+
     pub fn insert_memory(&self, memory: &MemoryRecord) -> Result<i64, DatabaseError> {
         let source_turn_refs = serde_json::to_string(&memory.source_turn_refs)?;
         let lineage_refs = serde_json::to_string(&memory.lineage_refs)?;
@@ -1197,7 +1223,7 @@ impl Database {
 }
 
 fn configure_connection(conn: &Connection, enable_wal: bool) -> Result<(), DatabaseError> {
-    conn.busy_timeout(Duration::from_secs(5))?;
+    conn.busy_timeout(Duration::from_secs(30))?;
     conn.pragma_update(None, "foreign_keys", "ON")?;
     if enable_wal {
         conn.pragma_update(None, "journal_mode", "WAL")?;
@@ -1410,7 +1436,7 @@ mod tests {
             .query_row("PRAGMA synchronous", [], |row| row.get(0))
             .unwrap();
 
-        assert_eq!(busy_timeout_ms, 5_000);
+        assert_eq!(busy_timeout_ms, 30_000);
         assert_eq!(journal_mode.to_ascii_lowercase(), "wal");
         assert_eq!(synchronous, 1);
     }

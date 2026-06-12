@@ -565,6 +565,9 @@ fn run_recall_eval_task(db: &Database, config: &Config, task: &TaskRecord) -> an
                 .collect::<Vec<_>>()
         })
         .unwrap_or_default();
+    let rerun_for_eval_run_id = payload
+        .get("rerun_for_eval_run_id")
+        .and_then(serde_json::Value::as_i64);
     let Some(turn_row_id) = db
         .turn_row_id_for_session_ordinal(session_id, turn_ordinal)
         .context("failed to load recall eval anchor turn")?
@@ -594,22 +597,27 @@ fn run_recall_eval_task(db: &Database, config: &Config, task: &TaskRecord) -> an
                 "session_id": session_id,
                 "turn_ordinal": turn_ordinal,
                 "memory_ids": memory_ids,
+                "rerun_for_eval_run_id": rerun_for_eval_run_id,
                 "rating_delay_seconds": 600,
                 "rubric": "1-5 recall relevance, concision, and actionability",
             })
             .to_string(),
         )
         .context("failed to create recall eval run")?;
+    let eval_targets = recall_eval_targets(db, &memory_ids, recall_text)
+        .context("failed to build recall eval targets")?;
     if later_turns.is_empty() {
-        db.insert_eval_result(
-            run_id,
-            turn_row_id,
-            memory_ids.first().copied(),
-            "insufficient_context",
-            "No subsequent completed turns were captured after recall, so recall usefulness cannot be scored.",
-            &now,
-        )
-        .context("failed to insert insufficient-context recall eval result")?;
+        for target in &eval_targets {
+            db.insert_eval_result(
+                run_id,
+                turn_row_id,
+                target.memory_id,
+                "insufficient_context",
+                "No subsequent completed turns were captured after recall, so recall usefulness cannot be scored.",
+                &now,
+            )
+            .context("failed to insert insufficient-context recall eval result")?;
+        }
         db.complete_eval_run(run_id, &unix_timestamp())
             .context("failed to complete recall eval run")?;
         return Ok(());
@@ -618,20 +626,22 @@ fn run_recall_eval_task(db: &Database, config: &Config, task: &TaskRecord) -> an
         AnthropicMessageConfig::judge_from_config(config),
         ReqwestTransport::default(),
     );
-    let prompt = recall_eval_prompt(recall_text, &later_turns);
-    let outcome = judge_client
-        .structured_json(recall_eval_system_prompt(), &prompt)
-        .map(|value| parse_eval_judge_response(&value))
-        .context("failed to rate recall")?;
-    db.insert_eval_result(
-        run_id,
-        turn_row_id,
-        memory_ids.first().copied(),
-        &outcome.score,
-        &outcome.rationale,
-        &now,
-    )
-    .context("failed to insert recall eval result")?;
+    for target in &eval_targets {
+        let prompt = recall_eval_prompt(&target.recall_text, &later_turns);
+        let outcome = judge_client
+            .structured_json(recall_eval_system_prompt(), &prompt)
+            .map(|value| parse_eval_judge_response(&value))
+            .context("failed to rate recall")?;
+        db.insert_eval_result(
+            run_id,
+            turn_row_id,
+            target.memory_id,
+            &outcome.score,
+            &outcome.rationale,
+            &now,
+        )
+        .context("failed to insert recall eval result")?;
+    }
     db.complete_eval_run(run_id, &unix_timestamp())
         .context("failed to complete recall eval run")?;
     Ok(())
@@ -696,6 +706,156 @@ fn defer_recall_eval_until_later_turns_exist(
     };
     db.enqueue_task(&deferred)
         .context("failed to enqueue deferred recall eval task")
+}
+
+struct RecallEvalTarget {
+    memory_id: Option<i64>,
+    recall_text: String,
+}
+
+fn recall_eval_targets(
+    db: &Database,
+    memory_ids: &[i64],
+    fallback_recall_text: &str,
+) -> anyhow::Result<Vec<RecallEvalTarget>> {
+    if memory_ids.is_empty() {
+        return Ok(vec![RecallEvalTarget {
+            memory_id: None,
+            recall_text: fallback_recall_text.to_string(),
+        }]);
+    }
+    let memories = db
+        .list_memories_by_ids(memory_ids)
+        .context("failed to load recall eval memories")?;
+    let mut targets = Vec::new();
+    for memory_id in memory_ids {
+        if let Some(memory) = memories.iter().find(|memory| memory.id == Some(*memory_id)) {
+            targets.push(RecallEvalTarget {
+                memory_id: Some(*memory_id),
+                recall_text: recall_eval_memory_text(memory),
+            });
+        }
+    }
+    if targets.is_empty() {
+        targets.push(RecallEvalTarget {
+            memory_id: None,
+            recall_text: fallback_recall_text.to_string(),
+        });
+    }
+    Ok(targets)
+}
+
+fn reconstruct_recall_eval_text(db: &Database, memory_ids: &[i64]) -> anyhow::Result<String> {
+    let memories = db
+        .list_memories_by_ids(memory_ids)
+        .context("failed to load stale recall eval memories")?;
+    let mut text = String::new();
+    for memory_id in memory_ids {
+        if let Some(memory) = memories.iter().find(|memory| memory.id == Some(*memory_id)) {
+            if !text.is_empty() {
+                text.push('\n');
+            }
+            text.push_str(&recall_eval_memory_text(memory));
+        }
+    }
+    Ok(text)
+}
+
+fn recall_eval_memory_text(memory: &MemoryRecord) -> String {
+    format!(
+        "## {}\n\n{}\n\ncreated_at: {}\noriginating_project: {}\n",
+        memory.title,
+        memory.body,
+        memory.created_at,
+        memory.project_descriptor.as_deref().unwrap_or("unknown")
+    )
+}
+
+pub fn queue_stale_recall_eval_tasks(db: &Database, limit: usize) -> anyhow::Result<u64> {
+    let runs = db
+        .list_eval_runs(200)
+        .context("failed to list eval runs for stale recall eval queue")?;
+    let mut queued = 0_u64;
+    for run in runs {
+        if queued as usize >= limit {
+            break;
+        }
+        if run.score.as_deref() != Some("insufficient_context") {
+            continue;
+        }
+        if db
+            .recall_eval_rerun_exists(run.id)
+            .context("failed to check recall eval rerun state")?
+        {
+            continue;
+        }
+        let config_json = serde_json::from_str::<serde_json::Value>(&run.config_json)
+            .context("failed to parse eval run config")?;
+        if config_json
+            .get("rerun_for_eval_run_id")
+            .and_then(serde_json::Value::as_i64)
+            .is_some()
+        {
+            continue;
+        }
+        let Some(session_id) = run.session_id.as_deref() else {
+            continue;
+        };
+        let Some(turn_ordinal) = run.turn_ordinal else {
+            continue;
+        };
+        let later_turns = db
+            .completed_turns_for_session_after_ordinal(session_id, turn_ordinal, 1)
+            .context("failed to check later turns for stale recall eval")?;
+        if later_turns.is_empty() {
+            continue;
+        }
+        let memory_ids = config_json
+            .get("memory_ids")
+            .and_then(serde_json::Value::as_array)
+            .map(|ids| {
+                ids.iter()
+                    .filter_map(serde_json::Value::as_i64)
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
+        let recall_text = reconstruct_recall_eval_text(db, &memory_ids)
+            .context("failed to reconstruct stale recall eval text")?;
+        if recall_text.trim().is_empty() {
+            continue;
+        }
+        let payload_json = json!({
+            "session_id": session_id,
+            "turn_ordinal": turn_ordinal,
+            "recall_text": recall_text,
+            "memory_ids": memory_ids,
+            "rerun_for_eval_run_id": run.id,
+        })
+        .to_string();
+        if db
+            .task_payload_exists(TASK_KIND_RECALL_EVAL, &payload_json)
+            .context("failed to check stale recall eval task")?
+        {
+            continue;
+        }
+        let now = unix_timestamp();
+        db.enqueue_task(&TaskRecord {
+            id: None,
+            kind: TASK_KIND_RECALL_EVAL.to_string(),
+            status: TaskStatus::Queued,
+            priority: 0,
+            payload_json,
+            attempts: 0,
+            max_attempts: 5,
+            next_run_at: None,
+            last_error: None,
+            created_at: now.clone(),
+            updated_at: now,
+        })
+        .context("failed to enqueue stale recall eval task")?;
+        queued += 1;
+    }
+    Ok(queued)
 }
 
 pub fn queue_memory_consolidation_if_due(

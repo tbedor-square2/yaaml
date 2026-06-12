@@ -470,6 +470,70 @@ fn consolidation_scheduler_queues_one_delayed_task_for_new_memories() {
 }
 
 #[test]
+fn consolidation_scheduler_requeues_when_active_cluster_still_exists() {
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+    let memories = [
+        (
+            "Backtest turn context improves recall ranking",
+            "Turn context metadata improves recall ranking for multi-project sessions.",
+            vec![1.0_f32, 0.0],
+        ),
+        (
+            "Backtest confirmed turn context recall ranking improved",
+            "Backtests confirmed turn context improves recall ranking for multi-project sessions.",
+            vec![0.8_f32, 0.2],
+        ),
+        (
+            "Backtest showed improved recall ranking with turn context",
+            "Known bad sessions now return project-specific memories after turn context hydration.",
+            vec![0.6_f32, 0.4],
+        ),
+    ];
+    for (title, body, vector) in memories {
+        let memory_id = db
+            .insert_memory(&memory(title, body, Some("/tmp/yaaml")))
+            .unwrap();
+        db.upsert_embedding(&EmbeddingRecord {
+            memory_id,
+            embedding_model: "text-embedding-3-small".to_string(),
+            dimensions: vector.len() as u64,
+            embedding_blob: encode_f32_embedding(&vector),
+            embedded_text_hash: format!("hash-{memory_id}"),
+            updated_at: "2026-06-08T00:00:00Z".to_string(),
+        })
+        .unwrap();
+    }
+    let task_id = db
+        .enqueue_task(&TaskRecord {
+            id: None,
+            kind: TASK_KIND_MEMORY_CONSOLIDATION.to_string(),
+            status: TaskStatus::Queued,
+            priority: 0,
+            payload_json: "{}".to_string(),
+            attempts: 0,
+            max_attempts: 5,
+            next_run_at: None,
+            last_error: None,
+            created_at: "2026-06-08T00:05:00Z".to_string(),
+            updated_at: "2026-06-08T00:05:00Z".to_string(),
+        })
+        .unwrap();
+    db.complete_task(task_id, "2026-06-08T00:05:01Z").unwrap();
+    let mut config = Config::default();
+    config.consolidation_dark_period_seconds = 0;
+
+    let queued = queue_memory_consolidation_if_due(&db, &config).unwrap();
+
+    assert!(queued.is_some());
+    assert_eq!(
+        db.count_tasks_by_status(TASK_KIND_MEMORY_CONSOLIDATION, TaskStatus::Queued)
+            .unwrap(),
+        1
+    );
+}
+
+#[test]
 fn consolidation_task_merges_top_cluster_and_preserves_lineage() {
     std::env::set_var("YAAML_TEST_CONSOLIDATION_KEY", "test-key");
     std::env::set_var("YAAML_TEST_OPENAI_KEY", "test-key");

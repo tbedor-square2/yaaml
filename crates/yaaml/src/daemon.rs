@@ -888,7 +888,11 @@ pub fn queue_memory_consolidation_if_due(
             timestamp_seconds(&latest_completed_at),
         ) {
             if completed_seconds >= memory_seconds {
-                return Ok(None);
+                if !active_consolidation_cluster_exists(db, config)
+                    .context("failed to check active consolidation clusters")?
+                {
+                    return Ok(None);
+                }
             }
         }
     }
@@ -914,6 +918,18 @@ pub fn queue_memory_consolidation_if_due(
     db.enqueue_task(&task)
         .map(Some)
         .context("failed to enqueue memory consolidation task")
+}
+
+fn active_consolidation_cluster_exists(db: &Database, config: &Config) -> anyhow::Result<bool> {
+    let cluster_memories = consolidation_cluster_memories(db, config)?;
+    Ok(find_consolidation_clusters(
+        &cluster_memories,
+        config.memory_cluster_distance_threshold,
+        config.memory_cluster_min_size,
+        config.memory_cluster_max_size,
+    )
+    .first()
+    .is_some())
 }
 
 fn should_defer_memory_consolidation(

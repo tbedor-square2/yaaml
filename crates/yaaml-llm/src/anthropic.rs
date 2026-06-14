@@ -168,25 +168,26 @@ pub fn parse_json_from_text(text: &str) -> Result<Value, ProviderError> {
 #[cfg(test)]
 mod tests {
     use std::cell::RefCell;
+    use std::rc::Rc;
 
     use crate::transport::{HttpResponse, HttpTransport};
 
     use super::*;
 
     struct MockTransport {
-        request: RefCell<Option<HttpRequest>>,
-        response: HttpResponse,
+        request: Rc<RefCell<Option<HttpRequest>>>,
+        result: Result<HttpResponse, ProviderError>,
     }
 
     impl Default for MockTransport {
         fn default() -> Self {
             Self {
-                request: RefCell::new(None),
-                response: HttpResponse {
+                request: Rc::new(RefCell::new(None)),
+                result: Ok(HttpResponse {
                     status: 200,
                     body: r#"{"content":[{"type":"text","text":"{\"title\":\"Memory\"}"}]}"#
                         .to_string(),
-                },
+                }),
             }
         }
     }
@@ -194,7 +195,10 @@ mod tests {
     impl HttpTransport for MockTransport {
         fn post_json(&self, request: HttpRequest) -> Result<HttpResponse, ProviderError> {
             *self.request.borrow_mut() = Some(request);
-            Ok(self.response.clone())
+            self.result
+                .as_ref()
+                .map(Clone::clone)
+                .map_err(|error| ProviderError::Transport(error.to_string()))
         }
     }
 
@@ -235,6 +239,7 @@ mod tests {
     fn sends_anthropic_message_request() {
         env::set_var("YAAML_TEST_ANTHROPIC_KEY", "test-key");
         let transport = MockTransport::default();
+        let request_cell = Rc::clone(&transport.request);
         let config = AnthropicMessageConfig {
             model: "claude-haiku-4-5-20251001".to_string(),
             api_key_env: "YAAML_TEST_ANTHROPIC_KEY".to_string(),
@@ -246,5 +251,81 @@ mod tests {
         let value = client.structured_json("system", "prompt").unwrap();
 
         assert_eq!(value["title"], "Memory");
+        let request = request_cell.borrow();
+        let request = request.as_ref().unwrap();
+        assert_eq!(request.url, "https://example.test/v1/messages");
+        assert_eq!(request.body["model"], "claude-haiku-4-5-20251001");
+        assert_eq!(request.body["max_tokens"], 100);
+        assert_eq!(request.body["system"], "system");
+        assert_eq!(request.body["messages"][0]["content"], "prompt");
+        assert_eq!(
+            request.headers.get("anthropic-version").map(String::as_str),
+            Some(ANTHROPIC_VERSION)
+        );
+    }
+
+    #[test]
+    fn http_429_is_retryable() {
+        env::set_var("YAAML_TEST_ANTHROPIC_429_KEY", "test-key");
+        let transport = MockTransport {
+            request: Rc::new(RefCell::new(None)),
+            result: Ok(HttpResponse {
+                status: 429,
+                body: "rate limited".to_string(),
+            }),
+        };
+        let config = AnthropicMessageConfig {
+            model: "claude-haiku-4-5-20251001".to_string(),
+            api_key_env: "YAAML_TEST_ANTHROPIC_429_KEY".to_string(),
+            base_url: "https://example.test".to_string(),
+            max_tokens: 100,
+        };
+        let client = AnthropicMessageClient::new(config, transport);
+
+        let error = client.message_text("system", "prompt").unwrap_err();
+
+        assert!(matches!(error, ProviderError::Http { status: 429, .. }));
+        assert_eq!(error.retry_class(), crate::RetryClass::Retryable);
+    }
+
+    #[test]
+    fn http_401_is_non_retryable() {
+        env::set_var("YAAML_TEST_ANTHROPIC_401_KEY", "test-key");
+        let transport = MockTransport {
+            request: Rc::new(RefCell::new(None)),
+            result: Ok(HttpResponse {
+                status: 401,
+                body: "unauthorized".to_string(),
+            }),
+        };
+        let config = AnthropicMessageConfig {
+            model: "claude-haiku-4-5-20251001".to_string(),
+            api_key_env: "YAAML_TEST_ANTHROPIC_401_KEY".to_string(),
+            base_url: "https://example.test".to_string(),
+            max_tokens: 100,
+        };
+        let client = AnthropicMessageClient::new(config, transport);
+
+        let error = client.message_text("system", "prompt").unwrap_err();
+
+        assert!(matches!(error, ProviderError::Http { status: 401, .. }));
+        assert_eq!(error.retry_class(), crate::RetryClass::NonRetryable);
+    }
+
+    #[test]
+    fn truncated_message_response_is_parse_error() {
+        let error =
+            parse_message_text(r#"{"content":[{"type":"text","text":"hello"}]"#).unwrap_err();
+
+        assert!(matches!(error, ProviderError::Parse(_)));
+        assert_eq!(error.retry_class(), crate::RetryClass::NonRetryable);
+    }
+
+    #[test]
+    fn missing_text_content_is_parse_error() {
+        let error =
+            parse_message_text(r#"{"content":[{"type":"tool_use","name":"Bash"}]}"#).unwrap_err();
+
+        assert!(matches!(error, ProviderError::Parse(_)));
     }
 }

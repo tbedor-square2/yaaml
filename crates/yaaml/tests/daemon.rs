@@ -108,6 +108,24 @@ fn codex_change_processing_ingests_appended_cursored_file() {
 }
 
 #[test]
+fn codex_change_processing_ignores_deleted_cursored_file() {
+    let tmp = TempDir::new().unwrap();
+    let root = tmp.path().join("sessions");
+    fs::create_dir_all(&root).unwrap();
+    let deleted = root.join("deleted.jsonl");
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+    db.update_cursor(&deleted.display().to_string(), 128, None)
+        .unwrap();
+
+    let report = process_codex_changes(&db, &Config::default(), &root).unwrap();
+
+    assert_eq!(report.scanned_files, 0);
+    assert_eq!(report.failures, 0);
+    assert_eq!(db.status().unwrap().backlog.failures, 0);
+}
+
+#[test]
 fn codex_change_processing_queues_and_runs_background_recall() {
     let tmp = TempDir::new().unwrap();
     let root = tmp.path().join("sessions");
@@ -830,6 +848,62 @@ fn queued_memory_task_parks_when_provider_is_unavailable() {
 
     assert_eq!(status.parked_jobs, 1);
     assert_eq!(status.workers.queued_jobs, 0);
+}
+
+#[test]
+fn queued_recall_task_parks_when_embedding_provider_is_unavailable() {
+    std::env::remove_var("YAAML_TEST_MISSING_RECALL_OPENAI_KEY");
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+    db.upsert_session(&SessionRecord {
+        id: "session-1".to_string(),
+        agent_type: AgentType::Codex,
+        project_id: "/tmp/yaaml".to_string(),
+        transcript_file_path: "/tmp/missing-session.jsonl".to_string(),
+        started_at: Some("2026-06-08T00:00:00Z".to_string()),
+        last_seen_at: Some("2026-06-08T00:00:01Z".to_string()),
+    })
+    .unwrap();
+    db.insert_turn(&TurnRecord {
+        session_id: "session-1".to_string(),
+        turn_id: Some("turn-1".to_string()),
+        ordinal: 0,
+        byte_start: 0,
+        byte_end: 10,
+        observed_at: Some("2026-06-08T00:00:02Z".to_string()),
+        status: yaaml_core::TurnStatus::Completed,
+        display_text: Some("refresh recall".to_string()),
+        cwd: None,
+        context: None,
+    })
+    .unwrap();
+    db.enqueue_task(&TaskRecord {
+        id: None,
+        kind: TASK_KIND_RECALL.to_string(),
+        status: TaskStatus::Queued,
+        priority: 0,
+        payload_json: serde_json::json!({
+            "session_id": "session-1",
+            "turn_ordinal": 0,
+        })
+        .to_string(),
+        attempts: 0,
+        max_attempts: 5,
+        next_run_at: None,
+        last_error: None,
+        created_at: "2026-06-08T00:00:00Z".to_string(),
+        updated_at: "2026-06-08T00:00:00Z".to_string(),
+    })
+    .unwrap();
+    let mut config = Config::default();
+    config.embedding_api_key_env = "YAAML_TEST_MISSING_RECALL_OPENAI_KEY".to_string();
+
+    assert_eq!(run_queued_tasks(&db, &config, 1).unwrap(), 0);
+    let status = db.status().unwrap();
+
+    assert_eq!(status.parked_jobs, 1);
+    assert_eq!(status.workers.queued_jobs, 0);
+    assert!(status.recent_failures[0].error.contains("missing API key"));
 }
 
 #[test]

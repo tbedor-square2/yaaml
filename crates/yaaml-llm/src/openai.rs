@@ -110,17 +110,17 @@ mod tests {
 
     struct MockTransport {
         request: Rc<RefCell<Option<HttpRequest>>>,
-        response: HttpResponse,
+        result: Result<HttpResponse, ProviderError>,
     }
 
     impl Default for MockTransport {
         fn default() -> Self {
             Self {
                 request: Rc::new(RefCell::new(None)),
-                response: HttpResponse {
+                result: Ok(HttpResponse {
                     status: 200,
                     body: r#"{"data":[{"embedding":[0.1,0.2,0.3]}]}"#.to_string(),
-                },
+                }),
             }
         }
     }
@@ -128,7 +128,10 @@ mod tests {
     impl HttpTransport for MockTransport {
         fn post_json(&self, request: HttpRequest) -> Result<HttpResponse, ProviderError> {
             *self.request.borrow_mut() = Some(request);
-            Ok(self.response.clone())
+            self.result
+                .as_ref()
+                .map(Clone::clone)
+                .map_err(|error| ProviderError::Transport(error.to_string()))
         }
     }
 
@@ -176,6 +179,84 @@ mod tests {
         assert_eq!(request.url, "https://example.test/v1/embeddings");
         assert_eq!(request.body["model"], "text-embedding-3-small");
         assert_eq!(request.body["input"], "hello");
+        assert_eq!(
+            request.headers.get("Authorization").map(String::as_str),
+            Some("Bearer test-key")
+        );
+    }
+
+    #[test]
+    fn http_429_is_retryable() {
+        env::set_var("YAAML_TEST_OPENAI_429_KEY", "test-key");
+        let transport = MockTransport {
+            request: Rc::new(RefCell::new(None)),
+            result: Ok(HttpResponse {
+                status: 429,
+                body: "rate limited".to_string(),
+            }),
+        };
+        let config = OpenAiEmbeddingConfig {
+            model: "text-embedding-3-small".to_string(),
+            api_key_env: "YAAML_TEST_OPENAI_429_KEY".to_string(),
+            base_url: "https://example.test".to_string(),
+        };
+        let client = OpenAiEmbeddingClient::new(config, transport);
+
+        let error = client.embed("hello").unwrap_err();
+
+        assert!(matches!(error, ProviderError::Http { status: 429, .. }));
+        assert_eq!(error.retry_class(), crate::RetryClass::Retryable);
+    }
+
+    #[test]
+    fn http_401_is_non_retryable() {
+        env::set_var("YAAML_TEST_OPENAI_401_KEY", "test-key");
+        let transport = MockTransport {
+            request: Rc::new(RefCell::new(None)),
+            result: Ok(HttpResponse {
+                status: 401,
+                body: "unauthorized".to_string(),
+            }),
+        };
+        let config = OpenAiEmbeddingConfig {
+            model: "text-embedding-3-small".to_string(),
+            api_key_env: "YAAML_TEST_OPENAI_401_KEY".to_string(),
+            base_url: "https://example.test".to_string(),
+        };
+        let client = OpenAiEmbeddingClient::new(config, transport);
+
+        let error = client.embed("hello").unwrap_err();
+
+        assert!(matches!(error, ProviderError::Http { status: 401, .. }));
+        assert_eq!(error.retry_class(), crate::RetryClass::NonRetryable);
+    }
+
+    #[test]
+    fn transport_error_is_retryable() {
+        env::set_var("YAAML_TEST_OPENAI_TRANSPORT_KEY", "test-key");
+        let transport = MockTransport {
+            request: Rc::new(RefCell::new(None)),
+            result: Err(ProviderError::Transport("connection timed out".to_string())),
+        };
+        let config = OpenAiEmbeddingConfig {
+            model: "text-embedding-3-small".to_string(),
+            api_key_env: "YAAML_TEST_OPENAI_TRANSPORT_KEY".to_string(),
+            base_url: "https://example.test".to_string(),
+        };
+        let client = OpenAiEmbeddingClient::new(config, transport);
+
+        let error = client.embed("hello").unwrap_err();
+
+        assert!(matches!(error, ProviderError::Transport(_)));
+        assert_eq!(error.retry_class(), crate::RetryClass::Retryable);
+    }
+
+    #[test]
+    fn truncated_embedding_response_is_parse_error() {
+        let error = parse_embedding_response(r#"{"data":[{"embedding":[1.0]}"#).unwrap_err();
+
+        assert!(matches!(error, ProviderError::Parse(_)));
+        assert_eq!(error.retry_class(), crate::RetryClass::NonRetryable);
     }
 
     #[test]

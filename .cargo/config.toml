@@ -1,0 +1,2 @@
+[alias]
+coverage = "tarpaulin --workspace --timeout 120 --fail-under 70 --out Html --output-dir target/coverage"

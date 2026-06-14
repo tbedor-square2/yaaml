@@ -1,9 +1,13 @@
 use std::fs;
 use std::path::Path;
 
+use crate::TurnHydration;
 use serde_json::Value;
 use thiserror::Error;
-use yaaml_core::{paths::normalize_project_id, AgentType, SessionRecord, TurnRecord, TurnStatus};
+use yaaml_core::{
+    infer_context_from_path, paths::normalize_project_id, AgentType, ContextMetadata,
+    SessionRecord, TurnRecord, TurnStatus,
+};
 
 #[derive(Debug, Error)]
 pub enum CodexParseError {
@@ -35,6 +39,8 @@ struct CurrentTurn {
     byte_end: u64,
     observed_at: Option<String>,
     status: Option<TurnStatus>,
+    cwd: Option<String>,
+    context: Option<ContextMetadata>,
     display_parts: Vec<String>,
 }
 
@@ -103,6 +109,9 @@ fn parse_codex_jsonl_with_session(
             .get("timestamp")
             .and_then(Value::as_str)
             .map(str::to_string);
+        if let (Some(session), Some(timestamp)) = (session.as_mut(), timestamp.as_ref()) {
+            session.last_seen_at = Some(timestamp.clone());
+        }
 
         match top_type {
             Some("session_meta") => {
@@ -139,6 +148,10 @@ fn parse_codex_jsonl_with_session(
                     session.project_id = normalized_project_id(cwd);
                 }
                 if let Some(turn) = current.as_mut() {
+                    if let Some(cwd) = value.pointer("/payload/cwd").and_then(Value::as_str) {
+                        turn.cwd = Some(cwd.to_string());
+                        turn.context = Some(infer_context_from_path(Path::new(cwd)));
+                    }
                     turn.byte_end = line_end;
                     turn.observed_at = timestamp.or_else(|| turn.observed_at.clone());
                 } else {
@@ -272,6 +285,14 @@ fn start_turn(
         byte_end: line_end,
         observed_at: timestamp,
         status: None,
+        cwd: value
+            .pointer("/payload/cwd")
+            .and_then(Value::as_str)
+            .map(str::to_string),
+        context: value
+            .pointer("/payload/cwd")
+            .and_then(Value::as_str)
+            .map(|cwd| infer_context_from_path(Path::new(cwd))),
         display_parts: Vec::new(),
     }
 }
@@ -306,7 +327,57 @@ fn finish_turn(
         observed_at: turn.observed_at,
         status,
         display_text,
+        cwd: turn.cwd,
+        context: turn.context,
     });
+}
+
+pub fn hydrate_codex_turn_bytes(bytes: &[u8]) -> Result<TurnHydration, CodexParseError> {
+    let mut display_parts = Vec::new();
+    let mut cwd = None;
+    let mut context = None;
+    let mut line_offset = 0_u64;
+    for raw_line in complete_lines(bytes) {
+        let line_start = line_offset;
+        line_offset += u64::try_from(raw_line.len()).unwrap_or(u64::MAX);
+        let line = trim_line_ending(raw_line);
+        if line.is_empty() {
+            continue;
+        }
+        let value: Value =
+            serde_json::from_slice(line).map_err(|source| CodexParseError::MalformedJson {
+                offset: line_start,
+                source,
+            })?;
+        match value.get("type").and_then(Value::as_str) {
+            Some("turn_context") => {
+                if let Some(line_cwd) = value.pointer("/payload/cwd").and_then(Value::as_str) {
+                    cwd = Some(line_cwd.to_string());
+                    context = Some(infer_context_from_path(Path::new(line_cwd)));
+                }
+            }
+            Some("response_item") => extract_response_item_text(&value, &mut display_parts),
+            Some("event_msg") => {
+                let payload_type = value.pointer("/payload/type").and_then(Value::as_str);
+                if matches!(payload_type, Some("user_message") | Some("agent_message")) {
+                    if let Some(message) = value.pointer("/payload/message").and_then(Value::as_str)
+                    {
+                        display_parts.push(message.to_string());
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    Ok(TurnHydration {
+        display_text: compact_display_text(display_parts),
+        cwd,
+        context,
+    })
+}
+
+pub fn display_text_from_codex_turn_bytes(bytes: &[u8]) -> Result<Option<String>, CodexParseError> {
+    hydrate_codex_turn_bytes(bytes).map(|hydration| hydration.display_text)
 }
 
 fn extract_response_item_text(value: &Value, display_parts: &mut Vec<String>) {

@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 use crate::{cosine_similarity, MemoryScope};
 
@@ -7,6 +7,9 @@ pub struct ClusterMemory {
     pub memory_id: i64,
     pub scope: MemoryScope,
     pub project_id: Option<String>,
+    pub title: String,
+    pub body: String,
+    pub lineage_refs: Vec<i64>,
     pub embedding: Vec<f32>,
 }
 
@@ -137,10 +140,59 @@ fn neighbors(memories: &[ClusterMemory], index: usize, distance_threshold: f32) 
         .enumerate()
         .filter_map(|(candidate_index, candidate)| {
             let distance = cosine_distance(&memories[index].embedding, &candidate.embedding)?;
-            (distance <= distance_threshold).then_some(candidate_index)
+            (distance <= distance_threshold
+                || memories_are_lexically_overlapping(&memories[index], candidate))
+            .then_some(candidate_index)
         })
         .collect()
 }
+
+fn memories_are_lexically_overlapping(left: &ClusterMemory, right: &ClusterMemory) -> bool {
+    if left.memory_id == right.memory_id {
+        return true;
+    }
+    if !left.lineage_refs.is_empty()
+        && !right.lineage_refs.is_empty()
+        && left
+            .lineage_refs
+            .iter()
+            .any(|left_ref| right.lineage_refs.contains(left_ref))
+    {
+        return true;
+    }
+    let title_similarity = token_jaccard(&left.title, &right.title);
+    let body_similarity = token_jaccard(&left.body, &right.body);
+    let text_similarity = token_jaccard(
+        &format!("{} {}", left.title, left.body),
+        &format!("{} {}", right.title, right.body),
+    );
+
+    (title_similarity >= 0.45 && (body_similarity >= 0.25 || text_similarity >= 0.35))
+        || text_similarity >= 0.45
+}
+
+fn token_jaccard(left: &str, right: &str) -> f32 {
+    let left_tokens = tokens_for_similarity(left);
+    let right_tokens = tokens_for_similarity(right);
+    if left_tokens.is_empty() || right_tokens.is_empty() {
+        return 0.0;
+    }
+    let intersection = left_tokens.intersection(&right_tokens).count();
+    let union = left_tokens.union(&right_tokens).count();
+    intersection as f32 / union as f32
+}
+
+fn tokens_for_similarity(text: &str) -> HashSet<String> {
+    text.split(|character: char| !character.is_ascii_alphanumeric())
+        .map(str::to_ascii_lowercase)
+        .filter(|token| token.len() > 1 && !SIMILARITY_STOP_WORDS.contains(&token.as_str()))
+        .collect()
+}
+
+const SIMILARITY_STOP_WORDS: &[&str] = &[
+    "and", "are", "but", "for", "from", "has", "have", "into", "not", "the", "this", "that", "use",
+    "uses", "with",
+];
 
 fn densest_members(memories: &[ClusterMemory], max_size: usize) -> Vec<ClusterMemory> {
     let mut scored = memories
@@ -223,6 +275,21 @@ mod tests {
             memory_id,
             scope,
             project_id: project_id.map(str::to_string),
+            title: format!("topic{memory_id}"),
+            body: format!("detail{memory_id}"),
+            lineage_refs: Vec::new(),
+            embedding: vec![x, 1.0 - x],
+        }
+    }
+
+    fn memory_with_text(memory_id: i64, title: &str, body: &str, x: f32) -> ClusterMemory {
+        ClusterMemory {
+            memory_id,
+            scope: MemoryScope::Project,
+            project_id: Some("/tmp/yaaml".to_string()),
+            title: title.to_string(),
+            body: body.to_string(),
+            lineage_refs: Vec::new(),
             embedding: vec![x, 1.0 - x],
         }
     }
@@ -267,6 +334,38 @@ mod tests {
             ],
             0.01,
             2,
+            5,
+        );
+
+        assert_eq!(clusters.len(), 1);
+        assert_eq!(clusters[0].memory_ids, vec![1, 2, 3]);
+    }
+
+    #[test]
+    fn overlapping_same_project_memory_text_clusters_even_when_vectors_are_looser() {
+        let clusters = find_consolidation_clusters(
+            &[
+                memory_with_text(
+                    1,
+                    "Backtest turn context improves recall ranking",
+                    "Turn context metadata improves recall ranking for multi-project sessions.",
+                    1.0,
+                ),
+                memory_with_text(
+                    2,
+                    "Backtest confirmed turn context recall ranking improved",
+                    "Backtests confirmed turn context improves recall ranking for multi-project sessions.",
+                    0.8,
+                ),
+                memory_with_text(
+                    3,
+                    "Backtest showed improved recall ranking with turn context",
+                    "Known bad sessions now return project-specific memories after turn context hydration.",
+                    0.6,
+                ),
+            ],
+            0.01,
+            3,
             5,
         );
 

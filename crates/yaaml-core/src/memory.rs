@@ -5,7 +5,7 @@ use serde::Deserialize;
 use serde_json::Value;
 use thiserror::Error;
 
-use crate::{MemoryRecord, MemoryScope, SourceTurnRef};
+use crate::{infer_context_from_memory, MemoryRecord, MemoryScope, SourceTurnRef};
 
 #[derive(Debug, Error)]
 pub enum MemoryError {
@@ -102,11 +102,17 @@ pub fn parse_formulation_response(
 
 pub fn embedding_text(memory: &MemoryRecord) -> String {
     let project_descriptor = memory.project_descriptor.as_deref().unwrap_or("unknown");
+    let context = infer_context_from_memory(memory);
+    let tags = context.subject_tags.join(", ");
     format!(
-        "title: {}\nscope: {}\nproject: {}\nbody:\n{}",
+        "title: {}\nscope: {}\nproject: {}\nrepo: {}\nwork_area: {}\nactivity_domain: {}\nsubject_tags: {}\nbody:\n{}",
         memory.title,
         memory.scope.as_str(),
         project_descriptor,
+        context.repo_id.as_deref().unwrap_or("unknown"),
+        context.work_area.as_deref().unwrap_or("unknown"),
+        context.activity_domain.as_deref().unwrap_or("unknown"),
+        tags,
         memory.body
     )
 }

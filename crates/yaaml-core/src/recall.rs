@@ -2,6 +2,8 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
+use serde::Serialize;
+
 use crate::paths::project_hash;
 use crate::TurnRecord;
 
@@ -19,7 +21,7 @@ pub struct RecallCandidate {
     pub project_id: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct RecallMemory {
     pub memory_id: i64,
     pub title: String,
@@ -80,7 +82,6 @@ pub fn apply_project_bonus(
     bonus: f32,
 ) -> Vec<RecallCandidate> {
     for candidate in &mut candidates {
-        candidate.score = candidate.similarity;
         if candidate.project_id.as_deref() == Some(current_project_id) {
             candidate.score += bonus;
         }
@@ -127,12 +128,8 @@ pub fn recall_file_path(recall_dir: &Path, project_id: &Path) -> PathBuf {
     recall_dir.join(format!("{}.md", project_hash(project_id)))
 }
 
-pub fn session_recall_file_path(recall_dir: &Path, project_id: &Path, session_id: &str) -> PathBuf {
-    recall_dir.join(format!(
-        "{}-{}.md",
-        project_hash(project_id),
-        safe_session_id(session_id)
-    ))
+pub fn session_recall_file_path(recall_dir: &Path, session_id: &str) -> PathBuf {
+    recall_dir.join(format!("session-{}.md", safe_session_id(session_id)))
 }
 
 fn safe_session_id(session_id: &str) -> String {
@@ -207,7 +204,7 @@ pub fn write_recall_file(
     Ok(RecallWrite::Written)
 }
 
-fn parse_memory_ids(contents: &str) -> Vec<i64> {
+pub fn parse_memory_ids(contents: &str) -> Vec<i64> {
     contents
         .lines()
         .find_map(|line| line.strip_prefix("memory_ids: "))
@@ -263,6 +260,22 @@ mod tests {
     }
 
     #[test]
+    fn project_bonus_preserves_existing_score_adjustments() {
+        let candidates = apply_project_bonus(
+            vec![RecallCandidate {
+                memory_id: 1,
+                similarity: 0.7,
+                score: 0.9,
+                project_id: Some("/tmp/current".to_string()),
+            }],
+            "/tmp/current",
+            0.05,
+        );
+
+        assert_eq!(candidates[0].score, 0.95);
+    }
+
+    #[test]
     fn recall_query_excludes_long_tool_output() {
         let turn = TurnRecord {
             session_id: "session-1".to_string(),
@@ -276,6 +289,8 @@ mod tests {
                 "user: fix it\ntool output: {}\nassistant: done",
                 "x".repeat(1_000)
             )),
+            cwd: None,
+            context: None,
         };
 
         let query = build_recall_query(&[turn], 2_000, 80);
@@ -311,13 +326,9 @@ mod tests {
     }
 
     #[test]
-    fn session_recall_path_includes_project_and_session() {
-        let path =
-            session_recall_file_path(Path::new("/tmp/recall"), Path::new("/tmp/project"), "a/b");
+    fn session_recall_path_uses_only_session_id() {
+        let path = session_recall_file_path(Path::new("/tmp/recall"), "a/b");
 
-        assert!(path.ends_with(format!(
-            "{}-a_b.md",
-            project_hash(Path::new("/tmp/project"))
-        )));
+        assert_eq!(path, Path::new("/tmp/recall/session-a_b.md"));
     }
 }

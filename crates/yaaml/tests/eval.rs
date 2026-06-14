@@ -5,7 +5,10 @@ use std::process::Command;
 use std::thread;
 
 use tempfile::TempDir;
-use yaaml_core::{AgentType, MemoryRecord, MemoryScope, SessionRecord, TurnRecord, TurnStatus};
+use yaaml_core::{
+    AgentType, MemoryRecord, MemoryScope, SessionRecord, TaskRecord, TaskStatus, TurnRecord,
+    TurnStatus,
+};
 use yaaml_store::Database;
 
 #[test]
@@ -47,6 +50,8 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
         observed_at: Some("2026-06-08T00:00:02Z".to_string()),
         status: TurnStatus::Completed,
         display_text: Some("use recall".to_string()),
+        cwd: None,
+        context: None,
     })
     .unwrap();
     db.insert_memory(&MemoryRecord {
@@ -105,6 +110,10 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     let runs: serde_json::Value = serde_json::from_slice(&list.stdout).unwrap();
     assert_eq!(runs[0]["id"], run_id);
     assert_eq!(runs[0]["result_count"], 1);
+    assert_eq!(runs[0]["score"], "unjudged");
+    let started_at_human = runs[0]["started_at_human"].as_str().unwrap();
+    assert!(!started_at_human.starts_with("unix:"));
+    assert!(started_at_human.contains("2026-"));
 
     let show = Command::new(binary)
         .arg("eval")
@@ -124,6 +133,8 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     assert_eq!(shown["run"]["id"], run_id);
     assert_eq!(shown["score_counts"]["unjudged"], 1);
     assert_eq!(shown["results"][0]["memory_title"], "Earlier memory");
+    assert!(shown["recalled_memories"].as_array().unwrap().is_empty());
+    assert_eq!(shown["later_completed_turns"], serde_json::Value::Null);
 
     let summary = Command::new(binary)
         .arg("eval")
@@ -144,6 +155,139 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     assert_eq!(summary_value["judged_results"], 0);
     assert_eq!(summary_value["average_score"], serde_json::Value::Null);
     assert_eq!(summary_value["score_counts"]["unjudged"], 1);
+    assert_eq!(summary_value["session_breakdown"][0]["runs"], 1);
+    assert_eq!(
+        summary_value["stale_insufficient_context"]
+            .as_array()
+            .unwrap()
+            .len(),
+        0
+    );
+}
+
+#[test]
+fn eval_list_includes_session_turn_score_and_human_timestamps() {
+    let tmp = TempDir::new().unwrap();
+    let home = tmp.path().join("home");
+    let project = tmp.path().join("project");
+    fs::create_dir_all(home.join(".yaaml")).unwrap();
+    fs::create_dir_all(&project).unwrap();
+    let db_path = home.join(".yaaml").join("yaaml.db");
+    fs::write(
+        home.join(".yaaml").join("config.toml"),
+        format!(
+            r#"
+db_path = "{}"
+embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
+"#,
+            db_path.display()
+        ),
+    )
+    .unwrap();
+    let mut db = Database::open(&db_path).unwrap();
+    db.migrate().unwrap();
+    db.upsert_session(&SessionRecord {
+        id: "session-1".to_string(),
+        agent_type: AgentType::Codex,
+        project_id: project.display().to_string(),
+        transcript_file_path: "/tmp/session.jsonl".to_string(),
+        started_at: Some("2026-06-08T00:00:00Z".to_string()),
+        last_seen_at: Some("2026-06-08T00:00:01Z".to_string()),
+    })
+    .unwrap();
+    db.insert_turn(&TurnRecord {
+        session_id: "session-1".to_string(),
+        turn_id: Some("turn-7".to_string()),
+        ordinal: 7,
+        byte_start: 0,
+        byte_end: 10,
+        observed_at: Some("2026-06-08T00:00:02Z".to_string()),
+        status: TurnStatus::Completed,
+        display_text: Some("use recall".to_string()),
+        cwd: None,
+        context: None,
+    })
+    .unwrap();
+    let turn_row_id = db
+        .turn_row_id_for_session_ordinal("session-1", 7)
+        .unwrap()
+        .unwrap();
+    let run_id = db
+        .insert_eval_run(
+            "recall_1_to_5",
+            "unix:1781205326",
+            r#"{"session_id":"session-1","turn_ordinal":7,"memory_ids":[1]}"#,
+        )
+        .unwrap();
+    db.insert_eval_result(run_id, turn_row_id, None, "5", "great", "unix:1781205330")
+        .unwrap();
+    db.complete_eval_run(run_id, "unix:1781205331").unwrap();
+    let insufficient_run_id = db
+        .insert_eval_run(
+            "recall_1_to_5",
+            "unix:1781205400",
+            r#"{"session_id":"session-1","turn_ordinal":8,"memory_ids":[1]}"#,
+        )
+        .unwrap();
+    db.insert_eval_result(
+        insufficient_run_id,
+        turn_row_id,
+        None,
+        "insufficient_context",
+        "not enough later turns",
+        "unix:1781205400",
+    )
+    .unwrap();
+    db.complete_eval_run(insufficient_run_id, "unix:1781205400")
+        .unwrap();
+
+    let binary = env!("CARGO_BIN_EXE_yaaml");
+    let json_output = Command::new(binary)
+        .arg("eval")
+        .arg("list")
+        .arg("--json")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .output()
+        .unwrap();
+    assert!(
+        json_output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&json_output.stderr)
+    );
+    let runs: serde_json::Value = serde_json::from_slice(&json_output.stdout).unwrap();
+    assert_eq!(runs[0]["id"], insufficient_run_id);
+    assert_eq!(runs[0]["session_id"], "session-1");
+    assert_eq!(runs[0]["turn_ordinal"], 8);
+    assert_eq!(runs[0]["score"], "n/a");
+    assert_eq!(runs[1]["id"], run_id);
+    assert_eq!(runs[1]["score"], "5");
+    let started_at_human = runs[1]["started_at_human"].as_str().unwrap();
+    let completed_at_human = runs[1]["completed_at_human"].as_str().unwrap();
+    assert!(!started_at_human.starts_with("unix:"));
+    assert!(!completed_at_human.starts_with("unix:"));
+    assert!(started_at_human.contains(":26 "));
+    assert!(completed_at_human.contains(":31 "));
+
+    let text_output = Command::new(binary)
+        .arg("eval")
+        .arg("list")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .output()
+        .unwrap();
+    assert!(
+        text_output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&text_output.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&text_output.stdout);
+    assert!(stdout.contains("score=n/a"));
+    assert!(stdout.contains("score=5"));
+    assert!(stdout.contains("session=session-1"));
+    assert!(stdout.contains("turn=7"));
+    assert!(stdout.contains("started=20"));
+    assert!(!stdout.contains("recall_1_to_5"));
 }
 
 #[test]
@@ -189,6 +333,8 @@ eval_judge_api_key_env = "YAAML_TEST_ANTHROPIC_KEY"
         observed_at: Some("2026-06-08T00:00:02Z".to_string()),
         status: TurnStatus::Completed,
         display_text: Some("use recall".to_string()),
+        cwd: None,
+        context: None,
     })
     .unwrap();
     db.insert_memory(&MemoryRecord {
@@ -269,10 +415,42 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
         observed_at: Some("2026-06-08T00:00:02Z".to_string()),
         status: TurnStatus::Completed,
         display_text: Some("use recall".to_string()),
+        cwd: None,
+        context: None,
+    })
+    .unwrap();
+    db.insert_turn(&TurnRecord {
+        session_id: "session-1".to_string(),
+        turn_id: Some("turn-8".to_string()),
+        ordinal: 8,
+        byte_start: 10,
+        byte_end: 20,
+        observed_at: Some("2026-06-08T00:00:07Z".to_string()),
+        status: TurnStatus::Completed,
+        display_text: Some("recall had no later context yet".to_string()),
+        cwd: None,
+        context: None,
+    })
+    .unwrap();
+    db.insert_turn(&TurnRecord {
+        session_id: "session-1".to_string(),
+        turn_id: Some("turn-9".to_string()),
+        ordinal: 9,
+        byte_start: 20,
+        byte_end: 30,
+        observed_at: Some("2026-06-08T00:10:07Z".to_string()),
+        status: TurnStatus::Completed,
+        display_text: Some("later context exists now".to_string()),
+        cwd: None,
+        context: None,
     })
     .unwrap();
     let turn_row_id = db
         .turn_row_id_for_session_ordinal("session-1", 7)
+        .unwrap()
+        .unwrap();
+    let turn_8_row_id = db
+        .turn_row_id_for_session_ordinal("session-1", 8)
         .unwrap()
         .unwrap();
     let low_memory_id = db
@@ -334,6 +512,41 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     .unwrap();
     db.complete_eval_run(run_id, "2026-06-08T00:00:06Z")
         .unwrap();
+    let stale_run_id = db
+        .insert_eval_run(
+            "recall_1_to_5",
+            "2026-06-08T00:00:08Z",
+            &format!(
+                r#"{{"session_id":"session-1","turn_ordinal":8,"memory_ids":[{}]}}"#,
+                low_memory_id
+            ),
+        )
+        .unwrap();
+    db.insert_eval_result(
+        stale_run_id,
+        turn_8_row_id,
+        Some(low_memory_id),
+        "insufficient_context",
+        "not enough later turns",
+        "2026-06-08T00:00:09Z",
+    )
+    .unwrap();
+    db.complete_eval_run(stale_run_id, "2026-06-08T00:00:10Z")
+        .unwrap();
+    db.enqueue_task(&TaskRecord {
+        id: None,
+        kind: "recall_eval".to_string(),
+        status: TaskStatus::Queued,
+        priority: 10,
+        payload_json: r#"{"session_id":"session-1","turn_ordinal":9}"#.to_string(),
+        attempts: 1,
+        max_attempts: 5,
+        next_run_at: Some("unix:1781206000".to_string()),
+        last_error: Some("waiting for subsequent turns before recall eval".to_string()),
+        created_at: "unix:1781205400".to_string(),
+        updated_at: "unix:1781205400".to_string(),
+    })
+    .unwrap();
 
     let binary = env!("CARGO_BIN_EXE_yaaml");
     let output = Command::new(binary)
@@ -350,12 +563,13 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
         String::from_utf8_lossy(&output.stderr)
     );
     let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
-    assert_eq!(value["runs_considered"], 1);
-    assert_eq!(value["results_considered"], 2);
+    assert_eq!(value["runs_considered"], 2);
+    assert_eq!(value["results_considered"], 3);
     assert_eq!(value["judged_results"], 2);
     assert_eq!(value["average_score"], 3.5);
     assert_eq!(value["score_counts"]["2"], 1);
     assert_eq!(value["score_counts"]["5"], 1);
+    assert_eq!(value["score_counts"]["n/a"], 1);
     assert_eq!(
         value["low_score_examples"][0]["memory_title"],
         "Weak memory"
@@ -366,6 +580,47 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     );
     assert_eq!(value["high_score_examples"][0]["session_id"], "session-1");
     assert_eq!(value["high_score_examples"][0]["turn_ordinal"], 7);
+    assert_eq!(value["session_breakdown"][0]["session_id"], "session-1");
+    assert_eq!(
+        value["session_breakdown"][0]["project_id"],
+        project.display().to_string()
+    );
+    assert_eq!(value["session_breakdown"][0]["runs"], 2);
+    assert_eq!(value["session_breakdown"][0]["results"], 3);
+    assert_eq!(value["session_breakdown"][0]["average_score"], 3.5);
+    assert_eq!(value["session_breakdown"][0]["score_counts"]["n/a"], 1);
+    assert_eq!(
+        value["stale_insufficient_context"][0]["run_id"],
+        stale_run_id
+    );
+    assert_eq!(
+        value["stale_insufficient_context"][0]["later_completed_turns"],
+        1
+    );
+    assert_eq!(value["queued_recall_evals"][0]["session_id"], "session-1");
+    assert_eq!(value["queued_recall_evals"][0]["turn_ordinal"], 9);
+
+    let shown = Command::new(binary)
+        .arg("eval")
+        .arg("show")
+        .arg(stale_run_id.to_string())
+        .arg("--json")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .output()
+        .unwrap();
+    assert!(
+        shown.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&shown.stderr)
+    );
+    let shown_value: serde_json::Value = serde_json::from_slice(&shown.stdout).unwrap();
+    assert_eq!(
+        shown_value["recalled_memories"][0]["memory_id"],
+        low_memory_id
+    );
+    assert_eq!(shown_value["recalled_memories"][0]["title"], "Weak memory");
+    assert_eq!(shown_value["later_completed_turns"], 1);
 
     let human = Command::new(binary)
         .arg("eval")
@@ -382,6 +637,9 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     let human_stdout = String::from_utf8_lossy(&human.stdout);
     assert!(human_stdout.contains("Eval summary"));
     assert!(human_stdout.contains("average score: 3.50"));
+    assert!(human_stdout.contains("Session breakdown"));
+    assert!(human_stdout.contains("N/a evals with later turns"));
+    assert!(human_stdout.contains("Queued recall evals"));
     assert!(human_stdout.contains("Weak memory"));
     assert!(human_stdout.contains("Useful memory"));
 }

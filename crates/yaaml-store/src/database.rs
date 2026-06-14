@@ -7,8 +7,8 @@ use serde::Serialize;
 use thiserror::Error;
 use yaaml_core::status::{BacklogStatus, Status, TaskFailure, WorkerStatus};
 use yaaml_core::{
-    EmbeddingRecord, MemoryRecord, MemoryScope, SessionRecord, SourceTurnRef, TaskRecord,
-    TaskStatus, TurnRecord,
+    infer_context_from_memory, infer_context_from_path, ContextMetadata, EmbeddingRecord,
+    MemoryRecord, MemoryScope, SessionRecord, SourceTurnRef, TaskRecord, TaskStatus, TurnRecord,
 };
 
 use crate::migrations::MIGRATIONS;
@@ -39,6 +39,9 @@ pub struct EvalRunRecord {
     pub completed_at: Option<String>,
     pub config_json: String,
     pub result_count: u64,
+    pub session_id: Option<String>,
+    pub turn_ordinal: Option<u64>,
+    pub score: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -51,6 +54,18 @@ pub struct EvalResultRecord {
     pub judge_score: Option<String>,
     pub rationale: Option<String>,
     pub created_at: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct RecallEvalTaskRecord {
+    pub id: i64,
+    pub status: String,
+    pub attempts: u64,
+    pub max_attempts: u64,
+    pub next_run_at: Option<String>,
+    pub last_error: Option<String>,
+    pub session_id: Option<String>,
+    pub turn_ordinal: Option<u64>,
 }
 
 impl Database {
@@ -83,6 +98,29 @@ impl Database {
             tx.execute_batch(migration)?;
         }
         tx.commit()?;
+        self.ensure_column("turns", "cwd", "ALTER TABLE turns ADD COLUMN cwd TEXT")?;
+        self.ensure_column(
+            "turns",
+            "context_json",
+            "ALTER TABLE turns ADD COLUMN context_json TEXT",
+        )?;
+        Ok(())
+    }
+
+    fn ensure_column(
+        &self,
+        table: &str,
+        column: &str,
+        alter_sql: &str,
+    ) -> Result<(), DatabaseError> {
+        let mut stmt = self.conn.prepare(&format!("PRAGMA table_info({table})"))?;
+        let rows = stmt.query_map([], |row| row.get::<_, String>(1))?;
+        for row in rows {
+            if row? == column {
+                return Ok(());
+            }
+        }
+        self.conn.execute_batch(alter_sql)?;
         Ok(())
     }
 
@@ -165,6 +203,13 @@ impl Database {
                 session.last_seen_at
             ],
         )?;
+        let context = infer_context_from_path(Path::new(&session.project_id));
+        self.upsert_context_metadata(
+            "session",
+            &session.id,
+            &context,
+            session.last_seen_at.as_deref().unwrap_or("unknown"),
+        )?;
         Ok(())
     }
 
@@ -239,10 +284,16 @@ impl Database {
     }
 
     pub fn insert_turn(&self, turn: &TurnRecord) -> Result<bool, DatabaseError> {
+        let context_json = turn
+            .context
+            .as_ref()
+            .map(serde_json::to_string)
+            .transpose()?;
         let inserted = self.conn.execute(
             "INSERT OR IGNORE INTO turns (
-                session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text
-             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+                session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status,
+                display_text, cwd, context_json
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
             params![
                 turn.session_id,
                 turn.turn_id,
@@ -251,7 +302,9 @@ impl Database {
                 u64_to_i64(turn.byte_end),
                 turn.observed_at,
                 turn.status.as_str(),
-                turn.display_text
+                turn.display_text,
+                turn.cwd,
+                context_json,
             ],
         )?;
         Ok(inserted > 0)
@@ -263,7 +316,7 @@ impl Database {
         limit: usize,
     ) -> Result<Vec<TurnRecord>, DatabaseError> {
         let mut stmt = self.conn.prepare(
-            "SELECT session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text
+            "SELECT session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text, cwd, context_json
              FROM turns
              WHERE session_id = ?1
              ORDER BY ordinal DESC
@@ -288,7 +341,7 @@ impl Database {
         end_ordinal: u64,
     ) -> Result<Vec<TurnRecord>, DatabaseError> {
         let mut stmt = self.conn.prepare(
-            "SELECT session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text
+            "SELECT session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text, cwd, context_json
              FROM turns
              WHERE session_id = ?1
                AND status = 'completed'
@@ -320,7 +373,7 @@ impl Database {
             let turn = self
                 .conn
                 .query_row(
-                    "SELECT session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text
+                    "SELECT session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text, cwd, context_json
                      FROM turns
                      WHERE session_id = ?1
                        AND status = 'completed'
@@ -372,7 +425,7 @@ impl Database {
         limit: usize,
     ) -> Result<Vec<TurnRecord>, DatabaseError> {
         let mut stmt = self.conn.prepare(
-            "SELECT session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text
+            "SELECT session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text, cwd, context_json
              FROM turns
              WHERE session_id = ?1
                AND status = 'completed'
@@ -417,6 +470,64 @@ impl Database {
         Ok(exists != 0)
     }
 
+    pub fn recall_eval_exists_for_anchor(
+        &self,
+        session_id: &str,
+        turn_ordinal: u64,
+    ) -> Result<bool, DatabaseError> {
+        let turn_ordinal = u64_to_i64(turn_ordinal);
+        let task_exists: i64 = self.conn.query_row(
+            "SELECT EXISTS(
+                SELECT 1 FROM tasks
+                WHERE kind = 'recall_eval'
+                  AND json_extract(payload_json, '$.session_id') = ?1
+                  AND CAST(json_extract(payload_json, '$.turn_ordinal') AS INTEGER) = ?2
+             )",
+            params![session_id, turn_ordinal],
+            |row| row.get(0),
+        )?;
+        if task_exists != 0 {
+            return Ok(true);
+        }
+        let eval_exists: i64 = self.conn.query_row(
+            "SELECT EXISTS(
+                SELECT 1 FROM eval_runs
+                WHERE strategy = 'recall_1_to_5'
+                  AND json_extract(config_json, '$.session_id') = ?1
+                  AND CAST(json_extract(config_json, '$.turn_ordinal') AS INTEGER) = ?2
+             )",
+            params![session_id, turn_ordinal],
+            |row| row.get(0),
+        )?;
+        Ok(eval_exists != 0)
+    }
+
+    pub fn recall_eval_rerun_exists(&self, source_eval_run_id: i64) -> Result<bool, DatabaseError> {
+        let task_exists: i64 = self.conn.query_row(
+            "SELECT EXISTS(
+                SELECT 1 FROM tasks
+                WHERE kind = 'recall_eval'
+                  AND CAST(json_extract(payload_json, '$.rerun_for_eval_run_id') AS INTEGER) = ?1
+                  AND status IN ('queued', 'running', 'completed')
+             )",
+            params![source_eval_run_id],
+            |row| row.get(0),
+        )?;
+        if task_exists != 0 {
+            return Ok(true);
+        }
+        let eval_exists: i64 = self.conn.query_row(
+            "SELECT EXISTS(
+                SELECT 1 FROM eval_runs
+                WHERE strategy = 'recall_1_to_5'
+                  AND CAST(json_extract(config_json, '$.rerun_for_eval_run_id') AS INTEGER) = ?1
+             )",
+            params![source_eval_run_id],
+            |row| row.get(0),
+        )?;
+        Ok(eval_exists != 0)
+    }
+
     pub fn insert_memory(&self, memory: &MemoryRecord) -> Result<i64, DatabaseError> {
         let source_turn_refs = serde_json::to_string(&memory.source_turn_refs)?;
         let lineage_refs = serde_json::to_string(&memory.lineage_refs)?;
@@ -439,7 +550,52 @@ impl Database {
                 lineage_refs
             ],
         )?;
-        Ok(self.conn.last_insert_rowid())
+        let memory_id = self.conn.last_insert_rowid();
+        let context = infer_context_from_memory(memory);
+        self.upsert_context_metadata(
+            "memory",
+            &memory_id.to_string(),
+            &context,
+            &memory.updated_at,
+        )?;
+        Ok(memory_id)
+    }
+
+    pub fn upsert_context_metadata(
+        &self,
+        entity_type: &str,
+        entity_key: &str,
+        context: &ContextMetadata,
+        updated_at: &str,
+    ) -> Result<(), DatabaseError> {
+        let context_json = serde_json::to_string(context)?;
+        self.conn.execute(
+            "INSERT INTO context_metadata (entity_type, entity_key, context_json, updated_at)
+             VALUES (?1, ?2, ?3, ?4)
+             ON CONFLICT(entity_type, entity_key) DO UPDATE SET
+                context_json = excluded.context_json,
+                updated_at = excluded.updated_at",
+            params![entity_type, entity_key, context_json, updated_at],
+        )?;
+        Ok(())
+    }
+
+    pub fn context_metadata(
+        &self,
+        entity_type: &str,
+        entity_key: &str,
+    ) -> Result<Option<ContextMetadata>, DatabaseError> {
+        let json = self
+            .conn
+            .query_row(
+                "SELECT context_json FROM context_metadata
+                 WHERE entity_type = ?1 AND entity_key = ?2",
+                params![entity_type, entity_key],
+                |row| row.get::<_, String>(0),
+            )
+            .optional()?;
+        json.map(|json| serde_json::from_str(&json).map_err(DatabaseError::from))
+            .transpose()
     }
 
     pub fn consolidate_memories(
@@ -511,6 +667,30 @@ impl Database {
         Ok(memories)
     }
 
+    pub fn list_memories_by_ids(
+        &self,
+        memory_ids: &[i64],
+    ) -> Result<Vec<MemoryRecord>, DatabaseError> {
+        let mut memories = Vec::new();
+        for memory_id in memory_ids {
+            let memory = self
+                .conn
+                .query_row(
+                    "SELECT id, title, body, scope, source_turn_refs, created_at, updated_at,
+                            is_active, session_id, project_id, project_descriptor, lineage_refs
+                     FROM memories
+                     WHERE id = ?1",
+                    params![memory_id],
+                    read_memory_record,
+                )
+                .optional()?;
+            if let Some(memory) = memory {
+                memories.push(memory);
+            }
+        }
+        Ok(memories)
+    }
+
     pub fn list_active_memories_created_before(
         &self,
         observed_at: &str,
@@ -532,7 +712,7 @@ impl Database {
 
     pub fn list_turns(&self, limit: usize) -> Result<Vec<TurnRecord>, DatabaseError> {
         let mut stmt = self.conn.prepare(
-            "SELECT session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text
+            "SELECT session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text, cwd, context_json
              FROM turns
              ORDER BY observed_at, id
              LIMIT ?1",
@@ -550,7 +730,7 @@ impl Database {
         limit: usize,
     ) -> Result<Vec<(i64, TurnRecord)>, DatabaseError> {
         let mut stmt = self.conn.prepare(
-            "SELECT id, session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text
+            "SELECT id, session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text, cwd, context_json
              FROM turns
              ORDER BY observed_at, id
              LIMIT ?1",
@@ -717,6 +897,74 @@ impl Database {
         Ok(i64_to_u64(count))
     }
 
+    pub fn latest_task_updated_at(
+        &self,
+        kind: &str,
+        status: TaskStatus,
+    ) -> Result<Option<String>, DatabaseError> {
+        self.conn
+            .query_row(
+                "SELECT updated_at
+                 FROM tasks
+                 WHERE kind = ?1 AND status = ?2
+                 ORDER BY id DESC
+                 LIMIT 1",
+                params![kind, status.as_str()],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(DatabaseError::from)
+    }
+
+    pub fn latest_active_memory_created_at(&self) -> Result<Option<String>, DatabaseError> {
+        self.conn
+            .query_row(
+                "SELECT created_at
+                 FROM memories
+                 WHERE is_active = 1
+                 ORDER BY id DESC
+                 LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(DatabaseError::from)
+    }
+
+    pub fn list_recall_eval_tasks(
+        &self,
+        limit: usize,
+    ) -> Result<Vec<RecallEvalTaskRecord>, DatabaseError> {
+        let mut stmt = self.conn.prepare(
+            "SELECT id, status, attempts, max_attempts, next_run_at, last_error,
+                    json_extract(payload_json, '$.session_id') AS session_id,
+                    CAST(json_extract(payload_json, '$.turn_ordinal') AS INTEGER) AS turn_ordinal
+             FROM tasks
+             WHERE kind = 'recall_eval'
+               AND status IN ('queued', 'running')
+             ORDER BY id DESC
+             LIMIT ?1",
+        )?;
+        let rows = stmt.query_map(params![u64_to_i64(limit as u64)], |row| {
+            let turn_ordinal: Option<i64> = row.get(7)?;
+            Ok(RecallEvalTaskRecord {
+                id: row.get(0)?,
+                status: row.get(1)?,
+                attempts: i64_to_u64(row.get(2)?),
+                max_attempts: i64_to_u64(row.get(3)?),
+                next_run_at: row.get(4)?,
+                last_error: row.get(5)?,
+                session_id: row.get(6)?,
+                turn_ordinal: turn_ordinal.map(i64_to_u64),
+            })
+        })?;
+        let mut tasks = Vec::new();
+        for row in rows {
+            tasks.push(row?);
+        }
+        Ok(tasks)
+    }
+
     pub fn mark_task_running(&self, task_id: i64, updated_at: &str) -> Result<(), DatabaseError> {
         self.conn.execute(
             "UPDATE tasks
@@ -863,7 +1111,14 @@ impl Database {
     pub fn list_eval_runs(&self, limit: usize) -> Result<Vec<EvalRunRecord>, DatabaseError> {
         let mut stmt = self.conn.prepare(
             "SELECT r.id, r.strategy, r.started_at, r.completed_at, r.config_json,
-                    COUNT(er.id) AS result_count
+                    COUNT(er.id) AS result_count,
+                    json_extract(r.config_json, '$.session_id') AS session_id,
+                    CAST(json_extract(r.config_json, '$.turn_ordinal') AS INTEGER) AS turn_ordinal,
+                    CASE
+                        WHEN COUNT(er.judge_score) = 0 THEN NULL
+                        WHEN COUNT(DISTINCT er.judge_score) = 1 THEN MAX(er.judge_score)
+                        ELSE group_concat(DISTINCT er.judge_score)
+                    END AS score
              FROM eval_runs r
              LEFT JOIN eval_results er ON er.eval_run_id = r.id
              GROUP BY r.id, r.strategy, r.started_at, r.completed_at, r.config_json
@@ -882,7 +1137,14 @@ impl Database {
         self.conn
             .query_row(
                 "SELECT r.id, r.strategy, r.started_at, r.completed_at, r.config_json,
-                        COUNT(er.id) AS result_count
+                        COUNT(er.id) AS result_count,
+                        json_extract(r.config_json, '$.session_id') AS session_id,
+                        CAST(json_extract(r.config_json, '$.turn_ordinal') AS INTEGER) AS turn_ordinal,
+                        CASE
+                            WHEN COUNT(er.judge_score) = 0 THEN NULL
+                            WHEN COUNT(DISTINCT er.judge_score) = 1 THEN MAX(er.judge_score)
+                            ELSE group_concat(DISTINCT er.judge_score)
+                        END AS score
                  FROM eval_runs r
                  LEFT JOIN eval_results er ON er.eval_run_id = r.id
                  WHERE r.id = ?1
@@ -961,7 +1223,7 @@ impl Database {
 }
 
 fn configure_connection(conn: &Connection, enable_wal: bool) -> Result<(), DatabaseError> {
-    conn.busy_timeout(Duration::from_secs(5))?;
+    conn.busy_timeout(Duration::from_secs(30))?;
     conn.pragma_update(None, "foreign_keys", "ON")?;
     if enable_wal {
         conn.pragma_update(None, "journal_mode", "WAL")?;
@@ -1016,6 +1278,7 @@ fn read_session_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<SessionRecor
 }
 
 fn read_eval_run_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<EvalRunRecord> {
+    let turn_ordinal: Option<i64> = row.get(7)?;
     Ok(EvalRunRecord {
         id: row.get(0)?,
         strategy: row.get(1)?,
@@ -1023,6 +1286,9 @@ fn read_eval_run_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<EvalRunReco
         completed_at: row.get(3)?,
         config_json: row.get(4)?,
         result_count: i64_to_u64(row.get(5)?),
+        session_id: row.get(6)?,
+        turn_ordinal: turn_ordinal.map(i64_to_u64),
+        score: row.get(8)?,
     })
 }
 
@@ -1048,6 +1314,11 @@ fn read_turn_record_from_offset(
     offset: usize,
 ) -> rusqlite::Result<TurnRecord> {
     let status: String = row.get(offset + 6)?;
+    let context_json: Option<String> = row.get(offset + 9)?;
+    let context = match context_json {
+        Some(json) => Some(serde_json::from_str(&json).map_err(json_decode_error)?),
+        None => None,
+    };
     Ok(TurnRecord {
         session_id: row.get(offset)?,
         turn_id: row.get(offset + 1)?,
@@ -1060,6 +1331,8 @@ fn read_turn_record_from_offset(
             _ => yaaml_core::TurnStatus::Completed,
         },
         display_text: row.get(offset + 7)?,
+        cwd: row.get(offset + 8)?,
+        context,
     })
 }
 
@@ -1163,7 +1436,7 @@ mod tests {
             .query_row("PRAGMA synchronous", [], |row| row.get(0))
             .unwrap();
 
-        assert_eq!(busy_timeout_ms, 5_000);
+        assert_eq!(busy_timeout_ms, 30_000);
         assert_eq!(journal_mode.to_ascii_lowercase(), "wal");
         assert_eq!(synchronous, 1);
     }
@@ -1206,6 +1479,8 @@ mod tests {
             observed_at: Some("2026-06-08T00:01:00Z".to_string()),
             status: yaaml_core::TurnStatus::Completed,
             display_text: Some("hello".to_string()),
+            cwd: None,
+            context: None,
         };
 
         assert!(db.insert_turn(&turn).unwrap());
@@ -1413,6 +1688,37 @@ mod tests {
         assert_eq!(memories[1].source_turn_refs, source_refs);
         assert_eq!(memories[0].scope, MemoryScope::Project);
         assert_eq!(memories[1].scope, MemoryScope::Global);
+    }
+
+    #[test]
+    fn memory_insert_persists_context_metadata() {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+        let memory = MemoryRecord {
+            id: None,
+            title: "Sad Sack Signals".to_string(),
+            body: "forge-signalsmith lifecycle job context.".to_string(),
+            scope: MemoryScope::Project,
+            source_turn_refs: Vec::new(),
+            created_at: "2026-06-08T00:00:00Z".to_string(),
+            updated_at: "2026-06-08T00:00:00Z".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some("/Users/tbedor".to_string()),
+            project_descriptor: Some("tbedor, Node".to_string()),
+            lineage_refs: Vec::new(),
+        };
+
+        let memory_id = db.insert_memory(&memory).unwrap();
+        let context = db
+            .context_metadata("memory", &memory_id.to_string())
+            .unwrap()
+            .unwrap();
+
+        assert_eq!(context.work_area.as_deref(), Some("sad-sack-signals"));
+        assert!(context
+            .subject_tags
+            .contains(&"forge-signalsmith".to_string()));
     }
 
     #[test]

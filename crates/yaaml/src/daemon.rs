@@ -14,10 +14,12 @@ use anyhow::Context;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use serde_json::json;
 use yaaml_core::{
-    apply_project_bonus, build_recall_query, derive_project_descriptor, embedded_text_hash,
-    embedding_text, parse_eval_judge_response, parse_formulation_response, recall_file_path,
-    render_recall_markdown, session_recall_file_path, write_recall_file, Config, EmbeddingRecord,
-    RecallCandidate, RecallMemory, SourceTurnRef, TaskRecord, TaskStatus, VectorIndex,
+    apply_project_bonus, build_recall_query, context_score, derive_project_descriptor,
+    embedded_text_hash, embedding_text, find_consolidation_clusters, infer_context_from_memory,
+    parse_eval_judge_response, parse_formulation_response, recall_file_path,
+    render_recall_markdown, session_recall_file_path, write_recall_file, ClusterMemory, Config,
+    EmbeddingRecord, MemoryRecord, MemoryScope, RecallCandidate, RecallMemory, SourceTurnRef,
+    TaskRecord, TaskStatus, VectorIndex,
 };
 use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
@@ -26,7 +28,10 @@ use yaaml_store::{Database, SqliteExactVectorIndex};
 use yaaml_transcript::codex::parse_codex_file_from_offset_with_session;
 use yaaml_transcript::discovery::discover_codex_backlog;
 
+use crate::turn_hydration::{context_from_turns, hydrate_turns};
+
 pub const TASK_KIND_MEMORY_FORMULATION: &str = "memory_formulation";
+pub const TASK_KIND_MEMORY_CONSOLIDATION: &str = "memory_consolidation";
 pub const TASK_KIND_RECALL: &str = "recall";
 pub const TASK_KIND_RECALL_EVAL: &str = "recall_eval";
 
@@ -117,6 +122,7 @@ pub fn ingest_codex_file(db: &Database, transcript_path: &Path) -> anyhow::Resul
     for turn in &parsed.turns {
         let mut turn = turn.clone();
         turn.ordinal += ordinal_base;
+        turn.display_text = None;
         if db
             .insert_turn(&turn)
             .context("failed to persist Codex turn")?
@@ -274,6 +280,7 @@ pub fn run_queued_tasks(db: &Database, config: &Config, limit: usize) -> anyhow:
             .context("failed to mark task running")?;
         let result = match task.kind.as_str() {
             TASK_KIND_MEMORY_FORMULATION => run_memory_formulation_task(db, config, &task),
+            TASK_KIND_MEMORY_CONSOLIDATION => run_memory_consolidation_task(db, config, &task),
             TASK_KIND_RECALL => run_recall_task(db, config, &task),
             TASK_KIND_RECALL_EVAL => run_recall_eval_task(db, config, &task),
             _ => Ok(()),
@@ -283,6 +290,8 @@ pub fn run_queued_tasks(db: &Database, config: &Config, limit: usize) -> anyhow:
                 if task.kind == TASK_KIND_MEMORY_FORMULATION {
                     dedupe_active_memories(db, &unix_timestamp())
                         .context("failed to dedupe active memories")?;
+                    queue_memory_consolidation_if_due(db, config)
+                        .context("failed to queue memory consolidation")?;
                 }
                 db.complete_task(task_id, &unix_timestamp())
                     .context("failed to complete task")?;
@@ -335,6 +344,7 @@ fn run_memory_formulation_task(
         db.completed_turns_for_source_refs(&requested_source_turn_refs)
             .context("failed to load task source turns")?
     };
+    let turns = hydrate_turns(db, &turns).context("failed to hydrate formulation turns")?;
     if turns.is_empty() {
         return Ok(());
     }
@@ -392,6 +402,93 @@ fn run_memory_formulation_task(
     Ok(())
 }
 
+fn run_memory_consolidation_task(
+    db: &Database,
+    config: &Config,
+    task: &TaskRecord,
+) -> anyhow::Result<()> {
+    if should_defer_memory_consolidation(db, config, task)? {
+        defer_memory_consolidation(db, task).context("failed to defer memory consolidation")?;
+        return Ok(());
+    }
+
+    let cluster_memories = consolidation_cluster_memories(db, config)?;
+    let clusters = find_consolidation_clusters(
+        &cluster_memories,
+        config.memory_cluster_distance_threshold,
+        config.memory_cluster_min_size,
+        config.memory_cluster_max_size,
+    );
+    let Some(cluster) = clusters.first() else {
+        return Ok(());
+    };
+    let source_memories = db
+        .list_memories_by_ids(&cluster.memory_ids)
+        .context("failed to load consolidation source memories")?
+        .into_iter()
+        .filter(|memory| memory.is_active)
+        .collect::<Vec<_>>();
+    if source_memories.len() < config.memory_cluster_min_size {
+        return Ok(());
+    }
+
+    let scope = source_memories[0].scope;
+    let project_id = source_memories[0].project_id.clone();
+    let default_project_descriptor = source_memories[0]
+        .project_descriptor
+        .as_deref()
+        .unwrap_or("consolidated memory")
+        .to_string();
+    let prompt = consolidation_prompt(&source_memories);
+    let consolidation_client = AnthropicMessageClient::new(
+        AnthropicMessageConfig::consolidation_from_config(config),
+        ReqwestTransport::default(),
+    );
+    let value = consolidation_client
+        .structured_json(consolidation_system_prompt(), &prompt)
+        .context("failed to consolidate memories")?;
+    let mut drafts = parse_formulation_response(
+        &value,
+        &default_project_descriptor,
+        config.max_memory_length,
+    )
+    .context("failed to parse consolidated memory")?;
+    let Some(draft) = drafts.pop() else {
+        return Ok(());
+    };
+
+    let now = unix_timestamp();
+    let source_turn_refs = merged_source_turn_refs(&source_memories);
+    let mut consolidated = draft.into_record(source_turn_refs, now.clone(), None, project_id);
+    consolidated.scope = scope;
+    if consolidated.scope == MemoryScope::Global {
+        consolidated.project_id = None;
+    }
+    consolidated.lineage_refs = cluster.memory_ids.clone();
+
+    let text = embedding_text(&consolidated);
+    let embedding_client = OpenAiEmbeddingClient::new(
+        OpenAiEmbeddingConfig::from_config(config),
+        ReqwestTransport::default(),
+    );
+    let vector = embedding_client
+        .embed(&text)
+        .context("failed to embed consolidated memory")?;
+    let consolidated_id = db
+        .consolidate_memories(&cluster.memory_ids, &consolidated, &now)
+        .context("failed to persist consolidated memory")?;
+    db.upsert_embedding(&EmbeddingRecord {
+        memory_id: consolidated_id,
+        embedding_model: config.embedding_model.clone(),
+        dimensions: vector.len() as u64,
+        embedding_blob: yaaml_store::database::encode_f32_embedding(&vector),
+        embedded_text_hash: embedded_text_hash(&text),
+        updated_at: now,
+    })
+    .context("failed to persist consolidated memory embedding")?;
+    Ok(())
+}
+
 fn run_recall_task(db: &Database, config: &Config, task: &TaskRecord) -> anyhow::Result<()> {
     let payload: serde_json::Value =
         serde_json::from_str(&task.payload_json).context("failed to parse recall payload")?;
@@ -407,10 +504,13 @@ fn run_recall_task(db: &Database, config: &Config, task: &TaskRecord) -> anyhow:
         .session_by_id(session_id)
         .context("failed to load recall task session")?
         .context("recall task references missing session")?;
-    let start_ordinal = turn_ordinal.saturating_sub(2);
+    let window = u64::try_from(config.recall_live_turn_window).unwrap_or(u64::MAX);
+    let start_ordinal = turn_ordinal.saturating_add(1).saturating_sub(window.max(1));
     let recent_turns = db
         .completed_turns_for_session_range(session_id, start_ordinal, turn_ordinal + 1)
         .context("failed to load recall task turns")?;
+    let recent_turns =
+        hydrate_turns(db, &recent_turns).context("failed to hydrate recall turns")?;
     if recent_turns.is_empty() {
         return Ok(());
     }
@@ -465,6 +565,9 @@ fn run_recall_eval_task(db: &Database, config: &Config, task: &TaskRecord) -> an
                 .collect::<Vec<_>>()
         })
         .unwrap_or_default();
+    let rerun_for_eval_run_id = payload
+        .get("rerun_for_eval_run_id")
+        .and_then(serde_json::Value::as_i64);
     let Some(turn_row_id) = db
         .turn_row_id_for_session_ordinal(session_id, turn_ordinal)
         .context("failed to load recall eval anchor turn")?
@@ -476,7 +579,16 @@ fn run_recall_eval_task(db: &Database, config: &Config, task: &TaskRecord) -> an
     let later_turns = db
         .completed_turns_for_session_after_ordinal(session_id, turn_ordinal, 20)
         .context("failed to load turns after recall")?;
+    let later_turns =
+        hydrate_turns(db, &later_turns).context("failed to hydrate recall eval turns")?;
     let now = unix_timestamp();
+    if later_turns.is_empty()
+        && should_defer_recall_eval_for_later_turns(db, config, task, session_id)?
+    {
+        defer_recall_eval_until_later_turns_exist(db, task)
+            .context("failed to defer recall eval task")?;
+        return Ok(());
+    }
     let run_id = db
         .insert_eval_run(
             "recall_1_to_5",
@@ -485,30 +597,51 @@ fn run_recall_eval_task(db: &Database, config: &Config, task: &TaskRecord) -> an
                 "session_id": session_id,
                 "turn_ordinal": turn_ordinal,
                 "memory_ids": memory_ids,
+                "rerun_for_eval_run_id": rerun_for_eval_run_id,
                 "rating_delay_seconds": 600,
                 "rubric": "1-5 recall relevance, concision, and actionability",
             })
             .to_string(),
         )
         .context("failed to create recall eval run")?;
+    let eval_targets = recall_eval_targets(db, &memory_ids, recall_text)
+        .context("failed to build recall eval targets")?;
+    if later_turns.is_empty() {
+        for target in &eval_targets {
+            db.insert_eval_result(
+                run_id,
+                turn_row_id,
+                target.memory_id,
+                "insufficient_context",
+                "No subsequent completed turns were captured after recall, so recall usefulness cannot be scored.",
+                &now,
+            )
+            .context("failed to insert insufficient-context recall eval result")?;
+        }
+        db.complete_eval_run(run_id, &unix_timestamp())
+            .context("failed to complete recall eval run")?;
+        return Ok(());
+    }
     let judge_client = AnthropicMessageClient::new(
         AnthropicMessageConfig::judge_from_config(config),
         ReqwestTransport::default(),
     );
-    let prompt = recall_eval_prompt(recall_text, &later_turns);
-    let outcome = judge_client
-        .structured_json(recall_eval_system_prompt(), &prompt)
-        .map(|value| parse_eval_judge_response(&value))
-        .context("failed to rate recall")?;
-    db.insert_eval_result(
-        run_id,
-        turn_row_id,
-        memory_ids.first().copied(),
-        &outcome.score,
-        &outcome.rationale,
-        &now,
-    )
-    .context("failed to insert recall eval result")?;
+    for target in &eval_targets {
+        let prompt = recall_eval_prompt(&target.recall_text, &later_turns);
+        let outcome = judge_client
+            .structured_json(recall_eval_system_prompt(), &prompt)
+            .map(|value| parse_eval_judge_response(&value))
+            .context("failed to rate recall")?;
+        db.insert_eval_result(
+            run_id,
+            turn_row_id,
+            target.memory_id,
+            &outcome.score,
+            &outcome.rationale,
+            &now,
+        )
+        .context("failed to insert recall eval result")?;
+    }
     db.complete_eval_run(run_id, &unix_timestamp())
         .context("failed to complete recall eval run")?;
     Ok(())
@@ -534,6 +667,362 @@ fn defer_recall_eval_until_anchor_exists(db: &Database, task: &TaskRecord) -> an
         .context("failed to enqueue deferred recall eval task")
 }
 
+fn should_defer_recall_eval_for_later_turns(
+    db: &Database,
+    config: &Config,
+    task: &TaskRecord,
+    session_id: &str,
+) -> anyhow::Result<bool> {
+    if task.attempts.saturating_add(1) >= task.max_attempts {
+        return Ok(false);
+    }
+    let Some(session) = db
+        .session_by_id(session_id)
+        .context("failed to load recall eval session")?
+    else {
+        return Ok(false);
+    };
+    Ok(!session_is_idle(&session, config))
+}
+
+fn defer_recall_eval_until_later_turns_exist(
+    db: &Database,
+    task: &TaskRecord,
+) -> anyhow::Result<i64> {
+    let next_run_seconds = unix_timestamp_seconds() + 600;
+    let now = format!("unix:{}", unix_timestamp_seconds());
+    let deferred = TaskRecord {
+        id: None,
+        kind: task.kind.clone(),
+        status: TaskStatus::Queued,
+        priority: task.priority,
+        payload_json: task.payload_json.clone(),
+        attempts: task.attempts.saturating_add(1),
+        max_attempts: task.max_attempts,
+        next_run_at: Some(format!("unix:{next_run_seconds}")),
+        last_error: Some("waiting for subsequent turns before recall eval".to_string()),
+        created_at: task.created_at.clone(),
+        updated_at: now,
+    };
+    db.enqueue_task(&deferred)
+        .context("failed to enqueue deferred recall eval task")
+}
+
+struct RecallEvalTarget {
+    memory_id: Option<i64>,
+    recall_text: String,
+}
+
+fn recall_eval_targets(
+    db: &Database,
+    memory_ids: &[i64],
+    fallback_recall_text: &str,
+) -> anyhow::Result<Vec<RecallEvalTarget>> {
+    if memory_ids.is_empty() {
+        return Ok(vec![RecallEvalTarget {
+            memory_id: None,
+            recall_text: fallback_recall_text.to_string(),
+        }]);
+    }
+    let memories = db
+        .list_memories_by_ids(memory_ids)
+        .context("failed to load recall eval memories")?;
+    let mut targets = Vec::new();
+    for memory_id in memory_ids {
+        if let Some(memory) = memories.iter().find(|memory| memory.id == Some(*memory_id)) {
+            targets.push(RecallEvalTarget {
+                memory_id: Some(*memory_id),
+                recall_text: recall_eval_memory_text(memory),
+            });
+        }
+    }
+    if targets.is_empty() {
+        targets.push(RecallEvalTarget {
+            memory_id: None,
+            recall_text: fallback_recall_text.to_string(),
+        });
+    }
+    Ok(targets)
+}
+
+fn reconstruct_recall_eval_text(db: &Database, memory_ids: &[i64]) -> anyhow::Result<String> {
+    let memories = db
+        .list_memories_by_ids(memory_ids)
+        .context("failed to load stale recall eval memories")?;
+    let mut text = String::new();
+    for memory_id in memory_ids {
+        if let Some(memory) = memories.iter().find(|memory| memory.id == Some(*memory_id)) {
+            if !text.is_empty() {
+                text.push('\n');
+            }
+            text.push_str(&recall_eval_memory_text(memory));
+        }
+    }
+    Ok(text)
+}
+
+fn recall_eval_memory_text(memory: &MemoryRecord) -> String {
+    format!(
+        "## {}\n\n{}\n\ncreated_at: {}\noriginating_project: {}\n",
+        memory.title,
+        memory.body,
+        memory.created_at,
+        memory.project_descriptor.as_deref().unwrap_or("unknown")
+    )
+}
+
+pub fn queue_stale_recall_eval_tasks(db: &Database, limit: usize) -> anyhow::Result<u64> {
+    let runs = db
+        .list_eval_runs(200)
+        .context("failed to list eval runs for stale recall eval queue")?;
+    let mut queued = 0_u64;
+    for run in runs {
+        if queued as usize >= limit {
+            break;
+        }
+        if run.score.as_deref() != Some("insufficient_context") {
+            continue;
+        }
+        if db
+            .recall_eval_rerun_exists(run.id)
+            .context("failed to check recall eval rerun state")?
+        {
+            continue;
+        }
+        let config_json = serde_json::from_str::<serde_json::Value>(&run.config_json)
+            .context("failed to parse eval run config")?;
+        if config_json
+            .get("rerun_for_eval_run_id")
+            .and_then(serde_json::Value::as_i64)
+            .is_some()
+        {
+            continue;
+        }
+        let Some(session_id) = run.session_id.as_deref() else {
+            continue;
+        };
+        let Some(turn_ordinal) = run.turn_ordinal else {
+            continue;
+        };
+        let later_turns = db
+            .completed_turns_for_session_after_ordinal(session_id, turn_ordinal, 1)
+            .context("failed to check later turns for stale recall eval")?;
+        if later_turns.is_empty() {
+            continue;
+        }
+        let memory_ids = config_json
+            .get("memory_ids")
+            .and_then(serde_json::Value::as_array)
+            .map(|ids| {
+                ids.iter()
+                    .filter_map(serde_json::Value::as_i64)
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
+        let recall_text = reconstruct_recall_eval_text(db, &memory_ids)
+            .context("failed to reconstruct stale recall eval text")?;
+        if recall_text.trim().is_empty() {
+            continue;
+        }
+        let payload_json = json!({
+            "session_id": session_id,
+            "turn_ordinal": turn_ordinal,
+            "recall_text": recall_text,
+            "memory_ids": memory_ids,
+            "rerun_for_eval_run_id": run.id,
+        })
+        .to_string();
+        if db
+            .task_payload_exists(TASK_KIND_RECALL_EVAL, &payload_json)
+            .context("failed to check stale recall eval task")?
+        {
+            continue;
+        }
+        let now = unix_timestamp();
+        db.enqueue_task(&TaskRecord {
+            id: None,
+            kind: TASK_KIND_RECALL_EVAL.to_string(),
+            status: TaskStatus::Queued,
+            priority: 0,
+            payload_json,
+            attempts: 0,
+            max_attempts: 5,
+            next_run_at: None,
+            last_error: None,
+            created_at: now.clone(),
+            updated_at: now,
+        })
+        .context("failed to enqueue stale recall eval task")?;
+        queued += 1;
+    }
+    Ok(queued)
+}
+
+pub fn queue_memory_consolidation_if_due(
+    db: &Database,
+    config: &Config,
+) -> anyhow::Result<Option<i64>> {
+    let active_tasks = db
+        .count_tasks_by_status(TASK_KIND_MEMORY_CONSOLIDATION, TaskStatus::Queued)
+        .context("failed to count queued consolidation tasks")?
+        + db.count_tasks_by_status(TASK_KIND_MEMORY_CONSOLIDATION, TaskStatus::Running)
+            .context("failed to count running consolidation tasks")?
+        + db.count_tasks_by_status(TASK_KIND_MEMORY_CONSOLIDATION, TaskStatus::Parked)
+            .context("failed to count parked consolidation tasks")?;
+    if active_tasks > 0 {
+        return Ok(None);
+    }
+
+    let Some(latest_memory_created_at) = db
+        .latest_active_memory_created_at()
+        .context("failed to load latest active memory timestamp")?
+    else {
+        return Ok(None);
+    };
+    if let Some(latest_completed_at) = db
+        .latest_task_updated_at(TASK_KIND_MEMORY_CONSOLIDATION, TaskStatus::Completed)
+        .context("failed to load latest consolidation timestamp")?
+    {
+        if let (Some(memory_seconds), Some(completed_seconds)) = (
+            timestamp_seconds(&latest_memory_created_at),
+            timestamp_seconds(&latest_completed_at),
+        ) {
+            if completed_seconds >= memory_seconds {
+                if !active_consolidation_cluster_exists(db, config)
+                    .context("failed to check active consolidation clusters")?
+                {
+                    return Ok(None);
+                }
+            }
+        }
+    }
+
+    let latest_memory_seconds =
+        timestamp_seconds(&latest_memory_created_at).unwrap_or_else(unix_timestamp_seconds);
+    let next_run_seconds =
+        latest_memory_seconds.saturating_add(config.consolidation_dark_period_seconds as i64);
+    let now = unix_timestamp();
+    let task = TaskRecord {
+        id: None,
+        kind: TASK_KIND_MEMORY_CONSOLIDATION.to_string(),
+        status: TaskStatus::Queued,
+        priority: -10,
+        payload_json: json!({"reason":"memory_dark_period"}).to_string(),
+        attempts: 0,
+        max_attempts: 20,
+        next_run_at: Some(format!("unix:{next_run_seconds}")),
+        last_error: None,
+        created_at: now.clone(),
+        updated_at: now,
+    };
+    db.enqueue_task(&task)
+        .map(Some)
+        .context("failed to enqueue memory consolidation task")
+}
+
+fn active_consolidation_cluster_exists(db: &Database, config: &Config) -> anyhow::Result<bool> {
+    let cluster_memories = consolidation_cluster_memories(db, config)?;
+    Ok(find_consolidation_clusters(
+        &cluster_memories,
+        config.memory_cluster_distance_threshold,
+        config.memory_cluster_min_size,
+        config.memory_cluster_max_size,
+    )
+    .first()
+    .is_some())
+}
+
+fn should_defer_memory_consolidation(
+    db: &Database,
+    config: &Config,
+    task: &TaskRecord,
+) -> anyhow::Result<bool> {
+    if task.attempts.saturating_add(1) >= task.max_attempts {
+        return Ok(false);
+    }
+    let Some(latest_memory_created_at) = db
+        .latest_active_memory_created_at()
+        .context("failed to load latest active memory timestamp")?
+    else {
+        return Ok(false);
+    };
+    let Some(latest_memory_seconds) = timestamp_seconds(&latest_memory_created_at) else {
+        return Ok(false);
+    };
+    let elapsed = unix_timestamp_seconds().saturating_sub(latest_memory_seconds) as u64;
+    Ok(elapsed < config.consolidation_dark_period_seconds)
+}
+
+fn defer_memory_consolidation(db: &Database, task: &TaskRecord) -> anyhow::Result<i64> {
+    let next_run_seconds = unix_timestamp_seconds() + 60;
+    let now = unix_timestamp();
+    let deferred = TaskRecord {
+        id: None,
+        kind: task.kind.clone(),
+        status: TaskStatus::Queued,
+        priority: task.priority,
+        payload_json: task.payload_json.clone(),
+        attempts: task.attempts.saturating_add(1),
+        max_attempts: task.max_attempts,
+        next_run_at: Some(format!("unix:{next_run_seconds}")),
+        last_error: Some("waiting for memory consolidation dark period".to_string()),
+        created_at: task.created_at.clone(),
+        updated_at: now,
+    };
+    db.enqueue_task(&deferred)
+        .context("failed to enqueue deferred memory consolidation task")
+}
+
+fn consolidation_cluster_memories(
+    db: &Database,
+    config: &Config,
+) -> anyhow::Result<Vec<ClusterMemory>> {
+    let memories = db.list_memories().context("failed to list memories")?;
+    let mut cluster_memories = Vec::new();
+    for memory in memories.into_iter().filter(|memory| memory.is_active) {
+        let Some(memory_id) = memory.id else {
+            continue;
+        };
+        let Some(embedding) = db
+            .get_embedding(memory_id)
+            .context("failed to load memory embedding")?
+        else {
+            continue;
+        };
+        if embedding.embedding_model != config.embedding_model {
+            continue;
+        }
+        let Some(vector) = yaaml_store::database::decode_f32_embedding(&embedding.embedding_blob)
+        else {
+            continue;
+        };
+        cluster_memories.push(ClusterMemory {
+            memory_id,
+            scope: memory.scope,
+            project_id: memory.project_id,
+            title: memory.title,
+            body: memory.body,
+            lineage_refs: memory.lineage_refs,
+            embedding: vector,
+        });
+    }
+    Ok(cluster_memories)
+}
+
+fn merged_source_turn_refs(memories: &[MemoryRecord]) -> Vec<SourceTurnRef> {
+    let mut seen = HashSet::new();
+    let mut refs = Vec::new();
+    for memory in memories {
+        for source_ref in &memory.source_turn_refs {
+            let key = (source_ref.session_id.clone(), source_ref.ordinal);
+            if seen.insert(key) {
+                refs.push(source_ref.clone());
+            }
+        }
+    }
+    refs
+}
+
 fn formulation_system_prompt() -> &'static str {
     concat!(
         "Create concise durable memories from coding-agent transcript turns. ",
@@ -542,6 +1031,17 @@ fn formulation_system_prompt() -> &'static str {
         "Focus memories on insights gained while solving the problem and on redirection provided by the user. ",
         "Always capture repeated user corrections, preferences, and process guidance as their own concise memories, including coding style preferences such as functional vs imperative style. ",
         "Use project scope when the preference is tied to the current project or language; use global scope only for durable cross-project user preferences or agent workflow patterns."
+    )
+}
+
+fn consolidation_system_prompt() -> &'static str {
+    concat!(
+        "Merge overlapping coding-agent memories into one concise durable memory. ",
+        "Return only JSON shaped as {\"memories\":[{\"title\":\"...\",\"body\":\"...\",\"scope\":\"project\"|\"global\",\"project_descriptor\":\"...\"}]}. ",
+        "Preserve concrete facts, durable user preferences, commands, file paths, project state, and unresolved follow-up context. ",
+        "Remove repetition and transient narration. ",
+        "Do not invent facts not present in the source memories. ",
+        "Return exactly one memory."
     )
 }
 
@@ -577,6 +1077,23 @@ fn formulation_prompt(
             config.tool_call_truncation_chars,
         );
         prompt.push_str(&format!("\nTurn {}:\n{}\n", turn.ordinal, text));
+    }
+    prompt
+}
+
+fn consolidation_prompt(memories: &[MemoryRecord]) -> String {
+    let mut prompt = String::from(
+        "Consolidate these overlapping memories into exactly one replacement memory. Keep it specific and actionable.\n\n",
+    );
+    for memory in memories {
+        prompt.push_str(&format!(
+            "Memory {}\nTitle: {}\nScope: {}\nProject: {}\nBody:\n{}\n\n",
+            memory.id.unwrap_or_default(),
+            truncate_chars(&memory.title, 300),
+            memory.scope.as_str(),
+            memory.project_descriptor.as_deref().unwrap_or("unknown"),
+            truncate_chars(&memory.body, 3_000)
+        ));
     }
     prompt
 }
@@ -957,6 +1474,12 @@ pub fn queue_recall_eval_after_turn(
     priority: i64,
 ) -> anyhow::Result<i64> {
     let now_seconds = unix_timestamp_seconds();
+    if db
+        .recall_eval_exists_for_anchor(session_id, turn_ordinal)
+        .context("failed to check existing recall eval task")?
+    {
+        return Ok(0);
+    }
     let payload = json!({
         "session_id": session_id,
         "turn_ordinal": turn_ordinal,
@@ -1005,21 +1528,30 @@ pub fn refresh_recall_with_embedding(
         .list_active_memories_by_ids(&hit_ids)
         .context("failed to load active memories")?;
     let project_id_string = project_id.display().to_string();
-    let candidates = hits
+    let query_text = build_recall_query(
+        recent_turns,
+        config.recall_query_max_chars,
+        config.tool_call_truncation_chars,
+    );
+    let query_context = context_from_turns(recent_turns, project_id, &query_text);
+    let mut candidates = hits
         .iter()
         .filter_map(|hit| {
             memories
                 .iter()
                 .find(|memory| memory.id == Some(hit.memory_id))
-                .map(|memory| RecallCandidate {
-                    memory_id: hit.memory_id,
-                    similarity: hit.similarity,
-                    score: hit.similarity,
-                    project_id: memory.project_id.clone(),
+                .map(|memory| {
+                    let memory_context = infer_context_from_memory(memory);
+                    RecallCandidate {
+                        memory_id: hit.memory_id,
+                        similarity: hit.similarity,
+                        score: hit.similarity + context_score(&query_context, &memory_context),
+                        project_id: memory.project_id.clone(),
+                    }
                 })
         })
         .collect::<Vec<_>>();
-    let candidates = if config.recall_project_tiebreaker {
+    candidates = if config.recall_project_tiebreaker {
         apply_project_bonus(
             candidates,
             &project_id_string,
@@ -1028,6 +1560,13 @@ pub fn refresh_recall_with_embedding(
     } else {
         candidates
     };
+    candidates.sort_by(|left, right| {
+        right
+            .score
+            .partial_cmp(&left.score)
+            .unwrap_or(std::cmp::Ordering::Equal)
+            .then_with(|| left.memory_id.cmp(&right.memory_id))
+    });
     let selected = candidates
         .into_iter()
         .take(config.recall_result_limit)
@@ -1070,7 +1609,7 @@ pub fn refresh_recall_with_embedding(
     let recall_dir = config.recall_dir()?;
     let path = recent_turns
         .last()
-        .map(|turn| session_recall_file_path(&recall_dir, project_id, &turn.session_id))
+        .map(|turn| session_recall_file_path(&recall_dir, &turn.session_id))
         .unwrap_or_else(|| recall_file_path(&recall_dir, project_id));
     let write = write_recall_file(&path, &rendered, &selected_ids)
         .context("failed to write recall file")?;
@@ -1191,6 +1730,8 @@ mod tests {
             observed_at: None,
             status: yaaml_core::TurnStatus::Completed,
             display_text: Some(format!("user text\ntool output: {}", "x".repeat(10_000))),
+            cwd: None,
+            context: None,
         }];
 
         let prompt = formulation_prompt(&config, "yaaml", &turns);

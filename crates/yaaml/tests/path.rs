@@ -69,8 +69,7 @@ fn path_prefers_current_session_recall_file() {
         "stderr: {}",
         String::from_utf8_lossy(&output.stderr)
     );
-    let expected =
-        session_recall_file_path(&recall_dir, &project.canonicalize().unwrap(), "session-1");
+    let expected = session_recall_file_path(&recall_dir, "session-1");
 
     assert_eq!(
         String::from_utf8_lossy(&output.stdout).trim(),
@@ -138,8 +137,7 @@ recall_dir = "{}"
         "stderr: {}",
         String::from_utf8_lossy(&output.stderr)
     );
-    let expected =
-        session_recall_file_path(&recall_dir, &project.canonicalize().unwrap(), "new-session");
+    let expected = session_recall_file_path(&recall_dir, "new-session");
 
     assert_eq!(
         String::from_utf8_lossy(&output.stdout).trim(),

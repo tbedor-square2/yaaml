@@ -88,6 +88,8 @@ mod tests {
             observed_at: Some(format!("2026-06-08T00:00:0{ordinal}Z")),
             status: TurnStatus::Completed,
             display_text: Some(text.to_string()),
+            cwd: None,
+            context: None,
         }
     }
 

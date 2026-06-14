@@ -50,6 +50,8 @@ pub struct TurnRecord {
     pub observed_at: Option<String>,
     pub status: TurnStatus,
     pub display_text: Option<String>,
+    pub cwd: Option<String>,
+    pub context: Option<crate::ContextMetadata>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

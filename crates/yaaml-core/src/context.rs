@@ -26,7 +26,7 @@ impl ContextMetadata {
         self.subject_tags = self
             .subject_tags
             .into_iter()
-            .filter_map(|tag| normalize_optional_tag(tag))
+            .filter_map(normalize_optional_tag)
             .filter(|tag| seen.insert(tag.clone()))
             .collect();
         self
@@ -370,10 +370,8 @@ fn remote_url_slug(url: &str) -> Option<String> {
         rest
     } else if let Some(rest) = trimmed.strip_prefix("https://github.com/") {
         rest
-    } else if let Some(rest) = trimmed.strip_prefix("ssh://git@github.com/") {
-        rest
     } else {
-        return None;
+        trimmed.strip_prefix("ssh://git@github.com/")?
     };
     let mut parts = path.split('/');
     let owner = parts.next()?;

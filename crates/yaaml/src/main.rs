@@ -1,5 +1,5 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use std::{env, fs};
@@ -908,7 +908,7 @@ fn build_eval_summary(db: &Database, runs: Vec<EvalRunRecord>) -> anyhow::Result
             }
         })
         .collect::<Vec<_>>();
-    session_breakdown.sort_by(|left, right| right.latest_run_id.cmp(&left.latest_run_id));
+    session_breakdown.sort_by_key(|session| std::cmp::Reverse(session.latest_run_id));
     let queued_recall_evals = db
         .list_recall_eval_tasks(20)
         .context("failed to list recall eval tasks")?
@@ -1483,12 +1483,14 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
     let recall_result = recall_from_embedding(
         &db,
         &config,
-        &query_embedding,
-        &project_id,
-        &query,
-        None,
-        "user input".to_string(),
-        now.clone(),
+        RecallEmbeddingRequest {
+            query_embedding: &query_embedding,
+            project_id: &project_id,
+            query_text: &query,
+            query_context: None,
+            query_source: "user input".to_string(),
+            query_timestamp: now.clone(),
+        },
     )?;
     let rendered = recall_result.markdown;
     let selected_ids = recall_result.selected_memory_ids;
@@ -1574,12 +1576,14 @@ fn refresh_missing_recall_file(
     let result = recall_from_embedding(
         db,
         config,
-        &query_embedding,
-        &session.project_id,
-        &query,
-        Some(query_context),
-        query_source,
-        now,
+        RecallEmbeddingRequest {
+            query_embedding: &query_embedding,
+            project_id: &session.project_id,
+            query_text: &query,
+            query_context: Some(query_context),
+            query_source,
+            query_timestamp: now,
+        },
     )?;
     if result.selected_memory_ids.is_empty() {
         return Ok(None);
@@ -1743,12 +1747,14 @@ fn recall_for_historical_turn(
     let result = recall_from_embedding(
         db,
         config,
-        &query_embedding,
-        &session.project_id,
-        &query,
-        Some(query_context),
-        query_source,
-        now,
+        RecallEmbeddingRequest {
+            query_embedding: &query_embedding,
+            project_id: &session.project_id,
+            query_text: &query,
+            query_context: Some(query_context),
+            query_source,
+            query_timestamp: now,
+        },
     )?;
 
     if args.json {
@@ -1773,21 +1779,28 @@ fn recall_for_historical_turn(
     Ok(())
 }
 
-fn recall_from_embedding(
-    db: &Database,
-    config: &Config,
-    query_embedding: &[f32],
-    project_id: &str,
-    query_text: &str,
+struct RecallEmbeddingRequest<'a> {
+    query_embedding: &'a [f32],
+    project_id: &'a str,
+    query_text: &'a str,
     query_context: Option<ContextMetadata>,
     query_source: String,
     query_timestamp: String,
+}
+
+fn recall_from_embedding(
+    db: &Database,
+    config: &Config,
+    request: RecallEmbeddingRequest<'_>,
 ) -> anyhow::Result<RecallSearchResult> {
-    let index =
-        SqliteExactVectorIndex::new(db, config.embedding_model.clone(), query_timestamp.clone());
+    let index = SqliteExactVectorIndex::new(
+        db,
+        config.embedding_model.clone(),
+        request.query_timestamp.clone(),
+    );
     let hits = index
         .search(
-            query_embedding,
+            request.query_embedding,
             config.recall_candidate_pool,
             config.recall_similarity_threshold,
         )
@@ -1796,9 +1809,12 @@ fn recall_from_embedding(
     let memories = db
         .list_active_memories_by_ids(&hit_ids)
         .context("failed to load matching memories")?;
-    let query_context = query_context.unwrap_or_else(|| {
-        let mut query_context = infer_context_from_path(std::path::Path::new(project_id));
-        merge_contexts(&mut query_context, infer_context_from_text(query_text));
+    let query_context = request.query_context.unwrap_or_else(|| {
+        let mut query_context = infer_context_from_path(Path::new(request.project_id));
+        merge_contexts(
+            &mut query_context,
+            infer_context_from_text(request.query_text),
+        );
         query_context
     });
     let mut candidates = hits
@@ -1819,7 +1835,11 @@ fn recall_from_embedding(
         })
         .collect::<Vec<_>>();
     candidates = if config.recall_project_tiebreaker {
-        apply_project_bonus(candidates, project_id, config.recall_project_score_bonus)
+        apply_project_bonus(
+            candidates,
+            request.project_id,
+            config.recall_project_score_bonus,
+        )
     } else {
         candidates
     };
@@ -1859,15 +1879,15 @@ fn recall_from_embedding(
         })
         .collect::<Vec<_>>();
     let markdown = render_recall_markdown(
-        &query_timestamp,
-        &query_source,
-        project_id,
+        &request.query_timestamp,
+        &request.query_source,
+        request.project_id,
         &recall_memories,
     );
     Ok(RecallSearchResult {
-        query_timestamp,
-        query_source,
-        project_id: project_id.to_string(),
+        query_timestamp: request.query_timestamp,
+        query_source: request.query_source,
+        project_id: request.project_id.to_string(),
         selected_memory_ids,
         memories: recall_memories,
         markdown,
@@ -2032,7 +2052,7 @@ fn print_human_status(status: &yaaml_core::status::Status) {
     println!("  parked jobs: {}", status.parked_jobs);
 }
 
-fn display(path: &PathBuf) -> String {
+fn display(path: &Path) -> String {
     path.display().to_string()
 }
 
@@ -2068,7 +2088,7 @@ fn human_timestamp(timestamp: &str) -> String {
 
 #[cfg(unix)]
 fn local_human_timestamp(seconds: i64) -> Option<String> {
-    let time: libc::time_t = seconds.try_into().ok()?;
+    let time: libc::time_t = seconds;
     let mut local_time = std::mem::MaybeUninit::<libc::tm>::uninit();
     let format = b"%Y-%m-%d %H:%M:%S %Z\0";
     let mut buffer = [0 as libc::c_char; 64];

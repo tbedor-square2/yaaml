@@ -339,8 +339,10 @@ fn historical_memory_queue_batches_all_completed_turns() {
     let mut db = Database::in_memory().unwrap();
     db.migrate().unwrap();
     ingest_codex_file(&db, &transcript).unwrap();
-    let mut config = Config::default();
-    config.backlog_formulation_turn_window = 10;
+    let config = Config {
+        backlog_formulation_turn_window: 10,
+        ..Config::default()
+    };
 
     let queued =
         queue_missing_memory_formulation_tasks(&db, &config, 0, PartialBatchPolicy::Include)
@@ -392,8 +394,10 @@ fn memory_queue_skips_already_covered_source_refs() {
         lineage_refs: Vec::new(),
     })
     .unwrap();
-    let mut config = Config::default();
-    config.backlog_formulation_turn_window = 10;
+    let config = Config {
+        backlog_formulation_turn_window: 10,
+        ..Config::default()
+    };
 
     let queued =
         queue_missing_memory_formulation_tasks(&db, &config, 0, PartialBatchPolicy::Include)
@@ -472,8 +476,10 @@ fn consolidation_scheduler_queues_one_delayed_task_for_new_memories() {
         Some("/tmp/yaaml"),
     ))
     .unwrap();
-    let mut config = Config::default();
-    config.consolidation_dark_period_seconds = 300;
+    let config = Config {
+        consolidation_dark_period_seconds: 300,
+        ..Config::default()
+    };
 
     let queued = queue_memory_consolidation_if_due(&db, &config).unwrap();
     let duplicate = queue_memory_consolidation_if_due(&db, &config).unwrap();
@@ -538,8 +544,10 @@ fn consolidation_scheduler_requeues_when_active_cluster_still_exists() {
         })
         .unwrap();
     db.complete_task(task_id, "2026-06-08T00:05:01Z").unwrap();
-    let mut config = Config::default();
-    config.consolidation_dark_period_seconds = 0;
+    let config = Config {
+        consolidation_dark_period_seconds: 0,
+        ..Config::default()
+    };
 
     let queued = queue_memory_consolidation_if_due(&db, &config).unwrap();
 
@@ -611,11 +619,13 @@ fn consolidation_task_merges_top_cluster_and_preserves_lineage() {
         updated_at: "2026-06-08T00:00:00Z".to_string(),
     })
     .unwrap();
-    let mut config = Config::default();
-    config.consolidation_api_key_env = "YAAML_TEST_CONSOLIDATION_KEY".to_string();
-    config.consolidation_base_url = Some(anthropic.base_url.clone());
-    config.embedding_api_key_env = "YAAML_TEST_OPENAI_KEY".to_string();
-    config.embedding_base_url = Some(embedding.base_url.clone());
+    let config = Config {
+        consolidation_api_key_env: "YAAML_TEST_CONSOLIDATION_KEY".to_string(),
+        consolidation_base_url: Some(anthropic.base_url.clone()),
+        embedding_api_key_env: "YAAML_TEST_OPENAI_KEY".to_string(),
+        embedding_base_url: Some(embedding.base_url.clone()),
+        ..Config::default()
+    };
 
     assert_eq!(run_queued_tasks(&db, &config, 1).unwrap(), 1);
     anthropic.join();
@@ -796,9 +806,11 @@ fn recall_eval_scores_each_recalled_memory() {
         updated_at: "2026-06-08T00:00:00Z".to_string(),
     })
     .unwrap();
-    let mut config = Config::default();
-    config.eval_judge_api_key_env = "YAAML_TEST_EVAL_KEY".to_string();
-    config.eval_judge_base_url = Some(judge.base_url.clone());
+    let config = Config {
+        eval_judge_api_key_env: "YAAML_TEST_EVAL_KEY".to_string(),
+        eval_judge_base_url: Some(judge.base_url.clone()),
+        ..Config::default()
+    };
 
     assert_eq!(run_queued_tasks(&db, &config, 1).unwrap(), 1);
     judge.join();
@@ -840,8 +852,10 @@ fn queued_memory_task_parks_when_provider_is_unavailable() {
         updated_at: "2026-06-08T00:00:00Z".to_string(),
     })
     .unwrap();
-    let mut config = Config::default();
-    config.summary_api_key_env = "YAAML_TEST_MISSING_ANTHROPIC_KEY".to_string();
+    let config = Config {
+        summary_api_key_env: "YAAML_TEST_MISSING_ANTHROPIC_KEY".to_string(),
+        ..Config::default()
+    };
 
     assert_eq!(run_queued_tasks(&db, &config, 1).unwrap(), 0);
     let status = db.status().unwrap();
@@ -895,8 +909,10 @@ fn queued_recall_task_parks_when_embedding_provider_is_unavailable() {
         updated_at: "2026-06-08T00:00:00Z".to_string(),
     })
     .unwrap();
-    let mut config = Config::default();
-    config.embedding_api_key_env = "YAAML_TEST_MISSING_RECALL_OPENAI_KEY".to_string();
+    let config = Config {
+        embedding_api_key_env: "YAAML_TEST_MISSING_RECALL_OPENAI_KEY".to_string(),
+        ..Config::default()
+    };
 
     assert_eq!(run_queued_tasks(&db, &config, 1).unwrap(), 0);
     let status = db.status().unwrap();
@@ -909,8 +925,10 @@ fn queued_recall_task_parks_when_embedding_provider_is_unavailable() {
 #[test]
 fn recall_file_is_written_after_memory_exists_and_new_turn_completes() {
     let tmp = TempDir::new().unwrap();
-    let mut config = Config::default();
-    config.recall_dir = tmp.path().join("recall").display().to_string();
+    let config = Config {
+        recall_dir: tmp.path().join("recall").display().to_string(),
+        ..Config::default()
+    };
     let mut db = Database::in_memory().unwrap();
     db.migrate().unwrap();
     let project = tmp.path().join("project");

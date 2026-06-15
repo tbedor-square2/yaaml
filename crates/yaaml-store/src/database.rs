@@ -1369,7 +1369,7 @@ fn json_decode_error(error: serde_json::Error) -> rusqlite::Error {
 }
 
 pub fn encode_f32_embedding(values: &[f32]) -> Vec<u8> {
-    let mut blob = Vec::with_capacity(values.len() * std::mem::size_of::<f32>());
+    let mut blob = Vec::with_capacity(std::mem::size_of_val(values));
     for value in values {
         blob.extend_from_slice(&value.to_le_bytes());
     }
@@ -1377,7 +1377,7 @@ pub fn encode_f32_embedding(values: &[f32]) -> Vec<u8> {
 }
 
 pub fn decode_f32_embedding(blob: &[u8]) -> Option<Vec<f32>> {
-    if blob.len() % std::mem::size_of::<f32>() != 0 {
+    if !blob.len().is_multiple_of(std::mem::size_of::<f32>()) {
         return None;
     }
     let mut values = Vec::with_capacity(blob.len() / std::mem::size_of::<f32>());

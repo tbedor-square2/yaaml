@@ -887,12 +887,11 @@ pub fn queue_memory_consolidation_if_due(
             timestamp_seconds(&latest_memory_created_at),
             timestamp_seconds(&latest_completed_at),
         ) {
-            if completed_seconds >= memory_seconds {
-                if !active_consolidation_cluster_exists(db, config)
+            if completed_seconds >= memory_seconds
+                && !active_consolidation_cluster_exists(db, config)
                     .context("failed to check active consolidation clusters")?
-                {
-                    return Ok(None);
-                }
+            {
+                return Ok(None);
             }
         }
     }
@@ -922,14 +921,13 @@ pub fn queue_memory_consolidation_if_due(
 
 fn active_consolidation_cluster_exists(db: &Database, config: &Config) -> anyhow::Result<bool> {
     let cluster_memories = consolidation_cluster_memories(db, config)?;
-    Ok(find_consolidation_clusters(
+    let clusters = find_consolidation_clusters(
         &cluster_memories,
         config.memory_cluster_distance_threshold,
         config.memory_cluster_min_size,
         config.memory_cluster_max_size,
-    )
-    .first()
-    .is_some())
+    );
+    Ok(!clusters.is_empty())
 }
 
 fn should_defer_memory_consolidation(
@@ -1718,9 +1716,11 @@ mod tests {
 
     #[test]
     fn formulation_prompt_truncates_large_tool_output() {
-        let mut config = Config::default();
-        config.max_formulation_tokens = 100;
-        config.tool_call_truncation_chars = 40;
+        let config = Config {
+            max_formulation_tokens: 100,
+            tool_call_truncation_chars: 40,
+            ..Config::default()
+        };
         let turns = vec![yaaml_core::TurnRecord {
             session_id: "session-1".to_string(),
             turn_id: Some("turn-1".to_string()),

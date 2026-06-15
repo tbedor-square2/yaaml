@@ -87,6 +87,16 @@ Expose the merged user-level + project-level configuration so users can debug co
 
 ## Test Coverage Tooling
 
+### Strict code quality gate
+
+Implemented:
+
+- Added `cargo strict` alias for `cargo clippy --workspace --all-targets --all-features -- -D warnings`.
+- Added `scripts/check-quality.sh` to run formatting, strict clippy, the full workspace test suite, and coverage.
+- Added GitHub Actions workflow enforcing fmt, clippy-as-errors, tests, and the 70% coverage floor.
+
+Current assessment: the repo now has a strict local and CI quality gate. Remaining quality work is structural, not gate-related: the largest files are still `daemon.rs`, `main.rs`, `database.rs`, and `context.rs`.
+
 ### Add `cargo-tarpaulin` and enforce a minimum coverage threshold
 
 Install tarpaulin and add a CI step:
@@ -204,6 +214,7 @@ Implemented command-level tests for `init`, human and JSON `status`, `remember`,
 - [ ] Store `display_text` in DB at ingestion
 - [ ] Parameterize Square-internal project names
 - [ ] Add `yaaml config --effective`
+- [x] Add strict lint / code quality gate
 - [x] Add coverage checker with ≥70% coverage floor
 - [x] Add `yaaml-transcript` standalone unit tests
 - [ ] Add fuzz targets for JSONL parsers

@@ -1,6 +1,6 @@
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::time::Duration;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use rusqlite::{params, Connection, OptionalExtension};
 use serde::Serialize;
@@ -66,6 +66,22 @@ pub struct RecallEvalTaskRecord {
     pub last_error: Option<String>,
     pub session_id: Option<String>,
     pub turn_ordinal: Option<u64>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct TaskListRecord {
+    pub id: i64,
+    pub kind: String,
+    pub status: String,
+    pub display_status: String,
+    pub priority: i64,
+    pub attempts: u64,
+    pub max_attempts: u64,
+    pub next_run_at: Option<String>,
+    pub last_error: Option<String>,
+    pub created_at: String,
+    pub updated_at: String,
+    pub payload_json: String,
 }
 
 impl Database {
@@ -145,7 +161,26 @@ impl Database {
             .flatten();
         let last_recall_at = None;
         let backlog = self.backlog_status()?;
-        let queued_jobs = self.count("SELECT COUNT(*) FROM tasks WHERE status = 'queued'")?;
+        let now = unix_now_seconds();
+        let queued_jobs = self.count_with_param(
+            "SELECT COUNT(*)
+             FROM tasks
+             WHERE status = 'queued'
+               AND (
+                   next_run_at IS NULL
+                   OR next_run_at NOT LIKE 'unix:%'
+                   OR CAST(substr(next_run_at, 6) AS INTEGER) <= ?1
+               )",
+            now,
+        )?;
+        let scheduled_jobs = self.count_with_param(
+            "SELECT COUNT(*)
+             FROM tasks
+             WHERE status = 'queued'
+               AND next_run_at LIKE 'unix:%'
+               AND CAST(substr(next_run_at, 6) AS INTEGER) > ?1",
+            now,
+        )?;
         let running_jobs = self.count("SELECT COUNT(*) FROM tasks WHERE status = 'running'")?;
         let parked_jobs = self.count("SELECT COUNT(*) FROM tasks WHERE status = 'parked'")?;
         let recent_failures = self.recent_failures()?;
@@ -160,6 +195,7 @@ impl Database {
             workers: WorkerStatus {
                 active_workers: running_jobs,
                 queued_jobs,
+                scheduled_jobs,
                 running_jobs,
             },
             recent_failures,
@@ -965,6 +1001,50 @@ impl Database {
         Ok(tasks)
     }
 
+    pub fn list_tasks(
+        &self,
+        display_status: Option<&str>,
+        limit: usize,
+    ) -> Result<Vec<TaskListRecord>, DatabaseError> {
+        let now = unix_now_seconds();
+        let status_clause = match display_status {
+            Some("queued") => {
+                "status = 'queued'
+                 AND (
+                     next_run_at IS NULL
+                     OR next_run_at NOT LIKE 'unix:%'
+                     OR CAST(substr(next_run_at, 6) AS INTEGER) <= ?1
+                 )"
+            }
+            Some("scheduled") => {
+                "status = 'queued'
+                 AND next_run_at LIKE 'unix:%'
+                 AND CAST(substr(next_run_at, 6) AS INTEGER) > ?1"
+            }
+            Some("running") => "?1 = ?1 AND status = 'running'",
+            Some("parked") => "?1 = ?1 AND status = 'parked'",
+            Some("completed") => "?1 = ?1 AND status = 'completed'",
+            Some(_) | None => "?1 = ?1",
+        };
+        let sql = format!(
+            "SELECT id, kind, status, priority, payload_json, attempts, max_attempts,
+                    next_run_at, last_error, created_at, updated_at
+             FROM tasks
+             WHERE {status_clause}
+             ORDER BY id DESC
+             LIMIT ?2"
+        );
+        let mut stmt = self.conn.prepare(&sql)?;
+        let rows = stmt.query_map(params![now, u64_to_i64(limit as u64)], |row| {
+            read_task_list_record(row, now)
+        })?;
+        let mut tasks = Vec::new();
+        for row in rows {
+            tasks.push(row?);
+        }
+        Ok(tasks)
+    }
+
     pub fn mark_task_running(&self, task_id: i64, updated_at: &str) -> Result<(), DatabaseError> {
         self.conn.execute(
             "UPDATE tasks
@@ -985,6 +1065,63 @@ impl Database {
             params![updated_at, task_id],
         )?;
         Ok(())
+    }
+
+    pub fn retry_task(&self, task_id: i64, updated_at: &str) -> Result<bool, DatabaseError> {
+        let updated = self.conn.execute(
+            "UPDATE tasks
+             SET status = 'queued',
+                 attempts = 0,
+                 next_run_at = NULL,
+                 last_error = NULL,
+                 updated_at = ?1
+             WHERE id = ?2
+               AND status IN ('queued', 'running', 'parked')",
+            params![updated_at, task_id],
+        )?;
+        Ok(updated > 0)
+    }
+
+    pub fn clear_task(&self, task_id: i64) -> Result<bool, DatabaseError> {
+        let deleted = self
+            .conn
+            .execute("DELETE FROM tasks WHERE id = ?1", params![task_id])?;
+        Ok(deleted > 0)
+    }
+
+    pub fn clear_tasks_by_display_status(
+        &self,
+        display_status: &str,
+        kind: Option<&str>,
+    ) -> Result<u64, DatabaseError> {
+        let now = unix_now_seconds();
+        let status_clause = match display_status {
+            "queued" => {
+                "status = 'queued'
+                 AND (
+                     next_run_at IS NULL
+                     OR next_run_at NOT LIKE 'unix:%'
+                     OR CAST(substr(next_run_at, 6) AS INTEGER) <= ?1
+                 )"
+            }
+            "scheduled" => {
+                "status = 'queued'
+                 AND next_run_at LIKE 'unix:%'
+                 AND CAST(substr(next_run_at, 6) AS INTEGER) > ?1"
+            }
+            "running" => "?1 = ?1 AND status = 'running'",
+            "parked" => "?1 = ?1 AND status = 'parked'",
+            "completed" => "?1 = ?1 AND status = 'completed'",
+            _ => return Ok(0),
+        };
+        let deleted = if let Some(kind) = kind {
+            let sql = format!("DELETE FROM tasks WHERE {status_clause} AND kind = ?2");
+            self.conn.execute(&sql, params![now, kind])?
+        } else {
+            let sql = format!("DELETE FROM tasks WHERE {status_clause}");
+            self.conn.execute(&sql, params![now])?
+        };
+        Ok(deleted as u64)
     }
 
     pub fn requeue_running_tasks(&self, updated_at: &str) -> Result<u64, DatabaseError> {
@@ -1181,6 +1318,11 @@ impl Database {
         Ok(count.try_into().unwrap_or(0))
     }
 
+    fn count_with_param(&self, sql: &str, value: i64) -> Result<u64, DatabaseError> {
+        let count: i64 = self.conn.query_row(sql, params![value], |row| row.get(0))?;
+        Ok(count.try_into().unwrap_or(0))
+    }
+
     fn backlog_status(&self) -> Result<BacklogStatus, DatabaseError> {
         Ok(self.conn.query_row(
             "SELECT discovered_files, processed_files, processed_turns, queued_memory_jobs, failures, last_activity_at
@@ -1238,6 +1380,48 @@ fn i64_to_u64(value: i64) -> u64 {
 
 fn u64_to_i64(value: u64) -> i64 {
     value.try_into().unwrap_or(i64::MAX)
+}
+
+fn unix_now_seconds() -> i64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|duration| duration.as_secs().try_into().unwrap_or(i64::MAX))
+        .unwrap_or(0)
+}
+
+fn task_display_status(status: &str, next_run_at: Option<&str>, now_seconds: i64) -> String {
+    if status == "queued"
+        && next_run_at
+            .and_then(|timestamp| timestamp.strip_prefix("unix:"))
+            .and_then(|seconds| seconds.parse::<i64>().ok())
+            .is_some_and(|seconds| seconds > now_seconds)
+    {
+        "scheduled".to_string()
+    } else {
+        status.to_string()
+    }
+}
+
+fn read_task_list_record(
+    row: &rusqlite::Row<'_>,
+    now_seconds: i64,
+) -> rusqlite::Result<TaskListRecord> {
+    let status: String = row.get(2)?;
+    let next_run_at: Option<String> = row.get(7)?;
+    Ok(TaskListRecord {
+        id: row.get(0)?,
+        kind: row.get(1)?,
+        display_status: task_display_status(&status, next_run_at.as_deref(), now_seconds),
+        status,
+        priority: row.get(3)?,
+        payload_json: row.get(4)?,
+        attempts: i64_to_u64(row.get(5)?),
+        max_attempts: i64_to_u64(row.get(6)?),
+        next_run_at,
+        last_error: row.get(8)?,
+        created_at: row.get(9)?,
+        updated_at: row.get(10)?,
+    })
 }
 
 fn read_task_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<TaskRecord> {

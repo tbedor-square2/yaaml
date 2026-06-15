@@ -22,7 +22,9 @@ use yaaml_core::{
 use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
 use yaaml_llm::ReqwestTransport;
-use yaaml_store::database::{EvalResultRecord, EvalRunRecord, RecallEvalTaskRecord};
+use yaaml_store::database::{
+    EvalResultRecord, EvalRunRecord, RecallEvalTaskRecord, TaskListRecord,
+};
 use yaaml_store::lock::DaemonLock;
 use yaaml_store::{Database, SqliteExactVectorIndex};
 
@@ -50,6 +52,8 @@ enum Command {
     Status(StatusArgs),
     /// Inspect configuration.
     Config(ConfigArgs),
+    /// Inspect or manage daemon tasks.
+    Tasks(TasksArgs),
     /// Resolve the current session or project's daemon-owned recall file path.
     Path,
     /// Print existing recall, or update it from user input.
@@ -168,6 +172,78 @@ struct ConfigArgs {
 }
 
 #[derive(Debug, Parser)]
+struct TasksArgs {
+    #[command(subcommand)]
+    command: TasksCommand,
+}
+
+#[derive(Debug, Subcommand)]
+enum TasksCommand {
+    /// List task queue state.
+    List(TaskListArgs),
+    /// Retry a queued, running, or parked task immediately.
+    Retry(TaskRetryArgs),
+    /// Delete tasks that are no longer useful.
+    Clear(TaskClearArgs),
+}
+
+#[derive(Debug, Parser)]
+struct TaskListArgs {
+    /// Filter by task display status.
+    #[arg(long, value_enum)]
+    status: Option<TaskDisplayStatusArg>,
+    /// Maximum tasks to show.
+    #[arg(long, default_value_t = 20)]
+    limit: usize,
+    /// Emit machine-readable JSON.
+    #[arg(long)]
+    json: bool,
+}
+
+#[derive(Debug, Parser)]
+struct TaskRetryArgs {
+    /// Task id to retry.
+    id: i64,
+}
+
+#[derive(Debug, Parser)]
+struct TaskClearArgs {
+    /// Clear one task id.
+    #[arg(long)]
+    id: Option<i64>,
+    /// Clear all tasks with this display status.
+    #[arg(long, value_enum)]
+    status: Option<TaskDisplayStatusArg>,
+    /// Optional task-kind filter when clearing by status.
+    #[arg(long)]
+    kind: Option<String>,
+    /// Required when clearing more than one task.
+    #[arg(long)]
+    yes: bool,
+}
+
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum TaskDisplayStatusArg {
+    Queued,
+    Scheduled,
+    Running,
+    Parked,
+    Completed,
+}
+
+impl TaskDisplayStatusArg {
+    fn as_filter(self) -> &'static str {
+        match self {
+            Self::Queued => "queued",
+            Self::Scheduled => "scheduled",
+            Self::Running => "running",
+            Self::Parked => "parked",
+            Self::Completed => "completed",
+        }
+    }
+}
+
+#[derive(Debug, Parser)]
 struct RecallArgs {
     /// User input to embed and search against stored memories. Omit to print existing recall.
     #[arg(long)]
@@ -228,19 +304,25 @@ fn main() -> anyhow::Result<()> {
         Command::Eval(args) => eval(args),
         Command::Status(args) => status(args),
         Command::Config(args) => config(args),
+        Command::Tasks(args) => tasks(args),
         Command::Path => path(),
         Command::Recall(args) => recall(args),
         Command::Remember(args) => remember(args),
     }
 }
 
-fn status(args: StatusArgs) -> anyhow::Result<()> {
+fn open_database_for_cwd() -> anyhow::Result<(Config, Database)> {
     let cwd = env::current_dir().context("failed to determine current directory")?;
     let config = Config::load_for_cwd(&cwd).context("failed to load config")?;
     let db_path = config.db_path().context("failed to resolve db_path")?;
     let mut db = Database::open(&db_path)
         .with_context(|| format!("failed to open {}", display(&db_path)))?;
     db.migrate().context("failed to migrate database")?;
+    Ok((config, db))
+}
+
+fn status(args: StatusArgs) -> anyhow::Result<()> {
+    let (_config, db) = open_database_for_cwd()?;
     let status = db.status().context("failed to read status")?;
 
     if args.json {
@@ -249,6 +331,64 @@ fn status(args: StatusArgs) -> anyhow::Result<()> {
         print_human_status(&status);
     }
 
+    Ok(())
+}
+
+fn tasks(args: TasksArgs) -> anyhow::Result<()> {
+    match args.command {
+        TasksCommand::List(args) => task_list(args),
+        TasksCommand::Retry(args) => task_retry(args),
+        TasksCommand::Clear(args) => task_clear(args),
+    }
+}
+
+fn task_list(args: TaskListArgs) -> anyhow::Result<()> {
+    let (_config, db) = open_database_for_cwd()?;
+    let tasks = db
+        .list_tasks(args.status.map(TaskDisplayStatusArg::as_filter), args.limit)
+        .context("failed to list tasks")?;
+    if args.json {
+        println!("{}", serde_json::to_string_pretty(&tasks)?);
+    } else {
+        print_human_tasks(&tasks);
+    }
+    Ok(())
+}
+
+fn task_retry(args: TaskRetryArgs) -> anyhow::Result<()> {
+    let (_config, db) = open_database_for_cwd()?;
+    if db
+        .retry_task(args.id, &unix_timestamp())
+        .context("failed to retry task")?
+    {
+        println!("retried task {}", args.id);
+    } else {
+        bail!("task {} was not found or is already completed", args.id);
+    }
+    Ok(())
+}
+
+fn task_clear(args: TaskClearArgs) -> anyhow::Result<()> {
+    let (_config, db) = open_database_for_cwd()?;
+    match (args.id, args.status) {
+        (Some(id), None) => {
+            if db.clear_task(id).context("failed to clear task")? {
+                println!("cleared task {id}");
+            } else {
+                bail!("task {id} was not found");
+            }
+        }
+        (None, Some(status)) => {
+            if !args.yes {
+                bail!("clearing by status requires --yes");
+            }
+            let cleared = db
+                .clear_tasks_by_display_status(status.as_filter(), args.kind.as_deref())
+                .context("failed to clear tasks")?;
+            println!("cleared {cleared} {} tasks", status.as_filter());
+        }
+        _ => bail!("provide exactly one of --id or --status"),
+    }
     Ok(())
 }
 
@@ -2073,10 +2213,46 @@ fn print_human_status(status: &yaaml_core::status::Status) {
         status.backlog.processed_turns
     );
     println!(
-        "  workers: {} queued, {} running",
-        status.workers.queued_jobs, status.workers.running_jobs
+        "  workers: {} queued, {} scheduled, {} running",
+        status.workers.queued_jobs, status.workers.scheduled_jobs, status.workers.running_jobs
     );
     println!("  parked jobs: {}", status.parked_jobs);
+}
+
+fn print_human_tasks(tasks: &[TaskListRecord]) {
+    if tasks.is_empty() {
+        println!("No tasks");
+        return;
+    }
+    println!("Tasks");
+    for task in tasks {
+        let next_run = task
+            .next_run_at
+            .as_deref()
+            .map(human_timestamp)
+            .unwrap_or_else(|| "-".to_string());
+        let error = task.last_error.as_deref().unwrap_or("-");
+        println!(
+            "  {}  {}  {}  attempts={}/{}  next={}  error={}",
+            task.id,
+            task.display_status,
+            task.kind,
+            task.attempts,
+            task.max_attempts,
+            next_run,
+            truncate_task_error(error)
+        );
+    }
+}
+
+fn truncate_task_error(error: &str) -> String {
+    const MAX_ERROR_CHARS: usize = 120;
+    if error.chars().count() <= MAX_ERROR_CHARS {
+        return error.to_string();
+    }
+    let mut truncated = error.chars().take(MAX_ERROR_CHARS).collect::<String>();
+    truncated.push_str("...");
+    truncated
 }
 
 fn display(path: &Path) -> String {

@@ -27,6 +27,7 @@ pub struct BacklogStatus {
 pub struct WorkerStatus {
     pub active_workers: u64,
     pub queued_jobs: u64,
+    pub scheduled_jobs: u64,
     pub running_jobs: u64,
 }
 

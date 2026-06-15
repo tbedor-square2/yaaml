@@ -74,7 +74,5 @@ fn status_human_output_reflects_database_state() {
     assert!(stdout.contains("YAAML status"));
     assert!(stdout.contains("memories: 1 active / 1 total"));
     assert!(stdout.contains("transcripts: 0 files tracked, 0 sessions, 0 stored turns"));
-    assert!(
-        stdout.contains("ingestion totals: 0 files discovered, 0 file passes, 0 turns inserted")
-    );
+    assert!(!stdout.contains("ingestion totals:"));
 }

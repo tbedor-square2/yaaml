@@ -2415,12 +2415,6 @@ fn print_human_status(status: &yaaml_core::status::Status) {
         status.backlog.transcript_files, status.backlog.sessions, status.backlog.stored_turns
     );
     println!(
-        "  ingestion totals: {} files discovered, {} file passes, {} turns inserted",
-        status.backlog.discovered_files,
-        status.backlog.processed_files,
-        status.backlog.processed_turns
-    );
-    println!(
         "  workers: {} queued, {} scheduled, {} running",
         status.workers.queued_jobs, status.workers.scheduled_jobs, status.workers.running_jobs
     );

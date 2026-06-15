@@ -44,6 +44,9 @@ crates/yaaml-core/src/context/
   tags.rs       # KNOWN_PHRASES and tag normalization (move to config-driven eventually)
 ```
 
+Implemented the mechanical module split while preserving the public `yaaml_core::context`
+API. Follow-up work remains for making the phrase/tag lists configuration-driven.
+
 ### 4. Split `crates/yaaml-store/src/database.rs` (1,872 lines) by record type
 
 ```
@@ -95,7 +98,9 @@ Implemented:
 - Added `scripts/check-quality.sh` to run formatting, strict clippy, the full workspace test suite, and coverage.
 - Added GitHub Actions workflow enforcing fmt, clippy-as-errors, tests, and the 70% coverage floor.
 
-Current assessment: the repo now has a strict local and CI quality gate. Remaining quality work is structural, not gate-related: the largest files are still `daemon.rs`, `main.rs`, `database.rs`, and `context.rs`.
+Current assessment: the repo now has a strict local and CI quality gate. Remaining quality work is structural, not gate-related: the largest files are still `daemon.rs`, `main.rs`, and `database.rs`.
+
+The local entrypoint is `just quality`, which delegates to `scripts/check-quality.sh`.
 
 ### Add `cargo-tarpaulin` and enforce a minimum coverage threshold
 
@@ -208,7 +213,7 @@ Implemented command-level tests for `init`, human and JSON `status`, `remember`,
 
 - [ ] Split `daemon.rs` into submodules
 - [ ] Split `main.rs` into command modules
-- [ ] Split `context.rs` into submodules
+- [x] Split `context.rs` into submodules
 - [ ] Split `database.rs` by record type
 - [ ] Strongly-type task payloads
 - [ ] Store `display_text` in DB at ingestion

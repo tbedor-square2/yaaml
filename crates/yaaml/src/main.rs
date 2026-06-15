@@ -48,6 +48,8 @@ enum Command {
     Eval(EvalArgs),
     /// Show daemon, memory, backlog, and provider status.
     Status(StatusArgs),
+    /// Inspect configuration.
+    Config(ConfigArgs),
     /// Resolve the current session or project's daemon-owned recall file path.
     Path,
     /// Print existing recall, or update it from user input.
@@ -156,6 +158,16 @@ struct StatusArgs {
 }
 
 #[derive(Debug, Parser)]
+struct ConfigArgs {
+    /// Print the merged user and project configuration.
+    #[arg(long)]
+    effective: bool,
+    /// Emit machine-readable JSON.
+    #[arg(long)]
+    json: bool,
+}
+
+#[derive(Debug, Parser)]
 struct RecallArgs {
     /// User input to embed and search against stored memories. Omit to print existing recall.
     #[arg(long)]
@@ -215,6 +227,7 @@ fn main() -> anyhow::Result<()> {
         Command::Service(args) => service(args),
         Command::Eval(args) => eval(args),
         Command::Status(args) => status(args),
+        Command::Config(args) => config(args),
         Command::Path => path(),
         Command::Recall(args) => recall(args),
         Command::Remember(args) => remember(args),
@@ -236,6 +249,20 @@ fn status(args: StatusArgs) -> anyhow::Result<()> {
         print_human_status(&status);
     }
 
+    Ok(())
+}
+
+fn config(args: ConfigArgs) -> anyhow::Result<()> {
+    if !args.effective {
+        bail!("only --effective is currently supported");
+    }
+    let cwd = env::current_dir().context("failed to determine current directory")?;
+    let config = Config::load_for_cwd(&cwd).context("failed to load config")?;
+    if args.json {
+        println!("{}", serde_json::to_string_pretty(&config)?);
+    } else {
+        println!("{}", toml::to_string_pretty(&config)?);
+    }
     Ok(())
 }
 

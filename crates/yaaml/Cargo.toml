@@ -16,6 +16,7 @@ libc.workspace = true
 notify.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+toml.workspace = true
 yaaml-core = { path = "../yaaml-core" }
 yaaml-llm = { path = "../yaaml-llm" }
 yaaml-store = { path = "../yaaml-store" }

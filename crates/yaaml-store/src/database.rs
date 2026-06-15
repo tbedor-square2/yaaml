@@ -1353,7 +1353,7 @@ impl Database {
     }
 
     fn backlog_status(&self) -> Result<BacklogStatus, DatabaseError> {
-        Ok(self.conn.query_row(
+        let mut backlog = self.conn.query_row(
             "SELECT discovered_files, processed_files, processed_turns, queued_memory_jobs, failures, last_activity_at
              FROM backlog_progress WHERE id = 1",
             [],
@@ -1362,12 +1362,19 @@ impl Database {
                     discovered_files: i64_to_u64(row.get(0)?),
                     processed_files: i64_to_u64(row.get(1)?),
                     processed_turns: i64_to_u64(row.get(2)?),
+                    transcript_files: 0,
+                    sessions: 0,
+                    stored_turns: 0,
                     queued_memory_jobs: i64_to_u64(row.get(3)?),
                     failures: i64_to_u64(row.get(4)?),
                     last_activity_at: row.get(5)?,
                 })
             },
-        )?)
+        )?;
+        backlog.transcript_files = self.count("SELECT COUNT(*) FROM file_cursors")?;
+        backlog.sessions = self.count("SELECT COUNT(*) FROM sessions")?;
+        backlog.stored_turns = self.count("SELECT COUNT(*) FROM turns")?;
+        Ok(backlog)
     }
 
     fn recent_failures(&self) -> Result<Vec<TaskFailure>, DatabaseError> {

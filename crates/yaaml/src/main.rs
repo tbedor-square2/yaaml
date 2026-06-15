@@ -2411,7 +2411,11 @@ fn print_human_status(status: &yaaml_core::status::Status) {
         status.active_memory_count, status.memory_count
     );
     println!(
-        "  backlog: {} files discovered, {} processed, {} turns processed",
+        "  transcripts: {} files tracked, {} sessions, {} stored turns",
+        status.backlog.transcript_files, status.backlog.sessions, status.backlog.stored_turns
+    );
+    println!(
+        "  ingestion totals: {} files discovered, {} file passes, {} turns inserted",
         status.backlog.discovered_files,
         status.backlog.processed_files,
         status.backlog.processed_turns

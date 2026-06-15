@@ -23,6 +23,8 @@ fn status_json_emits_valid_json_for_empty_db() {
     let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
     assert_eq!(value["memory_count"], 0);
     assert_eq!(value["backlog"]["discovered_files"], 0);
+    assert_eq!(value["backlog"]["transcript_files"], 0);
+    assert_eq!(value["backlog"]["stored_turns"], 0);
 }
 
 #[test]
@@ -71,4 +73,8 @@ fn status_human_output_reflects_database_state() {
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(stdout.contains("YAAML status"));
     assert!(stdout.contains("memories: 1 active / 1 total"));
+    assert!(stdout.contains("transcripts: 0 files tracked, 0 sessions, 0 stored turns"));
+    assert!(
+        stdout.contains("ingestion totals: 0 files discovered, 0 file passes, 0 turns inserted")
+    );
 }

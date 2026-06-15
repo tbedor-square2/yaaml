@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use serde::Serialize;
 
 use crate::paths::project_hash;
-use crate::TurnRecord;
+use crate::{context_score, ContextMetadata, MemoryKind, MemoryRecord, MemoryScope, TurnRecord};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct VectorHit {
@@ -19,6 +19,18 @@ pub struct RecallCandidate {
     pub similarity: f32,
     pub score: f32,
     pub project_id: Option<String>,
+    pub rank: RecallRankDetails,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct RecallRankDetails {
+    pub vector_score: f32,
+    pub context_score: f32,
+    pub project_bonus: f32,
+    pub task_key_bonus: f32,
+    pub global_durable_bonus: f32,
+    pub penalties: Vec<String>,
+    pub matched_task_keys: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -30,6 +42,7 @@ pub struct RecallMemory {
     pub project_id: Option<String>,
     pub project_descriptor: Option<String>,
     pub score: f32,
+    pub rank: RecallRankDetails,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -94,6 +107,306 @@ pub fn apply_project_bonus(
             .then_with(|| left.memory_id.cmp(&right.memory_id))
     });
     candidates
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct RecallRankingOptions {
+    pub project_tiebreaker: bool,
+    pub project_score_bonus: f32,
+}
+
+pub fn rank_recall_candidates(
+    hits: &[VectorHit],
+    memories: &[MemoryRecord],
+    current_project_id: &str,
+    query_context: &ContextMetadata,
+    query_task_keys: &[String],
+    options: RecallRankingOptions,
+) -> Vec<RecallCandidate> {
+    let mut candidates = hits
+        .iter()
+        .filter_map(|hit| {
+            memories
+                .iter()
+                .find(|memory| memory.id == Some(hit.memory_id))
+                .map(|memory| {
+                    rank_recall_candidate(
+                        *hit,
+                        memory,
+                        current_project_id,
+                        query_context,
+                        query_task_keys,
+                        options,
+                    )
+                })
+        })
+        .collect::<Vec<_>>();
+    candidates.sort_by(|left, right| {
+        right
+            .score
+            .partial_cmp(&left.score)
+            .unwrap_or(std::cmp::Ordering::Equal)
+            .then_with(|| left.memory_id.cmp(&right.memory_id))
+    });
+    candidates
+}
+
+fn rank_recall_candidate(
+    hit: VectorHit,
+    memory: &MemoryRecord,
+    current_project_id: &str,
+    query_context: &ContextMetadata,
+    query_task_keys: &[String],
+    options: RecallRankingOptions,
+) -> RecallCandidate {
+    let memory_context = crate::infer_context_from_memory(memory);
+    let context_component = context_score(query_context, &memory_context);
+    let project_bonus =
+        if options.project_tiebreaker && memory.project_id.as_deref() == Some(current_project_id) {
+            options.project_score_bonus
+        } else {
+            0.0
+        };
+    let matched_task_keys = matched_task_keys(query_task_keys, &memory.task_keys);
+    let task_key_bonus = (matched_task_keys.len() as f32 * 0.28).min(0.70);
+    let global_durable_bonus = if memory.scope == MemoryScope::Global
+        && matches!(
+            memory.kind,
+            MemoryKind::Preference | MemoryKind::Lesson | MemoryKind::Workflow
+        ) {
+        0.08
+    } else {
+        0.0
+    };
+    let mut penalty = 0.0;
+    let mut penalties = Vec::new();
+    if !query_task_keys.is_empty() && matched_task_keys.is_empty() {
+        if memory.project_id.as_deref() == Some(current_project_id) {
+            penalty += 0.24;
+            penalties.push("same_project_no_task_key_overlap".to_string());
+        }
+        if memory.kind == MemoryKind::TaskState {
+            penalty += 0.35;
+            penalties.push("task_state_without_task_key_overlap".to_string());
+        }
+    }
+    if memory.scope == MemoryScope::Global
+        && memory.kind == MemoryKind::TaskState
+        && matched_task_keys.is_empty()
+    {
+        penalty += 0.35;
+        penalties.push("global_task_state_without_task_key_overlap".to_string());
+    }
+
+    let score =
+        hit.similarity + context_component + project_bonus + task_key_bonus + global_durable_bonus
+            - penalty;
+    RecallCandidate {
+        memory_id: hit.memory_id,
+        similarity: hit.similarity,
+        score,
+        project_id: memory.project_id.clone(),
+        rank: RecallRankDetails {
+            vector_score: hit.similarity,
+            context_score: context_component,
+            project_bonus,
+            task_key_bonus,
+            global_durable_bonus,
+            penalties,
+            matched_task_keys,
+        },
+    }
+}
+
+pub fn extract_task_keys(text: &str) -> Vec<String> {
+    let mut keys = Vec::new();
+    let tokens = task_key_tokens(text);
+    for index in 0..tokens.len() {
+        let token = tokens[index].trim_matches(trim_task_key_punctuation);
+        if token.is_empty() {
+            continue;
+        }
+        let lower = token.to_ascii_lowercase();
+        if let Some(pr) = pull_request_key(&lower) {
+            push_unique(&mut keys, pr);
+        }
+        if matches!(
+            lower.as_str(),
+            "pr" | "pull" | "pull-request" | "pull_request"
+        ) {
+            if let Some(next) = tokens.get(index + 1).and_then(|next| numeric_token(next)) {
+                push_unique(&mut keys, format!("pr:{next}"));
+            }
+        }
+        if let Some(ticket) = ticket_key(token) {
+            push_unique(&mut keys, ticket);
+        }
+        if let Some(path) = path_key(token) {
+            push_unique(&mut keys, path);
+        }
+        if matches!(lower.as_str(), "branch" | "branch:") {
+            if let Some(next) = tokens.get(index + 1).and_then(|next| branch_key(next)) {
+                push_unique(&mut keys, next);
+            }
+        }
+        if let Some(tool) = tool_key(&lower) {
+            push_unique(&mut keys, tool);
+        }
+        if keys.len() >= 48 {
+            break;
+        }
+    }
+    keys
+}
+
+pub fn infer_memory_kind(title: &str, body: &str, scope: MemoryScope) -> MemoryKind {
+    let text = format!("{} {}", title, body).to_ascii_lowercase();
+    if text.contains("prefer")
+        || text.contains("preference")
+        || text.contains("user correction")
+        || text.contains("user redirected")
+        || text.contains("repeatedly prefers")
+    {
+        MemoryKind::Preference
+    } else if text.contains("workflow")
+        || text.contains("command")
+        || text.contains("run ")
+        || text.contains("use ")
+        || text.contains("skill")
+    {
+        MemoryKind::Workflow
+    } else if text.contains("pr ")
+        || text.contains("pull/")
+        || text.contains("branch")
+        || text.contains("status")
+        || text.contains("blocked")
+    {
+        MemoryKind::TaskState
+    } else if scope == MemoryScope::Project {
+        MemoryKind::ProjectFact
+    } else {
+        MemoryKind::Lesson
+    }
+}
+
+pub fn normalize_memory_kind(
+    kind: Option<&str>,
+    title: &str,
+    body: &str,
+    scope: MemoryScope,
+) -> MemoryKind {
+    match kind.map(str::trim) {
+        Some("preference") => MemoryKind::Preference,
+        Some("workflow") => MemoryKind::Workflow,
+        Some("project_fact") | Some("project-fact") => MemoryKind::ProjectFact,
+        Some("task_state") | Some("task-state") => MemoryKind::TaskState,
+        Some("lesson") => MemoryKind::Lesson,
+        _ => infer_memory_kind(title, body, scope),
+    }
+}
+
+fn matched_task_keys(query_task_keys: &[String], memory_task_keys: &[String]) -> Vec<String> {
+    let mut matched = Vec::new();
+    for query_key in query_task_keys {
+        if memory_task_keys
+            .iter()
+            .any(|memory_key| memory_key == query_key)
+        {
+            push_unique(&mut matched, query_key.clone());
+        }
+    }
+    matched
+}
+
+fn task_key_tokens(text: &str) -> Vec<&str> {
+    text.split_whitespace().collect()
+}
+
+fn trim_task_key_punctuation(character: char) -> bool {
+    matches!(
+        character,
+        ',' | ';' | '"' | '\'' | '(' | ')' | '[' | ']' | '{' | '}' | '<' | '>' | '`'
+    )
+}
+
+fn pull_request_key(token: &str) -> Option<String> {
+    if let Some((_, number)) = token.rsplit_once("/pull/") {
+        return numeric_token(number).map(|number| format!("pr:{number}"));
+    }
+    if let Some(number) = token.strip_prefix("pull/") {
+        return numeric_token(number).map(|number| format!("pr:{number}"));
+    }
+    if let Some(number) = token.strip_prefix("pr#") {
+        return numeric_token(number).map(|number| format!("pr:{number}"));
+    }
+    None
+}
+
+fn ticket_key(token: &str) -> Option<String> {
+    let token = token.trim_matches(|ch: char| !ch.is_ascii_alphanumeric() && ch != '-');
+    let (prefix, number) = token.split_once('-')?;
+    if prefix.len() < 2
+        || !prefix
+            .chars()
+            .all(|ch| ch.is_ascii_uppercase() || ch.is_ascii_digit())
+        || !number.chars().all(|ch| ch.is_ascii_digit())
+    {
+        return None;
+    }
+    Some(format!("ticket:{}-{}", prefix.to_ascii_uppercase(), number))
+}
+
+fn path_key(token: &str) -> Option<String> {
+    let token =
+        token.trim_matches(|ch: char| matches!(ch, ',' | ';' | ':' | '"' | '\'' | ')' | ']' | '}'));
+    if token.starts_with("http://") || token.starts_with("https://") {
+        return None;
+    }
+    if !token.contains('/') || token.len() < 6 {
+        return None;
+    }
+    if !token
+        .chars()
+        .any(|ch| ch.is_ascii_alphabetic() || ch.is_ascii_digit())
+    {
+        return None;
+    }
+    let normalized = token
+        .trim_start_matches("./")
+        .trim_end_matches('/')
+        .to_ascii_lowercase();
+    Some(format!("path:{normalized}"))
+}
+
+fn branch_key(token: &str) -> Option<String> {
+    let token = token.trim_matches(trim_task_key_punctuation);
+    if token.len() < 3 || token.starts_with('-') {
+        return None;
+    }
+    Some(format!("branch:{}", token.to_ascii_lowercase()))
+}
+
+fn tool_key(token: &str) -> Option<String> {
+    match token {
+        "yaaml" | "gt" | "bazel" | "bin/bazel" | "sq" | "cargo" | "just" | "gh" => {
+            Some(format!("tool:{token}"))
+        }
+        _ => None,
+    }
+}
+
+fn numeric_token(token: &str) -> Option<String> {
+    let number = token.trim_matches(|ch: char| !ch.is_ascii_digit());
+    if number.is_empty() {
+        return None;
+    }
+    Some(number.to_string())
+}
+
+fn push_unique(values: &mut Vec<String>, value: String) {
+    if !values.contains(&value) {
+        values.push(value);
+    }
 }
 
 pub fn build_recall_query(
@@ -222,6 +535,8 @@ fn truncate_chars(text: &str, max_chars: usize) -> String {
 mod tests {
     use tempfile::TempDir;
 
+    use crate::{MemoryKind, MemoryRecord, MemoryScope};
+
     use crate::TurnStatus;
 
     use super::*;
@@ -244,12 +559,14 @@ mod tests {
                     similarity: 0.9,
                     score: 0.9,
                     project_id: Some("/tmp/other".to_string()),
+                    rank: empty_rank(),
                 },
                 RecallCandidate {
                     memory_id: 2,
                     similarity: 0.7,
                     score: 0.7,
                     project_id: Some("/tmp/current".to_string()),
+                    rank: empty_rank(),
                 },
             ],
             "/tmp/current",
@@ -267,12 +584,114 @@ mod tests {
                 similarity: 0.7,
                 score: 0.9,
                 project_id: Some("/tmp/current".to_string()),
+                rank: empty_rank(),
             }],
             "/tmp/current",
             0.05,
         );
 
         assert_eq!(candidates[0].score, 0.95);
+    }
+
+    #[test]
+    fn task_key_extraction_finds_pr_ticket_path_and_tool_keys() {
+        let keys = extract_task_keys(
+            "PR 481245 updates riskarbiter/src/main/java/Foo.java for MLP-4400; run yaaml recall",
+        );
+
+        assert!(keys.contains(&"pr:481245".to_string()));
+        assert!(keys.contains(&"ticket:MLP-4400".to_string()));
+        assert!(keys.contains(&"path:riskarbiter/src/main/java/foo.java".to_string()));
+        assert!(keys.contains(&"tool:yaaml".to_string()));
+    }
+
+    #[test]
+    fn task_key_overlap_beats_same_project_wrong_task() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![
+            VectorHit {
+                memory_id: 1,
+                similarity: 0.90,
+            },
+            VectorHit {
+                memory_id: 2,
+                similarity: 0.70,
+            },
+        ];
+        let memories = vec![
+            memory(
+                1,
+                "Unrelated Java PR",
+                MemoryKind::TaskState,
+                Some(current_project),
+                vec!["pr:111111".to_string()],
+            ),
+            memory(
+                2,
+                "Risk Arbiter target PR",
+                MemoryKind::TaskState,
+                Some("/Users/tbedor/Development/java/riskarbiter"),
+                vec!["pr:481245".to_string()],
+            ),
+        ];
+        let candidates = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &["pr:481245".to_string()],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        assert_eq!(candidates[0].memory_id, 2);
+        assert!(candidates[0]
+            .rank
+            .matched_task_keys
+            .contains(&"pr:481245".to_string()));
+        assert!(candidates[1]
+            .rank
+            .penalties
+            .contains(&"same_project_no_task_key_overlap".to_string()));
+    }
+
+    fn empty_rank() -> RecallRankDetails {
+        RecallRankDetails {
+            vector_score: 0.0,
+            context_score: 0.0,
+            project_bonus: 0.0,
+            task_key_bonus: 0.0,
+            global_durable_bonus: 0.0,
+            penalties: Vec::new(),
+            matched_task_keys: Vec::new(),
+        }
+    }
+
+    fn memory(
+        id: i64,
+        title: &str,
+        kind: MemoryKind,
+        project_id: Option<&str>,
+        task_keys: Vec<String>,
+    ) -> MemoryRecord {
+        MemoryRecord {
+            id: Some(id),
+            title: title.to_string(),
+            body: title.to_string(),
+            scope: MemoryScope::Project,
+            kind,
+            task_keys,
+            source_turn_refs: Vec::new(),
+            created_at: "now".to_string(),
+            updated_at: "now".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: project_id.map(str::to_string),
+            project_descriptor: project_id.map(str::to_string),
+            lineage_refs: Vec::new(),
+        }
     }
 
     #[test]

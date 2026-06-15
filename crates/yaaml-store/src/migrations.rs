@@ -47,6 +47,8 @@ CREATE TABLE IF NOT EXISTS memories (
     title TEXT NOT NULL,
     body TEXT NOT NULL,
     scope TEXT NOT NULL,
+    memory_kind TEXT NOT NULL DEFAULT 'lesson',
+    task_keys TEXT NOT NULL DEFAULT '[]',
     source_turn_refs TEXT NOT NULL,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,

@@ -2,7 +2,7 @@ use std::sync::{Arc, Barrier};
 use std::thread;
 
 use tempfile::TempDir;
-use yaaml_core::{MemoryRecord, MemoryScope};
+use yaaml_core::{MemoryKind, MemoryRecord, MemoryScope};
 use yaaml_store::Database;
 
 fn memory(title: &str) -> MemoryRecord {
@@ -11,6 +11,8 @@ fn memory(title: &str) -> MemoryRecord {
         title: title.to_string(),
         body: "body".to_string(),
         scope: MemoryScope::Project,
+        kind: MemoryKind::Lesson,
+        task_keys: Vec::new(),
         source_turn_refs: Vec::new(),
         created_at: "2026-06-08T00:00:00Z".to_string(),
         updated_at: "2026-06-08T00:00:00Z".to_string(),

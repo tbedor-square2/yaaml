@@ -73,7 +73,7 @@ pub fn merge_contexts(base: &mut ContextMetadata, incoming: ContextMetadata) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{MemoryRecord, MemoryScope};
+    use crate::{MemoryKind, MemoryRecord, MemoryScope};
 
     #[test]
     fn text_context_extracts_github_repo_and_subject_tags() {
@@ -121,6 +121,8 @@ mod tests {
             title: title.to_string(),
             body: body.to_string(),
             scope: MemoryScope::Project,
+            kind: MemoryKind::Lesson,
+            task_keys: Vec::new(),
             source_turn_refs: Vec::new(),
             created_at: "now".to_string(),
             updated_at: "now".to_string(),

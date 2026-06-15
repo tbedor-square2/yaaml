@@ -6,8 +6,8 @@ use std::thread;
 
 use tempfile::TempDir;
 use yaaml_core::{
-    AgentType, MemoryRecord, MemoryScope, SessionRecord, TaskRecord, TaskStatus, TurnRecord,
-    TurnStatus,
+    AgentType, MemoryKind, MemoryRecord, MemoryScope, SessionRecord, TaskRecord, TaskStatus,
+    TurnRecord, TurnStatus,
 };
 use yaaml_store::Database;
 
@@ -59,6 +59,8 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
         title: "Earlier memory".to_string(),
         body: "Useful context".to_string(),
         scope: MemoryScope::Project,
+        kind: MemoryKind::Lesson,
+        task_keys: Vec::new(),
         source_turn_refs: Vec::new(),
         created_at: "2026-06-08T00:00:01Z".to_string(),
         updated_at: "2026-06-08T00:00:01Z".to_string(),
@@ -342,6 +344,8 @@ eval_judge_api_key_env = "YAAML_TEST_ANTHROPIC_KEY"
         title: "Earlier memory".to_string(),
         body: "Useful context".to_string(),
         scope: MemoryScope::Project,
+        kind: MemoryKind::Lesson,
+        task_keys: Vec::new(),
         source_turn_refs: Vec::new(),
         created_at: "2026-06-08T00:00:01Z".to_string(),
         updated_at: "2026-06-08T00:00:01Z".to_string(),
@@ -459,6 +463,8 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
             title: "Weak memory".to_string(),
             body: "Mostly unrelated context".to_string(),
             scope: MemoryScope::Project,
+            kind: MemoryKind::Lesson,
+            task_keys: Vec::new(),
             source_turn_refs: Vec::new(),
             created_at: "2026-06-08T00:00:01Z".to_string(),
             updated_at: "2026-06-08T00:00:01Z".to_string(),
@@ -475,6 +481,8 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
             title: "Useful memory".to_string(),
             body: "Directly actionable context".to_string(),
             scope: MemoryScope::Project,
+            kind: MemoryKind::Lesson,
+            task_keys: Vec::new(),
             source_turn_refs: Vec::new(),
             created_at: "2026-06-08T00:00:01Z".to_string(),
             updated_at: "2026-06-08T00:00:01Z".to_string(),

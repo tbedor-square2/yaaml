@@ -15,12 +15,12 @@ use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use yaaml_core::{
-    apply_project_bonus, build_recall_query, context_score, derive_project_descriptor,
-    embedded_text_hash, embedding_text, find_consolidation_clusters, infer_context_from_memory,
-    parse_eval_judge_response, parse_formulation_response, recall_file_path,
-    render_recall_markdown, session_recall_file_path, write_recall_file, ClusterMemory, Config,
-    EmbeddingRecord, MemoryRecord, MemoryScope, RecallCandidate, RecallMemory, SourceTurnRef,
-    TaskRecord, TaskStatus, VectorIndex,
+    build_recall_query, derive_project_descriptor, embedded_text_hash, embedding_text,
+    extract_task_keys, find_consolidation_clusters, parse_eval_judge_response,
+    parse_formulation_response, rank_recall_candidates, recall_file_path, render_recall_markdown,
+    session_recall_file_path, write_recall_file, ClusterMemory, Config, EmbeddingRecord,
+    MemoryRecord, MemoryScope, RecallMemory, RecallRankingOptions, SourceTurnRef, TaskRecord,
+    TaskStatus, VectorIndex,
 };
 use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
@@ -1041,18 +1041,20 @@ fn merged_source_turn_refs(memories: &[MemoryRecord]) -> Vec<SourceTurnRef> {
 fn formulation_system_prompt() -> &'static str {
     concat!(
         "Create concise durable memories from coding-agent transcript turns. ",
-        "Return only JSON shaped as {\"memories\":[{\"title\":\"...\",\"body\":\"...\",\"scope\":\"project\"|\"global\",\"project_descriptor\":\"...\"}]}. ",
-        "Prefer small, granular memories. ",
+        "Return only JSON shaped as {\"memories\":[{\"title\":\"...\",\"body\":\"...\",\"scope\":\"project\"|\"global\",\"kind\":\"preference\"|\"lesson\"|\"workflow\"|\"project_fact\"|\"task_state\",\"task_keys\":[\"type:value\"],\"project_descriptor\":\"...\"}]}. ",
+        "Return {\"memories\":[]} when the turns contain only ordinary progress updates, one-off command output, transient narration, or no durable lesson. ",
+        "Prefer zero or one small, granular memory per batch; create multiple memories only when the turns contain distinct durable lessons or preferences. ",
         "Focus memories on insights gained while solving the problem and on redirection provided by the user. ",
         "Always capture repeated user corrections, preferences, and process guidance as their own concise memories, including coding style preferences such as functional vs imperative style. ",
-        "Use project scope when the preference is tied to the current project or language; use global scope only for durable cross-project user preferences or agent workflow patterns."
+        "Use project scope when the preference is tied to the current project or language; use global scope only for durable cross-project user preferences or agent workflow patterns. ",
+        "Use task_state only for short-lived PR, branch, ticket, or status facts with concrete task_keys; avoid task_state when a reusable lesson or preference is available."
     )
 }
 
 fn consolidation_system_prompt() -> &'static str {
     concat!(
         "Merge overlapping coding-agent memories into one concise durable memory. ",
-        "Return only JSON shaped as {\"memories\":[{\"title\":\"...\",\"body\":\"...\",\"scope\":\"project\"|\"global\",\"project_descriptor\":\"...\"}]}. ",
+        "Return only JSON shaped as {\"memories\":[{\"title\":\"...\",\"body\":\"...\",\"scope\":\"project\"|\"global\",\"kind\":\"preference\"|\"lesson\"|\"workflow\"|\"project_fact\"|\"task_state\",\"task_keys\":[\"type:value\"],\"project_descriptor\":\"...\"}]}. ",
         "Preserve concrete facts, durable user preferences, commands, file paths, project state, and unresolved follow-up context. ",
         "Remove repetition and transient narration. ",
         "Do not invent facts not present in the source memories. ",
@@ -1541,39 +1543,18 @@ pub fn refresh_recall_with_embedding(
         config.tool_call_truncation_chars,
     );
     let query_context = context_from_turns(recent_turns, project_id, &query_text);
-    let mut candidates = hits
-        .iter()
-        .filter_map(|hit| {
-            memories
-                .iter()
-                .find(|memory| memory.id == Some(hit.memory_id))
-                .map(|memory| {
-                    let memory_context = infer_context_from_memory(memory);
-                    RecallCandidate {
-                        memory_id: hit.memory_id,
-                        similarity: hit.similarity,
-                        score: hit.similarity + context_score(&query_context, &memory_context),
-                        project_id: memory.project_id.clone(),
-                    }
-                })
-        })
-        .collect::<Vec<_>>();
-    candidates = if config.recall_project_tiebreaker {
-        apply_project_bonus(
-            candidates,
-            &project_id_string,
-            config.recall_project_score_bonus,
-        )
-    } else {
-        candidates
-    };
-    candidates.sort_by(|left, right| {
-        right
-            .score
-            .partial_cmp(&left.score)
-            .unwrap_or(std::cmp::Ordering::Equal)
-            .then_with(|| left.memory_id.cmp(&right.memory_id))
-    });
+    let query_task_keys = extract_task_keys(&query_text);
+    let candidates = rank_recall_candidates(
+        &hits,
+        &memories,
+        &project_id_string,
+        &query_context,
+        &query_task_keys,
+        RecallRankingOptions {
+            project_tiebreaker: config.recall_project_tiebreaker,
+            project_score_bonus: config.recall_project_score_bonus,
+        },
+    );
     let selected = candidates
         .into_iter()
         .take(config.recall_result_limit)
@@ -1599,6 +1580,7 @@ pub fn refresh_recall_with_embedding(
                     project_id: memory.project_id.clone(),
                     project_descriptor: memory.project_descriptor.clone(),
                     score: candidate.score,
+                    rank: candidate.rank.clone(),
                 })
         })
         .collect::<Vec<_>>();

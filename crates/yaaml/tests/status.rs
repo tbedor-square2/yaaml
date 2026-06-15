@@ -1,7 +1,7 @@
 use std::process::Command;
 
 use tempfile::TempDir;
-use yaaml_core::{MemoryRecord, MemoryScope};
+use yaaml_core::{MemoryKind, MemoryRecord, MemoryScope};
 use yaaml_store::Database;
 
 #[test]
@@ -43,6 +43,8 @@ fn status_human_output_reflects_database_state() {
         title: "Status memory".to_string(),
         body: "Status should report active memories.".to_string(),
         scope: MemoryScope::Project,
+        kind: MemoryKind::Lesson,
+        task_keys: Vec::new(),
         source_turn_refs: Vec::new(),
         created_at: "2026-06-08T00:00:00Z".to_string(),
         updated_at: "2026-06-08T00:00:00Z".to_string(),

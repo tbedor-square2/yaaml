@@ -17,8 +17,8 @@ use yaaml::daemon::{
 };
 use yaaml::turn_hydration::hydrate_turns;
 use yaaml_core::{
-    session_recall_file_path, AgentType, Config, EmbeddingRecord, MemoryRecord, MemoryScope,
-    SessionRecord, SourceTurnRef, TaskRecord, TaskStatus, TurnRecord,
+    session_recall_file_path, AgentType, Config, EmbeddingRecord, MemoryKind, MemoryRecord,
+    MemoryScope, SessionRecord, SourceTurnRef, TaskRecord, TaskStatus, TurnRecord,
 };
 use yaaml_store::database::encode_f32_embedding;
 use yaaml_store::Database;
@@ -381,6 +381,8 @@ fn memory_queue_skips_already_covered_source_refs() {
         title: "covered".to_string(),
         body: "covered".to_string(),
         scope: MemoryScope::Project,
+        kind: MemoryKind::Lesson,
+        task_keys: Vec::new(),
         source_turn_refs: (0..10)
             .map(|ordinal| SourceTurnRef {
                 session_id: "session-1".to_string(),
@@ -952,6 +954,8 @@ fn recall_file_is_written_after_memory_exists_and_new_turn_completes() {
         title: "Recall file location".to_string(),
         body: "Agents should use the YAAML skill to resolve the recall file.".to_string(),
         scope: MemoryScope::Project,
+        kind: MemoryKind::Lesson,
+        task_keys: Vec::new(),
         source_turn_refs: Vec::new(),
         created_at: "2026-06-08T00:00:00Z".to_string(),
         updated_at: "2026-06-08T00:00:00Z".to_string(),
@@ -1362,6 +1366,8 @@ fn memory(title: &str, body: &str, project_id: Option<&str>) -> MemoryRecord {
         title: title.to_string(),
         body: body.to_string(),
         scope: MemoryScope::Project,
+        kind: MemoryKind::Lesson,
+        task_keys: Vec::new(),
         source_turn_refs: Vec::new(),
         created_at: "2026-06-08T00:00:00Z".to_string(),
         updated_at: "2026-06-08T00:00:00Z".to_string(),

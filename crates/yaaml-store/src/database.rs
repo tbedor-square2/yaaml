@@ -7,8 +7,9 @@ use serde::Serialize;
 use thiserror::Error;
 use yaaml_core::status::{BacklogStatus, Status, TaskFailure, WorkerStatus};
 use yaaml_core::{
-    infer_context_from_memory, infer_context_from_path, ContextMetadata, EmbeddingRecord,
-    MemoryRecord, MemoryScope, SessionRecord, SourceTurnRef, TaskRecord, TaskStatus, TurnRecord,
+    extract_task_keys, infer_context_from_memory, infer_context_from_path, ContextMetadata,
+    EmbeddingRecord, MemoryKind, MemoryRecord, MemoryScope, SessionRecord, SourceTurnRef,
+    TaskRecord, TaskStatus, TurnRecord,
 };
 
 use crate::migrations::MIGRATIONS;
@@ -119,6 +120,16 @@ impl Database {
             "turns",
             "context_json",
             "ALTER TABLE turns ADD COLUMN context_json TEXT",
+        )?;
+        self.ensure_column(
+            "memories",
+            "memory_kind",
+            "ALTER TABLE memories ADD COLUMN memory_kind TEXT NOT NULL DEFAULT 'lesson'",
+        )?;
+        self.ensure_column(
+            "memories",
+            "task_keys",
+            "ALTER TABLE memories ADD COLUMN task_keys TEXT NOT NULL DEFAULT '[]'",
         )?;
         Ok(())
     }
@@ -567,15 +578,18 @@ impl Database {
     pub fn insert_memory(&self, memory: &MemoryRecord) -> Result<i64, DatabaseError> {
         let source_turn_refs = serde_json::to_string(&memory.source_turn_refs)?;
         let lineage_refs = serde_json::to_string(&memory.lineage_refs)?;
+        let task_keys = serde_json::to_string(&memory.task_keys)?;
         self.conn.execute(
             "INSERT INTO memories (
-                title, body, scope, source_turn_refs, created_at, updated_at, is_active,
-                session_id, project_id, project_descriptor, lineage_refs
-             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+                title, body, scope, memory_kind, task_keys, source_turn_refs, created_at,
+                updated_at, is_active, session_id, project_id, project_descriptor, lineage_refs
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
             params![
                 memory.title,
                 memory.body,
                 memory.scope.as_str(),
+                memory.kind.as_str(),
+                task_keys,
                 source_turn_refs,
                 memory.created_at,
                 memory.updated_at,
@@ -666,8 +680,9 @@ impl Database {
 
     pub fn list_memories(&self) -> Result<Vec<MemoryRecord>, DatabaseError> {
         let mut stmt = self.conn.prepare(
-            "SELECT id, title, body, scope, source_turn_refs, created_at, updated_at,
-                    is_active, session_id, project_id, project_descriptor, lineage_refs
+            "SELECT id, title, body, scope, memory_kind, task_keys, source_turn_refs,
+                    created_at, updated_at, is_active, session_id, project_id,
+                    project_descriptor, lineage_refs
              FROM memories
              ORDER BY id",
         )?;
@@ -688,8 +703,9 @@ impl Database {
             let memory = self
                 .conn
                 .query_row(
-                    "SELECT id, title, body, scope, source_turn_refs, created_at, updated_at,
-                            is_active, session_id, project_id, project_descriptor, lineage_refs
+                    "SELECT id, title, body, scope, memory_kind, task_keys, source_turn_refs,
+                            created_at, updated_at, is_active, session_id, project_id,
+                            project_descriptor, lineage_refs
                      FROM memories
                      WHERE id = ?1 AND is_active = 1",
                     params![memory_id],
@@ -712,8 +728,9 @@ impl Database {
             let memory = self
                 .conn
                 .query_row(
-                    "SELECT id, title, body, scope, source_turn_refs, created_at, updated_at,
-                            is_active, session_id, project_id, project_descriptor, lineage_refs
+                    "SELECT id, title, body, scope, memory_kind, task_keys, source_turn_refs,
+                            created_at, updated_at, is_active, session_id, project_id,
+                            project_descriptor, lineage_refs
                      FROM memories
                      WHERE id = ?1",
                     params![memory_id],
@@ -732,8 +749,9 @@ impl Database {
         observed_at: &str,
     ) -> Result<Vec<MemoryRecord>, DatabaseError> {
         let mut stmt = self.conn.prepare(
-            "SELECT id, title, body, scope, source_turn_refs, created_at, updated_at,
-                    is_active, session_id, project_id, project_descriptor, lineage_refs
+            "SELECT id, title, body, scope, memory_kind, task_keys, source_turn_refs,
+                    created_at, updated_at, is_active, session_id, project_id,
+                    project_descriptor, lineage_refs
              FROM memories
              WHERE is_active = 1 AND created_at < ?1
              ORDER BY created_at, id",
@@ -1522,28 +1540,46 @@ fn read_turn_record_from_offset(
 
 fn read_memory_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<MemoryRecord> {
     let scope: String = row.get(3)?;
-    let source_turn_refs_json: String = row.get(4)?;
-    let lineage_refs_json: String = row.get(11)?;
+    let memory_kind: String = row.get(4)?;
+    let task_keys_json: String = row.get(5)?;
+    let source_turn_refs_json: String = row.get(6)?;
+    let lineage_refs_json: String = row.get(13)?;
+    let title: String = row.get(1)?;
+    let body: String = row.get(2)?;
+    let scope = match scope.as_str() {
+        "global" => MemoryScope::Global,
+        _ => MemoryScope::Project,
+    };
     let source_turn_refs: Vec<SourceTurnRef> =
         serde_json::from_str(&source_turn_refs_json).map_err(json_decode_error)?;
+    let mut task_keys: Vec<String> =
+        serde_json::from_str(&task_keys_json).map_err(json_decode_error)?;
+    if task_keys.is_empty() {
+        task_keys = extract_task_keys(&format!("{title}\n{body}"));
+    }
     let lineage_refs: Vec<i64> =
         serde_json::from_str(&lineage_refs_json).map_err(json_decode_error)?;
-    let is_active: i64 = row.get(7)?;
+    let is_active: i64 = row.get(9)?;
     Ok(MemoryRecord {
         id: row.get(0)?,
-        title: row.get(1)?,
-        body: row.get(2)?,
-        scope: match scope.as_str() {
-            "global" => MemoryScope::Global,
-            _ => MemoryScope::Project,
+        title,
+        body,
+        scope,
+        kind: match memory_kind.as_str() {
+            "preference" => MemoryKind::Preference,
+            "workflow" => MemoryKind::Workflow,
+            "project_fact" => MemoryKind::ProjectFact,
+            "task_state" => MemoryKind::TaskState,
+            _ => MemoryKind::Lesson,
         },
+        task_keys,
         source_turn_refs,
-        created_at: row.get(5)?,
-        updated_at: row.get(6)?,
+        created_at: row.get(7)?,
+        updated_at: row.get(8)?,
         is_active: is_active != 0,
-        session_id: row.get(8)?,
-        project_id: row.get(9)?,
-        project_descriptor: row.get(10)?,
+        session_id: row.get(10)?,
+        project_id: row.get(11)?,
+        project_descriptor: row.get(12)?,
         lineage_refs,
     })
 }
@@ -1875,6 +1911,64 @@ mod tests {
     }
 
     #[test]
+    fn memory_insert_roundtrips_kind_and_task_keys() {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+        let memory = MemoryRecord {
+            id: None,
+            title: "PR memory".to_string(),
+            body: "PR 481245 needs task-key aware recall.".to_string(),
+            scope: MemoryScope::Project,
+            kind: MemoryKind::TaskState,
+            task_keys: vec!["pr:481245".to_string(), "tool:yaaml".to_string()],
+            source_turn_refs: Vec::new(),
+            created_at: "2026-06-08T00:00:00Z".to_string(),
+            updated_at: "2026-06-08T00:00:00Z".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some("/tmp/yaaml".to_string()),
+            project_descriptor: Some("yaaml, Rust".to_string()),
+            lineage_refs: Vec::new(),
+        };
+
+        db.insert_memory(&memory).unwrap();
+        let memories = db.list_memories().unwrap();
+
+        assert_eq!(memories[0].kind, MemoryKind::TaskState);
+        assert_eq!(
+            memories[0].task_keys,
+            vec!["pr:481245".to_string(), "tool:yaaml".to_string()]
+        );
+    }
+
+    #[test]
+    fn empty_persisted_task_keys_are_derived_on_read() {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+        let memory = MemoryRecord {
+            id: None,
+            title: "PR 481245".to_string(),
+            body: "Risk Arbiter recall should prefer the matching PR.".to_string(),
+            scope: MemoryScope::Project,
+            kind: MemoryKind::TaskState,
+            task_keys: Vec::new(),
+            source_turn_refs: Vec::new(),
+            created_at: "2026-06-08T00:00:00Z".to_string(),
+            updated_at: "2026-06-08T00:00:00Z".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some("/tmp/yaaml".to_string()),
+            project_descriptor: Some("yaaml, Rust".to_string()),
+            lineage_refs: Vec::new(),
+        };
+
+        db.insert_memory(&memory).unwrap();
+        let memories = db.list_memories().unwrap();
+
+        assert!(memories[0].task_keys.contains(&"pr:481245".to_string()));
+    }
+
+    #[test]
     fn memory_insert_persists_context_metadata() {
         let mut db = Database::in_memory().unwrap();
         db.migrate().unwrap();
@@ -1883,6 +1977,8 @@ mod tests {
             title: "Sad Sack Signals".to_string(),
             body: "forge-signalsmith lifecycle job context.".to_string(),
             scope: MemoryScope::Project,
+            kind: MemoryKind::Lesson,
+            task_keys: Vec::new(),
             source_turn_refs: Vec::new(),
             created_at: "2026-06-08T00:00:00Z".to_string(),
             updated_at: "2026-06-08T00:00:00Z".to_string(),
@@ -1914,6 +2010,8 @@ mod tests {
             title: "Recall files".to_string(),
             body: "Skills read recall markdown.".to_string(),
             scope: MemoryScope::Project,
+            kind: MemoryKind::Lesson,
+            task_keys: Vec::new(),
             source_turn_refs: Vec::new(),
             created_at: "2026-06-08T00:00:00Z".to_string(),
             updated_at: "2026-06-08T00:00:00Z".to_string(),
@@ -1954,6 +2052,8 @@ mod tests {
             title: title.to_string(),
             body: title.to_string(),
             scope: MemoryScope::Project,
+            kind: MemoryKind::Lesson,
+            task_keys: Vec::new(),
             source_turn_refs: Vec::new(),
             created_at: "2026-06-08T00:00:00Z".to_string(),
             updated_at: "2026-06-08T00:00:00Z".to_string(),
@@ -1970,6 +2070,8 @@ mod tests {
             title: "merged".to_string(),
             body: "merged body".to_string(),
             scope: MemoryScope::Project,
+            kind: MemoryKind::Lesson,
+            task_keys: Vec::new(),
             source_turn_refs: Vec::new(),
             created_at: "2026-06-08T00:00:01Z".to_string(),
             updated_at: "2026-06-08T00:00:01Z".to_string(),

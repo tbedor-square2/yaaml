@@ -12,12 +12,13 @@ use clap::{Parser, Subcommand, ValueEnum};
 use serde::Serialize;
 use yaaml::turn_hydration::{context_from_turns, hydrate_turns};
 use yaaml_core::{
-    apply_project_bonus, context_score, counterfactual_citation_score, derive_project_descriptor,
-    embedded_text_hash, embedding_text, infer_context_from_memory, infer_context_from_path,
-    infer_context_from_text, merge_contexts, parse_eval_judge_response, parse_memory_ids,
-    recall_file_path, render_recall_markdown, session_recall_file_path, write_recall_file, Config,
-    ConfigPaths, ContextMetadata, EmbeddingRecord, MemoryRecord, MemoryScope, RecallCandidate,
-    RecallMemory, RecallWrite, SessionRecord, TurnRecord, VectorIndex,
+    context_score, counterfactual_citation_score, derive_project_descriptor, embedded_text_hash,
+    embedding_text, extract_task_keys, infer_context_from_memory, infer_context_from_path,
+    infer_context_from_text, infer_memory_kind, merge_contexts, parse_eval_judge_response,
+    parse_memory_ids, rank_recall_candidates, recall_file_path, render_recall_markdown,
+    session_recall_file_path, write_recall_file, Config, ConfigPaths, ContextMetadata,
+    EmbeddingRecord, MemoryRecord, MemoryScope, RecallMemory, RecallRankDetails,
+    RecallRankingOptions, RecallWrite, SessionRecord, TurnRecord, VectorIndex,
 };
 use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
@@ -257,6 +258,9 @@ struct RecallArgs {
     /// Emit machine-readable JSON.
     #[arg(long)]
     json: bool,
+    /// Include per-memory ranking components in JSON output.
+    #[arg(long)]
+    debug_ranking: bool,
 }
 
 #[derive(Debug, Parser)]
@@ -1602,16 +1606,19 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
     let mut db = Database::open(&db_path)
         .with_context(|| format!("failed to open {}", display(&db_path)))?;
     db.migrate().context("failed to migrate database")?;
+    if args.debug_ranking && !args.json {
+        bail!("--debug-ranking requires --json");
+    }
 
     if args.session.is_some() || args.turn.is_some() {
         return recall_for_historical_turn(args, &config, &db);
     }
 
     let recall_path = contextual_recall_file_path(&recall_dir, &project_id_path, &db)?;
-    if args.json {
-        bail!("--json is only supported with --session and --turn");
-    }
     let Some(query) = args.query else {
+        if args.json || args.debug_ranking {
+            bail!("--json and --debug-ranking require --query or --session/--turn");
+        }
         if let Some(contents) = read_active_recall_file(&db, &recall_path)? {
             print!("{contents}");
             return Ok(());
@@ -1661,6 +1668,27 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
     )?;
     let rendered = recall_result.markdown;
     let selected_ids = recall_result.selected_memory_ids;
+    if args.json {
+        let anchor = recall_eval_anchor(&db, &project_id)?;
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&RecallCommandOutput {
+                session_id: anchor
+                    .as_ref()
+                    .map(|anchor| anchor.session_id.clone())
+                    .unwrap_or_default(),
+                turn_ordinal: anchor.map(|anchor| anchor.turn_ordinal).unwrap_or_default(),
+                query_timestamp: recall_result.query_timestamp,
+                query_source: recall_result.query_source,
+                project_id: recall_result.project_id,
+                selected_memory_ids: selected_ids,
+                memories: recall_result.memories,
+                ranking: args.debug_ranking.then_some(recall_result.ranking),
+                markdown: rendered,
+            })?
+        );
+        return Ok(());
+    }
     let write = write_recall_file(&recall_path, &rendered, &selected_ids)
         .context("failed to write recall file")?;
     if !selected_ids.is_empty() && matches!(write, RecallWrite::Written | RecallWrite::Unchanged) {
@@ -1836,7 +1864,15 @@ struct RecallCommandOutput {
     project_id: String,
     selected_memory_ids: Vec<i64>,
     memories: Vec<RecallMemory>,
+    ranking: Option<Vec<RecallDebugRanking>>,
     markdown: String,
+}
+
+#[derive(Debug, Serialize)]
+struct RecallDebugRanking {
+    memory_id: i64,
+    score: f32,
+    rank: RecallRankDetails,
 }
 
 #[derive(Debug)]
@@ -1846,6 +1882,7 @@ struct RecallSearchResult {
     project_id: String,
     selected_memory_ids: Vec<i64>,
     memories: Vec<RecallMemory>,
+    ranking: Vec<RecallDebugRanking>,
     markdown: String,
 }
 
@@ -1935,6 +1972,7 @@ fn recall_for_historical_turn(
                 project_id: result.project_id,
                 selected_memory_ids: result.selected_memory_ids,
                 memories: result.memories,
+                ranking: args.debug_ranking.then_some(result.ranking),
                 markdown: result.markdown,
             })?
         );
@@ -1984,39 +2022,18 @@ fn recall_from_embedding(
         );
         query_context
     });
-    let mut candidates = hits
-        .iter()
-        .filter_map(|hit| {
-            memories
-                .iter()
-                .find(|memory| memory.id == Some(hit.memory_id))
-                .map(|memory| {
-                    let memory_context = infer_context_from_memory(memory);
-                    RecallCandidate {
-                        memory_id: hit.memory_id,
-                        similarity: hit.similarity,
-                        score: hit.similarity + context_score(&query_context, &memory_context),
-                        project_id: memory.project_id.clone(),
-                    }
-                })
-        })
-        .collect::<Vec<_>>();
-    candidates = if config.recall_project_tiebreaker {
-        apply_project_bonus(
-            candidates,
-            request.project_id,
-            config.recall_project_score_bonus,
-        )
-    } else {
-        candidates
-    };
-    candidates.sort_by(|left, right| {
-        right
-            .score
-            .partial_cmp(&left.score)
-            .unwrap_or(std::cmp::Ordering::Equal)
-            .then_with(|| left.memory_id.cmp(&right.memory_id))
-    });
+    let query_task_keys = extract_task_keys(request.query_text);
+    let candidates = rank_recall_candidates(
+        &hits,
+        &memories,
+        request.project_id,
+        &query_context,
+        &query_task_keys,
+        RecallRankingOptions {
+            project_tiebreaker: config.recall_project_tiebreaker,
+            project_score_bonus: config.recall_project_score_bonus,
+        },
+    );
     let selected = candidates
         .into_iter()
         .take(config.recall_result_limit)
@@ -2042,7 +2059,16 @@ fn recall_from_embedding(
                     project_id: memory.project_id.clone(),
                     project_descriptor: memory.project_descriptor.clone(),
                     score: candidate.score,
+                    rank: candidate.rank.clone(),
                 })
+        })
+        .collect::<Vec<_>>();
+    let ranking = selected
+        .iter()
+        .map(|candidate| RecallDebugRanking {
+            memory_id: candidate.memory_id,
+            score: candidate.score,
+            rank: candidate.rank.clone(),
         })
         .collect::<Vec<_>>();
     let markdown = render_recall_markdown(
@@ -2057,6 +2083,7 @@ fn recall_from_embedding(
         project_id: request.project_id.to_string(),
         selected_memory_ids,
         memories: recall_memories,
+        ranking,
         markdown,
     })
 }
@@ -2099,6 +2126,8 @@ fn remember(args: RememberArgs) -> anyhow::Result<()> {
         title: truncate_chars(title, 200),
         body: truncate_chars(body, config.max_memory_length),
         scope: args.scope.into(),
+        kind: infer_memory_kind(title, body, args.scope.into()),
+        task_keys: extract_task_keys(&format!("{title}\n{body}")),
         source_turn_refs: Vec::new(),
         created_at: now.clone(),
         updated_at: now.clone(),

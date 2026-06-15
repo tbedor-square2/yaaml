@@ -1384,7 +1384,12 @@ fn source_turn_refs_for_turns(turns: &[yaaml_core::TurnRecord]) -> Vec<SourceTur
 
 fn covered_memory_turn_refs(db: &Database) -> anyhow::Result<HashSet<(String, u64)>> {
     let mut covered = HashSet::new();
-    for memory in db.list_memories().context("failed to list memories")? {
+    for memory in db
+        .list_memories()
+        .context("failed to list memories")?
+        .into_iter()
+        .filter(|memory| memory.is_active)
+    {
         for source_ref in memory.source_turn_refs {
             covered.insert((source_ref.session_id, source_ref.ordinal));
         }

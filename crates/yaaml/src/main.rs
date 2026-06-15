@@ -55,6 +55,8 @@ enum Command {
     Config(ConfigArgs),
     /// Inspect or manage daemon tasks.
     Tasks(TasksArgs),
+    /// Inspect or rebuild stored memories.
+    Memories(MemoriesArgs),
     /// Resolve the current session or project's daemon-owned recall file path.
     Path,
     /// Print existing recall, or update it from user input.
@@ -176,6 +178,37 @@ struct ConfigArgs {
 struct TasksArgs {
     #[command(subcommand)]
     command: TasksCommand,
+}
+
+#[derive(Debug, Parser)]
+struct MemoriesArgs {
+    #[command(subcommand)]
+    command: MemoriesCommand,
+}
+
+#[derive(Debug, Subcommand)]
+enum MemoriesCommand {
+    /// Show memory counts by scope, kind, and project.
+    Stats(MemoriesStatsArgs),
+    /// Soft-deactivate active memories and requeue transcript-backed formulation.
+    Rebuild(MemoriesRebuildArgs),
+}
+
+#[derive(Debug, Parser)]
+struct MemoriesStatsArgs {
+    /// Emit machine-readable JSON.
+    #[arg(long)]
+    json: bool,
+}
+
+#[derive(Debug, Parser)]
+struct MemoriesRebuildArgs {
+    /// Required confirmation for corpus rebuild.
+    #[arg(long)]
+    yes: bool,
+    /// Keep active memories and only queue currently uncovered turns.
+    #[arg(long)]
+    keep_active: bool,
 }
 
 #[derive(Debug, Subcommand)]
@@ -309,6 +342,7 @@ fn main() -> anyhow::Result<()> {
         Command::Status(args) => status(args),
         Command::Config(args) => config(args),
         Command::Tasks(args) => tasks(args),
+        Command::Memories(args) => memories(args),
         Command::Path => path(),
         Command::Recall(args) => recall(args),
         Command::Remember(args) => remember(args),
@@ -344,6 +378,147 @@ fn tasks(args: TasksArgs) -> anyhow::Result<()> {
         TasksCommand::Retry(args) => task_retry(args),
         TasksCommand::Clear(args) => task_clear(args),
     }
+}
+
+#[derive(Debug, Serialize)]
+struct MemoryStatsOutput {
+    total: usize,
+    active: usize,
+    by_scope_kind: Vec<MemoryScopeKindCount>,
+    top_projects: Vec<MemoryProjectCount>,
+}
+
+#[derive(Debug, Serialize)]
+struct MemoryScopeKindCount {
+    scope: String,
+    kind: String,
+    active: bool,
+    count: usize,
+}
+
+#[derive(Debug, Serialize)]
+struct MemoryProjectCount {
+    project_id: String,
+    active_count: usize,
+}
+
+#[derive(Debug, Serialize)]
+struct MemoryRebuildOutput {
+    deactivated_memories: u64,
+    cleared_memory_tasks: u64,
+    queued_memory_jobs: u64,
+}
+
+fn memories(args: MemoriesArgs) -> anyhow::Result<()> {
+    match args.command {
+        MemoriesCommand::Stats(args) => memories_stats(args),
+        MemoriesCommand::Rebuild(args) => memories_rebuild(args),
+    }
+}
+
+fn memories_stats(args: MemoriesStatsArgs) -> anyhow::Result<()> {
+    let (_config, db) = open_database_for_cwd()?;
+    let stats = build_memory_stats(&db)?;
+    if args.json {
+        println!("{}", serde_json::to_string_pretty(&stats)?);
+    } else {
+        print_human_memory_stats(&stats);
+    }
+    Ok(())
+}
+
+fn memories_rebuild(args: MemoriesRebuildArgs) -> anyhow::Result<()> {
+    if !args.yes {
+        bail!("memory rebuild requires --yes");
+    }
+    let (config, db) = open_database_for_cwd()?;
+    let now = unix_timestamp();
+    let deactivated_memories = if args.keep_active {
+        0
+    } else {
+        db.deactivate_active_memories(&now)
+            .context("failed to deactivate active memories")?
+    };
+    let cleared_memory_tasks = clear_memory_build_tasks(&db)?;
+    let queued_memory_jobs = yaaml::daemon::queue_missing_memory_formulation_tasks(
+        &db,
+        &config,
+        0,
+        yaaml::daemon::PartialBatchPolicy::Include,
+    )
+    .context("failed to queue memory formulation rebuild")?;
+    let output = MemoryRebuildOutput {
+        deactivated_memories,
+        cleared_memory_tasks,
+        queued_memory_jobs,
+    };
+    println!("{}", serde_json::to_string_pretty(&output)?);
+    Ok(())
+}
+
+fn clear_memory_build_tasks(db: &Database) -> anyhow::Result<u64> {
+    let mut cleared = 0;
+    for status in ["queued", "scheduled", "running", "parked"] {
+        for kind in [
+            yaaml::daemon::TASK_KIND_MEMORY_FORMULATION,
+            yaaml::daemon::TASK_KIND_MEMORY_CONSOLIDATION,
+        ] {
+            cleared += db
+                .clear_tasks_by_display_status(status, Some(kind))
+                .with_context(|| format!("failed to clear {status} {kind} tasks"))?;
+        }
+    }
+    Ok(cleared)
+}
+
+fn build_memory_stats(db: &Database) -> anyhow::Result<MemoryStatsOutput> {
+    let memories = db.list_memories().context("failed to list memories")?;
+    let mut by_scope_kind = BTreeMap::<(String, String, bool), usize>::new();
+    let mut by_project = BTreeMap::<String, usize>::new();
+    let mut active = 0;
+    for memory in &memories {
+        if memory.is_active {
+            active += 1;
+            if let Some(project_id) = &memory.project_id {
+                *by_project.entry(project_id.clone()).or_default() += 1;
+            }
+        }
+        *by_scope_kind
+            .entry((
+                memory.scope.as_str().to_string(),
+                memory.kind.as_str().to_string(),
+                memory.is_active,
+            ))
+            .or_default() += 1;
+    }
+    let mut top_projects = by_project
+        .into_iter()
+        .map(|(project_id, active_count)| MemoryProjectCount {
+            project_id,
+            active_count,
+        })
+        .collect::<Vec<_>>();
+    top_projects.sort_by(|left, right| {
+        right
+            .active_count
+            .cmp(&left.active_count)
+            .then_with(|| left.project_id.cmp(&right.project_id))
+    });
+    top_projects.truncate(20);
+    Ok(MemoryStatsOutput {
+        total: memories.len(),
+        active,
+        by_scope_kind: by_scope_kind
+            .into_iter()
+            .map(|((scope, kind, active), count)| MemoryScopeKindCount {
+                scope,
+                kind,
+                active,
+                count,
+            })
+            .collect(),
+        top_projects,
+    })
 }
 
 fn task_list(args: TaskListArgs) -> anyhow::Result<()> {
@@ -2271,6 +2446,25 @@ fn print_human_tasks(tasks: &[TaskListRecord]) {
             next_run,
             truncate_task_error(error)
         );
+    }
+}
+
+fn print_human_memory_stats(stats: &MemoryStatsOutput) {
+    println!("YAAML memories");
+    println!(
+        "  memories: {} active / {} total",
+        stats.active, stats.total
+    );
+    println!("  by scope/kind:");
+    for row in &stats.by_scope_kind {
+        let active = if row.active { "active" } else { "inactive" };
+        println!("    {} {} {}: {}", row.scope, row.kind, active, row.count);
+    }
+    if !stats.top_projects.is_empty() {
+        println!("  top projects:");
+        for project in &stats.top_projects {
+            println!("    {}: {}", project.project_id, project.active_count);
+        }
     }
 }
 

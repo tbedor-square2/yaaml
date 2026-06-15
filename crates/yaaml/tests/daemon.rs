@@ -413,6 +413,54 @@ fn memory_queue_skips_already_covered_source_refs() {
 }
 
 #[test]
+fn inactive_memories_do_not_cover_source_refs_for_rebuild() {
+    let tmp = TempDir::new().unwrap();
+    let transcript = tmp.path().join("session.jsonl");
+    let mut contents = session_meta();
+    for ordinal in 0..10 {
+        contents.push_str(&completed_turn(ordinal));
+    }
+    fs::write(&transcript, contents).unwrap();
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+    ingest_codex_file(&db, &transcript).unwrap();
+    db.insert_memory(&MemoryRecord {
+        id: None,
+        title: "inactive covered".to_string(),
+        body: "inactive covered".to_string(),
+        scope: MemoryScope::Project,
+        kind: MemoryKind::Lesson,
+        task_keys: Vec::new(),
+        source_turn_refs: (0..10)
+            .map(|ordinal| SourceTurnRef {
+                session_id: "session-1".to_string(),
+                ordinal,
+                byte_start: 0,
+                byte_end: 1,
+            })
+            .collect(),
+        created_at: "2026-06-08T00:00:00Z".to_string(),
+        updated_at: "2026-06-08T00:00:00Z".to_string(),
+        is_active: false,
+        session_id: Some("session-1".to_string()),
+        project_id: Some("/tmp/yaaml".to_string()),
+        project_descriptor: Some("yaaml, Rust".to_string()),
+        lineage_refs: Vec::new(),
+    })
+    .unwrap();
+    let config = Config {
+        backlog_formulation_turn_window: 10,
+        ..Config::default()
+    };
+
+    let queued =
+        queue_missing_memory_formulation_tasks(&db, &config, 0, PartialBatchPolicy::Include)
+            .unwrap();
+
+    assert_eq!(queued, 1);
+}
+
+#[test]
 fn dedupe_deactivates_obvious_same_project_duplicate_memory() {
     let mut db = Database::in_memory().unwrap();
     db.migrate().unwrap();

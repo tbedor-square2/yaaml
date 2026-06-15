@@ -678,6 +678,17 @@ impl Database {
         Ok(())
     }
 
+    pub fn deactivate_active_memories(&self, updated_at: &str) -> Result<u64, DatabaseError> {
+        let updated = self.conn.execute(
+            "UPDATE memories
+             SET is_active = 0,
+                 updated_at = ?1
+             WHERE is_active = 1",
+            params![updated_at],
+        )?;
+        Ok(updated as u64)
+    }
+
     pub fn list_memories(&self) -> Result<Vec<MemoryRecord>, DatabaseError> {
         let mut stmt = self.conn.prepare(
             "SELECT id, title, body, scope, memory_kind, task_keys, source_turn_refs,

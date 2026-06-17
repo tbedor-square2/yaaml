@@ -18,9 +18,9 @@ use yaaml_core::{
     build_recall_query, derive_project_descriptor, embedded_text_hash, embedding_text,
     extract_task_keys, find_consolidation_clusters, parse_eval_judge_response,
     parse_formulation_response, rank_recall_candidates, recall_file_path, render_recall_markdown,
-    session_recall_file_path, write_recall_file, ClusterMemory, Config, EmbeddingRecord,
-    MemoryRecord, MemoryScope, RecallMemory, RecallRankingOptions, SourceTurnRef, TaskRecord,
-    TaskStatus, VectorIndex,
+    select_recall_candidates, session_recall_file_path, write_recall_file, ClusterMemory, Config,
+    EmbeddingRecord, MemoryRecord, MemoryScope, RecallMemory, RecallRankingOptions, SourceTurnRef,
+    TaskRecord, TaskStatus, VectorIndex,
 };
 use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
@@ -1560,10 +1560,14 @@ pub fn refresh_recall_with_embedding(
             project_score_bonus: config.recall_project_score_bonus,
         },
     );
-    let selected = candidates
-        .into_iter()
-        .take(config.recall_result_limit)
-        .collect::<Vec<_>>();
+    let (selected, _) = select_recall_candidates(
+        candidates,
+        &memories,
+        &project_id_string,
+        &query_context,
+        &query_task_keys,
+        config.recall_result_limit,
+    );
     let selected_ids = selected
         .iter()
         .map(|candidate| candidate.memory_id)

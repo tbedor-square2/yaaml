@@ -16,8 +16,8 @@ use yaaml_core::{
     embedding_text, extract_task_keys, infer_context_from_memory, infer_context_from_path,
     infer_context_from_text, infer_memory_kind, merge_contexts, parse_eval_judge_response,
     parse_memory_ids, rank_recall_candidates, recall_file_path, render_recall_markdown,
-    session_recall_file_path, write_recall_file, Config, ConfigPaths, ContextMetadata,
-    EmbeddingRecord, MemoryRecord, MemoryScope, RecallMemory, RecallRankDetails,
+    select_recall_candidates, session_recall_file_path, write_recall_file, Config, ConfigPaths,
+    ContextMetadata, EmbeddingRecord, MemoryRecord, MemoryScope, RecallMemory, RecallRankDetails,
     RecallRankingOptions, RecallWrite, SessionRecord, TurnRecord, VectorIndex,
 };
 use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
@@ -2046,7 +2046,11 @@ struct RecallCommandOutput {
 #[derive(Debug, Serialize)]
 struct RecallDebugRanking {
     memory_id: i64,
+    selected: bool,
     score: f32,
+    similarity: f32,
+    memory_kind: String,
+    filter_reasons: Vec<String>,
     rank: RecallRankDetails,
 }
 
@@ -2209,10 +2213,14 @@ fn recall_from_embedding(
             project_score_bonus: config.recall_project_score_bonus,
         },
     );
-    let selected = candidates
-        .into_iter()
-        .take(config.recall_result_limit)
-        .collect::<Vec<_>>();
+    let (selected, debug_candidates) = select_recall_candidates(
+        candidates,
+        &memories,
+        request.project_id,
+        &query_context,
+        &query_task_keys,
+        config.recall_result_limit,
+    );
     let selected_memory_ids = selected
         .iter()
         .map(|candidate| candidate.memory_id)
@@ -2238,11 +2246,20 @@ fn recall_from_embedding(
                 })
         })
         .collect::<Vec<_>>();
-    let ranking = selected
+    let selected_id_set = selected_memory_ids.iter().copied().collect::<HashSet<_>>();
+    let ranking = debug_candidates
         .iter()
         .map(|candidate| RecallDebugRanking {
             memory_id: candidate.memory_id,
+            selected: selected_id_set.contains(&candidate.memory_id),
             score: candidate.score,
+            similarity: candidate.similarity,
+            memory_kind: memories
+                .iter()
+                .find(|memory| memory.id == Some(candidate.memory_id))
+                .map(|memory| memory.kind.as_str().to_string())
+                .unwrap_or_else(|| "unknown".to_string()),
+            filter_reasons: candidate.rank.filter_reasons.clone(),
             rank: candidate.rank.clone(),
         })
         .collect::<Vec<_>>();

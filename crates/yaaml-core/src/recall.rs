@@ -30,6 +30,7 @@ pub struct RecallRankDetails {
     pub task_key_bonus: f32,
     pub global_durable_bonus: f32,
     pub penalties: Vec<String>,
+    pub filter_reasons: Vec<String>,
     pub matched_task_keys: Vec<String>,
 }
 
@@ -151,6 +152,42 @@ pub fn rank_recall_candidates(
     candidates
 }
 
+pub fn select_recall_candidates(
+    candidates: Vec<RecallCandidate>,
+    memories: &[MemoryRecord],
+    current_project_id: &str,
+    query_context: &ContextMetadata,
+    query_task_keys: &[String],
+    limit: usize,
+) -> (Vec<RecallCandidate>, Vec<RecallCandidate>) {
+    let mut kept = Vec::new();
+    let mut debug = Vec::new();
+    for mut candidate in candidates {
+        let decision = memories
+            .iter()
+            .find(|memory| memory.id == Some(candidate.memory_id))
+            .map(|memory| {
+                recall_filter_decision(
+                    &candidate,
+                    memory,
+                    current_project_id,
+                    query_context,
+                    query_task_keys,
+                )
+            })
+            .unwrap_or_else(|| RecallFilterDecision {
+                keep: false,
+                reasons: vec!["drop:memory_not_loaded".to_string()],
+            });
+        candidate.rank.filter_reasons = decision.reasons;
+        if decision.keep && kept.len() < limit {
+            kept.push(candidate.clone());
+        }
+        debug.push(candidate);
+    }
+    (kept, debug)
+}
+
 fn rank_recall_candidate(
     hit: VectorHit,
     memory: &MemoryRecord,
@@ -168,7 +205,15 @@ fn rank_recall_candidate(
             0.0
         };
     let matched_task_keys = matched_task_keys(query_task_keys, &memory.task_keys);
-    let task_key_bonus = (matched_task_keys.len() as f32 * 0.28).min(0.70);
+    let strong_task_key_matches = matched_task_keys
+        .iter()
+        .filter(|key| is_strong_task_key(key))
+        .count();
+    let weak_task_key_matches = matched_task_keys
+        .len()
+        .saturating_sub(strong_task_key_matches);
+    let task_key_bonus =
+        (strong_task_key_matches as f32 * 0.28 + weak_task_key_matches as f32 * 0.06).min(0.70);
     let global_durable_bonus = if memory.scope == MemoryScope::Global
         && matches!(
             memory.kind,
@@ -213,8 +258,103 @@ fn rank_recall_candidate(
             task_key_bonus,
             global_durable_bonus,
             penalties,
+            filter_reasons: Vec::new(),
             matched_task_keys,
         },
+    }
+}
+
+struct RecallFilterDecision {
+    keep: bool,
+    reasons: Vec<String>,
+}
+
+fn recall_filter_decision(
+    candidate: &RecallCandidate,
+    memory: &MemoryRecord,
+    current_project_id: &str,
+    query_context: &ContextMetadata,
+    query_task_keys: &[String],
+) -> RecallFilterDecision {
+    let memory_context = crate::infer_context_from_memory(memory);
+    let same_project = memory.project_id.as_deref() == Some(current_project_id);
+    let same_repo =
+        query_context.repo_id.is_some() && query_context.repo_id == memory_context.repo_id;
+    let same_work_area =
+        query_context.work_area.is_some() && query_context.work_area == memory_context.work_area;
+    let strong_task_key_match = candidate
+        .rank
+        .matched_task_keys
+        .iter()
+        .any(|key| is_strong_task_key(key));
+    let weak_task_key_match = !candidate.rank.matched_task_keys.is_empty();
+    let strong_context = same_work_area
+        || (same_repo && candidate.rank.context_score >= 0.36)
+        || candidate.rank.context_score >= 0.42;
+
+    let mut reasons = Vec::new();
+    if strong_task_key_match {
+        reasons.push("keep:strong_task_key_match".to_string());
+        return RecallFilterDecision {
+            keep: true,
+            reasons,
+        };
+    }
+
+    match memory.kind {
+        MemoryKind::TaskState => {
+            if !query_task_keys.is_empty() {
+                reasons.push("drop:task_state_without_task_key_match".to_string());
+                return RecallFilterDecision {
+                    keep: false,
+                    reasons,
+                };
+            }
+            if same_project && strong_context {
+                reasons.push("keep:task_state_strong_context".to_string());
+                return RecallFilterDecision {
+                    keep: true,
+                    reasons,
+                };
+            }
+            reasons.push("drop:task_state_weak_context".to_string());
+            RecallFilterDecision {
+                keep: false,
+                reasons,
+            }
+        }
+        MemoryKind::ProjectFact => {
+            if same_project || strong_context {
+                reasons.push("keep:project_fact_context".to_string());
+                RecallFilterDecision {
+                    keep: true,
+                    reasons,
+                }
+            } else {
+                reasons.push("drop:project_fact_wrong_context".to_string());
+                RecallFilterDecision {
+                    keep: false,
+                    reasons,
+                }
+            }
+        }
+        MemoryKind::Preference | MemoryKind::Lesson | MemoryKind::Workflow => {
+            if memory.scope == MemoryScope::Global {
+                reasons.push("keep:global_durable".to_string());
+            } else if same_project {
+                reasons.push("keep:same_project_durable".to_string());
+            } else if strong_context {
+                reasons.push("keep:cross_project_strong_context".to_string());
+            } else if weak_task_key_match {
+                reasons.push("keep:weak_task_key_semantic_durable".to_string());
+            } else {
+                reasons.push("keep:semantic_durable".to_string());
+            }
+            RecallFilterDecision {
+                keep: true,
+                reasons,
+            }
+        }
     }
 }
 
@@ -308,14 +448,35 @@ pub fn normalize_memory_kind(
 fn matched_task_keys(query_task_keys: &[String], memory_task_keys: &[String]) -> Vec<String> {
     let mut matched = Vec::new();
     for query_key in query_task_keys {
+        let normalized_query_key = query_key.to_ascii_lowercase();
         if memory_task_keys
             .iter()
-            .any(|memory_key| memory_key == query_key)
+            .any(|memory_key| memory_key.to_ascii_lowercase() == normalized_query_key)
         {
             push_unique(&mut matched, query_key.clone());
         }
     }
     matched
+}
+
+fn is_strong_task_key(key: &str) -> bool {
+    let key = key.to_ascii_lowercase();
+    matches!(
+        key.split_once(':').map(|(prefix, _)| prefix),
+        Some(
+            "app"
+                | "branch"
+                | "metric"
+                | "path"
+                | "pr"
+                | "project"
+                | "sentry"
+                | "signal"
+                | "target"
+                | "ticket"
+                | "trigger"
+        )
+    )
 }
 
 fn task_key_tokens(text: &str) -> Vec<&str> {
@@ -365,6 +526,9 @@ fn path_key(token: &str) -> Option<String> {
     if !token.contains('/') || token.len() < 6 {
         return None;
     }
+    if !has_path_shape(token) {
+        return None;
+    }
     if !token
         .chars()
         .any(|ch| ch.is_ascii_alphabetic() || ch.is_ascii_digit())
@@ -376,6 +540,33 @@ fn path_key(token: &str) -> Option<String> {
         .trim_end_matches('/')
         .to_ascii_lowercase();
     Some(format!("path:{normalized}"))
+}
+
+fn has_path_shape(token: &str) -> bool {
+    if token.starts_with("./")
+        || token.starts_with("../")
+        || token.starts_with('/')
+        || token.starts_with("~/")
+        || token.starts_with("//")
+        || token.contains(':')
+        || token
+            .rsplit('/')
+            .next()
+            .is_some_and(|segment| segment.contains('.'))
+    {
+        return true;
+    }
+    let segments = token.split('/').collect::<Vec<_>>();
+    if segments.len() >= 3 {
+        return true;
+    }
+    let pathish_segments = [
+        "app", "apps", "bin", "build", "cmd", "config", "crates", "docs", "java", "js", "kotlin",
+        "lib", "packages", "py", "python", "src", "store", "test", "tests", "ts",
+    ];
+    segments
+        .iter()
+        .any(|segment| pathish_segments.contains(&segment.to_ascii_lowercase().as_str()))
 }
 
 fn branch_key(token: &str) -> Option<String> {
@@ -606,6 +797,14 @@ mod tests {
     }
 
     #[test]
+    fn task_key_extraction_ignores_generic_slash_phrases() {
+        let keys = extract_task_keys("compare before/after and repair/validation notes");
+
+        assert!(!keys.contains(&"path:before/after".to_string()));
+        assert!(!keys.contains(&"path:repair/validation".to_string()));
+    }
+
+    #[test]
     fn task_key_overlap_beats_same_project_wrong_task() {
         let current_project = "/Users/tbedor/Development/java";
         let hits = vec![
@@ -657,6 +856,126 @@ mod tests {
             .contains(&"same_project_no_task_key_overlap".to_string()));
     }
 
+    #[test]
+    fn selection_drops_task_state_without_matching_task_key() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![
+            VectorHit {
+                memory_id: 1,
+                similarity: 0.95,
+            },
+            VectorHit {
+                memory_id: 2,
+                similarity: 0.80,
+            },
+            VectorHit {
+                memory_id: 3,
+                similarity: 0.78,
+            },
+        ];
+        let memories = vec![
+            memory(
+                1,
+                "Abandoned PR state",
+                MemoryKind::TaskState,
+                Some(current_project),
+                vec!["pr:111111".to_string()],
+            ),
+            memory(
+                2,
+                "Target PR state",
+                MemoryKind::TaskState,
+                Some(current_project),
+                vec!["pr:481245".to_string()],
+            ),
+            memory(
+                3,
+                "Reusable Java workflow",
+                MemoryKind::Workflow,
+                Some(current_project),
+                Vec::new(),
+            ),
+        ];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &["pr:481245".to_string()],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &["pr:481245".to_string()],
+            5,
+        );
+
+        assert_eq!(
+            selected
+                .iter()
+                .map(|candidate| candidate.memory_id)
+                .collect::<Vec<_>>(),
+            vec![2, 3]
+        );
+        let dropped = debug
+            .iter()
+            .find(|candidate| candidate.memory_id == 1)
+            .unwrap();
+        assert!(dropped
+            .rank
+            .filter_reasons
+            .contains(&"drop:task_state_without_task_key_match".to_string()));
+    }
+
+    #[test]
+    fn tool_key_match_alone_does_not_keep_task_state() {
+        let current_project = "/Users/tbedor/Development/yaaml";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![memory(
+            1,
+            "Old YAAML status",
+            MemoryKind::TaskState,
+            Some(current_project),
+            vec!["tool:yaaml".to_string()],
+        )];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &["tool:yaaml".to_string()],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+        assert!(ranked[0].rank.task_key_bonus > 0.0);
+
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &["tool:yaaml".to_string()],
+            5,
+        );
+
+        assert!(selected.is_empty());
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:task_state_without_task_key_match".to_string()));
+    }
+
     fn empty_rank() -> RecallRankDetails {
         RecallRankDetails {
             vector_score: 0.0,
@@ -665,6 +984,7 @@ mod tests {
             task_key_bonus: 0.0,
             global_durable_bonus: 0.0,
             penalties: Vec::new(),
+            filter_reasons: Vec::new(),
             matched_task_keys: Vec::new(),
         }
     }

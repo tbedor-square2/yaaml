@@ -16,6 +16,8 @@ pub struct RecallFilterTelemetry {
     pub final_selected_count: usize,
     pub llm_attempted: bool,
     pub llm_applied: bool,
+    #[serde(default)]
+    pub llm_empty_fallback: bool,
     pub llm_error: Option<String>,
 }
 
@@ -57,6 +59,7 @@ pub fn select_recall_candidates_with_llm_filter(
         final_selected_count: deterministic_selected.len(),
         llm_attempted: false,
         llm_applied: false,
+        llm_empty_fallback: false,
         llm_error: None,
     };
 
@@ -79,8 +82,17 @@ pub fn select_recall_candidates_with_llm_filter(
         &filter_pool,
     ) {
         Ok(selected_ids) => {
-            let selected_id_set = selected_ids.into_iter().collect::<HashSet<_>>();
-            annotate_llm_filter(&mut debug_candidates, &filter_pool, &selected_id_set);
+            let mut selected_id_set = selected_ids.into_iter().collect::<HashSet<_>>();
+            if selected_id_set.is_empty() && !deterministic_selected.is_empty() {
+                selected_id_set.insert(deterministic_selected[0].memory_id);
+                telemetry.llm_empty_fallback = true;
+            }
+            annotate_llm_filter(
+                &mut debug_candidates,
+                &filter_pool,
+                &selected_id_set,
+                telemetry.llm_empty_fallback,
+            );
             let selected = filter_pool
                 .iter()
                 .filter(|candidate| selected_id_set.contains(&candidate.memory_id))
@@ -141,7 +153,7 @@ fn run_llm_filter(
 }
 
 fn recall_filter_system_prompt() -> &'static str {
-    "You filter memory recall for a coding agent. Return compact JSON only. Select only memories that are relevant to the current task, concise enough to justify context cost, and likely actionable. Drop memories from the wrong project/task, stale task state, generic workflow notes, or memories that only share weak vocabulary. Do not invent memory ids."
+    "You filter memory recall for a coding agent. Return compact JSON only. Treat the deterministic ranking as a useful baseline and prune only memories that are clearly unrelated, stale, or too generic to justify context cost. Select 1-5 memories whenever any candidate is plausibly useful as background or actionable guidance. Return an empty list only when every candidate is clearly wrong for the current task. Do not invent memory ids."
 }
 
 fn recall_filter_prompt(
@@ -179,6 +191,7 @@ fn recall_filter_prompt(
         "query_context": query_context,
         "current_turn_text": truncate_chars(query_text, 6000),
         "max_selected_memories": config.recall_result_limit,
+        "selection_policy": "Prefer fewer memories than deterministic recall, but keep plausible background. Empty selection is allowed only when all candidates are clearly unrelated.",
         "candidate_memories": candidates_json,
         "response_schema": {
             "selected_memory_ids": ["integer memory ids to keep, in candidate order or fewer"]
@@ -216,6 +229,7 @@ fn annotate_llm_filter(
     debug_candidates: &mut [RecallCandidate],
     filter_pool: &[RecallCandidate],
     selected_id_set: &HashSet<i64>,
+    empty_fallback: bool,
 ) {
     let filter_pool_ids = filter_pool
         .iter()
@@ -226,15 +240,17 @@ fn annotate_llm_filter(
             continue;
         }
         if selected_id_set.contains(&candidate.memory_id) {
-            candidate
-                .rank
-                .filter_reasons
-                .push("keep:llm_semantic_filter".to_string());
+            candidate.rank.filter_reasons.push(if empty_fallback {
+                "keep:llm_empty_fallback".to_string()
+            } else {
+                "keep:llm_semantic_filter".to_string()
+            });
         } else {
-            candidate
-                .rank
-                .filter_reasons
-                .push("drop:llm_semantic_filter".to_string());
+            candidate.rank.filter_reasons.push(if empty_fallback {
+                "drop:llm_empty_fallback".to_string()
+            } else {
+                "drop:llm_semantic_filter".to_string()
+            });
         }
     }
 }

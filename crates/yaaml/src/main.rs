@@ -474,6 +474,7 @@ struct StatsLlmFilter {
     runs_with_filter_telemetry: usize,
     llm_attempted_runs: usize,
     llm_applied_runs: usize,
+    llm_empty_fallback_runs: usize,
     llm_error_runs: usize,
     average_candidates_per_filtered_run: f64,
     average_dropped_memories_per_applied_run: f64,
@@ -700,6 +701,10 @@ fn build_llm_filter_stats(volumes: &[StatsRecallVolumeRun]) -> StatsLlmFilter {
             .filter(|telemetry| telemetry.llm_attempted)
             .count(),
         llm_applied_runs: applied.len(),
+        llm_empty_fallback_runs: telemetry
+            .iter()
+            .filter(|telemetry| telemetry.llm_empty_fallback)
+            .count(),
         llm_error_runs: telemetry
             .iter()
             .filter(|telemetry| telemetry.llm_error.is_some())
@@ -782,10 +787,11 @@ fn print_human_stats(stats: &StatsOutput) {
         stats.useful.insufficient_context_results
     );
     println!(
-        "  llm filter: telemetry_runs={} attempted={} applied={} errors={} avg_candidates={:.2} avg_dropped={:.2}",
+        "  llm filter: telemetry_runs={} attempted={} applied={} empty_fallbacks={} errors={} avg_candidates={:.2} avg_dropped={:.2}",
         stats.llm_filter.runs_with_filter_telemetry,
         stats.llm_filter.llm_attempted_runs,
         stats.llm_filter.llm_applied_runs,
+        stats.llm_filter.llm_empty_fallback_runs,
         stats.llm_filter.llm_error_runs,
         stats.llm_filter.average_candidates_per_filtered_run,
         stats.llm_filter.average_dropped_memories_per_applied_run

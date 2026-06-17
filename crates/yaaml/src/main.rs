@@ -9,15 +9,17 @@ use std::ffi::CStr;
 
 use anyhow::{bail, Context};
 use clap::{Parser, Subcommand, ValueEnum};
+use serde::Deserialize;
 use serde::Serialize;
+use yaaml::recall_filter::{select_recall_candidates_with_llm_filter, RecallFilterTelemetry};
 use yaaml::turn_hydration::{context_from_turns, hydrate_turns};
 use yaaml_core::{
     context_score, counterfactual_citation_score, derive_project_descriptor, embedded_text_hash,
     embedding_text, extract_task_keys, infer_context_from_memory, infer_context_from_path,
     infer_context_from_text, infer_memory_kind, merge_contexts, parse_eval_judge_response,
     parse_memory_ids, rank_recall_candidates, recall_file_path, render_recall_markdown,
-    select_recall_candidates, session_recall_file_path, write_recall_file, Config, ConfigPaths,
-    ContextMetadata, EmbeddingRecord, MemoryRecord, MemoryScope, RecallMemory, RecallRankDetails,
+    session_recall_file_path, write_recall_file, Config, ConfigPaths, ContextMetadata,
+    EmbeddingRecord, MemoryRecord, MemoryScope, RecallMemory, RecallRankDetails,
     RecallRankingOptions, RecallWrite, SessionRecord, TurnRecord, VectorIndex,
 };
 use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
@@ -51,6 +53,8 @@ enum Command {
     Eval(EvalArgs),
     /// Show daemon, memory, backlog, and provider status.
     Status(StatusArgs),
+    /// Show recall coverage, volume, and usefulness metrics.
+    Stats(StatsArgs),
     /// Inspect configuration.
     Config(ConfigArgs),
     /// Inspect or manage daemon tasks.
@@ -162,6 +166,16 @@ struct StatusArgs {
     /// Emit machine-readable JSON.
     #[arg(long)]
     json: bool,
+}
+
+#[derive(Debug, Parser)]
+struct StatsArgs {
+    /// Emit machine-readable JSON.
+    #[arg(long)]
+    json: bool,
+    /// Maximum recent eval runs to consider for usefulness metrics.
+    #[arg(long, default_value_t = 1000)]
+    eval_limit: usize,
 }
 
 #[derive(Debug, Parser)]
@@ -340,6 +354,7 @@ fn main() -> anyhow::Result<()> {
         Command::Service(args) => service(args),
         Command::Eval(args) => eval(args),
         Command::Status(args) => status(args),
+        Command::Stats(args) => stats(args),
         Command::Config(args) => config(args),
         Command::Tasks(args) => tasks(args),
         Command::Memories(args) => memories(args),
@@ -370,6 +385,415 @@ fn status(args: StatusArgs) -> anyhow::Result<()> {
     }
 
     Ok(())
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+struct StatsAnchor {
+    session_id: String,
+    turn_ordinal: u64,
+}
+
+#[derive(Debug, Deserialize)]
+struct StatsRecallTaskPayload {
+    session_id: String,
+    turn_ordinal: u64,
+}
+
+#[derive(Debug, Deserialize)]
+struct StatsRecallEvalTaskPayload {
+    session_id: String,
+    turn_ordinal: u64,
+    recall_text: String,
+    #[serde(default)]
+    memory_ids: Vec<i64>,
+    #[serde(default)]
+    filter_telemetry: Option<RecallFilterTelemetry>,
+}
+
+#[derive(Debug, Deserialize)]
+struct StatsEvalRunConfig {
+    session_id: Option<String>,
+    turn_ordinal: Option<u64>,
+}
+
+#[derive(Debug, Clone)]
+struct StatsRecallVolumeRun {
+    memory_count: usize,
+    recall_chars: usize,
+    filter_telemetry: Option<RecallFilterTelemetry>,
+}
+
+#[derive(Debug, Serialize)]
+struct StatsOutput {
+    eligible_turns: usize,
+    recall_runs: usize,
+    recall_rate: f64,
+    non_empty_recall_runs: usize,
+    non_empty_recall_rate: f64,
+    non_empty_per_recall_rate: f64,
+    volume: StatsVolume,
+    useful: StatsUseful,
+    llm_filter: StatsLlmFilter,
+}
+
+#[derive(Debug, Serialize)]
+struct StatsVolume {
+    average_memories_per_non_empty_run: f64,
+    p50_memories_per_non_empty_run: usize,
+    p90_memories_per_non_empty_run: usize,
+    average_recall_chars_per_non_empty_run: f64,
+    p50_recall_chars_per_non_empty_run: usize,
+    p90_recall_chars_per_non_empty_run: usize,
+    memory_count_buckets: StatsMemoryCountBuckets,
+}
+
+#[derive(Debug, Default, Serialize)]
+struct StatsMemoryCountBuckets {
+    zero: usize,
+    one_to_two: usize,
+    three_to_five: usize,
+    more_than_five: usize,
+}
+
+#[derive(Debug, Serialize)]
+struct StatsUseful {
+    evaluated_recall_runs: usize,
+    useful_recall_runs: usize,
+    useful_run_rate_per_eligible_turn: f64,
+    useful_run_rate_per_evaluated_recall: f64,
+    judged_memory_results: usize,
+    good_memory_results: usize,
+    low_memory_results: usize,
+    good_memory_rate: f64,
+    low_memory_rate: f64,
+    insufficient_context_results: usize,
+}
+
+#[derive(Debug, Serialize)]
+struct StatsLlmFilter {
+    runs_with_filter_telemetry: usize,
+    llm_attempted_runs: usize,
+    llm_applied_runs: usize,
+    llm_error_runs: usize,
+    average_candidates_per_filtered_run: f64,
+    average_dropped_memories_per_applied_run: f64,
+}
+
+fn stats(args: StatsArgs) -> anyhow::Result<()> {
+    let (_config, db) = open_database_for_cwd()?;
+    let stats = build_stats(&db, args.eval_limit)?;
+    if args.json {
+        println!("{}", serde_json::to_string_pretty(&stats)?);
+    } else {
+        print_human_stats(&stats);
+    }
+    Ok(())
+}
+
+fn build_stats(db: &Database, eval_limit: usize) -> anyhow::Result<StatsOutput> {
+    let eligible = db
+        .completed_turn_anchors()
+        .context("failed to load completed turn anchors")?
+        .into_iter()
+        .map(|turn| StatsAnchor {
+            session_id: turn.session_id,
+            turn_ordinal: turn.ordinal,
+        })
+        .collect::<HashSet<_>>();
+
+    let mut recall_runs = db
+        .list_tasks_by_kind(yaaml::daemon::TASK_KIND_RECALL)
+        .context("failed to list recall tasks")?
+        .into_iter()
+        .filter(|task| task.status == "completed")
+        .filter_map(|task| recall_task_anchor(&task.payload_json))
+        .filter(|anchor| eligible.contains(anchor))
+        .collect::<HashSet<_>>();
+
+    let mut volume_by_anchor = BTreeMap::<StatsAnchor, StatsRecallVolumeRun>::new();
+    for task in db
+        .list_tasks_by_kind(yaaml::daemon::TASK_KIND_RECALL_EVAL)
+        .context("failed to list recall eval tasks")?
+    {
+        let Some((anchor, volume)) = recall_eval_task_volume(&task.payload_json) else {
+            continue;
+        };
+        if !eligible.contains(&anchor) || volume.memory_count == 0 {
+            continue;
+        }
+        recall_runs.insert(anchor.clone());
+        volume_by_anchor.entry(anchor).or_insert(volume);
+    }
+
+    let mut latest_eval_run_by_anchor = BTreeMap::<StatsAnchor, EvalRunRecord>::new();
+    for run in db
+        .list_eval_runs(eval_limit)
+        .context("failed to list eval runs")?
+    {
+        let Some(anchor) = eval_run_anchor(&run.config_json) else {
+            continue;
+        };
+        if eligible.contains(&anchor) {
+            latest_eval_run_by_anchor.entry(anchor).or_insert(run);
+        }
+    }
+
+    let mut evaluated_recall_runs = 0_usize;
+    let mut useful_recall_runs = 0_usize;
+    let mut judged_memory_results = 0_usize;
+    let mut good_memory_results = 0_usize;
+    let mut low_memory_results = 0_usize;
+    let mut insufficient_context_results = 0_usize;
+    for run in latest_eval_run_by_anchor.values() {
+        let results = db
+            .eval_results_for_run(run.id)
+            .with_context(|| format!("failed to load eval results for run {}", run.id))?;
+        let mut has_numeric_score = false;
+        let mut has_useful_score = false;
+        for result in results {
+            match result.judge_score.as_deref().and_then(numeric_eval_score) {
+                Some(score) => {
+                    has_numeric_score = true;
+                    judged_memory_results += 1;
+                    if score >= 4 {
+                        good_memory_results += 1;
+                        has_useful_score = true;
+                    } else if score <= 2 {
+                        low_memory_results += 1;
+                    }
+                }
+                None => {
+                    if result.judge_score.as_deref() == Some("insufficient_context") {
+                        insufficient_context_results += 1;
+                    }
+                }
+            }
+        }
+        if has_numeric_score {
+            evaluated_recall_runs += 1;
+        }
+        if has_useful_score {
+            useful_recall_runs += 1;
+        }
+    }
+
+    let volumes = volume_by_anchor.values().cloned().collect::<Vec<_>>();
+    let volume = build_volume_stats(&volumes);
+    let llm_filter = build_llm_filter_stats(&volumes);
+    let eligible_count = eligible.len();
+    let recall_count = recall_runs.len();
+    let non_empty_count = volume_by_anchor.len();
+    let useful = StatsUseful {
+        evaluated_recall_runs,
+        useful_recall_runs,
+        useful_run_rate_per_eligible_turn: rate(useful_recall_runs, eligible_count),
+        useful_run_rate_per_evaluated_recall: rate(useful_recall_runs, evaluated_recall_runs),
+        judged_memory_results,
+        good_memory_results,
+        low_memory_results,
+        good_memory_rate: rate(good_memory_results, judged_memory_results),
+        low_memory_rate: rate(low_memory_results, judged_memory_results),
+        insufficient_context_results,
+    };
+
+    Ok(StatsOutput {
+        eligible_turns: eligible_count,
+        recall_runs: recall_count,
+        recall_rate: rate(recall_count, eligible_count),
+        non_empty_recall_runs: non_empty_count,
+        non_empty_recall_rate: rate(non_empty_count, eligible_count),
+        non_empty_per_recall_rate: rate(non_empty_count, recall_count),
+        volume,
+        useful,
+        llm_filter,
+    })
+}
+
+fn recall_task_anchor(payload_json: &str) -> Option<StatsAnchor> {
+    serde_json::from_str::<StatsRecallTaskPayload>(payload_json)
+        .ok()
+        .map(|payload| StatsAnchor {
+            session_id: payload.session_id,
+            turn_ordinal: payload.turn_ordinal,
+        })
+}
+
+fn recall_eval_task_volume(payload_json: &str) -> Option<(StatsAnchor, StatsRecallVolumeRun)> {
+    let payload = serde_json::from_str::<StatsRecallEvalTaskPayload>(payload_json).ok()?;
+    Some((
+        StatsAnchor {
+            session_id: payload.session_id,
+            turn_ordinal: payload.turn_ordinal,
+        },
+        StatsRecallVolumeRun {
+            memory_count: payload.memory_ids.len(),
+            recall_chars: payload.recall_text.chars().count(),
+            filter_telemetry: payload.filter_telemetry,
+        },
+    ))
+}
+
+fn eval_run_anchor(config_json: &str) -> Option<StatsAnchor> {
+    let config = serde_json::from_str::<StatsEvalRunConfig>(config_json).ok()?;
+    Some(StatsAnchor {
+        session_id: config.session_id?,
+        turn_ordinal: config.turn_ordinal?,
+    })
+}
+
+fn build_volume_stats(volumes: &[StatsRecallVolumeRun]) -> StatsVolume {
+    let memory_counts = volumes
+        .iter()
+        .map(|volume| volume.memory_count)
+        .collect::<Vec<_>>();
+    let recall_chars = volumes
+        .iter()
+        .map(|volume| volume.recall_chars)
+        .collect::<Vec<_>>();
+    let mut buckets = StatsMemoryCountBuckets::default();
+    for count in &memory_counts {
+        match *count {
+            0 => buckets.zero += 1,
+            1..=2 => buckets.one_to_two += 1,
+            3..=5 => buckets.three_to_five += 1,
+            _ => buckets.more_than_five += 1,
+        }
+    }
+
+    StatsVolume {
+        average_memories_per_non_empty_run: average(&memory_counts),
+        p50_memories_per_non_empty_run: percentile(&memory_counts, 0.50),
+        p90_memories_per_non_empty_run: percentile(&memory_counts, 0.90),
+        average_recall_chars_per_non_empty_run: average(&recall_chars),
+        p50_recall_chars_per_non_empty_run: percentile(&recall_chars, 0.50),
+        p90_recall_chars_per_non_empty_run: percentile(&recall_chars, 0.90),
+        memory_count_buckets: buckets,
+    }
+}
+
+fn build_llm_filter_stats(volumes: &[StatsRecallVolumeRun]) -> StatsLlmFilter {
+    let telemetry = volumes
+        .iter()
+        .filter_map(|volume| volume.filter_telemetry.as_ref())
+        .collect::<Vec<_>>();
+    let applied = telemetry
+        .iter()
+        .filter(|telemetry| telemetry.llm_applied)
+        .copied()
+        .collect::<Vec<_>>();
+    let candidate_counts = telemetry
+        .iter()
+        .map(|telemetry| telemetry.candidate_count)
+        .collect::<Vec<_>>();
+    let dropped_counts = applied
+        .iter()
+        .map(|telemetry| {
+            telemetry
+                .deterministic_selected_count
+                .saturating_sub(telemetry.final_selected_count)
+        })
+        .collect::<Vec<_>>();
+    StatsLlmFilter {
+        runs_with_filter_telemetry: telemetry.len(),
+        llm_attempted_runs: telemetry
+            .iter()
+            .filter(|telemetry| telemetry.llm_attempted)
+            .count(),
+        llm_applied_runs: applied.len(),
+        llm_error_runs: telemetry
+            .iter()
+            .filter(|telemetry| telemetry.llm_error.is_some())
+            .count(),
+        average_candidates_per_filtered_run: average(&candidate_counts),
+        average_dropped_memories_per_applied_run: average(&dropped_counts),
+    }
+}
+
+fn rate(numerator: usize, denominator: usize) -> f64 {
+    if denominator == 0 {
+        0.0
+    } else {
+        numerator as f64 / denominator as f64
+    }
+}
+
+fn average(values: &[usize]) -> f64 {
+    if values.is_empty() {
+        0.0
+    } else {
+        values.iter().sum::<usize>() as f64 / values.len() as f64
+    }
+}
+
+fn percentile(values: &[usize], percentile: f64) -> usize {
+    if values.is_empty() {
+        return 0;
+    }
+    let mut sorted = values.to_vec();
+    sorted.sort_unstable();
+    let index = ((sorted.len() as f64 * percentile).ceil() as usize).saturating_sub(1);
+    sorted[index.min(sorted.len() - 1)]
+}
+
+fn print_human_stats(stats: &StatsOutput) {
+    println!("YAAML recall stats");
+    println!("  eligible turns: {}", stats.eligible_turns);
+    println!(
+        "  recall runs: {} ({})",
+        stats.recall_runs,
+        percent(stats.recall_rate)
+    );
+    println!(
+        "  non-empty recall: {} ({} of eligible, {} of recall runs)",
+        stats.non_empty_recall_runs,
+        percent(stats.non_empty_recall_rate),
+        percent(stats.non_empty_per_recall_rate)
+    );
+    println!(
+        "  recall volume: avg {:.2} memories, p50 {}, p90 {}; avg {:.0} chars, p50 {}, p90 {}",
+        stats.volume.average_memories_per_non_empty_run,
+        stats.volume.p50_memories_per_non_empty_run,
+        stats.volume.p90_memories_per_non_empty_run,
+        stats.volume.average_recall_chars_per_non_empty_run,
+        stats.volume.p50_recall_chars_per_non_empty_run,
+        stats.volume.p90_recall_chars_per_non_empty_run
+    );
+    println!(
+        "  memory-count buckets: 0={}, 1-2={}, 3-5={}, >5={}",
+        stats.volume.memory_count_buckets.zero,
+        stats.volume.memory_count_buckets.one_to_two,
+        stats.volume.memory_count_buckets.three_to_five,
+        stats.volume.memory_count_buckets.more_than_five
+    );
+    println!(
+        "  useful recall: {} / {} evaluated runs ({}); {} of eligible turns",
+        stats.useful.useful_recall_runs,
+        stats.useful.evaluated_recall_runs,
+        percent(stats.useful.useful_run_rate_per_evaluated_recall),
+        percent(stats.useful.useful_run_rate_per_eligible_turn)
+    );
+    println!(
+        "  memory judgments: {} good={} ({}) low={} ({}) n/a={}",
+        stats.useful.judged_memory_results,
+        stats.useful.good_memory_results,
+        percent(stats.useful.good_memory_rate),
+        stats.useful.low_memory_results,
+        percent(stats.useful.low_memory_rate),
+        stats.useful.insufficient_context_results
+    );
+    println!(
+        "  llm filter: telemetry_runs={} attempted={} applied={} errors={} avg_candidates={:.2} avg_dropped={:.2}",
+        stats.llm_filter.runs_with_filter_telemetry,
+        stats.llm_filter.llm_attempted_runs,
+        stats.llm_filter.llm_applied_runs,
+        stats.llm_filter.llm_error_runs,
+        stats.llm_filter.average_candidates_per_filtered_run,
+        stats.llm_filter.average_dropped_memories_per_applied_run
+    );
+}
+
+fn percent(rate: f64) -> String {
+    format!("{:.1}%", rate * 100.0)
 }
 
 fn tasks(args: TasksArgs) -> anyhow::Result<()> {
@@ -1841,8 +2265,17 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
             query_timestamp: now.clone(),
         },
     )?;
-    let rendered = recall_result.markdown;
-    let selected_ids = recall_result.selected_memory_ids;
+    let RecallSearchResult {
+        query_timestamp,
+        query_source,
+        project_id: result_project_id,
+        selected_memory_ids,
+        memories,
+        ranking,
+        filter_telemetry,
+        markdown: rendered,
+    } = recall_result;
+    let selected_ids = selected_memory_ids.clone();
     if args.json {
         let anchor = recall_eval_anchor(&db, &project_id)?;
         println!(
@@ -1853,12 +2286,13 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
                     .map(|anchor| anchor.session_id.clone())
                     .unwrap_or_default(),
                 turn_ordinal: anchor.map(|anchor| anchor.turn_ordinal).unwrap_or_default(),
-                query_timestamp: recall_result.query_timestamp,
-                query_source: recall_result.query_source,
-                project_id: recall_result.project_id,
-                selected_memory_ids: selected_ids,
-                memories: recall_result.memories,
-                ranking: args.debug_ranking.then_some(recall_result.ranking),
+                query_timestamp,
+                query_source,
+                project_id: result_project_id,
+                selected_memory_ids,
+                memories,
+                ranking: args.debug_ranking.then_some(ranking),
+                filter_telemetry: Some(filter_telemetry),
                 markdown: rendered,
             })?
         );
@@ -1874,6 +2308,7 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
                 anchor.turn_ordinal,
                 &rendered,
                 &selected_ids,
+                Some(&filter_telemetry),
                 0,
             )?;
         }
@@ -1967,6 +2402,7 @@ fn refresh_missing_recall_file(
             turn_ordinal,
             &result.markdown,
             &result.selected_memory_ids,
+            None,
             0,
         )?;
     }
@@ -2040,6 +2476,7 @@ struct RecallCommandOutput {
     selected_memory_ids: Vec<i64>,
     memories: Vec<RecallMemory>,
     ranking: Option<Vec<RecallDebugRanking>>,
+    filter_telemetry: Option<RecallFilterTelemetry>,
     markdown: String,
 }
 
@@ -2062,6 +2499,7 @@ struct RecallSearchResult {
     selected_memory_ids: Vec<i64>,
     memories: Vec<RecallMemory>,
     ranking: Vec<RecallDebugRanking>,
+    filter_telemetry: RecallFilterTelemetry,
     markdown: String,
 }
 
@@ -2152,6 +2590,7 @@ fn recall_for_historical_turn(
                 selected_memory_ids: result.selected_memory_ids,
                 memories: result.memories,
                 ranking: args.debug_ranking.then_some(result.ranking),
+                filter_telemetry: Some(result.filter_telemetry),
                 markdown: result.markdown,
             })?
         );
@@ -2213,14 +2652,17 @@ fn recall_from_embedding(
             project_score_bonus: config.recall_project_score_bonus,
         },
     );
-    let (selected, debug_candidates) = select_recall_candidates(
+    let filter_result = select_recall_candidates_with_llm_filter(
+        config,
         candidates,
         &memories,
         request.project_id,
+        request.query_text,
         &query_context,
         &query_task_keys,
-        config.recall_result_limit,
     );
+    let selected = filter_result.selected;
+    let debug_candidates = filter_result.debug_candidates;
     let selected_memory_ids = selected
         .iter()
         .map(|candidate| candidate.memory_id)
@@ -2276,6 +2718,7 @@ fn recall_from_embedding(
         selected_memory_ids,
         memories: recall_memories,
         ranking,
+        filter_telemetry: filter_result.telemetry,
         markdown,
     })
 }

@@ -18,9 +18,9 @@ use yaaml_core::{
     build_recall_query, derive_project_descriptor, embedded_text_hash, embedding_text,
     extract_task_keys, find_consolidation_clusters, parse_eval_judge_response,
     parse_formulation_response, rank_recall_candidates, recall_file_path, render_recall_markdown,
-    select_recall_candidates, session_recall_file_path, write_recall_file, ClusterMemory, Config,
-    EmbeddingRecord, MemoryRecord, MemoryScope, RecallMemory, RecallRankingOptions, SourceTurnRef,
-    TaskRecord, TaskStatus, VectorIndex,
+    session_recall_file_path, write_recall_file, ClusterMemory, Config, EmbeddingRecord,
+    MemoryRecord, MemoryScope, RecallMemory, RecallRankingOptions, SourceTurnRef, TaskRecord,
+    TaskStatus, VectorIndex,
 };
 use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
@@ -29,6 +29,7 @@ use yaaml_store::{Database, SqliteExactVectorIndex};
 use yaaml_transcript::codex::parse_codex_file_from_offset_with_session;
 use yaaml_transcript::discovery::discover_codex_backlog;
 
+use crate::recall_filter::{select_recall_candidates_with_llm_filter, RecallFilterTelemetry};
 use crate::turn_hydration::{context_from_turns, hydrate_turns};
 
 pub const TASK_KIND_MEMORY_FORMULATION: &str = "memory_formulation";
@@ -72,6 +73,8 @@ struct RecallEvalTaskPayload {
     eval_after: Option<String>,
     #[serde(default)]
     rerun_for_eval_run_id: Option<i64>,
+    #[serde(default)]
+    filter_telemetry: Option<RecallFilterTelemetry>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -844,6 +847,7 @@ pub fn queue_stale_recall_eval_tasks(db: &Database, limit: usize) -> anyhow::Res
             recall_at: None,
             eval_after: None,
             rerun_for_eval_run_id: Some(run.id),
+            filter_telemetry: None,
         })
         .context("failed to serialize stale recall eval task payload")?;
         if db
@@ -1483,6 +1487,7 @@ pub fn queue_recall_eval_after_turn(
     turn_ordinal: u64,
     recall_text: &str,
     memory_ids: &[i64],
+    filter_telemetry: Option<&RecallFilterTelemetry>,
     priority: i64,
 ) -> anyhow::Result<i64> {
     let now_seconds = unix_timestamp_seconds();
@@ -1500,6 +1505,7 @@ pub fn queue_recall_eval_after_turn(
         recall_at: Some(format!("unix:{now_seconds}")),
         eval_after: Some(format!("unix:{}", now_seconds + 600)),
         rerun_for_eval_run_id: None,
+        filter_telemetry: filter_telemetry.cloned(),
     })
     .context("failed to serialize recall eval task payload")?;
     let now = format!("unix:{now_seconds}");
@@ -1560,14 +1566,16 @@ pub fn refresh_recall_with_embedding(
             project_score_bonus: config.recall_project_score_bonus,
         },
     );
-    let (selected, _) = select_recall_candidates(
+    let filter_result = select_recall_candidates_with_llm_filter(
+        config,
         candidates,
         &memories,
         &project_id_string,
+        &query_text,
         &query_context,
         &query_task_keys,
-        config.recall_result_limit,
     );
+    let selected = filter_result.selected;
     let selected_ids = selected
         .iter()
         .map(|candidate| candidate.memory_id)
@@ -1619,6 +1627,7 @@ pub fn refresh_recall_with_embedding(
                 turn.ordinal,
                 &rendered,
                 &selected_ids,
+                Some(&filter_result.telemetry),
                 0,
             )?;
         }

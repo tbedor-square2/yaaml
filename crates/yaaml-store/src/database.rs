@@ -85,6 +85,13 @@ pub struct TaskListRecord {
     pub payload_json: String,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct TurnAnchorRecord {
+    pub session_id: String,
+    pub ordinal: u64,
+    pub observed_at: Option<String>,
+}
+
 impl Database {
     pub fn open(path: impl AsRef<Path>) -> Result<Self, DatabaseError> {
         let path = path.as_ref().to_path_buf();
@@ -489,6 +496,27 @@ impl Database {
             turns.push(row?);
         }
         Ok(turns)
+    }
+
+    pub fn completed_turn_anchors(&self) -> Result<Vec<TurnAnchorRecord>, DatabaseError> {
+        let mut stmt = self.conn.prepare(
+            "SELECT session_id, ordinal, observed_at
+             FROM turns
+             WHERE status = 'completed'
+             ORDER BY session_id, ordinal",
+        )?;
+        let rows = stmt.query_map([], |row| {
+            Ok(TurnAnchorRecord {
+                session_id: row.get(0)?,
+                ordinal: i64_to_u64(row.get(1)?),
+                observed_at: row.get(2)?,
+            })
+        })?;
+        let mut anchors = Vec::new();
+        for row in rows {
+            anchors.push(row?);
+        }
+        Ok(anchors)
     }
 
     pub fn next_turn_ordinal_for_session(&self, session_id: &str) -> Result<u64, DatabaseError> {
@@ -1067,6 +1095,23 @@ impl Database {
         let rows = stmt.query_map(params![now, u64_to_i64(limit as u64)], |row| {
             read_task_list_record(row, now)
         })?;
+        let mut tasks = Vec::new();
+        for row in rows {
+            tasks.push(row?);
+        }
+        Ok(tasks)
+    }
+
+    pub fn list_tasks_by_kind(&self, kind: &str) -> Result<Vec<TaskListRecord>, DatabaseError> {
+        let now = unix_now_seconds();
+        let mut stmt = self.conn.prepare(
+            "SELECT id, kind, status, priority, payload_json, attempts, max_attempts,
+                    next_run_at, last_error, created_at, updated_at
+             FROM tasks
+             WHERE kind = ?1
+             ORDER BY id DESC",
+        )?;
+        let rows = stmt.query_map(params![kind], |row| read_task_list_record(row, now))?;
         let mut tasks = Vec::new();
         for row in rows {
             tasks.push(row?);

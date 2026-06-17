@@ -30,6 +30,7 @@ fn manual_recall_query_writes_expected_markdown() {
 db_path = "{}"
 recall_dir = "{}"
 embedding_base_url = "{}"
+recall_llm_filter_enabled = false
 "#,
             db_path.display(),
             recall_dir.display(),
@@ -145,6 +146,7 @@ fn recall_query_json_can_include_debug_ranking() {
             r#"
 db_path = "{}"
 embedding_base_url = "{}"
+recall_llm_filter_enabled = false
 "#,
             db_path.display(),
             server.base_url
@@ -229,6 +231,7 @@ fn recall_query_debug_shows_dropped_task_state_without_task_key_match() {
             r#"
 db_path = "{}"
 embedding_base_url = "{}"
+recall_llm_filter_enabled = false
 "#,
             db_path.display(),
             server.base_url
@@ -403,6 +406,7 @@ fn recall_query_writes_current_session_file_when_session_id_is_available() {
 db_path = "{}"
 recall_dir = "{}"
 embedding_base_url = "{}"
+recall_llm_filter_enabled = false
 "#,
             db_path.display(),
             recall_dir.display(),
@@ -496,6 +500,7 @@ fn bare_recall_refreshes_missing_current_session_file() {
 db_path = "{}"
 recall_dir = "{}"
 embedding_base_url = "{}"
+recall_llm_filter_enabled = false
 "#,
             db_path.display(),
             recall_dir.display(),
@@ -606,6 +611,7 @@ fn recall_query_falls_back_to_latest_project_session() {
 db_path = "{}"
 recall_dir = "{}"
 embedding_base_url = "{}"
+recall_llm_filter_enabled = false
 "#,
             db_path.display(),
             recall_dir.display(),
@@ -714,6 +720,7 @@ fn historical_recall_uses_session_turn_context_without_writing_file() {
 db_path = "{}"
 recall_dir = "{}"
 embedding_base_url = "{}"
+recall_llm_filter_enabled = false
 recall_live_turn_window = 2
 "#,
             db_path.display(),

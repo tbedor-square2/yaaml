@@ -1,5 +1,5 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use std::{env, fs};
@@ -9,20 +9,25 @@ use std::ffi::CStr;
 
 use anyhow::{bail, Context};
 use clap::{Parser, Subcommand, ValueEnum};
+use serde::Deserialize;
 use serde::Serialize;
+use yaaml::recall_filter::{select_recall_candidates_with_llm_filter, RecallFilterTelemetry};
 use yaaml::turn_hydration::{context_from_turns, hydrate_turns};
 use yaaml_core::{
-    apply_project_bonus, context_score, counterfactual_citation_score, derive_project_descriptor,
-    embedded_text_hash, embedding_text, infer_context_from_memory, infer_context_from_path,
-    infer_context_from_text, merge_contexts, parse_eval_judge_response, parse_memory_ids,
-    recall_file_path, render_recall_markdown, session_recall_file_path, write_recall_file, Config,
-    ConfigPaths, ContextMetadata, EmbeddingRecord, MemoryRecord, MemoryScope, RecallCandidate,
-    RecallMemory, RecallWrite, SessionRecord, TurnRecord, VectorIndex,
+    context_score, counterfactual_citation_score, derive_project_descriptor, embedded_text_hash,
+    embedding_text, extract_task_keys, infer_context_from_memory, infer_context_from_path,
+    infer_context_from_text, infer_memory_kind, merge_contexts, parse_eval_judge_response,
+    parse_memory_ids, rank_recall_candidates, recall_file_path, render_recall_markdown,
+    session_recall_file_path, write_recall_file, Config, ConfigPaths, ContextMetadata,
+    EmbeddingRecord, MemoryRecord, MemoryScope, RecallMemory, RecallRankDetails,
+    RecallRankingOptions, RecallWrite, SessionRecord, TurnRecord, VectorIndex,
 };
 use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
 use yaaml_llm::ReqwestTransport;
-use yaaml_store::database::{EvalResultRecord, EvalRunRecord, RecallEvalTaskRecord};
+use yaaml_store::database::{
+    EvalResultRecord, EvalRunRecord, RecallEvalTaskRecord, TaskListRecord,
+};
 use yaaml_store::lock::DaemonLock;
 use yaaml_store::{Database, SqliteExactVectorIndex};
 
@@ -48,6 +53,14 @@ enum Command {
     Eval(EvalArgs),
     /// Show daemon, memory, backlog, and provider status.
     Status(StatusArgs),
+    /// Show recall coverage, volume, and usefulness metrics.
+    Stats(StatsArgs),
+    /// Inspect configuration.
+    Config(ConfigArgs),
+    /// Inspect or manage daemon tasks.
+    Tasks(TasksArgs),
+    /// Inspect or rebuild stored memories.
+    Memories(MemoriesArgs),
     /// Resolve the current session or project's daemon-owned recall file path.
     Path,
     /// Print existing recall, or update it from user input.
@@ -156,6 +169,129 @@ struct StatusArgs {
 }
 
 #[derive(Debug, Parser)]
+struct StatsArgs {
+    /// Emit machine-readable JSON.
+    #[arg(long)]
+    json: bool,
+    /// Maximum recent eval runs to consider for usefulness metrics.
+    #[arg(long, default_value_t = 1000)]
+    eval_limit: usize,
+}
+
+#[derive(Debug, Parser)]
+struct ConfigArgs {
+    /// Print the merged user and project configuration.
+    #[arg(long)]
+    effective: bool,
+    /// Emit machine-readable JSON.
+    #[arg(long)]
+    json: bool,
+}
+
+#[derive(Debug, Parser)]
+struct TasksArgs {
+    #[command(subcommand)]
+    command: TasksCommand,
+}
+
+#[derive(Debug, Parser)]
+struct MemoriesArgs {
+    #[command(subcommand)]
+    command: MemoriesCommand,
+}
+
+#[derive(Debug, Subcommand)]
+enum MemoriesCommand {
+    /// Show memory counts by scope, kind, and project.
+    Stats(MemoriesStatsArgs),
+    /// Soft-deactivate active memories and requeue transcript-backed formulation.
+    Rebuild(MemoriesRebuildArgs),
+}
+
+#[derive(Debug, Parser)]
+struct MemoriesStatsArgs {
+    /// Emit machine-readable JSON.
+    #[arg(long)]
+    json: bool,
+}
+
+#[derive(Debug, Parser)]
+struct MemoriesRebuildArgs {
+    /// Required confirmation for corpus rebuild.
+    #[arg(long)]
+    yes: bool,
+    /// Keep active memories and only queue currently uncovered turns.
+    #[arg(long)]
+    keep_active: bool,
+}
+
+#[derive(Debug, Subcommand)]
+enum TasksCommand {
+    /// List task queue state.
+    List(TaskListArgs),
+    /// Retry a queued, running, or parked task immediately.
+    Retry(TaskRetryArgs),
+    /// Delete tasks that are no longer useful.
+    Clear(TaskClearArgs),
+}
+
+#[derive(Debug, Parser)]
+struct TaskListArgs {
+    /// Filter by task display status.
+    #[arg(long, value_enum)]
+    status: Option<TaskDisplayStatusArg>,
+    /// Maximum tasks to show.
+    #[arg(long, default_value_t = 20)]
+    limit: usize,
+    /// Emit machine-readable JSON.
+    #[arg(long)]
+    json: bool,
+}
+
+#[derive(Debug, Parser)]
+struct TaskRetryArgs {
+    /// Task id to retry.
+    id: i64,
+}
+
+#[derive(Debug, Parser)]
+struct TaskClearArgs {
+    /// Clear one task id.
+    #[arg(long)]
+    id: Option<i64>,
+    /// Clear all tasks with this display status.
+    #[arg(long, value_enum)]
+    status: Option<TaskDisplayStatusArg>,
+    /// Optional task-kind filter when clearing by status.
+    #[arg(long)]
+    kind: Option<String>,
+    /// Required when clearing more than one task.
+    #[arg(long)]
+    yes: bool,
+}
+
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum TaskDisplayStatusArg {
+    Queued,
+    Scheduled,
+    Running,
+    Parked,
+    Completed,
+}
+
+impl TaskDisplayStatusArg {
+    fn as_filter(self) -> &'static str {
+        match self {
+            Self::Queued => "queued",
+            Self::Scheduled => "scheduled",
+            Self::Running => "running",
+            Self::Parked => "parked",
+            Self::Completed => "completed",
+        }
+    }
+}
+
+#[derive(Debug, Parser)]
 struct RecallArgs {
     /// User input to embed and search against stored memories. Omit to print existing recall.
     #[arg(long)]
@@ -169,6 +305,9 @@ struct RecallArgs {
     /// Emit machine-readable JSON.
     #[arg(long)]
     json: bool,
+    /// Include per-memory ranking components in JSON output.
+    #[arg(long)]
+    debug_ranking: bool,
 }
 
 #[derive(Debug, Parser)]
@@ -215,19 +354,28 @@ fn main() -> anyhow::Result<()> {
         Command::Service(args) => service(args),
         Command::Eval(args) => eval(args),
         Command::Status(args) => status(args),
+        Command::Stats(args) => stats(args),
+        Command::Config(args) => config(args),
+        Command::Tasks(args) => tasks(args),
+        Command::Memories(args) => memories(args),
         Command::Path => path(),
         Command::Recall(args) => recall(args),
         Command::Remember(args) => remember(args),
     }
 }
 
-fn status(args: StatusArgs) -> anyhow::Result<()> {
+fn open_database_for_cwd() -> anyhow::Result<(Config, Database)> {
     let cwd = env::current_dir().context("failed to determine current directory")?;
     let config = Config::load_for_cwd(&cwd).context("failed to load config")?;
     let db_path = config.db_path().context("failed to resolve db_path")?;
     let mut db = Database::open(&db_path)
         .with_context(|| format!("failed to open {}", display(&db_path)))?;
     db.migrate().context("failed to migrate database")?;
+    Ok((config, db))
+}
+
+fn status(args: StatusArgs) -> anyhow::Result<()> {
+    let (_config, db) = open_database_for_cwd()?;
     let status = db.status().context("failed to read status")?;
 
     if args.json {
@@ -236,6 +384,634 @@ fn status(args: StatusArgs) -> anyhow::Result<()> {
         print_human_status(&status);
     }
 
+    Ok(())
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+struct StatsAnchor {
+    session_id: String,
+    turn_ordinal: u64,
+}
+
+#[derive(Debug, Deserialize)]
+struct StatsRecallTaskPayload {
+    session_id: String,
+    turn_ordinal: u64,
+}
+
+#[derive(Debug, Deserialize)]
+struct StatsRecallEvalTaskPayload {
+    session_id: String,
+    turn_ordinal: u64,
+    recall_text: String,
+    #[serde(default)]
+    memory_ids: Vec<i64>,
+    #[serde(default)]
+    filter_telemetry: Option<RecallFilterTelemetry>,
+}
+
+#[derive(Debug, Deserialize)]
+struct StatsEvalRunConfig {
+    session_id: Option<String>,
+    turn_ordinal: Option<u64>,
+}
+
+#[derive(Debug, Clone)]
+struct StatsRecallVolumeRun {
+    memory_count: usize,
+    recall_chars: usize,
+    filter_telemetry: Option<RecallFilterTelemetry>,
+}
+
+#[derive(Debug, Serialize)]
+struct StatsOutput {
+    eligible_turns: usize,
+    recall_runs: usize,
+    recall_rate: f64,
+    non_empty_recall_runs: usize,
+    non_empty_recall_rate: f64,
+    non_empty_per_recall_rate: f64,
+    volume: StatsVolume,
+    useful: StatsUseful,
+    llm_filter: StatsLlmFilter,
+}
+
+#[derive(Debug, Serialize)]
+struct StatsVolume {
+    average_memories_per_non_empty_run: f64,
+    p50_memories_per_non_empty_run: usize,
+    p90_memories_per_non_empty_run: usize,
+    average_recall_chars_per_non_empty_run: f64,
+    p50_recall_chars_per_non_empty_run: usize,
+    p90_recall_chars_per_non_empty_run: usize,
+    memory_count_buckets: StatsMemoryCountBuckets,
+}
+
+#[derive(Debug, Default, Serialize)]
+struct StatsMemoryCountBuckets {
+    zero: usize,
+    one_to_two: usize,
+    three_to_five: usize,
+    more_than_five: usize,
+}
+
+#[derive(Debug, Serialize)]
+struct StatsUseful {
+    evaluated_recall_runs: usize,
+    useful_recall_runs: usize,
+    useful_run_rate_per_eligible_turn: f64,
+    useful_run_rate_per_evaluated_recall: f64,
+    judged_memory_results: usize,
+    good_memory_results: usize,
+    low_memory_results: usize,
+    good_memory_rate: f64,
+    low_memory_rate: f64,
+    insufficient_context_results: usize,
+}
+
+#[derive(Debug, Serialize)]
+struct StatsLlmFilter {
+    runs_with_filter_telemetry: usize,
+    llm_attempted_runs: usize,
+    llm_applied_runs: usize,
+    llm_empty_fallback_runs: usize,
+    llm_error_runs: usize,
+    average_candidates_per_filtered_run: f64,
+    average_dropped_memories_per_applied_run: f64,
+}
+
+fn stats(args: StatsArgs) -> anyhow::Result<()> {
+    let (_config, db) = open_database_for_cwd()?;
+    let stats = build_stats(&db, args.eval_limit)?;
+    if args.json {
+        println!("{}", serde_json::to_string_pretty(&stats)?);
+    } else {
+        print_human_stats(&stats);
+    }
+    Ok(())
+}
+
+fn build_stats(db: &Database, eval_limit: usize) -> anyhow::Result<StatsOutput> {
+    let eligible = db
+        .completed_turn_anchors()
+        .context("failed to load completed turn anchors")?
+        .into_iter()
+        .map(|turn| StatsAnchor {
+            session_id: turn.session_id,
+            turn_ordinal: turn.ordinal,
+        })
+        .collect::<HashSet<_>>();
+
+    let mut recall_runs = db
+        .list_tasks_by_kind(yaaml::daemon::TASK_KIND_RECALL)
+        .context("failed to list recall tasks")?
+        .into_iter()
+        .filter(|task| task.status == "completed")
+        .filter_map(|task| recall_task_anchor(&task.payload_json))
+        .filter(|anchor| eligible.contains(anchor))
+        .collect::<HashSet<_>>();
+
+    let mut volume_by_anchor = BTreeMap::<StatsAnchor, StatsRecallVolumeRun>::new();
+    for task in db
+        .list_tasks_by_kind(yaaml::daemon::TASK_KIND_RECALL_EVAL)
+        .context("failed to list recall eval tasks")?
+    {
+        let Some((anchor, volume)) = recall_eval_task_volume(&task.payload_json) else {
+            continue;
+        };
+        if !eligible.contains(&anchor) || volume.memory_count == 0 {
+            continue;
+        }
+        recall_runs.insert(anchor.clone());
+        volume_by_anchor.entry(anchor).or_insert(volume);
+    }
+
+    let mut latest_eval_run_by_anchor = BTreeMap::<StatsAnchor, EvalRunRecord>::new();
+    for run in db
+        .list_eval_runs(eval_limit)
+        .context("failed to list eval runs")?
+    {
+        let Some(anchor) = eval_run_anchor(&run.config_json) else {
+            continue;
+        };
+        if eligible.contains(&anchor) {
+            latest_eval_run_by_anchor.entry(anchor).or_insert(run);
+        }
+    }
+
+    let mut evaluated_recall_runs = 0_usize;
+    let mut useful_recall_runs = 0_usize;
+    let mut judged_memory_results = 0_usize;
+    let mut good_memory_results = 0_usize;
+    let mut low_memory_results = 0_usize;
+    let mut insufficient_context_results = 0_usize;
+    for run in latest_eval_run_by_anchor.values() {
+        let results = db
+            .eval_results_for_run(run.id)
+            .with_context(|| format!("failed to load eval results for run {}", run.id))?;
+        let mut has_numeric_score = false;
+        let mut has_useful_score = false;
+        for result in results {
+            match result.judge_score.as_deref().and_then(numeric_eval_score) {
+                Some(score) => {
+                    has_numeric_score = true;
+                    judged_memory_results += 1;
+                    if score >= 4 {
+                        good_memory_results += 1;
+                        has_useful_score = true;
+                    } else if score <= 2 {
+                        low_memory_results += 1;
+                    }
+                }
+                None => {
+                    if result.judge_score.as_deref() == Some("insufficient_context") {
+                        insufficient_context_results += 1;
+                    }
+                }
+            }
+        }
+        if has_numeric_score {
+            evaluated_recall_runs += 1;
+        }
+        if has_useful_score {
+            useful_recall_runs += 1;
+        }
+    }
+
+    let volumes = volume_by_anchor.values().cloned().collect::<Vec<_>>();
+    let volume = build_volume_stats(&volumes);
+    let llm_filter = build_llm_filter_stats(&volumes);
+    let eligible_count = eligible.len();
+    let recall_count = recall_runs.len();
+    let non_empty_count = volume_by_anchor.len();
+    let useful = StatsUseful {
+        evaluated_recall_runs,
+        useful_recall_runs,
+        useful_run_rate_per_eligible_turn: rate(useful_recall_runs, eligible_count),
+        useful_run_rate_per_evaluated_recall: rate(useful_recall_runs, evaluated_recall_runs),
+        judged_memory_results,
+        good_memory_results,
+        low_memory_results,
+        good_memory_rate: rate(good_memory_results, judged_memory_results),
+        low_memory_rate: rate(low_memory_results, judged_memory_results),
+        insufficient_context_results,
+    };
+
+    Ok(StatsOutput {
+        eligible_turns: eligible_count,
+        recall_runs: recall_count,
+        recall_rate: rate(recall_count, eligible_count),
+        non_empty_recall_runs: non_empty_count,
+        non_empty_recall_rate: rate(non_empty_count, eligible_count),
+        non_empty_per_recall_rate: rate(non_empty_count, recall_count),
+        volume,
+        useful,
+        llm_filter,
+    })
+}
+
+fn recall_task_anchor(payload_json: &str) -> Option<StatsAnchor> {
+    serde_json::from_str::<StatsRecallTaskPayload>(payload_json)
+        .ok()
+        .map(|payload| StatsAnchor {
+            session_id: payload.session_id,
+            turn_ordinal: payload.turn_ordinal,
+        })
+}
+
+fn recall_eval_task_volume(payload_json: &str) -> Option<(StatsAnchor, StatsRecallVolumeRun)> {
+    let payload = serde_json::from_str::<StatsRecallEvalTaskPayload>(payload_json).ok()?;
+    Some((
+        StatsAnchor {
+            session_id: payload.session_id,
+            turn_ordinal: payload.turn_ordinal,
+        },
+        StatsRecallVolumeRun {
+            memory_count: payload.memory_ids.len(),
+            recall_chars: payload.recall_text.chars().count(),
+            filter_telemetry: payload.filter_telemetry,
+        },
+    ))
+}
+
+fn eval_run_anchor(config_json: &str) -> Option<StatsAnchor> {
+    let config = serde_json::from_str::<StatsEvalRunConfig>(config_json).ok()?;
+    Some(StatsAnchor {
+        session_id: config.session_id?,
+        turn_ordinal: config.turn_ordinal?,
+    })
+}
+
+fn build_volume_stats(volumes: &[StatsRecallVolumeRun]) -> StatsVolume {
+    let memory_counts = volumes
+        .iter()
+        .map(|volume| volume.memory_count)
+        .collect::<Vec<_>>();
+    let recall_chars = volumes
+        .iter()
+        .map(|volume| volume.recall_chars)
+        .collect::<Vec<_>>();
+    let mut buckets = StatsMemoryCountBuckets::default();
+    for count in &memory_counts {
+        match *count {
+            0 => buckets.zero += 1,
+            1..=2 => buckets.one_to_two += 1,
+            3..=5 => buckets.three_to_five += 1,
+            _ => buckets.more_than_five += 1,
+        }
+    }
+
+    StatsVolume {
+        average_memories_per_non_empty_run: average(&memory_counts),
+        p50_memories_per_non_empty_run: percentile(&memory_counts, 0.50),
+        p90_memories_per_non_empty_run: percentile(&memory_counts, 0.90),
+        average_recall_chars_per_non_empty_run: average(&recall_chars),
+        p50_recall_chars_per_non_empty_run: percentile(&recall_chars, 0.50),
+        p90_recall_chars_per_non_empty_run: percentile(&recall_chars, 0.90),
+        memory_count_buckets: buckets,
+    }
+}
+
+fn build_llm_filter_stats(volumes: &[StatsRecallVolumeRun]) -> StatsLlmFilter {
+    let telemetry = volumes
+        .iter()
+        .filter_map(|volume| volume.filter_telemetry.as_ref())
+        .collect::<Vec<_>>();
+    let applied = telemetry
+        .iter()
+        .filter(|telemetry| telemetry.llm_applied)
+        .copied()
+        .collect::<Vec<_>>();
+    let candidate_counts = telemetry
+        .iter()
+        .map(|telemetry| telemetry.candidate_count)
+        .collect::<Vec<_>>();
+    let dropped_counts = applied
+        .iter()
+        .map(|telemetry| {
+            telemetry
+                .deterministic_selected_count
+                .saturating_sub(telemetry.final_selected_count)
+        })
+        .collect::<Vec<_>>();
+    StatsLlmFilter {
+        runs_with_filter_telemetry: telemetry.len(),
+        llm_attempted_runs: telemetry
+            .iter()
+            .filter(|telemetry| telemetry.llm_attempted)
+            .count(),
+        llm_applied_runs: applied.len(),
+        llm_empty_fallback_runs: telemetry
+            .iter()
+            .filter(|telemetry| telemetry.llm_empty_fallback)
+            .count(),
+        llm_error_runs: telemetry
+            .iter()
+            .filter(|telemetry| telemetry.llm_error.is_some())
+            .count(),
+        average_candidates_per_filtered_run: average(&candidate_counts),
+        average_dropped_memories_per_applied_run: average(&dropped_counts),
+    }
+}
+
+fn rate(numerator: usize, denominator: usize) -> f64 {
+    if denominator == 0 {
+        0.0
+    } else {
+        numerator as f64 / denominator as f64
+    }
+}
+
+fn average(values: &[usize]) -> f64 {
+    if values.is_empty() {
+        0.0
+    } else {
+        values.iter().sum::<usize>() as f64 / values.len() as f64
+    }
+}
+
+fn percentile(values: &[usize], percentile: f64) -> usize {
+    if values.is_empty() {
+        return 0;
+    }
+    let mut sorted = values.to_vec();
+    sorted.sort_unstable();
+    let index = ((sorted.len() as f64 * percentile).ceil() as usize).saturating_sub(1);
+    sorted[index.min(sorted.len() - 1)]
+}
+
+fn print_human_stats(stats: &StatsOutput) {
+    println!("YAAML recall stats");
+    println!("  eligible turns: {}", stats.eligible_turns);
+    println!(
+        "  recall runs: {} ({})",
+        stats.recall_runs,
+        percent(stats.recall_rate)
+    );
+    println!(
+        "  non-empty recall: {} ({} of eligible, {} of recall runs)",
+        stats.non_empty_recall_runs,
+        percent(stats.non_empty_recall_rate),
+        percent(stats.non_empty_per_recall_rate)
+    );
+    println!(
+        "  recall volume: avg {:.2} memories, p50 {}, p90 {}; avg {:.0} chars, p50 {}, p90 {}",
+        stats.volume.average_memories_per_non_empty_run,
+        stats.volume.p50_memories_per_non_empty_run,
+        stats.volume.p90_memories_per_non_empty_run,
+        stats.volume.average_recall_chars_per_non_empty_run,
+        stats.volume.p50_recall_chars_per_non_empty_run,
+        stats.volume.p90_recall_chars_per_non_empty_run
+    );
+    println!(
+        "  memory-count buckets: 0={}, 1-2={}, 3-5={}, >5={}",
+        stats.volume.memory_count_buckets.zero,
+        stats.volume.memory_count_buckets.one_to_two,
+        stats.volume.memory_count_buckets.three_to_five,
+        stats.volume.memory_count_buckets.more_than_five
+    );
+    println!(
+        "  useful recall: {} / {} evaluated runs ({}); {} of eligible turns",
+        stats.useful.useful_recall_runs,
+        stats.useful.evaluated_recall_runs,
+        percent(stats.useful.useful_run_rate_per_evaluated_recall),
+        percent(stats.useful.useful_run_rate_per_eligible_turn)
+    );
+    println!(
+        "  memory judgments: {} good={} ({}) low={} ({}) n/a={}",
+        stats.useful.judged_memory_results,
+        stats.useful.good_memory_results,
+        percent(stats.useful.good_memory_rate),
+        stats.useful.low_memory_results,
+        percent(stats.useful.low_memory_rate),
+        stats.useful.insufficient_context_results
+    );
+    println!(
+        "  llm filter: telemetry_runs={} attempted={} applied={} empty_fallbacks={} errors={} avg_candidates={:.2} avg_dropped={:.2}",
+        stats.llm_filter.runs_with_filter_telemetry,
+        stats.llm_filter.llm_attempted_runs,
+        stats.llm_filter.llm_applied_runs,
+        stats.llm_filter.llm_empty_fallback_runs,
+        stats.llm_filter.llm_error_runs,
+        stats.llm_filter.average_candidates_per_filtered_run,
+        stats.llm_filter.average_dropped_memories_per_applied_run
+    );
+}
+
+fn percent(rate: f64) -> String {
+    format!("{:.1}%", rate * 100.0)
+}
+
+fn tasks(args: TasksArgs) -> anyhow::Result<()> {
+    match args.command {
+        TasksCommand::List(args) => task_list(args),
+        TasksCommand::Retry(args) => task_retry(args),
+        TasksCommand::Clear(args) => task_clear(args),
+    }
+}
+
+#[derive(Debug, Serialize)]
+struct MemoryStatsOutput {
+    total: usize,
+    active: usize,
+    by_scope_kind: Vec<MemoryScopeKindCount>,
+    top_projects: Vec<MemoryProjectCount>,
+}
+
+#[derive(Debug, Serialize)]
+struct MemoryScopeKindCount {
+    scope: String,
+    kind: String,
+    active: bool,
+    count: usize,
+}
+
+#[derive(Debug, Serialize)]
+struct MemoryProjectCount {
+    project_id: String,
+    active_count: usize,
+}
+
+#[derive(Debug, Serialize)]
+struct MemoryRebuildOutput {
+    deactivated_memories: u64,
+    cleared_memory_tasks: u64,
+    queued_memory_jobs: u64,
+}
+
+fn memories(args: MemoriesArgs) -> anyhow::Result<()> {
+    match args.command {
+        MemoriesCommand::Stats(args) => memories_stats(args),
+        MemoriesCommand::Rebuild(args) => memories_rebuild(args),
+    }
+}
+
+fn memories_stats(args: MemoriesStatsArgs) -> anyhow::Result<()> {
+    let (_config, db) = open_database_for_cwd()?;
+    let stats = build_memory_stats(&db)?;
+    if args.json {
+        println!("{}", serde_json::to_string_pretty(&stats)?);
+    } else {
+        print_human_memory_stats(&stats);
+    }
+    Ok(())
+}
+
+fn memories_rebuild(args: MemoriesRebuildArgs) -> anyhow::Result<()> {
+    if !args.yes {
+        bail!("memory rebuild requires --yes");
+    }
+    let (config, db) = open_database_for_cwd()?;
+    let now = unix_timestamp();
+    let deactivated_memories = if args.keep_active {
+        0
+    } else {
+        db.deactivate_active_memories(&now)
+            .context("failed to deactivate active memories")?
+    };
+    let cleared_memory_tasks = clear_memory_build_tasks(&db)?;
+    let queued_memory_jobs = yaaml::daemon::queue_missing_memory_formulation_tasks(
+        &db,
+        &config,
+        0,
+        yaaml::daemon::PartialBatchPolicy::Include,
+    )
+    .context("failed to queue memory formulation rebuild")?;
+    let output = MemoryRebuildOutput {
+        deactivated_memories,
+        cleared_memory_tasks,
+        queued_memory_jobs,
+    };
+    println!("{}", serde_json::to_string_pretty(&output)?);
+    Ok(())
+}
+
+fn clear_memory_build_tasks(db: &Database) -> anyhow::Result<u64> {
+    let mut cleared = 0;
+    for status in ["queued", "scheduled", "running", "parked"] {
+        for kind in [
+            yaaml::daemon::TASK_KIND_MEMORY_FORMULATION,
+            yaaml::daemon::TASK_KIND_MEMORY_CONSOLIDATION,
+        ] {
+            cleared += db
+                .clear_tasks_by_display_status(status, Some(kind))
+                .with_context(|| format!("failed to clear {status} {kind} tasks"))?;
+        }
+    }
+    Ok(cleared)
+}
+
+fn build_memory_stats(db: &Database) -> anyhow::Result<MemoryStatsOutput> {
+    let memories = db.list_memories().context("failed to list memories")?;
+    let mut by_scope_kind = BTreeMap::<(String, String, bool), usize>::new();
+    let mut by_project = BTreeMap::<String, usize>::new();
+    let mut active = 0;
+    for memory in &memories {
+        if memory.is_active {
+            active += 1;
+            if let Some(project_id) = &memory.project_id {
+                *by_project.entry(project_id.clone()).or_default() += 1;
+            }
+        }
+        *by_scope_kind
+            .entry((
+                memory.scope.as_str().to_string(),
+                memory.kind.as_str().to_string(),
+                memory.is_active,
+            ))
+            .or_default() += 1;
+    }
+    let mut top_projects = by_project
+        .into_iter()
+        .map(|(project_id, active_count)| MemoryProjectCount {
+            project_id,
+            active_count,
+        })
+        .collect::<Vec<_>>();
+    top_projects.sort_by(|left, right| {
+        right
+            .active_count
+            .cmp(&left.active_count)
+            .then_with(|| left.project_id.cmp(&right.project_id))
+    });
+    top_projects.truncate(20);
+    Ok(MemoryStatsOutput {
+        total: memories.len(),
+        active,
+        by_scope_kind: by_scope_kind
+            .into_iter()
+            .map(|((scope, kind, active), count)| MemoryScopeKindCount {
+                scope,
+                kind,
+                active,
+                count,
+            })
+            .collect(),
+        top_projects,
+    })
+}
+
+fn task_list(args: TaskListArgs) -> anyhow::Result<()> {
+    let (_config, db) = open_database_for_cwd()?;
+    let tasks = db
+        .list_tasks(args.status.map(TaskDisplayStatusArg::as_filter), args.limit)
+        .context("failed to list tasks")?;
+    if args.json {
+        println!("{}", serde_json::to_string_pretty(&tasks)?);
+    } else {
+        print_human_tasks(&tasks);
+    }
+    Ok(())
+}
+
+fn task_retry(args: TaskRetryArgs) -> anyhow::Result<()> {
+    let (_config, db) = open_database_for_cwd()?;
+    if db
+        .retry_task(args.id, &unix_timestamp())
+        .context("failed to retry task")?
+    {
+        println!("retried task {}", args.id);
+    } else {
+        bail!("task {} was not found or is already completed", args.id);
+    }
+    Ok(())
+}
+
+fn task_clear(args: TaskClearArgs) -> anyhow::Result<()> {
+    let (_config, db) = open_database_for_cwd()?;
+    match (args.id, args.status) {
+        (Some(id), None) => {
+            if db.clear_task(id).context("failed to clear task")? {
+                println!("cleared task {id}");
+            } else {
+                bail!("task {id} was not found");
+            }
+        }
+        (None, Some(status)) => {
+            if !args.yes {
+                bail!("clearing by status requires --yes");
+            }
+            let cleared = db
+                .clear_tasks_by_display_status(status.as_filter(), args.kind.as_deref())
+                .context("failed to clear tasks")?;
+            println!("cleared {cleared} {} tasks", status.as_filter());
+        }
+        _ => bail!("provide exactly one of --id or --status"),
+    }
+    Ok(())
+}
+
+fn config(args: ConfigArgs) -> anyhow::Result<()> {
+    if !args.effective {
+        bail!("only --effective is currently supported");
+    }
+    let cwd = env::current_dir().context("failed to determine current directory")?;
+    let config = Config::load_for_cwd(&cwd).context("failed to load config")?;
+    if args.json {
+        println!("{}", serde_json::to_string_pretty(&config)?);
+    } else {
+        println!("{}", toml::to_string_pretty(&config)?);
+    }
     Ok(())
 }
 
@@ -908,7 +1684,7 @@ fn build_eval_summary(db: &Database, runs: Vec<EvalRunRecord>) -> anyhow::Result
             }
         })
         .collect::<Vec<_>>();
-    session_breakdown.sort_by(|left, right| right.latest_run_id.cmp(&left.latest_run_id));
+    session_breakdown.sort_by_key(|session| std::cmp::Reverse(session.latest_run_id));
     let queued_recall_evals = db
         .list_recall_eval_tasks(20)
         .context("failed to list recall eval tasks")?
@@ -1435,16 +2211,19 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
     let mut db = Database::open(&db_path)
         .with_context(|| format!("failed to open {}", display(&db_path)))?;
     db.migrate().context("failed to migrate database")?;
+    if args.debug_ranking && !args.json {
+        bail!("--debug-ranking requires --json");
+    }
 
     if args.session.is_some() || args.turn.is_some() {
         return recall_for_historical_turn(args, &config, &db);
     }
 
     let recall_path = contextual_recall_file_path(&recall_dir, &project_id_path, &db)?;
-    if args.json {
-        bail!("--json is only supported with --session and --turn");
-    }
     let Some(query) = args.query else {
+        if args.json || args.debug_ranking {
+            bail!("--json and --debug-ranking require --query or --session/--turn");
+        }
         if let Some(contents) = read_active_recall_file(&db, &recall_path)? {
             print!("{contents}");
             return Ok(());
@@ -1483,15 +2262,48 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
     let recall_result = recall_from_embedding(
         &db,
         &config,
-        &query_embedding,
-        &project_id,
-        &query,
-        None,
-        "user input".to_string(),
-        now.clone(),
+        RecallEmbeddingRequest {
+            query_embedding: &query_embedding,
+            project_id: &project_id,
+            query_text: &query,
+            query_context: None,
+            query_source: "user input".to_string(),
+            query_timestamp: now.clone(),
+        },
     )?;
-    let rendered = recall_result.markdown;
-    let selected_ids = recall_result.selected_memory_ids;
+    let RecallSearchResult {
+        query_timestamp,
+        query_source,
+        project_id: result_project_id,
+        selected_memory_ids,
+        memories,
+        ranking,
+        filter_telemetry,
+        markdown: rendered,
+    } = recall_result;
+    let selected_ids = selected_memory_ids.clone();
+    if args.json {
+        let anchor = recall_eval_anchor(&db, &project_id)?;
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&RecallCommandOutput {
+                session_id: anchor
+                    .as_ref()
+                    .map(|anchor| anchor.session_id.clone())
+                    .unwrap_or_default(),
+                turn_ordinal: anchor.map(|anchor| anchor.turn_ordinal).unwrap_or_default(),
+                query_timestamp,
+                query_source,
+                project_id: result_project_id,
+                selected_memory_ids,
+                memories,
+                ranking: args.debug_ranking.then_some(ranking),
+                filter_telemetry: Some(filter_telemetry),
+                markdown: rendered,
+            })?
+        );
+        return Ok(());
+    }
     let write = write_recall_file(&recall_path, &rendered, &selected_ids)
         .context("failed to write recall file")?;
     if !selected_ids.is_empty() && matches!(write, RecallWrite::Written | RecallWrite::Unchanged) {
@@ -1502,6 +2314,7 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
                 anchor.turn_ordinal,
                 &rendered,
                 &selected_ids,
+                Some(&filter_telemetry),
                 0,
             )?;
         }
@@ -1574,12 +2387,14 @@ fn refresh_missing_recall_file(
     let result = recall_from_embedding(
         db,
         config,
-        &query_embedding,
-        &session.project_id,
-        &query,
-        Some(query_context),
-        query_source,
-        now,
+        RecallEmbeddingRequest {
+            query_embedding: &query_embedding,
+            project_id: &session.project_id,
+            query_text: &query,
+            query_context: Some(query_context),
+            query_source,
+            query_timestamp: now,
+        },
     )?;
     if result.selected_memory_ids.is_empty() {
         return Ok(None);
@@ -1593,6 +2408,7 @@ fn refresh_missing_recall_file(
             turn_ordinal,
             &result.markdown,
             &result.selected_memory_ids,
+            None,
             0,
         )?;
     }
@@ -1665,7 +2481,20 @@ struct RecallCommandOutput {
     project_id: String,
     selected_memory_ids: Vec<i64>,
     memories: Vec<RecallMemory>,
+    ranking: Option<Vec<RecallDebugRanking>>,
+    filter_telemetry: Option<RecallFilterTelemetry>,
     markdown: String,
+}
+
+#[derive(Debug, Serialize)]
+struct RecallDebugRanking {
+    memory_id: i64,
+    selected: bool,
+    score: f32,
+    similarity: f32,
+    memory_kind: String,
+    filter_reasons: Vec<String>,
+    rank: RecallRankDetails,
 }
 
 #[derive(Debug)]
@@ -1675,6 +2504,8 @@ struct RecallSearchResult {
     project_id: String,
     selected_memory_ids: Vec<i64>,
     memories: Vec<RecallMemory>,
+    ranking: Vec<RecallDebugRanking>,
+    filter_telemetry: RecallFilterTelemetry,
     markdown: String,
 }
 
@@ -1743,12 +2574,14 @@ fn recall_for_historical_turn(
     let result = recall_from_embedding(
         db,
         config,
-        &query_embedding,
-        &session.project_id,
-        &query,
-        Some(query_context),
-        query_source,
-        now,
+        RecallEmbeddingRequest {
+            query_embedding: &query_embedding,
+            project_id: &session.project_id,
+            query_text: &query,
+            query_context: Some(query_context),
+            query_source,
+            query_timestamp: now,
+        },
     )?;
 
     if args.json {
@@ -1762,6 +2595,8 @@ fn recall_for_historical_turn(
                 project_id: result.project_id,
                 selected_memory_ids: result.selected_memory_ids,
                 memories: result.memories,
+                ranking: args.debug_ranking.then_some(result.ranking),
+                filter_telemetry: Some(result.filter_telemetry),
                 markdown: result.markdown,
             })?
         );
@@ -1773,21 +2608,28 @@ fn recall_for_historical_turn(
     Ok(())
 }
 
-fn recall_from_embedding(
-    db: &Database,
-    config: &Config,
-    query_embedding: &[f32],
-    project_id: &str,
-    query_text: &str,
+struct RecallEmbeddingRequest<'a> {
+    query_embedding: &'a [f32],
+    project_id: &'a str,
+    query_text: &'a str,
     query_context: Option<ContextMetadata>,
     query_source: String,
     query_timestamp: String,
+}
+
+fn recall_from_embedding(
+    db: &Database,
+    config: &Config,
+    request: RecallEmbeddingRequest<'_>,
 ) -> anyhow::Result<RecallSearchResult> {
-    let index =
-        SqliteExactVectorIndex::new(db, config.embedding_model.clone(), query_timestamp.clone());
+    let index = SqliteExactVectorIndex::new(
+        db,
+        config.embedding_model.clone(),
+        request.query_timestamp.clone(),
+    );
     let hits = index
         .search(
-            query_embedding,
+            request.query_embedding,
             config.recall_candidate_pool,
             config.recall_similarity_threshold,
         )
@@ -1796,44 +2638,37 @@ fn recall_from_embedding(
     let memories = db
         .list_active_memories_by_ids(&hit_ids)
         .context("failed to load matching memories")?;
-    let query_context = query_context.unwrap_or_else(|| {
-        let mut query_context = infer_context_from_path(std::path::Path::new(project_id));
-        merge_contexts(&mut query_context, infer_context_from_text(query_text));
+    let query_context = request.query_context.unwrap_or_else(|| {
+        let mut query_context = infer_context_from_path(Path::new(request.project_id));
+        merge_contexts(
+            &mut query_context,
+            infer_context_from_text(request.query_text),
+        );
         query_context
     });
-    let mut candidates = hits
-        .iter()
-        .filter_map(|hit| {
-            memories
-                .iter()
-                .find(|memory| memory.id == Some(hit.memory_id))
-                .map(|memory| {
-                    let memory_context = infer_context_from_memory(memory);
-                    RecallCandidate {
-                        memory_id: hit.memory_id,
-                        similarity: hit.similarity,
-                        score: hit.similarity + context_score(&query_context, &memory_context),
-                        project_id: memory.project_id.clone(),
-                    }
-                })
-        })
-        .collect::<Vec<_>>();
-    candidates = if config.recall_project_tiebreaker {
-        apply_project_bonus(candidates, project_id, config.recall_project_score_bonus)
-    } else {
-        candidates
-    };
-    candidates.sort_by(|left, right| {
-        right
-            .score
-            .partial_cmp(&left.score)
-            .unwrap_or(std::cmp::Ordering::Equal)
-            .then_with(|| left.memory_id.cmp(&right.memory_id))
-    });
-    let selected = candidates
-        .into_iter()
-        .take(config.recall_result_limit)
-        .collect::<Vec<_>>();
+    let query_task_keys = extract_task_keys(request.query_text);
+    let candidates = rank_recall_candidates(
+        &hits,
+        &memories,
+        request.project_id,
+        &query_context,
+        &query_task_keys,
+        RecallRankingOptions {
+            project_tiebreaker: config.recall_project_tiebreaker,
+            project_score_bonus: config.recall_project_score_bonus,
+        },
+    );
+    let filter_result = select_recall_candidates_with_llm_filter(
+        config,
+        candidates,
+        &memories,
+        request.project_id,
+        request.query_text,
+        &query_context,
+        &query_task_keys,
+    );
+    let selected = filter_result.selected;
+    let debug_candidates = filter_result.debug_candidates;
     let selected_memory_ids = selected
         .iter()
         .map(|candidate| candidate.memory_id)
@@ -1855,21 +2690,41 @@ fn recall_from_embedding(
                     project_id: memory.project_id.clone(),
                     project_descriptor: memory.project_descriptor.clone(),
                     score: candidate.score,
+                    rank: candidate.rank.clone(),
                 })
         })
         .collect::<Vec<_>>();
+    let selected_id_set = selected_memory_ids.iter().copied().collect::<HashSet<_>>();
+    let ranking = debug_candidates
+        .iter()
+        .map(|candidate| RecallDebugRanking {
+            memory_id: candidate.memory_id,
+            selected: selected_id_set.contains(&candidate.memory_id),
+            score: candidate.score,
+            similarity: candidate.similarity,
+            memory_kind: memories
+                .iter()
+                .find(|memory| memory.id == Some(candidate.memory_id))
+                .map(|memory| memory.kind.as_str().to_string())
+                .unwrap_or_else(|| "unknown".to_string()),
+            filter_reasons: candidate.rank.filter_reasons.clone(),
+            rank: candidate.rank.clone(),
+        })
+        .collect::<Vec<_>>();
     let markdown = render_recall_markdown(
-        &query_timestamp,
-        &query_source,
-        project_id,
+        &request.query_timestamp,
+        &request.query_source,
+        request.project_id,
         &recall_memories,
     );
     Ok(RecallSearchResult {
-        query_timestamp,
-        query_source,
-        project_id: project_id.to_string(),
+        query_timestamp: request.query_timestamp,
+        query_source: request.query_source,
+        project_id: request.project_id.to_string(),
         selected_memory_ids,
         memories: recall_memories,
+        ranking,
+        filter_telemetry: filter_result.telemetry,
         markdown,
     })
 }
@@ -1912,6 +2767,8 @@ fn remember(args: RememberArgs) -> anyhow::Result<()> {
         title: truncate_chars(title, 200),
         body: truncate_chars(body, config.max_memory_length),
         scope: args.scope.into(),
+        kind: infer_memory_kind(title, body, args.scope.into()),
+        task_keys: extract_task_keys(&format!("{title}\n{body}")),
         source_turn_refs: Vec::new(),
         created_at: now.clone(),
         updated_at: now.clone(),
@@ -2020,19 +2877,72 @@ fn print_human_status(status: &yaaml_core::status::Status) {
         status.active_memory_count, status.memory_count
     );
     println!(
-        "  backlog: {} files discovered, {} processed, {} turns processed",
-        status.backlog.discovered_files,
-        status.backlog.processed_files,
-        status.backlog.processed_turns
+        "  transcripts: {} files tracked, {} sessions, {} stored turns",
+        status.backlog.transcript_files, status.backlog.sessions, status.backlog.stored_turns
     );
     println!(
-        "  workers: {} queued, {} running",
-        status.workers.queued_jobs, status.workers.running_jobs
+        "  workers: {} queued, {} scheduled, {} running",
+        status.workers.queued_jobs, status.workers.scheduled_jobs, status.workers.running_jobs
     );
     println!("  parked jobs: {}", status.parked_jobs);
 }
 
-fn display(path: &PathBuf) -> String {
+fn print_human_tasks(tasks: &[TaskListRecord]) {
+    if tasks.is_empty() {
+        println!("No tasks");
+        return;
+    }
+    println!("Tasks");
+    for task in tasks {
+        let next_run = task
+            .next_run_at
+            .as_deref()
+            .map(human_timestamp)
+            .unwrap_or_else(|| "-".to_string());
+        let error = task.last_error.as_deref().unwrap_or("-");
+        println!(
+            "  {}  {}  {}  attempts={}/{}  next={}  error={}",
+            task.id,
+            task.display_status,
+            task.kind,
+            task.attempts,
+            task.max_attempts,
+            next_run,
+            truncate_task_error(error)
+        );
+    }
+}
+
+fn print_human_memory_stats(stats: &MemoryStatsOutput) {
+    println!("YAAML memories");
+    println!(
+        "  memories: {} active / {} total",
+        stats.active, stats.total
+    );
+    println!("  by scope/kind:");
+    for row in &stats.by_scope_kind {
+        let active = if row.active { "active" } else { "inactive" };
+        println!("    {} {} {}: {}", row.scope, row.kind, active, row.count);
+    }
+    if !stats.top_projects.is_empty() {
+        println!("  top projects:");
+        for project in &stats.top_projects {
+            println!("    {}: {}", project.project_id, project.active_count);
+        }
+    }
+}
+
+fn truncate_task_error(error: &str) -> String {
+    const MAX_ERROR_CHARS: usize = 120;
+    if error.chars().count() <= MAX_ERROR_CHARS {
+        return error.to_string();
+    }
+    let mut truncated = error.chars().take(MAX_ERROR_CHARS).collect::<String>();
+    truncated.push_str("...");
+    truncated
+}
+
+fn display(path: &Path) -> String {
     path.display().to_string()
 }
 
@@ -2068,7 +2978,7 @@ fn human_timestamp(timestamp: &str) -> String {
 
 #[cfg(unix)]
 fn local_human_timestamp(seconds: i64) -> Option<String> {
-    let time: libc::time_t = seconds.try_into().ok()?;
+    let time: libc::time_t = seconds;
     let mut local_time = std::mem::MaybeUninit::<libc::tm>::uninit();
     let format = b"%Y-%m-%d %H:%M:%S %Z\0";
     let mut buffer = [0 as libc::c_char; 64];

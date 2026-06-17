@@ -74,7 +74,7 @@ fn normalize_eval_score(score: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use crate::{MemoryScope, SourceTurnRef, TurnStatus};
+    use crate::{MemoryKind, MemoryScope, SourceTurnRef, TurnStatus};
 
     use super::*;
 
@@ -99,6 +99,8 @@ mod tests {
             title: format!("memory {id}"),
             body: "body".to_string(),
             scope: MemoryScope::Project,
+            kind: MemoryKind::Lesson,
+            task_keys: Vec::new(),
             source_turn_refs: Vec::new(),
             created_at: created_at.to_string(),
             updated_at: created_at.to_string(),

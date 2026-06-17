@@ -1,0 +1,3 @@
+[alias]
+coverage = "tarpaulin --workspace --timeout 120 --fail-under 70 --out Html --output-dir target/coverage"
+strict = "clippy --workspace --all-targets --all-features -- -D warnings"

@@ -69,6 +69,27 @@ impl MemoryScope {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum MemoryKind {
+    Preference,
+    Lesson,
+    Workflow,
+    ProjectFact,
+    TaskState,
+}
+
+impl MemoryKind {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Preference => "preference",
+            Self::Lesson => "lesson",
+            Self::Workflow => "workflow",
+            Self::ProjectFact => "project_fact",
+            Self::TaskState => "task_state",
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SourceTurnRef {
     pub session_id: String,
@@ -83,6 +104,8 @@ pub struct MemoryRecord {
     pub title: String,
     pub body: String,
     pub scope: MemoryScope,
+    pub kind: MemoryKind,
+    pub task_keys: Vec<String>,
     pub source_turn_refs: Vec<SourceTurnRef>,
     pub created_at: String,
     pub updated_at: String,

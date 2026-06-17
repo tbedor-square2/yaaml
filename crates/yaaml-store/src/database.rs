@@ -1,14 +1,15 @@
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::time::Duration;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use rusqlite::{params, Connection, OptionalExtension};
 use serde::Serialize;
 use thiserror::Error;
 use yaaml_core::status::{BacklogStatus, Status, TaskFailure, WorkerStatus};
 use yaaml_core::{
-    infer_context_from_memory, infer_context_from_path, ContextMetadata, EmbeddingRecord,
-    MemoryRecord, MemoryScope, SessionRecord, SourceTurnRef, TaskRecord, TaskStatus, TurnRecord,
+    extract_task_keys, infer_context_from_memory, infer_context_from_path, ContextMetadata,
+    EmbeddingRecord, MemoryKind, MemoryRecord, MemoryScope, SessionRecord, SourceTurnRef,
+    TaskRecord, TaskStatus, TurnRecord,
 };
 
 use crate::migrations::MIGRATIONS;
@@ -68,6 +69,29 @@ pub struct RecallEvalTaskRecord {
     pub turn_ordinal: Option<u64>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct TaskListRecord {
+    pub id: i64,
+    pub kind: String,
+    pub status: String,
+    pub display_status: String,
+    pub priority: i64,
+    pub attempts: u64,
+    pub max_attempts: u64,
+    pub next_run_at: Option<String>,
+    pub last_error: Option<String>,
+    pub created_at: String,
+    pub updated_at: String,
+    pub payload_json: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct TurnAnchorRecord {
+    pub session_id: String,
+    pub ordinal: u64,
+    pub observed_at: Option<String>,
+}
+
 impl Database {
     pub fn open(path: impl AsRef<Path>) -> Result<Self, DatabaseError> {
         let path = path.as_ref().to_path_buf();
@@ -103,6 +127,16 @@ impl Database {
             "turns",
             "context_json",
             "ALTER TABLE turns ADD COLUMN context_json TEXT",
+        )?;
+        self.ensure_column(
+            "memories",
+            "memory_kind",
+            "ALTER TABLE memories ADD COLUMN memory_kind TEXT NOT NULL DEFAULT 'lesson'",
+        )?;
+        self.ensure_column(
+            "memories",
+            "task_keys",
+            "ALTER TABLE memories ADD COLUMN task_keys TEXT NOT NULL DEFAULT '[]'",
         )?;
         Ok(())
     }
@@ -145,7 +179,26 @@ impl Database {
             .flatten();
         let last_recall_at = None;
         let backlog = self.backlog_status()?;
-        let queued_jobs = self.count("SELECT COUNT(*) FROM tasks WHERE status = 'queued'")?;
+        let now = unix_now_seconds();
+        let queued_jobs = self.count_with_param(
+            "SELECT COUNT(*)
+             FROM tasks
+             WHERE status = 'queued'
+               AND (
+                   next_run_at IS NULL
+                   OR next_run_at NOT LIKE 'unix:%'
+                   OR CAST(substr(next_run_at, 6) AS INTEGER) <= ?1
+               )",
+            now,
+        )?;
+        let scheduled_jobs = self.count_with_param(
+            "SELECT COUNT(*)
+             FROM tasks
+             WHERE status = 'queued'
+               AND next_run_at LIKE 'unix:%'
+               AND CAST(substr(next_run_at, 6) AS INTEGER) > ?1",
+            now,
+        )?;
         let running_jobs = self.count("SELECT COUNT(*) FROM tasks WHERE status = 'running'")?;
         let parked_jobs = self.count("SELECT COUNT(*) FROM tasks WHERE status = 'parked'")?;
         let recent_failures = self.recent_failures()?;
@@ -160,6 +213,7 @@ impl Database {
             workers: WorkerStatus {
                 active_workers: running_jobs,
                 queued_jobs,
+                scheduled_jobs,
                 running_jobs,
             },
             recent_failures,
@@ -444,6 +498,27 @@ impl Database {
         Ok(turns)
     }
 
+    pub fn completed_turn_anchors(&self) -> Result<Vec<TurnAnchorRecord>, DatabaseError> {
+        let mut stmt = self.conn.prepare(
+            "SELECT session_id, ordinal, observed_at
+             FROM turns
+             WHERE status = 'completed'
+             ORDER BY session_id, ordinal",
+        )?;
+        let rows = stmt.query_map([], |row| {
+            Ok(TurnAnchorRecord {
+                session_id: row.get(0)?,
+                ordinal: i64_to_u64(row.get(1)?),
+                observed_at: row.get(2)?,
+            })
+        })?;
+        let mut anchors = Vec::new();
+        for row in rows {
+            anchors.push(row?);
+        }
+        Ok(anchors)
+    }
+
     pub fn next_turn_ordinal_for_session(&self, session_id: &str) -> Result<u64, DatabaseError> {
         let max_ordinal: Option<i64> = self
             .conn
@@ -531,15 +606,18 @@ impl Database {
     pub fn insert_memory(&self, memory: &MemoryRecord) -> Result<i64, DatabaseError> {
         let source_turn_refs = serde_json::to_string(&memory.source_turn_refs)?;
         let lineage_refs = serde_json::to_string(&memory.lineage_refs)?;
+        let task_keys = serde_json::to_string(&memory.task_keys)?;
         self.conn.execute(
             "INSERT INTO memories (
-                title, body, scope, source_turn_refs, created_at, updated_at, is_active,
-                session_id, project_id, project_descriptor, lineage_refs
-             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+                title, body, scope, memory_kind, task_keys, source_turn_refs, created_at,
+                updated_at, is_active, session_id, project_id, project_descriptor, lineage_refs
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
             params![
                 memory.title,
                 memory.body,
                 memory.scope.as_str(),
+                memory.kind.as_str(),
+                task_keys,
                 source_turn_refs,
                 memory.created_at,
                 memory.updated_at,
@@ -628,10 +706,22 @@ impl Database {
         Ok(())
     }
 
+    pub fn deactivate_active_memories(&self, updated_at: &str) -> Result<u64, DatabaseError> {
+        let updated = self.conn.execute(
+            "UPDATE memories
+             SET is_active = 0,
+                 updated_at = ?1
+             WHERE is_active = 1",
+            params![updated_at],
+        )?;
+        Ok(updated as u64)
+    }
+
     pub fn list_memories(&self) -> Result<Vec<MemoryRecord>, DatabaseError> {
         let mut stmt = self.conn.prepare(
-            "SELECT id, title, body, scope, source_turn_refs, created_at, updated_at,
-                    is_active, session_id, project_id, project_descriptor, lineage_refs
+            "SELECT id, title, body, scope, memory_kind, task_keys, source_turn_refs,
+                    created_at, updated_at, is_active, session_id, project_id,
+                    project_descriptor, lineage_refs
              FROM memories
              ORDER BY id",
         )?;
@@ -652,8 +742,9 @@ impl Database {
             let memory = self
                 .conn
                 .query_row(
-                    "SELECT id, title, body, scope, source_turn_refs, created_at, updated_at,
-                            is_active, session_id, project_id, project_descriptor, lineage_refs
+                    "SELECT id, title, body, scope, memory_kind, task_keys, source_turn_refs,
+                            created_at, updated_at, is_active, session_id, project_id,
+                            project_descriptor, lineage_refs
                      FROM memories
                      WHERE id = ?1 AND is_active = 1",
                     params![memory_id],
@@ -676,8 +767,9 @@ impl Database {
             let memory = self
                 .conn
                 .query_row(
-                    "SELECT id, title, body, scope, source_turn_refs, created_at, updated_at,
-                            is_active, session_id, project_id, project_descriptor, lineage_refs
+                    "SELECT id, title, body, scope, memory_kind, task_keys, source_turn_refs,
+                            created_at, updated_at, is_active, session_id, project_id,
+                            project_descriptor, lineage_refs
                      FROM memories
                      WHERE id = ?1",
                     params![memory_id],
@@ -696,8 +788,9 @@ impl Database {
         observed_at: &str,
     ) -> Result<Vec<MemoryRecord>, DatabaseError> {
         let mut stmt = self.conn.prepare(
-            "SELECT id, title, body, scope, source_turn_refs, created_at, updated_at,
-                    is_active, session_id, project_id, project_descriptor, lineage_refs
+            "SELECT id, title, body, scope, memory_kind, task_keys, source_turn_refs,
+                    created_at, updated_at, is_active, session_id, project_id,
+                    project_descriptor, lineage_refs
              FROM memories
              WHERE is_active = 1 AND created_at < ?1
              ORDER BY created_at, id",
@@ -965,6 +1058,67 @@ impl Database {
         Ok(tasks)
     }
 
+    pub fn list_tasks(
+        &self,
+        display_status: Option<&str>,
+        limit: usize,
+    ) -> Result<Vec<TaskListRecord>, DatabaseError> {
+        let now = unix_now_seconds();
+        let status_clause = match display_status {
+            Some("queued") => {
+                "status = 'queued'
+                 AND (
+                     next_run_at IS NULL
+                     OR next_run_at NOT LIKE 'unix:%'
+                     OR CAST(substr(next_run_at, 6) AS INTEGER) <= ?1
+                 )"
+            }
+            Some("scheduled") => {
+                "status = 'queued'
+                 AND next_run_at LIKE 'unix:%'
+                 AND CAST(substr(next_run_at, 6) AS INTEGER) > ?1"
+            }
+            Some("running") => "?1 = ?1 AND status = 'running'",
+            Some("parked") => "?1 = ?1 AND status = 'parked'",
+            Some("completed") => "?1 = ?1 AND status = 'completed'",
+            Some(_) | None => "?1 = ?1",
+        };
+        let sql = format!(
+            "SELECT id, kind, status, priority, payload_json, attempts, max_attempts,
+                    next_run_at, last_error, created_at, updated_at
+             FROM tasks
+             WHERE {status_clause}
+             ORDER BY id DESC
+             LIMIT ?2"
+        );
+        let mut stmt = self.conn.prepare(&sql)?;
+        let rows = stmt.query_map(params![now, u64_to_i64(limit as u64)], |row| {
+            read_task_list_record(row, now)
+        })?;
+        let mut tasks = Vec::new();
+        for row in rows {
+            tasks.push(row?);
+        }
+        Ok(tasks)
+    }
+
+    pub fn list_tasks_by_kind(&self, kind: &str) -> Result<Vec<TaskListRecord>, DatabaseError> {
+        let now = unix_now_seconds();
+        let mut stmt = self.conn.prepare(
+            "SELECT id, kind, status, priority, payload_json, attempts, max_attempts,
+                    next_run_at, last_error, created_at, updated_at
+             FROM tasks
+             WHERE kind = ?1
+             ORDER BY id DESC",
+        )?;
+        let rows = stmt.query_map(params![kind], |row| read_task_list_record(row, now))?;
+        let mut tasks = Vec::new();
+        for row in rows {
+            tasks.push(row?);
+        }
+        Ok(tasks)
+    }
+
     pub fn mark_task_running(&self, task_id: i64, updated_at: &str) -> Result<(), DatabaseError> {
         self.conn.execute(
             "UPDATE tasks
@@ -985,6 +1139,63 @@ impl Database {
             params![updated_at, task_id],
         )?;
         Ok(())
+    }
+
+    pub fn retry_task(&self, task_id: i64, updated_at: &str) -> Result<bool, DatabaseError> {
+        let updated = self.conn.execute(
+            "UPDATE tasks
+             SET status = 'queued',
+                 attempts = 0,
+                 next_run_at = NULL,
+                 last_error = NULL,
+                 updated_at = ?1
+             WHERE id = ?2
+               AND status IN ('queued', 'running', 'parked')",
+            params![updated_at, task_id],
+        )?;
+        Ok(updated > 0)
+    }
+
+    pub fn clear_task(&self, task_id: i64) -> Result<bool, DatabaseError> {
+        let deleted = self
+            .conn
+            .execute("DELETE FROM tasks WHERE id = ?1", params![task_id])?;
+        Ok(deleted > 0)
+    }
+
+    pub fn clear_tasks_by_display_status(
+        &self,
+        display_status: &str,
+        kind: Option<&str>,
+    ) -> Result<u64, DatabaseError> {
+        let now = unix_now_seconds();
+        let status_clause = match display_status {
+            "queued" => {
+                "status = 'queued'
+                 AND (
+                     next_run_at IS NULL
+                     OR next_run_at NOT LIKE 'unix:%'
+                     OR CAST(substr(next_run_at, 6) AS INTEGER) <= ?1
+                 )"
+            }
+            "scheduled" => {
+                "status = 'queued'
+                 AND next_run_at LIKE 'unix:%'
+                 AND CAST(substr(next_run_at, 6) AS INTEGER) > ?1"
+            }
+            "running" => "?1 = ?1 AND status = 'running'",
+            "parked" => "?1 = ?1 AND status = 'parked'",
+            "completed" => "?1 = ?1 AND status = 'completed'",
+            _ => return Ok(0),
+        };
+        let deleted = if let Some(kind) = kind {
+            let sql = format!("DELETE FROM tasks WHERE {status_clause} AND kind = ?2");
+            self.conn.execute(&sql, params![now, kind])?
+        } else {
+            let sql = format!("DELETE FROM tasks WHERE {status_clause}");
+            self.conn.execute(&sql, params![now])?
+        };
+        Ok(deleted as u64)
     }
 
     pub fn requeue_running_tasks(&self, updated_at: &str) -> Result<u64, DatabaseError> {
@@ -1181,8 +1392,13 @@ impl Database {
         Ok(count.try_into().unwrap_or(0))
     }
 
+    fn count_with_param(&self, sql: &str, value: i64) -> Result<u64, DatabaseError> {
+        let count: i64 = self.conn.query_row(sql, params![value], |row| row.get(0))?;
+        Ok(count.try_into().unwrap_or(0))
+    }
+
     fn backlog_status(&self) -> Result<BacklogStatus, DatabaseError> {
-        Ok(self.conn.query_row(
+        let mut backlog = self.conn.query_row(
             "SELECT discovered_files, processed_files, processed_turns, queued_memory_jobs, failures, last_activity_at
              FROM backlog_progress WHERE id = 1",
             [],
@@ -1191,12 +1407,19 @@ impl Database {
                     discovered_files: i64_to_u64(row.get(0)?),
                     processed_files: i64_to_u64(row.get(1)?),
                     processed_turns: i64_to_u64(row.get(2)?),
+                    transcript_files: 0,
+                    sessions: 0,
+                    stored_turns: 0,
                     queued_memory_jobs: i64_to_u64(row.get(3)?),
                     failures: i64_to_u64(row.get(4)?),
                     last_activity_at: row.get(5)?,
                 })
             },
-        )?)
+        )?;
+        backlog.transcript_files = self.count("SELECT COUNT(*) FROM file_cursors")?;
+        backlog.sessions = self.count("SELECT COUNT(*) FROM sessions")?;
+        backlog.stored_turns = self.count("SELECT COUNT(*) FROM turns")?;
+        Ok(backlog)
     }
 
     fn recent_failures(&self) -> Result<Vec<TaskFailure>, DatabaseError> {
@@ -1238,6 +1461,48 @@ fn i64_to_u64(value: i64) -> u64 {
 
 fn u64_to_i64(value: u64) -> i64 {
     value.try_into().unwrap_or(i64::MAX)
+}
+
+fn unix_now_seconds() -> i64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|duration| duration.as_secs().try_into().unwrap_or(i64::MAX))
+        .unwrap_or(0)
+}
+
+fn task_display_status(status: &str, next_run_at: Option<&str>, now_seconds: i64) -> String {
+    if status == "queued"
+        && next_run_at
+            .and_then(|timestamp| timestamp.strip_prefix("unix:"))
+            .and_then(|seconds| seconds.parse::<i64>().ok())
+            .is_some_and(|seconds| seconds > now_seconds)
+    {
+        "scheduled".to_string()
+    } else {
+        status.to_string()
+    }
+}
+
+fn read_task_list_record(
+    row: &rusqlite::Row<'_>,
+    now_seconds: i64,
+) -> rusqlite::Result<TaskListRecord> {
+    let status: String = row.get(2)?;
+    let next_run_at: Option<String> = row.get(7)?;
+    Ok(TaskListRecord {
+        id: row.get(0)?,
+        kind: row.get(1)?,
+        display_status: task_display_status(&status, next_run_at.as_deref(), now_seconds),
+        status,
+        priority: row.get(3)?,
+        payload_json: row.get(4)?,
+        attempts: i64_to_u64(row.get(5)?),
+        max_attempts: i64_to_u64(row.get(6)?),
+        next_run_at,
+        last_error: row.get(8)?,
+        created_at: row.get(9)?,
+        updated_at: row.get(10)?,
+    })
 }
 
 fn read_task_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<TaskRecord> {
@@ -1338,28 +1603,46 @@ fn read_turn_record_from_offset(
 
 fn read_memory_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<MemoryRecord> {
     let scope: String = row.get(3)?;
-    let source_turn_refs_json: String = row.get(4)?;
-    let lineage_refs_json: String = row.get(11)?;
+    let memory_kind: String = row.get(4)?;
+    let task_keys_json: String = row.get(5)?;
+    let source_turn_refs_json: String = row.get(6)?;
+    let lineage_refs_json: String = row.get(13)?;
+    let title: String = row.get(1)?;
+    let body: String = row.get(2)?;
+    let scope = match scope.as_str() {
+        "global" => MemoryScope::Global,
+        _ => MemoryScope::Project,
+    };
     let source_turn_refs: Vec<SourceTurnRef> =
         serde_json::from_str(&source_turn_refs_json).map_err(json_decode_error)?;
+    let mut task_keys: Vec<String> =
+        serde_json::from_str(&task_keys_json).map_err(json_decode_error)?;
+    if task_keys.is_empty() {
+        task_keys = extract_task_keys(&format!("{title}\n{body}"));
+    }
     let lineage_refs: Vec<i64> =
         serde_json::from_str(&lineage_refs_json).map_err(json_decode_error)?;
-    let is_active: i64 = row.get(7)?;
+    let is_active: i64 = row.get(9)?;
     Ok(MemoryRecord {
         id: row.get(0)?,
-        title: row.get(1)?,
-        body: row.get(2)?,
-        scope: match scope.as_str() {
-            "global" => MemoryScope::Global,
-            _ => MemoryScope::Project,
+        title,
+        body,
+        scope,
+        kind: match memory_kind.as_str() {
+            "preference" => MemoryKind::Preference,
+            "workflow" => MemoryKind::Workflow,
+            "project_fact" => MemoryKind::ProjectFact,
+            "task_state" => MemoryKind::TaskState,
+            _ => MemoryKind::Lesson,
         },
+        task_keys,
         source_turn_refs,
-        created_at: row.get(5)?,
-        updated_at: row.get(6)?,
+        created_at: row.get(7)?,
+        updated_at: row.get(8)?,
         is_active: is_active != 0,
-        session_id: row.get(8)?,
-        project_id: row.get(9)?,
-        project_descriptor: row.get(10)?,
+        session_id: row.get(10)?,
+        project_id: row.get(11)?,
+        project_descriptor: row.get(12)?,
         lineage_refs,
     })
 }
@@ -1369,7 +1652,7 @@ fn json_decode_error(error: serde_json::Error) -> rusqlite::Error {
 }
 
 pub fn encode_f32_embedding(values: &[f32]) -> Vec<u8> {
-    let mut blob = Vec::with_capacity(values.len() * std::mem::size_of::<f32>());
+    let mut blob = Vec::with_capacity(std::mem::size_of_val(values));
     for value in values {
         blob.extend_from_slice(&value.to_le_bytes());
     }
@@ -1377,7 +1660,7 @@ pub fn encode_f32_embedding(values: &[f32]) -> Vec<u8> {
 }
 
 pub fn decode_f32_embedding(blob: &[u8]) -> Option<Vec<f32>> {
-    if blob.len() % std::mem::size_of::<f32>() != 0 {
+    if !blob.len().is_multiple_of(std::mem::size_of::<f32>()) {
         return None;
     }
     let mut values = Vec::with_capacity(blob.len() / std::mem::size_of::<f32>());
@@ -1691,6 +1974,64 @@ mod tests {
     }
 
     #[test]
+    fn memory_insert_roundtrips_kind_and_task_keys() {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+        let memory = MemoryRecord {
+            id: None,
+            title: "PR memory".to_string(),
+            body: "PR 481245 needs task-key aware recall.".to_string(),
+            scope: MemoryScope::Project,
+            kind: MemoryKind::TaskState,
+            task_keys: vec!["pr:481245".to_string(), "tool:yaaml".to_string()],
+            source_turn_refs: Vec::new(),
+            created_at: "2026-06-08T00:00:00Z".to_string(),
+            updated_at: "2026-06-08T00:00:00Z".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some("/tmp/yaaml".to_string()),
+            project_descriptor: Some("yaaml, Rust".to_string()),
+            lineage_refs: Vec::new(),
+        };
+
+        db.insert_memory(&memory).unwrap();
+        let memories = db.list_memories().unwrap();
+
+        assert_eq!(memories[0].kind, MemoryKind::TaskState);
+        assert_eq!(
+            memories[0].task_keys,
+            vec!["pr:481245".to_string(), "tool:yaaml".to_string()]
+        );
+    }
+
+    #[test]
+    fn empty_persisted_task_keys_are_derived_on_read() {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+        let memory = MemoryRecord {
+            id: None,
+            title: "PR 481245".to_string(),
+            body: "Risk Arbiter recall should prefer the matching PR.".to_string(),
+            scope: MemoryScope::Project,
+            kind: MemoryKind::TaskState,
+            task_keys: Vec::new(),
+            source_turn_refs: Vec::new(),
+            created_at: "2026-06-08T00:00:00Z".to_string(),
+            updated_at: "2026-06-08T00:00:00Z".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some("/tmp/yaaml".to_string()),
+            project_descriptor: Some("yaaml, Rust".to_string()),
+            lineage_refs: Vec::new(),
+        };
+
+        db.insert_memory(&memory).unwrap();
+        let memories = db.list_memories().unwrap();
+
+        assert!(memories[0].task_keys.contains(&"pr:481245".to_string()));
+    }
+
+    #[test]
     fn memory_insert_persists_context_metadata() {
         let mut db = Database::in_memory().unwrap();
         db.migrate().unwrap();
@@ -1699,6 +2040,8 @@ mod tests {
             title: "Sad Sack Signals".to_string(),
             body: "forge-signalsmith lifecycle job context.".to_string(),
             scope: MemoryScope::Project,
+            kind: MemoryKind::Lesson,
+            task_keys: Vec::new(),
             source_turn_refs: Vec::new(),
             created_at: "2026-06-08T00:00:00Z".to_string(),
             updated_at: "2026-06-08T00:00:00Z".to_string(),
@@ -1730,6 +2073,8 @@ mod tests {
             title: "Recall files".to_string(),
             body: "Skills read recall markdown.".to_string(),
             scope: MemoryScope::Project,
+            kind: MemoryKind::Lesson,
+            task_keys: Vec::new(),
             source_turn_refs: Vec::new(),
             created_at: "2026-06-08T00:00:00Z".to_string(),
             updated_at: "2026-06-08T00:00:00Z".to_string(),
@@ -1770,6 +2115,8 @@ mod tests {
             title: title.to_string(),
             body: title.to_string(),
             scope: MemoryScope::Project,
+            kind: MemoryKind::Lesson,
+            task_keys: Vec::new(),
             source_turn_refs: Vec::new(),
             created_at: "2026-06-08T00:00:00Z".to_string(),
             updated_at: "2026-06-08T00:00:00Z".to_string(),
@@ -1786,6 +2133,8 @@ mod tests {
             title: "merged".to_string(),
             body: "merged body".to_string(),
             scope: MemoryScope::Project,
+            kind: MemoryKind::Lesson,
+            task_keys: Vec::new(),
             source_turn_refs: Vec::new(),
             created_at: "2026-06-08T00:00:01Z".to_string(),
             updated_at: "2026-06-08T00:00:01Z".to_string(),

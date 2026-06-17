@@ -5,7 +5,10 @@ use serde::Deserialize;
 use serde_json::Value;
 use thiserror::Error;
 
-use crate::{infer_context_from_memory, MemoryRecord, MemoryScope, SourceTurnRef};
+use crate::{
+    extract_task_keys, infer_context_from_memory, normalize_memory_kind, MemoryKind, MemoryRecord,
+    MemoryScope, SourceTurnRef,
+};
 
 #[derive(Debug, Error)]
 pub enum MemoryError {
@@ -18,6 +21,8 @@ pub struct MemoryDraft {
     pub title: String,
     pub body: String,
     pub scope: MemoryScope,
+    pub kind: MemoryKind,
+    pub task_keys: Vec<String>,
     pub project_descriptor: String,
 }
 
@@ -34,6 +39,8 @@ impl MemoryDraft {
             title: self.title,
             body: self.body,
             scope: self.scope,
+            kind: self.kind,
+            task_keys: self.task_keys,
             source_turn_refs,
             created_at: created_at.clone(),
             updated_at: created_at,
@@ -59,6 +66,8 @@ struct FormulatedMemory {
     title: String,
     body: String,
     scope: Option<String>,
+    kind: Option<String>,
+    task_keys: Option<Vec<String>>,
     project_descriptor: Option<String>,
 }
 
@@ -84,6 +93,18 @@ pub fn parse_formulation_response(
                 Some("global") => MemoryScope::Global,
                 _ => MemoryScope::Project,
             };
+            let kind = normalize_memory_kind(memory.kind.as_deref(), &title, &body, scope);
+            let mut task_keys = memory
+                .task_keys
+                .unwrap_or_default()
+                .into_iter()
+                .filter_map(|key| normalize_task_key(&key))
+                .collect::<Vec<_>>();
+            for key in extract_task_keys(&format!("{title}\n{body}")) {
+                if !task_keys.contains(&key) {
+                    task_keys.push(key);
+                }
+            }
             let project_descriptor = memory
                 .project_descriptor
                 .map(|descriptor| descriptor.trim().to_string())
@@ -94,6 +115,8 @@ pub fn parse_formulation_response(
                 title,
                 body,
                 scope,
+                kind,
+                task_keys,
                 project_descriptor,
             })
         })
@@ -104,17 +127,29 @@ pub fn embedding_text(memory: &MemoryRecord) -> String {
     let project_descriptor = memory.project_descriptor.as_deref().unwrap_or("unknown");
     let context = infer_context_from_memory(memory);
     let tags = context.subject_tags.join(", ");
+    let task_keys = memory.task_keys.join(", ");
     format!(
-        "title: {}\nscope: {}\nproject: {}\nrepo: {}\nwork_area: {}\nactivity_domain: {}\nsubject_tags: {}\nbody:\n{}",
+        "title: {}\nscope: {}\nkind: {}\nproject: {}\nrepo: {}\nwork_area: {}\nactivity_domain: {}\nsubject_tags: {}\ntask_keys: {}\nbody:\n{}",
         memory.title,
         memory.scope.as_str(),
+        memory.kind.as_str(),
         project_descriptor,
         context.repo_id.as_deref().unwrap_or("unknown"),
         context.work_area.as_deref().unwrap_or("unknown"),
         context.activity_domain.as_deref().unwrap_or("unknown"),
         tags,
+        task_keys,
         memory.body
     )
+}
+
+fn normalize_task_key(key: &str) -> Option<String> {
+    let key = key.trim().to_ascii_lowercase();
+    if key.is_empty() || !key.contains(':') {
+        None
+    } else {
+        Some(key)
+    }
 }
 
 pub fn embedded_text_hash(text: &str) -> String {
@@ -278,6 +313,8 @@ version = "0.1.0"
             title: "Recall files".to_string(),
             body: "Agents read daemon-owned recall files.".to_string(),
             scope: MemoryScope::Project,
+            kind: MemoryKind::Lesson,
+            task_keys: vec!["tool:yaaml".to_string()],
             source_turn_refs: Vec::new(),
             created_at: "2026-06-08T00:00:00Z".to_string(),
             updated_at: "2026-06-08T00:00:00Z".to_string(),

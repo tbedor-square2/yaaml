@@ -23,11 +23,13 @@ pub use memory::{
     MemoryDraft, MemoryError,
 };
 pub use model::{
-    AgentType, EmbeddingRecord, MemoryRecord, MemoryScope, SessionRecord, SourceTurnRef,
-    TaskRecord, TaskStatus, TurnRecord, TurnStatus,
+    AgentType, EmbeddingRecord, MemoryKind, MemoryRecord, MemoryScope, SessionRecord,
+    SourceTurnRef, TaskRecord, TaskStatus, TurnRecord, TurnStatus,
 };
 pub use recall::{
-    apply_project_bonus, build_recall_query, cosine_similarity, parse_memory_ids, recall_file_path,
-    render_recall_markdown, session_recall_file_path, write_recall_file, RecallCandidate,
-    RecallMemory, RecallWrite, VectorHit, VectorIndex,
+    apply_project_bonus, build_recall_query, cosine_similarity, extract_task_keys,
+    infer_memory_kind, normalize_memory_kind, parse_memory_ids, rank_recall_candidates,
+    recall_file_path, render_recall_markdown, select_recall_candidates, session_recall_file_path,
+    write_recall_file, RecallCandidate, RecallMemory, RecallRankDetails, RecallRankingOptions,
+    RecallWrite, VectorHit, VectorIndex,
 };

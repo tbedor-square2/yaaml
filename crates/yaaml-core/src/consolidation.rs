@@ -342,6 +342,56 @@ mod tests {
     }
 
     #[test]
+    fn single_memory_does_not_create_cluster() {
+        let clusters = find_consolidation_clusters(
+            &[memory(1, MemoryScope::Project, Some("/tmp/a"), 1.0)],
+            0.01,
+            2,
+            5,
+        );
+
+        assert!(clusters.is_empty());
+    }
+
+    #[test]
+    fn two_identical_memories_cluster_by_lexical_overlap() {
+        let clusters = find_consolidation_clusters(
+            &[
+                memory_with_text(
+                    1,
+                    "Functional style preference",
+                    "Prefer iterator chains over explicit loops in Rust parser code.",
+                    1.0,
+                ),
+                memory_with_text(
+                    2,
+                    "Functional style preference",
+                    "Prefer iterator chains over explicit loops in Rust parser code.",
+                    0.2,
+                ),
+            ],
+            0.01,
+            2,
+            5,
+        );
+
+        assert_eq!(clusters.len(), 1);
+        assert_eq!(clusters[0].memory_ids, vec![1, 2]);
+    }
+
+    #[test]
+    fn empty_embedding_vectors_do_not_panic_or_cluster() {
+        let mut first = memory_with_text(1, "one", "one body", 1.0);
+        first.embedding = Vec::new();
+        let mut second = memory_with_text(2, "one", "one body", 1.0);
+        second.embedding = Vec::new();
+
+        let clusters = find_consolidation_clusters(&[first, second], 0.01, 2, 5);
+
+        assert!(clusters.is_empty());
+    }
+
+    #[test]
     fn overlapping_same_project_memory_text_clusters_even_when_vectors_are_looser() {
         let clusters = find_consolidation_clusters(
             &[

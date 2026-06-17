@@ -7,8 +7,8 @@ use std::thread;
 use tempfile::TempDir;
 use yaaml::daemon::TASK_KIND_RECALL_EVAL;
 use yaaml_core::{
-    recall_file_path, session_recall_file_path, AgentType, EmbeddingRecord, MemoryRecord,
-    MemoryScope, SessionRecord, TaskStatus, TurnRecord, TurnStatus,
+    recall_file_path, session_recall_file_path, AgentType, EmbeddingRecord, MemoryKind,
+    MemoryRecord, MemoryScope, SessionRecord, TaskStatus, TurnRecord, TurnStatus,
 };
 use yaaml_store::database::encode_f32_embedding;
 use yaaml_store::Database;
@@ -30,6 +30,7 @@ fn manual_recall_query_writes_expected_markdown() {
 db_path = "{}"
 recall_dir = "{}"
 embedding_base_url = "{}"
+recall_llm_filter_enabled = false
 "#,
             db_path.display(),
             recall_dir.display(),
@@ -46,6 +47,8 @@ embedding_base_url = "{}"
         title: "Recall files".to_string(),
         body: "Agents should read the daemon-owned recall file through the skill.".to_string(),
         scope: MemoryScope::Project,
+        kind: MemoryKind::Lesson,
+        task_keys: Vec::new(),
         source_turn_refs: Vec::new(),
         created_at: "2026-06-08T00:00:00Z".to_string(),
         updated_at: "2026-06-08T00:00:00Z".to_string(),
@@ -129,6 +132,188 @@ embedding_base_url = "{}"
 }
 
 #[test]
+fn recall_query_json_can_include_debug_ranking() {
+    let tmp = TempDir::new().unwrap();
+    let home = tmp.path().join("home");
+    let project = tmp.path().join("project");
+    fs::create_dir_all(home.join(".yaaml")).unwrap();
+    fs::create_dir_all(&project).unwrap();
+    let db_path = home.join(".yaaml").join("yaaml.db");
+    let server = fake_embedding_server();
+    fs::write(
+        home.join(".yaaml").join("config.toml"),
+        format!(
+            r#"
+db_path = "{}"
+embedding_base_url = "{}"
+recall_llm_filter_enabled = false
+"#,
+            db_path.display(),
+            server.base_url
+        ),
+    )
+    .unwrap();
+
+    let project_id = project.canonicalize().unwrap().display().to_string();
+    let mut db = Database::open(&db_path).unwrap();
+    db.migrate().unwrap();
+    let memory = MemoryRecord {
+        id: None,
+        title: "Task-key recall".to_string(),
+        body: "PR 481245 should use task-key aware ranking.".to_string(),
+        scope: MemoryScope::Project,
+        kind: MemoryKind::TaskState,
+        task_keys: vec!["pr:481245".to_string()],
+        source_turn_refs: Vec::new(),
+        created_at: "2026-06-08T00:00:00Z".to_string(),
+        updated_at: "2026-06-08T00:00:00Z".to_string(),
+        is_active: true,
+        session_id: None,
+        project_id: Some(project_id),
+        project_descriptor: Some("yaaml, Rust CLI memory daemon".to_string()),
+        lineage_refs: Vec::new(),
+    };
+    let memory_id = db.insert_memory(&memory).unwrap();
+    db.upsert_embedding(&EmbeddingRecord {
+        memory_id,
+        embedding_model: "text-embedding-3-small".to_string(),
+        dimensions: 2,
+        embedding_blob: encode_f32_embedding(&[1.0, 0.0]),
+        embedded_text_hash: "hash".to_string(),
+        updated_at: "2026-06-08T00:00:00Z".to_string(),
+    })
+    .unwrap();
+
+    let output = Command::new(env!("CARGO_BIN_EXE_yaaml"))
+        .arg("recall")
+        .arg("--query")
+        .arg("what should PR 481245 recall")
+        .arg("--json")
+        .arg("--debug-ranking")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .env("OPENAI_API_KEY", "test-key")
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    server.join();
+    let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(value["selected_memory_ids"][0], memory_id);
+    assert_eq!(
+        value["ranking"][0]["rank"]["matched_task_keys"][0],
+        "pr:481245"
+    );
+    assert!(
+        value["ranking"][0]["rank"]["task_key_bonus"]
+            .as_f64()
+            .unwrap()
+            > 0.0
+    );
+}
+
+#[test]
+fn recall_query_debug_shows_dropped_task_state_without_task_key_match() {
+    let tmp = TempDir::new().unwrap();
+    let home = tmp.path().join("home");
+    let project = tmp.path().join("project");
+    fs::create_dir_all(home.join(".yaaml")).unwrap();
+    fs::create_dir_all(&project).unwrap();
+    let db_path = home.join(".yaaml").join("yaaml.db");
+    let server = fake_embedding_server();
+    fs::write(
+        home.join(".yaaml").join("config.toml"),
+        format!(
+            r#"
+db_path = "{}"
+embedding_base_url = "{}"
+recall_llm_filter_enabled = false
+"#,
+            db_path.display(),
+            server.base_url
+        ),
+    )
+    .unwrap();
+
+    let project_id = project.canonicalize().unwrap().display().to_string();
+    let mut db = Database::open(&db_path).unwrap();
+    db.migrate().unwrap();
+    let stale_id = insert_memory_with_embedding(
+        &mut db,
+        MemoryRecord {
+            id: None,
+            title: "Stale PR state".to_string(),
+            body: "PR 111111 was an abandoned strategy.".to_string(),
+            scope: MemoryScope::Project,
+            kind: MemoryKind::TaskState,
+            task_keys: vec!["pr:111111".to_string()],
+            source_turn_refs: Vec::new(),
+            created_at: "2026-06-08T00:00:00Z".to_string(),
+            updated_at: "2026-06-08T00:00:00Z".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some(project_id.clone()),
+            project_descriptor: Some("yaaml, Rust CLI memory daemon".to_string()),
+            lineage_refs: Vec::new(),
+        },
+    );
+    let target_id = insert_memory_with_embedding(
+        &mut db,
+        MemoryRecord {
+            id: None,
+            title: "Target PR state".to_string(),
+            body: "PR 481245 should be recalled for this task.".to_string(),
+            scope: MemoryScope::Project,
+            kind: MemoryKind::TaskState,
+            task_keys: vec!["pr:481245".to_string()],
+            source_turn_refs: Vec::new(),
+            created_at: "2026-06-08T00:00:00Z".to_string(),
+            updated_at: "2026-06-08T00:00:00Z".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some(project_id),
+            project_descriptor: Some("yaaml, Rust CLI memory daemon".to_string()),
+            lineage_refs: Vec::new(),
+        },
+    );
+
+    let output = Command::new(env!("CARGO_BIN_EXE_yaaml"))
+        .arg("recall")
+        .arg("--query")
+        .arg("what should PR 481245 recall")
+        .arg("--json")
+        .arg("--debug-ranking")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .env("OPENAI_API_KEY", "test-key")
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    server.join();
+    let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(value["selected_memory_ids"], serde_json::json!([target_id]));
+    let ranking = value["ranking"].as_array().unwrap();
+    let stale = ranking
+        .iter()
+        .find(|entry| entry["memory_id"] == stale_id)
+        .unwrap();
+    assert_eq!(stale["selected"], false);
+    assert_eq!(
+        stale["filter_reasons"][0],
+        "drop:task_state_without_task_key_match"
+    );
+}
+
+#[test]
 fn bare_recall_invalidates_file_with_inactive_memory_ids() {
     let tmp = TempDir::new().unwrap();
     let home = tmp.path().join("home");
@@ -160,6 +345,8 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
             title: "Inactive recall memory".to_string(),
             body: "This memory should not be printed after deactivation.".to_string(),
             scope: MemoryScope::Project,
+            kind: MemoryKind::Lesson,
+            task_keys: Vec::new(),
             source_turn_refs: Vec::new(),
             created_at: "2026-06-08T00:00:00Z".to_string(),
             updated_at: "2026-06-08T00:00:00Z".to_string(),
@@ -219,6 +406,7 @@ fn recall_query_writes_current_session_file_when_session_id_is_available() {
 db_path = "{}"
 recall_dir = "{}"
 embedding_base_url = "{}"
+recall_llm_filter_enabled = false
 "#,
             db_path.display(),
             recall_dir.display(),
@@ -235,6 +423,8 @@ embedding_base_url = "{}"
         title: "Session recall".to_string(),
         body: "Recall should be triggered from the current user request.".to_string(),
         scope: MemoryScope::Project,
+        kind: MemoryKind::Lesson,
+        task_keys: Vec::new(),
         source_turn_refs: Vec::new(),
         created_at: "2026-06-08T00:00:00Z".to_string(),
         updated_at: "2026-06-08T00:00:00Z".to_string(),
@@ -310,6 +500,7 @@ fn bare_recall_refreshes_missing_current_session_file() {
 db_path = "{}"
 recall_dir = "{}"
 embedding_base_url = "{}"
+recall_llm_filter_enabled = false
 "#,
             db_path.display(),
             recall_dir.display(),
@@ -349,6 +540,8 @@ embedding_base_url = "{}"
         body: "Bare recall should generate a missing session recall file from recent turns."
             .to_string(),
         scope: MemoryScope::Project,
+        kind: MemoryKind::Lesson,
+        task_keys: Vec::new(),
         source_turn_refs: Vec::new(),
         created_at: "2026-06-08T00:00:00Z".to_string(),
         updated_at: "2026-06-08T00:00:00Z".to_string(),
@@ -418,6 +611,7 @@ fn recall_query_falls_back_to_latest_project_session() {
 db_path = "{}"
 recall_dir = "{}"
 embedding_base_url = "{}"
+recall_llm_filter_enabled = false
 "#,
             db_path.display(),
             recall_dir.display(),
@@ -455,6 +649,8 @@ embedding_base_url = "{}"
         body: "Recall should use the newest known project session without a Codex thread id."
             .to_string(),
         scope: MemoryScope::Project,
+        kind: MemoryKind::Lesson,
+        task_keys: Vec::new(),
         source_turn_refs: Vec::new(),
         created_at: "2026-06-08T00:00:00Z".to_string(),
         updated_at: "2026-06-08T00:00:00Z".to_string(),
@@ -524,6 +720,7 @@ fn historical_recall_uses_session_turn_context_without_writing_file() {
 db_path = "{}"
 recall_dir = "{}"
 embedding_base_url = "{}"
+recall_llm_filter_enabled = false
 recall_live_turn_window = 2
 "#,
             db_path.display(),
@@ -565,6 +762,8 @@ recall_live_turn_window = 2
         title: "Historical recall".to_string(),
         body: "Backtests can replay recall for a specific session turn.".to_string(),
         scope: MemoryScope::Project,
+        kind: MemoryKind::Lesson,
+        task_keys: Vec::new(),
         source_turn_refs: Vec::new(),
         created_at: "2026-06-08T00:00:00Z".to_string(),
         updated_at: "2026-06-08T00:00:00Z".to_string(),
@@ -632,6 +831,20 @@ recall_live_turn_window = 2
 struct FakeServer {
     base_url: String,
     handle: thread::JoinHandle<()>,
+}
+
+fn insert_memory_with_embedding(db: &mut Database, memory: MemoryRecord) -> i64 {
+    let memory_id = db.insert_memory(&memory).unwrap();
+    db.upsert_embedding(&EmbeddingRecord {
+        memory_id,
+        embedding_model: "text-embedding-3-small".to_string(),
+        dimensions: 2,
+        embedding_blob: encode_f32_embedding(&[1.0, 0.0]),
+        embedded_text_hash: format!("hash-{memory_id}"),
+        updated_at: "2026-06-08T00:00:00Z".to_string(),
+    })
+    .unwrap();
+    memory_id
 }
 
 impl FakeServer {

@@ -18,6 +18,9 @@ pub struct BacklogStatus {
     pub discovered_files: u64,
     pub processed_files: u64,
     pub processed_turns: u64,
+    pub transcript_files: u64,
+    pub sessions: u64,
+    pub stored_turns: u64,
     pub queued_memory_jobs: u64,
     pub failures: u64,
     pub last_activity_at: Option<String>,
@@ -27,6 +30,7 @@ pub struct BacklogStatus {
 pub struct WorkerStatus {
     pub active_workers: u64,
     pub queued_jobs: u64,
+    pub scheduled_jobs: u64,
     pub running_jobs: u64,
 }
 

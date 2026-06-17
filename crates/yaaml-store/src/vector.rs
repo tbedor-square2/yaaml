@@ -104,7 +104,7 @@ pub fn has_embedding(db: &Database, memory_id: i64) -> Result<bool, DatabaseErro
 
 #[cfg(test)]
 mod tests {
-    use yaaml_core::{embedded_text_hash, MemoryRecord, MemoryScope};
+    use yaaml_core::{embedded_text_hash, MemoryKind, MemoryRecord, MemoryScope};
 
     use super::*;
 
@@ -117,6 +117,8 @@ mod tests {
             title: title.to_string(),
             body: title.to_string(),
             scope: MemoryScope::Project,
+            kind: MemoryKind::Lesson,
+            task_keys: Vec::new(),
             source_turn_refs: Vec::new(),
             created_at: "2026-06-08T00:00:00Z".to_string(),
             updated_at: "2026-06-08T00:00:00Z".to_string(),

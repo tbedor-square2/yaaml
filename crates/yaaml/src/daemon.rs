@@ -12,14 +12,15 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use anyhow::Context;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use yaaml_core::{
-    apply_project_bonus, build_recall_query, context_score, derive_project_descriptor,
-    embedded_text_hash, embedding_text, find_consolidation_clusters, infer_context_from_memory,
-    parse_eval_judge_response, parse_formulation_response, recall_file_path,
-    render_recall_markdown, session_recall_file_path, write_recall_file, ClusterMemory, Config,
-    EmbeddingRecord, MemoryRecord, MemoryScope, RecallCandidate, RecallMemory, SourceTurnRef,
-    TaskRecord, TaskStatus, VectorIndex,
+    build_recall_query, derive_project_descriptor, embedded_text_hash, embedding_text,
+    extract_task_keys, find_consolidation_clusters, parse_eval_judge_response,
+    parse_formulation_response, rank_recall_candidates, recall_file_path, render_recall_markdown,
+    session_recall_file_path, write_recall_file, ClusterMemory, Config, EmbeddingRecord,
+    MemoryRecord, MemoryScope, RecallMemory, RecallRankingOptions, SourceTurnRef, TaskRecord,
+    TaskStatus, VectorIndex,
 };
 use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
@@ -28,12 +29,53 @@ use yaaml_store::{Database, SqliteExactVectorIndex};
 use yaaml_transcript::codex::parse_codex_file_from_offset_with_session;
 use yaaml_transcript::discovery::discover_codex_backlog;
 
+use crate::recall_filter::{select_recall_candidates_with_llm_filter, RecallFilterTelemetry};
 use crate::turn_hydration::{context_from_turns, hydrate_turns};
 
 pub const TASK_KIND_MEMORY_FORMULATION: &str = "memory_formulation";
 pub const TASK_KIND_MEMORY_CONSOLIDATION: &str = "memory_consolidation";
 pub const TASK_KIND_RECALL: &str = "recall";
 pub const TASK_KIND_RECALL_EVAL: &str = "recall_eval";
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct MemoryFormulationTaskPayload {
+    session_id: String,
+    #[serde(default)]
+    start_ordinal: Option<u64>,
+    #[serde(default)]
+    end_ordinal: Option<u64>,
+    #[serde(default)]
+    source_turn_refs: Vec<SourceTurnRef>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct MemoryConsolidationTaskPayload {
+    #[serde(default)]
+    reason: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct RecallTaskPayload {
+    session_id: String,
+    turn_ordinal: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct RecallEvalTaskPayload {
+    session_id: String,
+    turn_ordinal: u64,
+    recall_text: String,
+    #[serde(default)]
+    memory_ids: Vec<i64>,
+    #[serde(default)]
+    recall_at: Option<String>,
+    #[serde(default)]
+    eval_after: Option<String>,
+    #[serde(default)]
+    rerun_for_eval_run_id: Option<i64>,
+    #[serde(default)]
+    filter_telemetry: Option<RecallFilterTelemetry>,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PartialBatchPolicy {
@@ -122,7 +164,6 @@ pub fn ingest_codex_file(db: &Database, transcript_path: &Path) -> anyhow::Resul
     for turn in &parsed.turns {
         let mut turn = turn.clone();
         turn.ordinal += ordinal_base;
-        turn.display_text = None;
         if db
             .insert_turn(&turn)
             .context("failed to persist Codex turn")?
@@ -326,17 +367,14 @@ fn run_memory_formulation_task(
     config: &Config,
     task: &TaskRecord,
 ) -> anyhow::Result<()> {
-    let payload: serde_json::Value =
+    let payload: MemoryFormulationTaskPayload =
         serde_json::from_str(&task.payload_json).context("failed to parse task payload")?;
-    let session_id = payload
-        .get("session_id")
-        .and_then(serde_json::Value::as_str)
-        .context("memory formulation task missing session_id")?;
+    let session_id = payload.session_id.as_str();
     let session = db
         .session_by_id(session_id)
         .context("failed to load task session")?
         .context("memory formulation task references missing session")?;
-    let requested_source_turn_refs = source_turn_refs_from_payload(&payload)?;
+    let requested_source_turn_refs = payload.source_turn_refs;
     let turns = if requested_source_turn_refs.is_empty() {
         db.turns_for_session(session_id, config.turns_between_memory as usize)
             .context("failed to load task turns")?
@@ -407,6 +445,8 @@ fn run_memory_consolidation_task(
     config: &Config,
     task: &TaskRecord,
 ) -> anyhow::Result<()> {
+    let _payload: MemoryConsolidationTaskPayload = serde_json::from_str(&task.payload_json)
+        .context("failed to parse consolidation payload")?;
     if should_defer_memory_consolidation(db, config, task)? {
         defer_memory_consolidation(db, task).context("failed to defer memory consolidation")?;
         return Ok(());
@@ -490,16 +530,10 @@ fn run_memory_consolidation_task(
 }
 
 fn run_recall_task(db: &Database, config: &Config, task: &TaskRecord) -> anyhow::Result<()> {
-    let payload: serde_json::Value =
+    let payload: RecallTaskPayload =
         serde_json::from_str(&task.payload_json).context("failed to parse recall payload")?;
-    let session_id = payload
-        .get("session_id")
-        .and_then(serde_json::Value::as_str)
-        .context("recall task missing session_id")?;
-    let turn_ordinal = payload
-        .get("turn_ordinal")
-        .and_then(serde_json::Value::as_u64)
-        .context("recall task missing turn_ordinal")?;
+    let session_id = payload.session_id.as_str();
+    let turn_ordinal = payload.turn_ordinal;
     let session = db
         .session_by_id(session_id)
         .context("failed to load recall task session")?
@@ -542,32 +576,13 @@ fn run_recall_task(db: &Database, config: &Config, task: &TaskRecord) -> anyhow:
 }
 
 fn run_recall_eval_task(db: &Database, config: &Config, task: &TaskRecord) -> anyhow::Result<()> {
-    let payload: serde_json::Value =
+    let payload: RecallEvalTaskPayload =
         serde_json::from_str(&task.payload_json).context("failed to parse recall eval payload")?;
-    let session_id = payload
-        .get("session_id")
-        .and_then(serde_json::Value::as_str)
-        .context("recall eval task missing session_id")?;
-    let turn_ordinal = payload
-        .get("turn_ordinal")
-        .and_then(serde_json::Value::as_u64)
-        .context("recall eval task missing turn_ordinal")?;
-    let recall_text = payload
-        .get("recall_text")
-        .and_then(serde_json::Value::as_str)
-        .context("recall eval task missing recall_text")?;
-    let memory_ids = payload
-        .get("memory_ids")
-        .and_then(serde_json::Value::as_array)
-        .map(|ids| {
-            ids.iter()
-                .filter_map(serde_json::Value::as_i64)
-                .collect::<Vec<_>>()
-        })
-        .unwrap_or_default();
-    let rerun_for_eval_run_id = payload
-        .get("rerun_for_eval_run_id")
-        .and_then(serde_json::Value::as_i64);
+    let session_id = payload.session_id.as_str();
+    let turn_ordinal = payload.turn_ordinal;
+    let recall_text = payload.recall_text.as_str();
+    let memory_ids = payload.memory_ids;
+    let rerun_for_eval_run_id = payload.rerun_for_eval_run_id;
     let Some(turn_row_id) = db
         .turn_row_id_for_session_ordinal(session_id, turn_ordinal)
         .context("failed to load recall eval anchor turn")?
@@ -824,14 +839,17 @@ pub fn queue_stale_recall_eval_tasks(db: &Database, limit: usize) -> anyhow::Res
         if recall_text.trim().is_empty() {
             continue;
         }
-        let payload_json = json!({
-            "session_id": session_id,
-            "turn_ordinal": turn_ordinal,
-            "recall_text": recall_text,
-            "memory_ids": memory_ids,
-            "rerun_for_eval_run_id": run.id,
+        let payload_json = serde_json::to_string(&RecallEvalTaskPayload {
+            session_id: session_id.to_string(),
+            turn_ordinal,
+            recall_text,
+            memory_ids,
+            recall_at: None,
+            eval_after: None,
+            rerun_for_eval_run_id: Some(run.id),
+            filter_telemetry: None,
         })
-        .to_string();
+        .context("failed to serialize stale recall eval task payload")?;
         if db
             .task_payload_exists(TASK_KIND_RECALL_EVAL, &payload_json)
             .context("failed to check stale recall eval task")?
@@ -887,12 +905,11 @@ pub fn queue_memory_consolidation_if_due(
             timestamp_seconds(&latest_memory_created_at),
             timestamp_seconds(&latest_completed_at),
         ) {
-            if completed_seconds >= memory_seconds {
-                if !active_consolidation_cluster_exists(db, config)
+            if completed_seconds >= memory_seconds
+                && !active_consolidation_cluster_exists(db, config)
                     .context("failed to check active consolidation clusters")?
-                {
-                    return Ok(None);
-                }
+            {
+                return Ok(None);
             }
         }
     }
@@ -907,7 +924,10 @@ pub fn queue_memory_consolidation_if_due(
         kind: TASK_KIND_MEMORY_CONSOLIDATION.to_string(),
         status: TaskStatus::Queued,
         priority: -10,
-        payload_json: json!({"reason":"memory_dark_period"}).to_string(),
+        payload_json: serde_json::to_string(&MemoryConsolidationTaskPayload {
+            reason: "memory_dark_period".to_string(),
+        })
+        .context("failed to serialize consolidation task payload")?,
         attempts: 0,
         max_attempts: 20,
         next_run_at: Some(format!("unix:{next_run_seconds}")),
@@ -922,14 +942,13 @@ pub fn queue_memory_consolidation_if_due(
 
 fn active_consolidation_cluster_exists(db: &Database, config: &Config) -> anyhow::Result<bool> {
     let cluster_memories = consolidation_cluster_memories(db, config)?;
-    Ok(find_consolidation_clusters(
+    let clusters = find_consolidation_clusters(
         &cluster_memories,
         config.memory_cluster_distance_threshold,
         config.memory_cluster_min_size,
         config.memory_cluster_max_size,
-    )
-    .first()
-    .is_some())
+    );
+    Ok(!clusters.is_empty())
 }
 
 fn should_defer_memory_consolidation(
@@ -1026,18 +1045,20 @@ fn merged_source_turn_refs(memories: &[MemoryRecord]) -> Vec<SourceTurnRef> {
 fn formulation_system_prompt() -> &'static str {
     concat!(
         "Create concise durable memories from coding-agent transcript turns. ",
-        "Return only JSON shaped as {\"memories\":[{\"title\":\"...\",\"body\":\"...\",\"scope\":\"project\"|\"global\",\"project_descriptor\":\"...\"}]}. ",
-        "Prefer small, granular memories. ",
+        "Return only JSON shaped as {\"memories\":[{\"title\":\"...\",\"body\":\"...\",\"scope\":\"project\"|\"global\",\"kind\":\"preference\"|\"lesson\"|\"workflow\"|\"project_fact\"|\"task_state\",\"task_keys\":[\"type:value\"],\"project_descriptor\":\"...\"}]}. ",
+        "Return {\"memories\":[]} when the turns contain only ordinary progress updates, one-off command output, transient narration, or no durable lesson. ",
+        "Prefer zero or one small, granular memory per batch; create multiple memories only when the turns contain distinct durable lessons or preferences. ",
         "Focus memories on insights gained while solving the problem and on redirection provided by the user. ",
         "Always capture repeated user corrections, preferences, and process guidance as their own concise memories, including coding style preferences such as functional vs imperative style. ",
-        "Use project scope when the preference is tied to the current project or language; use global scope only for durable cross-project user preferences or agent workflow patterns."
+        "Use project scope when the preference is tied to the current project or language; use global scope only for durable cross-project user preferences or agent workflow patterns. ",
+        "Use task_state only for short-lived PR, branch, ticket, or status facts with concrete task_keys; avoid task_state when a reusable lesson or preference is available."
     )
 }
 
 fn consolidation_system_prompt() -> &'static str {
     concat!(
         "Merge overlapping coding-agent memories into one concise durable memory. ",
-        "Return only JSON shaped as {\"memories\":[{\"title\":\"...\",\"body\":\"...\",\"scope\":\"project\"|\"global\",\"project_descriptor\":\"...\"}]}. ",
+        "Return only JSON shaped as {\"memories\":[{\"title\":\"...\",\"body\":\"...\",\"scope\":\"project\"|\"global\",\"kind\":\"preference\"|\"lesson\"|\"workflow\"|\"project_fact\"|\"task_state\",\"task_keys\":[\"type:value\"],\"project_descriptor\":\"...\"}]}. ",
         "Preserve concrete facts, durable user preferences, commands, file paths, project state, and unresolved follow-up context. ",
         "Remove repetition and transient narration. ",
         "Do not invent facts not present in the source memories. ",
@@ -1321,13 +1342,13 @@ fn enqueue_memory_formulation_task(
     let end_ordinal = source_turn_refs
         .last()
         .map(|source_ref| source_ref.ordinal.saturating_add(1));
-    let payload = json!({
-        "session_id": session_id,
-        "start_ordinal": start_ordinal,
-        "end_ordinal": end_ordinal,
-        "source_turn_refs": source_turn_refs,
-    });
-    let payload_json = payload.to_string();
+    let payload_json = serde_json::to_string(&MemoryFormulationTaskPayload {
+        session_id: session_id.to_string(),
+        start_ordinal,
+        end_ordinal,
+        source_turn_refs,
+    })
+    .context("failed to serialize formulation task payload")?;
     if db
         .task_payload_exists(TASK_KIND_MEMORY_FORMULATION, &payload_json)
         .context("failed to check existing formulation task")?
@@ -1353,16 +1374,6 @@ fn enqueue_memory_formulation_task(
         .context("failed to enqueue formulation task")
 }
 
-fn source_turn_refs_from_payload(
-    payload: &serde_json::Value,
-) -> anyhow::Result<Vec<SourceTurnRef>> {
-    match payload.get("source_turn_refs") {
-        Some(value) => serde_json::from_value(value.clone())
-            .context("failed to parse formulation source_turn_refs"),
-        None => Ok(Vec::new()),
-    }
-}
-
 fn source_turn_refs_for_turns(turns: &[yaaml_core::TurnRecord]) -> Vec<SourceTurnRef> {
     turns
         .iter()
@@ -1377,7 +1388,12 @@ fn source_turn_refs_for_turns(turns: &[yaaml_core::TurnRecord]) -> Vec<SourceTur
 
 fn covered_memory_turn_refs(db: &Database) -> anyhow::Result<HashSet<(String, u64)>> {
     let mut covered = HashSet::new();
-    for memory in db.list_memories().context("failed to list memories")? {
+    for memory in db
+        .list_memories()
+        .context("failed to list memories")?
+        .into_iter()
+        .filter(|memory| memory.is_active)
+    {
         for source_ref in memory.source_turn_refs {
             covered.insert((source_ref.session_id, source_ref.ordinal));
         }
@@ -1436,11 +1452,11 @@ pub fn queue_recall_after_turn(
     turn_ordinal: u64,
     priority: i64,
 ) -> anyhow::Result<i64> {
-    let payload = json!({
-        "session_id": session_id,
-        "turn_ordinal": turn_ordinal,
-    });
-    let payload_json = payload.to_string();
+    let payload_json = serde_json::to_string(&RecallTaskPayload {
+        session_id: session_id.to_string(),
+        turn_ordinal,
+    })
+    .context("failed to serialize recall task payload")?;
     if db
         .task_payload_exists(TASK_KIND_RECALL, &payload_json)
         .context("failed to check existing recall task")?
@@ -1471,6 +1487,7 @@ pub fn queue_recall_eval_after_turn(
     turn_ordinal: u64,
     recall_text: &str,
     memory_ids: &[i64],
+    filter_telemetry: Option<&RecallFilterTelemetry>,
     priority: i64,
 ) -> anyhow::Result<i64> {
     let now_seconds = unix_timestamp_seconds();
@@ -1480,21 +1497,24 @@ pub fn queue_recall_eval_after_turn(
     {
         return Ok(0);
     }
-    let payload = json!({
-        "session_id": session_id,
-        "turn_ordinal": turn_ordinal,
-        "recall_text": recall_text,
-        "memory_ids": memory_ids,
-        "recall_at": format!("unix:{now_seconds}"),
-        "eval_after": format!("unix:{}", now_seconds + 600),
-    });
+    let payload_json = serde_json::to_string(&RecallEvalTaskPayload {
+        session_id: session_id.to_string(),
+        turn_ordinal,
+        recall_text: recall_text.to_string(),
+        memory_ids: memory_ids.to_vec(),
+        recall_at: Some(format!("unix:{now_seconds}")),
+        eval_after: Some(format!("unix:{}", now_seconds + 600)),
+        rerun_for_eval_run_id: None,
+        filter_telemetry: filter_telemetry.cloned(),
+    })
+    .context("failed to serialize recall eval task payload")?;
     let now = format!("unix:{now_seconds}");
     let task = TaskRecord {
         id: None,
         kind: TASK_KIND_RECALL_EVAL.to_string(),
         status: TaskStatus::Queued,
         priority,
-        payload_json: payload.to_string(),
+        payload_json,
         attempts: 0,
         max_attempts: 5,
         next_run_at: Some(format!("unix:{}", now_seconds + 600)),
@@ -1534,43 +1554,28 @@ pub fn refresh_recall_with_embedding(
         config.tool_call_truncation_chars,
     );
     let query_context = context_from_turns(recent_turns, project_id, &query_text);
-    let mut candidates = hits
-        .iter()
-        .filter_map(|hit| {
-            memories
-                .iter()
-                .find(|memory| memory.id == Some(hit.memory_id))
-                .map(|memory| {
-                    let memory_context = infer_context_from_memory(memory);
-                    RecallCandidate {
-                        memory_id: hit.memory_id,
-                        similarity: hit.similarity,
-                        score: hit.similarity + context_score(&query_context, &memory_context),
-                        project_id: memory.project_id.clone(),
-                    }
-                })
-        })
-        .collect::<Vec<_>>();
-    candidates = if config.recall_project_tiebreaker {
-        apply_project_bonus(
-            candidates,
-            &project_id_string,
-            config.recall_project_score_bonus,
-        )
-    } else {
-        candidates
-    };
-    candidates.sort_by(|left, right| {
-        right
-            .score
-            .partial_cmp(&left.score)
-            .unwrap_or(std::cmp::Ordering::Equal)
-            .then_with(|| left.memory_id.cmp(&right.memory_id))
-    });
-    let selected = candidates
-        .into_iter()
-        .take(config.recall_result_limit)
-        .collect::<Vec<_>>();
+    let query_task_keys = extract_task_keys(&query_text);
+    let candidates = rank_recall_candidates(
+        &hits,
+        &memories,
+        &project_id_string,
+        &query_context,
+        &query_task_keys,
+        RecallRankingOptions {
+            project_tiebreaker: config.recall_project_tiebreaker,
+            project_score_bonus: config.recall_project_score_bonus,
+        },
+    );
+    let filter_result = select_recall_candidates_with_llm_filter(
+        config,
+        candidates,
+        &memories,
+        &project_id_string,
+        &query_text,
+        &query_context,
+        &query_task_keys,
+    );
+    let selected = filter_result.selected;
     let selected_ids = selected
         .iter()
         .map(|candidate| candidate.memory_id)
@@ -1592,6 +1597,7 @@ pub fn refresh_recall_with_embedding(
                     project_id: memory.project_id.clone(),
                     project_descriptor: memory.project_descriptor.clone(),
                     score: candidate.score,
+                    rank: candidate.rank.clone(),
                 })
         })
         .collect::<Vec<_>>();
@@ -1621,6 +1627,7 @@ pub fn refresh_recall_with_embedding(
                 turn.ordinal,
                 &rendered,
                 &selected_ids,
+                Some(&filter_result.telemetry),
                 0,
             )?;
         }
@@ -1718,9 +1725,11 @@ mod tests {
 
     #[test]
     fn formulation_prompt_truncates_large_tool_output() {
-        let mut config = Config::default();
-        config.max_formulation_tokens = 100;
-        config.tool_call_truncation_chars = 40;
+        let config = Config {
+            max_formulation_tokens: 100,
+            tool_call_truncation_chars: 40,
+            ..Config::default()
+        };
         let turns = vec![yaaml_core::TurnRecord {
             session_id: "session-1".to_string(),
             turn_id: Some("turn-1".to_string()),

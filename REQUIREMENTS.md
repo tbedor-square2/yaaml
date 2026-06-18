@@ -233,8 +233,8 @@ All configuration lives in `~/.yaaml/config.toml` (user-level) with optional pro
 | `turns_between_memory` | `10` | Turn pairs before auto-creating a memory |
 | `session_idle_memory_seconds` | `600` | Idle seconds after which a below-threshold session is flushed for memory formulation |
 | `consolidation_dark_period_seconds` | `300` | Inactivity seconds before consolidation runs |
-| `recall_result_limit` | `5` | Max memories returned per recall query |
-| `recall_candidate_pool` | `20` | Candidates fetched before final trimming |
+| `recall_result_limit` | `3` | Max memories returned per recall query |
+| `recall_candidate_pool` | `8` | Candidates fetched before final trimming |
 | `recall_live_turn_window` | `3` | Completed turn pairs included in live recall query construction |
 | `recall_query_max_chars` | `12000` | Max characters in synthesized recall query text |
 | `recall_similarity_threshold` | `0.3` | Cosine similarity cutoff for vector search |

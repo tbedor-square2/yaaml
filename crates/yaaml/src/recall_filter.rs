@@ -47,14 +47,12 @@ pub fn select_recall_candidates_with_llm_filter(
         query_task_keys,
         filter_limit,
     );
-    let deterministic_top_n = filter_pool
-        .iter()
-        .take(config.recall_result_limit)
-        .cloned()
-        .collect::<Vec<_>>();
-    let deterministic_selected =
-        reason_aware_variable_count_selection(deterministic_top_n, config.recall_result_limit);
-    annotate_variable_count_selection(&mut debug_candidates, &deterministic_selected);
+    let deterministic_selected = strict_kind_diverse_top_fallback_selection(
+        &filter_pool,
+        memories,
+        config.recall_result_limit,
+    );
+    annotate_deterministic_selection(&mut debug_candidates, &deterministic_selected);
     let mut telemetry = RecallFilterTelemetry {
         candidate_count: filter_pool.len(),
         deterministic_selected_count: deterministic_selected.len(),
@@ -120,56 +118,57 @@ pub fn select_recall_candidates_with_llm_filter(
     }
 }
 
-fn reason_aware_variable_count_selection(
-    candidates: Vec<RecallCandidate>,
+fn strict_kind_diverse_top_fallback_selection(
+    candidates: &[RecallCandidate],
+    memories: &[MemoryRecord],
     limit: usize,
 ) -> Vec<RecallCandidate> {
-    if candidates
-        .first()
-        .is_none_or(|candidate| candidate.score < 0.75)
-    {
+    let Some(top_candidate) = candidates.first() else {
+        return Vec::new();
+    };
+    if top_candidate.score < 0.75 {
         return Vec::new();
     }
-    candidates
-        .into_iter()
-        .take(limit)
-        .enumerate()
-        .filter_map(|(index, candidate)| {
-            if index == 0 || candidate.score >= 1.05 || reason_aware_tail_keep(&candidate) {
-                Some(candidate)
-            } else {
-                None
-            }
-        })
-        .collect()
+
+    let mut selected = Vec::new();
+    let mut seen_kinds = HashSet::new();
+    for (index, candidate) in candidates.iter().enumerate() {
+        let kind = memory_kind(candidate, memories);
+        let keep = (index == 0 || has_task_match(candidate) || !seen_kinds.contains(&kind))
+            && candidate.score >= 0.90;
+        if keep {
+            selected.push(candidate.clone());
+            seen_kinds.insert(kind);
+        }
+        if selected.len() == limit {
+            break;
+        }
+    }
+
+    if selected.is_empty() {
+        selected.push(top_candidate.clone());
+    }
+    selected
 }
 
-fn reason_aware_tail_keep(candidate: &RecallCandidate) -> bool {
-    let reasons = candidate
+fn has_task_match(candidate: &RecallCandidate) -> bool {
+    candidate
         .rank
         .filter_reasons
         .iter()
-        .map(String::as_str)
-        .collect::<HashSet<_>>();
-    if reasons.contains("keep:strong_task_key_match") {
-        return candidate.score >= 0.75;
-    }
-    if reasons.contains("keep:project_fact_context") {
-        return candidate.score >= 0.88 && candidate.similarity >= 0.58;
-    }
-    if reasons.contains("keep:same_project_durable") {
-        return candidate.score >= 0.82 && candidate.similarity >= 0.50;
-    }
-    if reasons.contains("keep:global_durable") {
-        return candidate.score >= 0.82 && candidate.similarity >= 0.58;
-    }
-    if reasons.contains("keep:weak_task_key_semantic_durable") {
-        return candidate.score >= 0.82;
-    }
-    false
+        .any(|reason| reason == "keep:strong_task_key_match")
+        || !candidate.rank.matched_task_keys.is_empty()
 }
 
-fn annotate_variable_count_selection(
+fn memory_kind(candidate: &RecallCandidate, memories: &[MemoryRecord]) -> String {
+    memories
+        .iter()
+        .find(|memory| memory.id == Some(candidate.memory_id))
+        .map(|memory| memory.kind.as_str().to_string())
+        .unwrap_or_else(|| "unknown".to_string())
+}
+
+fn annotate_deterministic_selection(
     debug_candidates: &mut [RecallCandidate],
     selected: &[RecallCandidate],
 ) {
@@ -182,14 +181,14 @@ fn annotate_variable_count_selection(
             candidate
                 .rank
                 .filter_reasons
-                .push("keep:variable_count_score".to_string());
+                .push("keep:strict_kind_diverse".to_string());
         } else if candidate.rank.filter_reasons.iter().any(|reason| {
-            reason.starts_with("keep:") && !matches!(reason.as_str(), "keep:variable_count_score")
+            reason.starts_with("keep:") && !matches!(reason.as_str(), "keep:strict_kind_diverse")
         }) {
             candidate
                 .rank
                 .filter_reasons
-                .push("drop:variable_count_score".to_string());
+                .push("drop:strict_kind_diverse".to_string());
         }
     }
 }
@@ -574,22 +573,37 @@ mod tests {
     }
 
     #[test]
-    fn variable_count_selection_abstains_when_top_score_is_weak() {
+    fn strict_kind_diverse_selection_abstains_when_top_score_is_weak() {
         let candidates = vec![candidate_with_score(1, 0.74), candidate_with_score(2, 1.20)];
+        let memories = vec![memory(1, "body"), memory(2, "body")];
 
-        assert!(reason_aware_variable_count_selection(candidates, 3).is_empty());
+        assert!(strict_kind_diverse_top_fallback_selection(&candidates, &memories, 3).is_empty());
     }
 
     #[test]
-    fn variable_count_selection_keeps_strong_top_and_prunes_weak_tail() {
-        let candidates = vec![
-            candidate_with_score(1, 0.90),
-            candidate_with_score(2, 1.04),
-            candidate_with_score(3, 1.05),
-            candidate_with_score(4, 1.50),
-        ];
+    fn strict_kind_diverse_selection_uses_top_fallback() {
+        let candidates = vec![candidate_with_score(1, 0.89), candidate_with_score(2, 0.88)];
+        let memories = vec![memory(1, "body"), memory(2, "body")];
 
-        let selected = reason_aware_variable_count_selection(candidates, 3)
+        let selected = strict_kind_diverse_top_fallback_selection(&candidates, &memories, 3)
+            .into_iter()
+            .map(|candidate| candidate.memory_id)
+            .collect::<Vec<_>>();
+
+        assert_eq!(selected, vec![1]);
+    }
+
+    #[test]
+    fn strict_kind_diverse_selection_limits_repeated_kinds() {
+        let candidates = vec![
+            candidate_with_score(1, 1.20),
+            candidate_with_score(2, 1.10),
+            candidate_with_score(3, 1.00),
+        ];
+        let mut memories = vec![memory(1, "body"), memory(2, "body"), memory(3, "body")];
+        memories[2].kind = MemoryKind::ProjectFact;
+
+        let selected = strict_kind_diverse_top_fallback_selection(&candidates, &memories, 3)
             .into_iter()
             .map(|candidate| candidate.memory_id)
             .collect::<Vec<_>>();
@@ -598,31 +612,24 @@ mod tests {
     }
 
     #[test]
-    fn reason_aware_selection_keeps_supported_lower_scoring_tail() {
-        let mut candidates = vec![candidate_with_score(1, 0.90), candidate_with_score(2, 0.83)];
+    fn strict_kind_diverse_selection_keeps_task_matches_across_same_kind() {
+        let mut candidates = vec![
+            candidate_with_score(1, 1.20),
+            candidate_with_score(2, 0.95),
+            candidate_with_score(3, 0.94),
+        ];
         candidates[1]
             .rank
-            .filter_reasons
-            .push("keep:same_project_durable".to_string());
+            .matched_task_keys
+            .push("path:src/lib.rs".to_string());
+        let memories = vec![memory(1, "body"), memory(2, "body"), memory(3, "body")];
 
-        let selected = reason_aware_variable_count_selection(candidates, 3)
+        let selected = strict_kind_diverse_top_fallback_selection(&candidates, &memories, 3)
             .into_iter()
             .map(|candidate| candidate.memory_id)
             .collect::<Vec<_>>();
 
         assert_eq!(selected, vec![1, 2]);
-    }
-
-    #[test]
-    fn reason_aware_selection_drops_unsupported_lower_scoring_tail() {
-        let candidates = vec![candidate_with_score(1, 0.90), candidate_with_score(2, 0.83)];
-
-        let selected = reason_aware_variable_count_selection(candidates, 3)
-            .into_iter()
-            .map(|candidate| candidate.memory_id)
-            .collect::<Vec<_>>();
-
-        assert_eq!(selected, vec![1]);
     }
 
     #[test]

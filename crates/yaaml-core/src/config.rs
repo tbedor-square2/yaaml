@@ -95,14 +95,14 @@ impl Default for Config {
             session_idle_memory_seconds: 600,
             consolidation_dark_period_seconds: 300,
             recall_result_limit: 3,
-            recall_candidate_pool: 8,
+            recall_candidate_pool: 16,
             recall_live_turn_window: 3,
             recall_query_max_chars: 12_000,
             recall_similarity_threshold: 0.3,
             recall_project_tiebreaker: true,
             recall_project_score_bonus: 0.05,
             recall_llm_filter_enabled: false,
-            recall_llm_filter_candidate_limit: 8,
+            recall_llm_filter_candidate_limit: 16,
             recall_llm_filter_prompt_max_chars: 12_000,
             recall_dir: "~/.yaaml/recall".to_string(),
             db_path: "~/.yaaml/yaaml.db".to_string(),
@@ -208,12 +208,12 @@ mod tests {
         assert_eq!(config.turns_between_memory, 10);
         assert_eq!(config.session_idle_memory_seconds, 600);
         assert_eq!(config.recall_result_limit, 3);
-        assert_eq!(config.recall_candidate_pool, 8);
+        assert_eq!(config.recall_candidate_pool, 16);
         assert_eq!(config.recall_live_turn_window, 3);
         assert_eq!(config.recall_query_max_chars, 12_000);
         assert_eq!(config.recall_similarity_threshold, 0.3);
         assert!(!config.recall_llm_filter_enabled);
-        assert_eq!(config.recall_llm_filter_candidate_limit, 8);
+        assert_eq!(config.recall_llm_filter_candidate_limit, 16);
         assert_eq!(config.recall_dir, "~/.yaaml/recall");
         assert_eq!(config.vector_index_backend, "sqlite-exact");
         assert_eq!(config.memory_cluster_distance_threshold, 0.21125);

@@ -47,11 +47,14 @@ pub fn select_recall_candidates_with_llm_filter(
         query_task_keys,
         filter_limit,
     );
-    let deterministic_selected = filter_pool
+    let deterministic_top_n = filter_pool
         .iter()
         .take(config.recall_result_limit)
         .cloned()
         .collect::<Vec<_>>();
+    let deterministic_selected =
+        reason_aware_variable_count_selection(deterministic_top_n, config.recall_result_limit);
+    annotate_variable_count_selection(&mut debug_candidates, &deterministic_selected);
     let mut telemetry = RecallFilterTelemetry {
         candidate_count: filter_pool.len(),
         deterministic_selected_count: deterministic_selected.len(),
@@ -113,6 +116,80 @@ pub fn select_recall_candidates_with_llm_filter(
                 debug_candidates,
                 telemetry,
             }
+        }
+    }
+}
+
+fn reason_aware_variable_count_selection(
+    candidates: Vec<RecallCandidate>,
+    limit: usize,
+) -> Vec<RecallCandidate> {
+    if candidates
+        .first()
+        .is_none_or(|candidate| candidate.score < 0.75)
+    {
+        return Vec::new();
+    }
+    candidates
+        .into_iter()
+        .take(limit)
+        .enumerate()
+        .filter_map(|(index, candidate)| {
+            if index == 0 || candidate.score >= 1.05 || reason_aware_tail_keep(&candidate) {
+                Some(candidate)
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
+fn reason_aware_tail_keep(candidate: &RecallCandidate) -> bool {
+    let reasons = candidate
+        .rank
+        .filter_reasons
+        .iter()
+        .map(String::as_str)
+        .collect::<HashSet<_>>();
+    if reasons.contains("keep:strong_task_key_match") {
+        return candidate.score >= 0.75;
+    }
+    if reasons.contains("keep:project_fact_context") {
+        return candidate.score >= 0.88 && candidate.similarity >= 0.58;
+    }
+    if reasons.contains("keep:same_project_durable") {
+        return candidate.score >= 0.82 && candidate.similarity >= 0.50;
+    }
+    if reasons.contains("keep:global_durable") {
+        return candidate.score >= 0.82 && candidate.similarity >= 0.58;
+    }
+    if reasons.contains("keep:weak_task_key_semantic_durable") {
+        return candidate.score >= 0.82;
+    }
+    false
+}
+
+fn annotate_variable_count_selection(
+    debug_candidates: &mut [RecallCandidate],
+    selected: &[RecallCandidate],
+) {
+    let selected_ids = selected
+        .iter()
+        .map(|candidate| candidate.memory_id)
+        .collect::<HashSet<_>>();
+    for candidate in debug_candidates {
+        if selected_ids.contains(&candidate.memory_id) {
+            candidate
+                .rank
+                .filter_reasons
+                .push("keep:variable_count_score".to_string());
+        } else if candidate.rank.filter_reasons.iter().any(|reason| {
+            reason.starts_with("keep:") && !matches!(reason.as_str(), "keep:variable_count_score")
+        }) {
+            candidate
+                .rank
+                .filter_reasons
+                .push("drop:variable_count_score".to_string());
         }
     }
 }
@@ -497,6 +574,58 @@ mod tests {
     }
 
     #[test]
+    fn variable_count_selection_abstains_when_top_score_is_weak() {
+        let candidates = vec![candidate_with_score(1, 0.74), candidate_with_score(2, 1.20)];
+
+        assert!(reason_aware_variable_count_selection(candidates, 3).is_empty());
+    }
+
+    #[test]
+    fn variable_count_selection_keeps_strong_top_and_prunes_weak_tail() {
+        let candidates = vec![
+            candidate_with_score(1, 0.90),
+            candidate_with_score(2, 1.04),
+            candidate_with_score(3, 1.05),
+            candidate_with_score(4, 1.50),
+        ];
+
+        let selected = reason_aware_variable_count_selection(candidates, 3)
+            .into_iter()
+            .map(|candidate| candidate.memory_id)
+            .collect::<Vec<_>>();
+
+        assert_eq!(selected, vec![1, 3]);
+    }
+
+    #[test]
+    fn reason_aware_selection_keeps_supported_lower_scoring_tail() {
+        let mut candidates = vec![candidate_with_score(1, 0.90), candidate_with_score(2, 0.83)];
+        candidates[1]
+            .rank
+            .filter_reasons
+            .push("keep:same_project_durable".to_string());
+
+        let selected = reason_aware_variable_count_selection(candidates, 3)
+            .into_iter()
+            .map(|candidate| candidate.memory_id)
+            .collect::<Vec<_>>();
+
+        assert_eq!(selected, vec![1, 2]);
+    }
+
+    #[test]
+    fn reason_aware_selection_drops_unsupported_lower_scoring_tail() {
+        let candidates = vec![candidate_with_score(1, 0.90), candidate_with_score(2, 0.83)];
+
+        let selected = reason_aware_variable_count_selection(candidates, 3)
+            .into_iter()
+            .map(|candidate| candidate.memory_id)
+            .collect::<Vec<_>>();
+
+        assert_eq!(selected, vec![1]);
+    }
+
+    #[test]
     fn recall_filter_prompt_never_truncates_serialized_json() {
         let config = Config {
             recall_llm_filter_prompt_max_chars: 3200,
@@ -523,13 +652,17 @@ mod tests {
     }
 
     fn candidate(memory_id: i64) -> RecallCandidate {
+        candidate_with_score(memory_id, 0.5)
+    }
+
+    fn candidate_with_score(memory_id: i64, score: f32) -> RecallCandidate {
         RecallCandidate {
             memory_id,
-            similarity: 0.5,
-            score: 0.5,
+            similarity: score,
+            score,
             project_id: None,
             rank: yaaml_core::RecallRankDetails {
-                vector_score: 0.5,
+                vector_score: score,
                 context_score: 0.0,
                 project_bonus: 0.0,
                 task_key_bonus: 0.0,

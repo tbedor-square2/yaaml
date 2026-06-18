@@ -5,6 +5,11 @@ repo="${1:-$(git rev-parse --show-toplevel)}"
 label="${2:-$(basename "$repo")}"
 oracle_bin="${YAAML_ORACLE_BIN:-yaaml}"
 out_dir="${BACKTEST_OUT_DIR:-$repo/target/recall-backtests}"
+anchor_source="${BACKTEST_ANCHOR_SOURCE:-fixed}"
+anchor_limit="${BACKTEST_ANCHOR_LIMIT:-200}"
+db_path="${BACKTEST_DB:-$HOME/.yaaml/yaaml.db}"
+exclude_context_embedded="${BACKTEST_EXCLUDE_CONTEXT_EMBEDDED:-1}"
+anchors_file="${BACKTEST_ANCHORS_FILE:-}"
 mkdir -p "$out_dir"
 
 anchors_tsv="$out_dir/anchors.tsv"
@@ -12,7 +17,57 @@ details_jsonl="$out_dir/$label.details.jsonl"
 summary_json="$out_dir/$label.summary.json"
 : >"$details_jsonl"
 
-cat >"$anchors_tsv" <<'ANCHORS'
+if [[ -n "$anchors_file" ]]; then
+  cp "$anchors_file" "$anchors_tsv"
+elif [[ "$anchor_source" == "eval-library" ]]; then
+  if [[ ! -f "$db_path" ]]; then
+    echo "database not found: $db_path" >&2
+    exit 1
+  fi
+  limit_clause=""
+  if [[ "$anchor_limit" != "all" ]]; then
+    limit_clause="LIMIT $anchor_limit"
+  fi
+  leakage_clause=""
+  if [[ "$exclude_context_embedded" == "1" ]]; then
+    leakage_clause="AND NOT EXISTS (
+      SELECT 1
+      FROM eval_results er
+      JOIN eval_context_embeddings ece ON ece.eval_result_id = er.id
+      WHERE er.eval_run_id = r.id
+    )"
+  fi
+  sqlite3 -separator $'\t' "$db_path" "
+    WITH eligible AS (
+      SELECT
+        r.id,
+        json_extract(r.config_json, '$.session_id') AS session_id,
+        CAST(json_extract(r.config_json, '$.turn_ordinal') AS INTEGER) AS turn_ordinal
+      FROM eval_runs r
+      WHERE r.completed_at IS NOT NULL
+        AND json_extract(r.config_json, '$.session_id') IS NOT NULL
+        AND json_extract(r.config_json, '$.turn_ordinal') IS NOT NULL
+        $leakage_clause
+    ),
+    latest_per_anchor AS (
+      SELECT
+        MAX(id) AS run_id,
+        session_id,
+        turn_ordinal
+      FROM eligible
+      GROUP BY session_id, turn_ordinal
+    )
+    SELECT
+      run_id,
+      session_id,
+      turn_ordinal,
+      'eval-library-' || run_id
+    FROM latest_per_anchor
+    ORDER BY run_id DESC
+    $limit_clause;
+  " >"$anchors_tsv"
+else
+  cat >"$anchors_tsv" <<'ANCHORS'
 945	019ed725-d1bc-7e62-860f-0315f2af147a	1	java-acl-all-bad
 944	019ed6d1-2c21-7480-abd9-77e59d52df20	11	java-ci-mixed
 943	019ea810-ee08-7cb3-a7ac-5bcd76670996	123	yaaml-good
@@ -30,6 +85,19 @@ cat >"$anchors_tsv" <<'ANCHORS'
 887	019ebd43-5d50-7c42-98f8-1ddd93912a8d	43	java-package-good
 881	019ebd43-5d50-7c42-98f8-1ddd93912a8d	42	java-package-mixed
 ANCHORS
+fi
+
+anchor_count="$(wc -l <"$anchors_tsv" | tr -d ' ')"
+if [[ "$anchor_count" == "0" ]]; then
+  echo "no anchors selected" >&2
+  exit 1
+fi
+
+(
+  cd "$repo"
+  cargo build -q -p yaaml
+)
+recall_bin="$repo/target/debug/yaaml"
 
 run_with_retry() {
   local attempt
@@ -51,8 +119,8 @@ while IFS=$'\t' read -r run_id session_id turn_ordinal case_label; do
   fi
 
   run_with_retry bash -c \
-    'cd "$1" && cargo run -q -p yaaml -- recall --session "$2" --turn "$3" --json --debug-ranking' \
-    bash "$repo" "$session_id" "$turn_ordinal" >"$recall_file" 2>"$recall_file.stderr"
+    'cd "$1" && "$2" recall --session "$3" --turn "$4" --json --debug-ranking' \
+    bash "$repo" "$recall_bin" "$session_id" "$turn_ordinal" >"$recall_file" 2>"$recall_file.stderr"
 
   if ! jq -e type "$recall_file" >/dev/null; then
     echo "recall command did not emit valid JSON for run $run_id; see $recall_file.stderr" >&2
@@ -103,11 +171,13 @@ while IFS=$'\t' read -r run_id session_id turn_ordinal case_label; do
 done <"$anchors_tsv"
 
 jq -s \
-  --arg label "$label" '
+  --arg label "$label" \
+  --arg anchor_source "$anchor_source" '
     def avg(xs):
       if (xs | length) == 0 then null else ((xs | add) / (xs | length)) end;
     {
       strategy: $label,
+      anchor_source: $anchor_source,
       anchors: length,
       selected_memories: (map(.selected_count) | add),
       average_selected_per_anchor: avg(map(.selected_count)),

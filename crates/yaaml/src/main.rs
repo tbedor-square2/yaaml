@@ -11,6 +11,7 @@ use anyhow::{bail, Context};
 use clap::{Parser, Subcommand, ValueEnum};
 use serde::Deserialize;
 use serde::Serialize;
+use yaaml::llm_judge::JudgeClient;
 use yaaml::recall_filter::{select_recall_candidates_with_llm_filter, RecallFilterTelemetry};
 use yaaml::turn_hydration::{context_from_turns, hydrate_turns};
 use yaaml_core::{
@@ -22,7 +23,6 @@ use yaaml_core::{
     EmbeddingRecord, MemoryRecord, MemoryScope, RecallMemory, RecallRankDetails,
     RecallRankingOptions, RecallWrite, SessionRecord, TurnRecord, VectorIndex,
 };
-use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
 use yaaml_llm::ReqwestTransport;
 use yaaml_store::database::{
@@ -1980,20 +1980,8 @@ struct EvalCandidate {
     retrieval_strategy: &'static str,
 }
 
-fn eval_judge_client(
-    config: &Config,
-    disabled: bool,
-) -> Option<AnthropicMessageClient<ReqwestTransport>> {
-    if disabled || config.eval_judge_provider != "anthropic" {
-        return None;
-    }
-    if env::var(&config.eval_judge_api_key_env).is_err() {
-        return None;
-    }
-    Some(AnthropicMessageClient::new(
-        AnthropicMessageConfig::judge_from_config(config),
-        ReqwestTransport::default(),
-    ))
+fn eval_judge_client(config: &Config, disabled: bool) -> Option<JudgeClient> {
+    JudgeClient::from_config(config, disabled)
 }
 
 fn select_eval_candidates(
@@ -2114,7 +2102,7 @@ fn lexical_score(query_terms: &HashSet<String>, text: &str) -> f32 {
 }
 
 fn judge_eval_candidate(
-    judge_client: Option<&AnthropicMessageClient<ReqwestTransport>>,
+    judge_client: Option<&JudgeClient>,
     turn: &TurnRecord,
     candidate: &EvalCandidate,
     citation_score: &str,

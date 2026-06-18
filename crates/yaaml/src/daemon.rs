@@ -29,6 +29,7 @@ use yaaml_store::{Database, SqliteExactVectorIndex};
 use yaaml_transcript::codex::parse_codex_file_from_offset_with_session;
 use yaaml_transcript::discovery::discover_codex_backlog;
 
+use crate::llm_judge::JudgeClient;
 use crate::recall_filter::{select_recall_candidates_with_llm_filter, RecallFilterTelemetry};
 use crate::turn_hydration::{context_from_turns, hydrate_turns};
 
@@ -637,10 +638,8 @@ fn run_recall_eval_task(db: &Database, config: &Config, task: &TaskRecord) -> an
             .context("failed to complete recall eval run")?;
         return Ok(());
     }
-    let judge_client = AnthropicMessageClient::new(
-        AnthropicMessageConfig::judge_from_config(config),
-        ReqwestTransport::default(),
-    );
+    let judge_client = JudgeClient::from_config(config, false)
+        .context("recall eval judge provider is unavailable")?;
     for target in &eval_targets {
         let prompt = recall_eval_prompt(&target.recall_text, &later_turns);
         let outcome = judge_client

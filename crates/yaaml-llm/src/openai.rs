@@ -2,9 +2,10 @@ use std::collections::BTreeMap;
 use std::env;
 
 use serde::Deserialize;
-use serde_json::json;
+use serde_json::{json, Value};
 use yaaml_core::Config;
 
+use crate::anthropic::parse_json_from_text;
 use crate::error::ProviderError;
 use crate::transport::{HttpRequest, HttpTransport};
 
@@ -30,8 +31,35 @@ impl OpenAiEmbeddingConfig {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct OpenAiMessageConfig {
+    pub model: String,
+    pub api_key_env: String,
+    pub base_url: String,
+    pub max_tokens: u64,
+}
+
+impl OpenAiMessageConfig {
+    pub fn judge_from_config(config: &Config) -> Self {
+        Self {
+            model: config.eval_judge_model.clone(),
+            api_key_env: config.eval_judge_api_key_env.clone(),
+            base_url: config
+                .eval_judge_base_url
+                .clone()
+                .unwrap_or_else(|| DEFAULT_OPENAI_BASE_URL.to_string()),
+            max_tokens: 1024,
+        }
+    }
+}
+
 pub struct OpenAiEmbeddingClient<T> {
     config: OpenAiEmbeddingConfig,
+    transport: T,
+}
+
+pub struct OpenAiMessageClient<T> {
+    config: OpenAiMessageConfig,
     transport: T,
 }
 
@@ -74,6 +102,55 @@ where
     }
 }
 
+impl<T> OpenAiMessageClient<T>
+where
+    T: HttpTransport,
+{
+    pub fn new(config: OpenAiMessageConfig, transport: T) -> Self {
+        Self { config, transport }
+    }
+
+    pub fn structured_json(&self, system: &str, prompt: &str) -> Result<Value, ProviderError> {
+        let text = self.message_text(system, prompt)?;
+        parse_json_from_text(&text)
+    }
+
+    pub fn message_text(&self, system: &str, prompt: &str) -> Result<String, ProviderError> {
+        let api_key =
+            env::var(&self.config.api_key_env).map_err(|_| ProviderError::MissingApiKey {
+                env_var: self.config.api_key_env.clone(),
+            })?;
+        let mut headers = BTreeMap::new();
+        headers.insert("Authorization".to_string(), format!("Bearer {api_key}"));
+        headers.insert("Content-Type".to_string(), "application/json".to_string());
+
+        let request = HttpRequest {
+            url: format!(
+                "{}/v1/chat/completions",
+                self.config.base_url.trim_end_matches('/')
+            ),
+            headers,
+            body: json!({
+                "model": self.config.model,
+                "messages": [
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": prompt}
+                ],
+                "response_format": {"type": "json_object"},
+                "max_tokens": self.config.max_tokens,
+            }),
+        };
+        let response = self.transport.post_json(request)?;
+        if !(200..300).contains(&response.status) {
+            return Err(ProviderError::Http {
+                status: response.status,
+                body: response.body,
+            });
+        }
+        parse_chat_completion_message_text(&response.body)
+    }
+}
+
 #[derive(Debug, Deserialize)]
 struct EmbeddingsResponse {
     data: Vec<EmbeddingDatum>,
@@ -94,6 +171,39 @@ pub fn parse_embedding_response(body: &str) -> Result<Vec<f32>, ProviderError> {
         .map(|datum| datum.embedding)
         .filter(|embedding| !embedding.is_empty())
         .ok_or_else(|| ProviderError::Parse("missing embedding vector".to_string()))
+}
+
+#[derive(Debug, Deserialize)]
+struct ChatCompletionResponse {
+    choices: Vec<ChatCompletionChoice>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ChatCompletionChoice {
+    message: ChatCompletionMessage,
+}
+
+#[derive(Debug, Deserialize)]
+struct ChatCompletionMessage {
+    content: Option<String>,
+}
+
+pub fn parse_chat_completion_message_text(body: &str) -> Result<String, ProviderError> {
+    let parsed: ChatCompletionResponse =
+        serde_json::from_str(body).map_err(|error| ProviderError::Parse(error.to_string()))?;
+    let text = parsed
+        .choices
+        .into_iter()
+        .filter_map(|choice| choice.message.content)
+        .collect::<Vec<_>>()
+        .join("\n");
+    if text.trim().is_empty() {
+        Err(ProviderError::Parse(
+            "missing chat completion message content".to_string(),
+        ))
+    } else {
+        Ok(text)
+    }
 }
 
 #[cfg(test)]
@@ -142,6 +252,94 @@ mod tests {
                 .unwrap();
 
         assert_eq!(embedding, vec![1.0, 2.0]);
+    }
+
+    #[test]
+    fn parses_openai_chat_completion_message_text() {
+        let text = parse_chat_completion_message_text(
+            r#"{"choices":[{"message":{"role":"assistant","content":"{\"selected_memory_ids\":[1]}"}}]}"#,
+        )
+        .unwrap();
+
+        assert_eq!(text, r#"{"selected_memory_ids":[1]}"#);
+    }
+
+    #[test]
+    fn parses_openai_chat_completion_structured_json() {
+        env::set_var("YAAML_TEST_OPENAI_MESSAGE_KEY", "test-key");
+        let transport = MockTransport {
+            request: Rc::new(RefCell::new(None)),
+            result: Ok(HttpResponse {
+                status: 200,
+                body: r#"{"choices":[{"message":{"content":"{\"selected_memory_ids\":[2,3]}"}}]}"#
+                    .to_string(),
+            }),
+        };
+        let config = OpenAiMessageConfig {
+            model: "gpt-4.1-mini".to_string(),
+            api_key_env: "YAAML_TEST_OPENAI_MESSAGE_KEY".to_string(),
+            base_url: "https://example.test".to_string(),
+            max_tokens: 100,
+        };
+        let client = OpenAiMessageClient::new(config, transport);
+
+        let value = client.structured_json("system", "prompt").unwrap();
+
+        assert_eq!(value["selected_memory_ids"], json!([2, 3]));
+    }
+
+    #[test]
+    fn sends_openai_message_request() {
+        env::set_var("YAAML_TEST_OPENAI_MESSAGE_REQUEST_KEY", "test-key");
+        let transport = MockTransport {
+            request: Rc::new(RefCell::new(None)),
+            result: Ok(HttpResponse {
+                status: 200,
+                body: r#"{"choices":[{"message":{"content":"{\"selected_memory_ids\":[1]}"}}]}"#
+                    .to_string(),
+            }),
+        };
+        let request = transport.request.clone();
+        let config = OpenAiMessageConfig {
+            model: "gpt-4.1-mini".to_string(),
+            api_key_env: "YAAML_TEST_OPENAI_MESSAGE_REQUEST_KEY".to_string(),
+            base_url: "https://example.test".to_string(),
+            max_tokens: 100,
+        };
+        let client = OpenAiMessageClient::new(config, transport);
+
+        let value = client.structured_json("system", "prompt").unwrap();
+
+        assert_eq!(value["selected_memory_ids"], json!([1]));
+        let request = request.borrow();
+        let request = request.as_ref().unwrap();
+        assert_eq!(request.url, "https://example.test/v1/chat/completions");
+        assert_eq!(request.body["model"], "gpt-4.1-mini");
+        assert_eq!(request.body["messages"][0]["role"], "system");
+        assert_eq!(request.body["messages"][0]["content"], "system");
+        assert_eq!(request.body["messages"][1]["role"], "user");
+        assert_eq!(request.body["messages"][1]["content"], "prompt");
+        assert_eq!(request.body["response_format"]["type"], "json_object");
+        assert_eq!(
+            request.headers.get("Authorization").map(String::as_str),
+            Some("Bearer test-key")
+        );
+    }
+
+    #[test]
+    fn missing_openai_message_api_key_is_non_retryable() {
+        let config = OpenAiMessageConfig {
+            model: "gpt-4.1-mini".to_string(),
+            api_key_env: "YAAML_TEST_MISSING_OPENAI_MESSAGE_KEY".to_string(),
+            base_url: "https://example.test".to_string(),
+            max_tokens: 100,
+        };
+        let client = OpenAiMessageClient::new(config, MockTransport::default());
+
+        let error = client.structured_json("system", "prompt").unwrap_err();
+
+        assert!(matches!(error, ProviderError::MissingApiKey { .. }));
+        assert_eq!(error.retry_class(), crate::RetryClass::NonRetryable);
     }
 
     #[test]

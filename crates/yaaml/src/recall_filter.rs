@@ -1,13 +1,12 @@
 use std::collections::HashSet;
-use std::env;
 
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use yaaml_core::{
     select_recall_candidates, Config, ContextMetadata, MemoryRecord, RecallCandidate,
 };
-use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
-use yaaml_llm::{ProviderError, ReqwestTransport};
+
+use crate::llm_judge::JudgeClient;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RecallFilterTelemetry {
@@ -118,28 +117,19 @@ pub fn select_recall_candidates_with_llm_filter(
     }
 }
 
-fn recall_filter_client(config: &Config) -> Option<AnthropicMessageClient<ReqwestTransport>> {
-    if !config.recall_llm_filter_enabled || config.eval_judge_provider != "anthropic" {
-        return None;
-    }
-    if env::var(&config.eval_judge_api_key_env).is_err() {
-        return None;
-    }
-    Some(AnthropicMessageClient::new(
-        AnthropicMessageConfig::judge_from_config(config),
-        ReqwestTransport::default(),
-    ))
+fn recall_filter_client(config: &Config) -> Option<JudgeClient> {
+    JudgeClient::from_config(config, !config.recall_llm_filter_enabled)
 }
 
 fn run_llm_filter(
-    client: &AnthropicMessageClient<ReqwestTransport>,
+    client: &JudgeClient,
     config: &Config,
     query_text: &str,
     query_context: &ContextMetadata,
     current_project_id: &str,
     memories: &[MemoryRecord],
     candidates: &[RecallCandidate],
-) -> Result<Vec<i64>, ProviderError> {
+) -> Result<Vec<i64>, yaaml_llm::ProviderError> {
     let prompt = recall_filter_prompt(
         config,
         query_text,
@@ -164,6 +154,61 @@ fn recall_filter_prompt(
     memories: &[MemoryRecord],
     candidates: &[RecallCandidate],
 ) -> String {
+    const PROMPT_ATTEMPTS: &[(usize, usize)] = &[
+        (6000, 1200),
+        (4500, 800),
+        (3000, 500),
+        (2000, 300),
+        (1200, 160),
+        (800, 80),
+        (400, 40),
+    ];
+
+    let budget = config.recall_llm_filter_prompt_max_chars;
+    let mut shortest_prompt = String::new();
+    for (turn_max_chars, body_max_chars) in PROMPT_ATTEMPTS {
+        let prompt = build_recall_filter_prompt(
+            config,
+            query_text,
+            query_context,
+            current_project_id,
+            memories,
+            candidates,
+            *turn_max_chars,
+            *body_max_chars,
+        );
+        if shortest_prompt.is_empty() || prompt.chars().count() < shortest_prompt.chars().count() {
+            shortest_prompt = prompt.clone();
+        }
+        if prompt.chars().count() <= budget {
+            return prompt;
+        }
+    }
+    let compact_prompt = build_compact_recall_filter_prompt(
+        config,
+        query_text,
+        current_project_id,
+        memories,
+        candidates,
+        240,
+    );
+    if compact_prompt.chars().count() < shortest_prompt.chars().count() {
+        return compact_prompt;
+    }
+    shortest_prompt
+}
+
+#[allow(clippy::too_many_arguments)]
+fn build_recall_filter_prompt(
+    config: &Config,
+    query_text: &str,
+    query_context: &ContextMetadata,
+    current_project_id: &str,
+    memories: &[MemoryRecord],
+    candidates: &[RecallCandidate],
+    turn_max_chars: usize,
+    body_max_chars: usize,
+) -> String {
     let candidates_json = candidates
         .iter()
         .filter_map(|candidate| {
@@ -174,7 +219,7 @@ fn recall_filter_prompt(
                     json!({
                         "memory_id": candidate.memory_id,
                         "title": memory.title,
-                        "body": truncate_chars(&memory.body, 1200),
+                        "body": truncate_chars(&memory.body, body_max_chars),
                         "kind": memory.kind.as_str(),
                         "scope": memory.scope.as_str(),
                         "project_id": memory.project_id,
@@ -186,19 +231,56 @@ fn recall_filter_prompt(
                 })
         })
         .collect::<Vec<_>>();
-    let prompt = json!({
+    json!({
         "current_project_id": current_project_id,
         "query_context": query_context,
-        "current_turn_text": truncate_chars(query_text, 6000),
+        "current_turn_text": truncate_chars(query_text, turn_max_chars),
         "max_selected_memories": config.recall_result_limit,
         "selection_policy": "Prefer fewer memories than deterministic recall, but keep plausible background. Empty selection is allowed only when all candidates are clearly unrelated.",
         "candidate_memories": candidates_json,
         "response_schema": {
-            "selected_memory_ids": ["integer memory ids to keep, in candidate order or fewer"]
+            "selected_memory_ids": ["integer memory ids to keep, in candidate order or fewer"],
+            "memory_scores": [{"memory_id": "integer", "score": "1-5 relevance score"}]
         }
     })
-    .to_string();
-    truncate_chars(&prompt, config.recall_llm_filter_prompt_max_chars)
+    .to_string()
+}
+
+fn build_compact_recall_filter_prompt(
+    config: &Config,
+    query_text: &str,
+    current_project_id: &str,
+    memories: &[MemoryRecord],
+    candidates: &[RecallCandidate],
+    turn_max_chars: usize,
+) -> String {
+    let candidates_json = candidates
+        .iter()
+        .filter_map(|candidate| {
+            memories
+                .iter()
+                .find(|memory| memory.id == Some(candidate.memory_id))
+                .map(|memory| {
+                    json!({
+                        "memory_id": candidate.memory_id,
+                        "title": truncate_chars(&memory.title, 80),
+                        "kind": memory.kind.as_str(),
+                        "scope": memory.scope.as_str(),
+                        "project_id": memory.project_id,
+                        "score": candidate.score,
+                    })
+                })
+        })
+        .collect::<Vec<_>>();
+    json!({
+        "current_project_id": current_project_id,
+        "current_turn_text": truncate_chars(query_text, turn_max_chars),
+        "max_selected_memories": config.recall_result_limit,
+        "selection_policy": "Keep only candidate memories plausibly useful to this turn. Empty only when all are clearly unrelated.",
+        "candidate_memories": candidates_json,
+        "response_schema": {"selected_memory_ids": ["integer memory ids"]}
+    })
+    .to_string()
 }
 
 fn parse_selected_memory_ids(value: &Value, candidates: &[RecallCandidate]) -> Vec<i64> {
@@ -206,23 +288,105 @@ fn parse_selected_memory_ids(value: &Value, candidates: &[RecallCandidate]) -> V
         .iter()
         .map(|candidate| candidate.memory_id)
         .collect::<HashSet<_>>();
-    value
-        .get("selected_memory_ids")
-        .and_then(Value::as_array)
-        .into_iter()
-        .flatten()
-        .filter_map(|value| {
-            value
-                .as_i64()
-                .or_else(|| value.as_str().and_then(|text| text.parse::<i64>().ok()))
-        })
-        .filter(|id| candidate_ids.contains(id))
-        .fold(Vec::new(), |mut ids, id| {
-            if !ids.contains(&id) {
+    let mut ids = Vec::new();
+    for key in [
+        "selected_memory_ids",
+        "memory_ids",
+        "selected_memories",
+        "selected",
+    ] {
+        collect_selected_ids(value.get(key), &mut ids);
+    }
+    if ids.is_empty() {
+        ids = parse_scored_memory_ids(value);
+    }
+    candidate_ordered_ids(&ids, candidates, &candidate_ids)
+}
+
+fn collect_selected_ids(value: Option<&Value>, ids: &mut Vec<i64>) {
+    match value {
+        Some(Value::Array(values)) => {
+            for value in values {
+                collect_selected_ids(Some(value), ids);
+            }
+        }
+        Some(Value::Object(map)) => {
+            if let Some(id) = value_to_memory_id(map.get("memory_id").or_else(|| map.get("id"))) {
                 ids.push(id);
             }
-            ids
+        }
+        Some(value) => {
+            if let Some(id) = value_to_memory_id(Some(value)) {
+                ids.push(id);
+            }
+        }
+        None => {}
+    }
+}
+
+fn value_to_memory_id(value: Option<&Value>) -> Option<i64> {
+    value.and_then(|value| {
+        value
+            .as_i64()
+            .or_else(|| value.as_str().and_then(|text| text.parse::<i64>().ok()))
+    })
+}
+
+fn parse_scored_memory_ids(value: &Value) -> Vec<i64> {
+    let scored = ["memory_scores", "scores", "candidate_scores", "candidates"]
+        .iter()
+        .filter_map(|key| value.get(key).and_then(Value::as_array))
+        .flatten()
+        .filter_map(|value| {
+            let object = value.as_object()?;
+            let id = value_to_memory_id(object.get("memory_id").or_else(|| object.get("id")))?;
+            let score = object
+                .get("relevance_score")
+                .or_else(|| object.get("score"))
+                .or_else(|| object.get("rating"))
+                .and_then(value_to_f32)?;
+            Some((id, score))
         })
+        .collect::<Vec<_>>();
+
+    let strong = scored
+        .iter()
+        .filter(|(_, score)| *score >= 4.0)
+        .map(|(id, _)| *id)
+        .collect::<Vec<_>>();
+    if !strong.is_empty() {
+        return strong;
+    }
+    scored
+        .into_iter()
+        .filter(|(_, score)| *score >= 3.0)
+        .map(|(id, _)| id)
+        .take(3)
+        .collect()
+}
+
+fn value_to_f32(value: &Value) -> Option<f32> {
+    value
+        .as_f64()
+        .map(|number| number as f32)
+        .or_else(|| value.as_str().and_then(|text| text.parse::<f32>().ok()))
+}
+
+fn candidate_ordered_ids(
+    ids: &[i64],
+    candidates: &[RecallCandidate],
+    candidate_ids: &HashSet<i64>,
+) -> Vec<i64> {
+    let selected_ids = ids
+        .iter()
+        .filter(|id| candidate_ids.contains(id))
+        .copied()
+        .collect::<HashSet<_>>();
+    candidates
+        .iter()
+        .map(|candidate| candidate.memory_id)
+        .filter(|id| selected_ids.contains(id))
+        .collect()
 }
 
 fn annotate_llm_filter(
@@ -256,6 +420,9 @@ fn annotate_llm_filter(
 }
 
 fn truncate_chars(text: &str, max_chars: usize) -> String {
+    if max_chars == 0 {
+        return String::new();
+    }
     if text.chars().count() <= max_chars {
         return text.to_string();
     }
@@ -267,6 +434,7 @@ fn truncate_chars(text: &str, max_chars: usize) -> String {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
+    use yaaml_core::{MemoryKind, MemoryScope};
 
     use super::*;
 
@@ -276,6 +444,82 @@ mod tests {
         let value = json!({"selected_memory_ids": [2, "3", 9, "bad", 2]});
 
         assert_eq!(parse_selected_memory_ids(&value, &candidates), vec![2, 3]);
+    }
+
+    #[test]
+    fn parses_selected_memory_ids_from_object_arrays_and_aliases() {
+        let candidates = vec![candidate(1), candidate(2), candidate(3), candidate(4)];
+
+        assert_eq!(
+            parse_selected_memory_ids(
+                &json!({"selected_memories": [{"memory_id": "3"}, {"id": 1}, {"id": 99}]}),
+                &candidates,
+            ),
+            vec![1, 3]
+        );
+        assert_eq!(
+            parse_selected_memory_ids(&json!({"memory_ids": ["4", 2, 2]}), &candidates),
+            vec![2, 4]
+        );
+        assert_eq!(
+            parse_selected_memory_ids(&json!({"selected": [{"id": "2"}]}), &candidates),
+            vec![2]
+        );
+    }
+
+    #[test]
+    fn parses_scored_memory_ids_when_selected_ids_are_absent() {
+        let candidates = vec![candidate(1), candidate(2), candidate(3), candidate(4)];
+        let value = json!({
+            "memory_scores": [
+                {"memory_id": 3, "score": 4},
+                {"memory_id": 1, "relevance_score": "5"},
+                {"memory_id": 4, "score": 2},
+                {"memory_id": 99, "score": 5}
+            ]
+        });
+
+        assert_eq!(parse_selected_memory_ids(&value, &candidates), vec![1, 3]);
+    }
+
+    #[test]
+    fn scored_memory_ids_keep_medium_scores_when_no_strong_scores_exist() {
+        let candidates = vec![candidate(1), candidate(2), candidate(3), candidate(4)];
+        let value = json!({
+            "scores": [
+                {"id": 4, "rating": "3"},
+                {"id": 2, "score": 3.5},
+                {"id": 1, "score": 2}
+            ]
+        });
+
+        assert_eq!(parse_selected_memory_ids(&value, &candidates), vec![2, 4]);
+    }
+
+    #[test]
+    fn recall_filter_prompt_never_truncates_serialized_json() {
+        let config = Config {
+            recall_llm_filter_prompt_max_chars: 3200,
+            ..Config::default()
+        };
+        let memories = (1..=12)
+            .map(|id| memory(id, &"body ".repeat(500)))
+            .collect::<Vec<_>>();
+        let candidates = (1..=12).map(candidate).collect::<Vec<_>>();
+        let query_text = "current turn ".repeat(800);
+
+        let prompt = recall_filter_prompt(
+            &config,
+            &query_text,
+            &ContextMetadata::default(),
+            "/tmp/yaaml",
+            &memories,
+            &candidates,
+        );
+        let parsed = serde_json::from_str::<Value>(&prompt).unwrap();
+
+        assert!(prompt.chars().count() <= config.recall_llm_filter_prompt_max_chars);
+        assert_eq!(parsed["candidate_memories"].as_array().unwrap().len(), 12);
     }
 
     fn candidate(memory_id: i64) -> RecallCandidate {
@@ -294,6 +538,25 @@ mod tests {
                 filter_reasons: Vec::new(),
                 matched_task_keys: Vec::new(),
             },
+        }
+    }
+
+    fn memory(memory_id: i64, body: &str) -> MemoryRecord {
+        MemoryRecord {
+            id: Some(memory_id),
+            title: format!("memory {memory_id}"),
+            body: body.to_string(),
+            scope: MemoryScope::Project,
+            kind: MemoryKind::Lesson,
+            task_keys: Vec::new(),
+            source_turn_refs: Vec::new(),
+            created_at: "unix:1".to_string(),
+            updated_at: "unix:1".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some("/tmp/yaaml".to_string()),
+            project_descriptor: Some("yaaml".to_string()),
+            lineage_refs: Vec::new(),
         }
     }
 }

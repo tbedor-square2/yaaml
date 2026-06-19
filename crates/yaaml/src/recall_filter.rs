@@ -15,8 +15,6 @@ pub struct RecallFilterTelemetry {
     pub final_selected_count: usize,
     pub llm_attempted: bool,
     pub llm_applied: bool,
-    #[serde(default)]
-    pub llm_empty_fallback: bool,
     pub llm_error: Option<String>,
 }
 
@@ -59,7 +57,6 @@ pub fn select_recall_candidates_with_llm_filter(
         final_selected_count: deterministic_selected.len(),
         llm_attempted: false,
         llm_applied: false,
-        llm_empty_fallback: false,
         llm_error: None,
     };
 
@@ -82,17 +79,8 @@ pub fn select_recall_candidates_with_llm_filter(
         &filter_pool,
     ) {
         Ok(selected_ids) => {
-            let mut selected_id_set = selected_ids.into_iter().collect::<HashSet<_>>();
-            if selected_id_set.is_empty() && !deterministic_selected.is_empty() {
-                selected_id_set.insert(deterministic_selected[0].memory_id);
-                telemetry.llm_empty_fallback = true;
-            }
-            annotate_llm_filter(
-                &mut debug_candidates,
-                &filter_pool,
-                &selected_id_set,
-                telemetry.llm_empty_fallback,
-            );
+            let selected_id_set = selected_ids.into_iter().collect::<HashSet<_>>();
+            annotate_llm_filter(&mut debug_candidates, &filter_pool, &selected_id_set);
             let selected = filter_pool
                 .iter()
                 .filter(|candidate| selected_id_set.contains(&candidate.memory_id))
@@ -469,7 +457,6 @@ fn annotate_llm_filter(
     debug_candidates: &mut [RecallCandidate],
     filter_pool: &[RecallCandidate],
     selected_id_set: &HashSet<i64>,
-    empty_fallback: bool,
 ) {
     let filter_pool_ids = filter_pool
         .iter()
@@ -480,17 +467,15 @@ fn annotate_llm_filter(
             continue;
         }
         if selected_id_set.contains(&candidate.memory_id) {
-            candidate.rank.filter_reasons.push(if empty_fallback {
-                "keep:llm_empty_fallback".to_string()
-            } else {
-                "keep:llm_semantic_filter".to_string()
-            });
+            candidate
+                .rank
+                .filter_reasons
+                .push("keep:llm_semantic_filter".to_string());
         } else {
-            candidate.rank.filter_reasons.push(if empty_fallback {
-                "drop:llm_empty_fallback".to_string()
-            } else {
-                "drop:llm_semantic_filter".to_string()
-            });
+            candidate
+                .rank
+                .filter_reasons
+                .push("drop:llm_semantic_filter".to_string());
         }
     }
 }

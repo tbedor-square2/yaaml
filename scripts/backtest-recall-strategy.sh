@@ -192,7 +192,6 @@ jq -s \
       empty_recall_runs: (map(select(.empty_recall)) | length),
       llm_attempted_runs: (map(select(.filter_telemetry.llm_attempted == true)) | length),
       llm_applied_runs: (map(select(.filter_telemetry.llm_applied == true)) | length),
-      llm_empty_fallback_runs: (map(select(.filter_telemetry.llm_empty_fallback == true)) | length),
       cases: .
     }
   ' "$details_jsonl" >"$summary_json"

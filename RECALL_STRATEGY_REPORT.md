@@ -38,8 +38,8 @@ Important limitations:
 | deterministic-top5 | 80 | 5.00 | 56 | 24 | 2.68 | 18 | 37 | 12 / 14 | 12 |
 | deterministic-top3 | 48 | 3.00 | 35 | 13 | 2.92 | 13 | 21 | 11 / 14 | 11 |
 | project-task-filter | 78 | 4.88 | 53 | 25 | 2.63 | 17 | 35 | 11 / 14 | 12 |
-| current LLM top1 fallback | 16 | 1.00 | 13 | 3 | 3.00 | 6 | 7 | 6 / 14 | 7 |
-| LLM empty fallback top3 | 48 | 3.00 | 36 | 12 | 2.81 | 13 | 22 | 11 / 14 | 12 |
+| LLM top1 historical run | 16 | 1.00 | 13 | 3 | 3.00 | 6 | 7 | 6 / 14 | 7 |
+| LLM top3 historical run | 48 | 3.00 | 36 | 12 | 2.81 | 13 | 22 | 11 / 14 | 12 |
 | LLM score rerank | 16 | 1.00 | 13 | 3 | 3.00 | 6 | 7 | 6 / 14 | 7 |
 
 ## Findings
@@ -49,11 +49,11 @@ Important limitations:
    preserves 11 of 14 useful-run opportunities.
 
 2. The LLM filter is not currently reliable as a selector.
-   Both binary filtering and score-reranking returned empty selections for every anchor and fell
-   back to deterministic recall. That means the remote model is not using the candidate list in a
-   stable enough way for production recall gating.
+   Both binary filtering and score-reranking returned empty selections for every anchor. That means
+   the remote model is not using the candidate list in a stable enough way for production recall
+   gating.
 
-3. The current top-1 fallback over-prunes.
+3. The LLM top-1 historical run over-prunes.
    It gives the highest average known score but captures useful context in only 6 of 14 useful
    anchors. It often keeps the wrong deterministic top candidate while dropping a useful candidate
    lower in the top-5.

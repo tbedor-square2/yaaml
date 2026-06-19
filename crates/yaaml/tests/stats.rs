@@ -117,6 +117,11 @@ fn stats_json_reports_recall_rates_volume_and_usefulness() {
     assert_eq!(stats["useful"]["good_memory_results"], 1);
     assert_eq!(stats["useful"]["low_memory_results"], 1);
     assert_eq!(stats["llm_filter"]["llm_applied_runs"], 1);
+    let removed_key = ["llm_empty", "fallback_runs"].join("_");
+    assert!(!stats["llm_filter"]
+        .as_object()
+        .unwrap()
+        .contains_key(&removed_key));
     assert_eq!(
         stats["llm_filter"]["average_dropped_memories_per_applied_run"],
         1.0

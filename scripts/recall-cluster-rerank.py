@@ -304,6 +304,33 @@ def signal_adjustment(signal: ClusterSignal, policy: str) -> float:
         if pos >= 0.84 and margin >= 0.04:
             return 0.14
         return 0.0
+    if policy == "cluster_gate_min2":
+        if signal.negative_count >= 2 and neg >= 0.84 and margin <= -0.04:
+            return -0.22
+        if signal.positive_count >= 2 and pos >= 0.84 and margin >= 0.04:
+            return 0.14
+        return 0.0
+    if policy == "cluster_gate_mixed_demote":
+        if (
+            signal.positive_similarity is not None
+            and signal.negative_count >= 2
+            and neg >= 0.84
+            and margin <= -0.04
+        ):
+            return -0.22
+        if pos >= 0.84 and margin >= 0.04:
+            return 0.14
+        return 0.0
+    if policy == "cluster_margin_min2":
+        if max(pos, neg) < 0.78:
+            return 0.0
+        if margin < 0.0 and signal.negative_count < 2:
+            return 0.0
+        if margin > 0.0 and signal.positive_count < 2:
+            return 0.0
+        return max(-0.18, min(0.14, margin * 0.30))
+    if policy == "cluster_positive_only":
+        return 0.14 if pos >= 0.84 and margin >= 0.04 else 0.0
     if policy == "cluster_count_weighted":
         pos_weight = min(3, signal.positive_count) * max(0.0, pos - 0.78)
         neg_weight = min(3, signal.negative_count) * max(0.0, neg - 0.78)
@@ -364,6 +391,16 @@ def adjusted_candidates(
         adjusted.append(clone)
     adjusted.sort(key=lambda item: (-score(item), memory_id(item)))
     return adjusted
+
+
+def policy_select(policy: str, candidates: list[Case], signals: dict[int, ClusterSignal]) -> list[int]:
+    if policy == "baseline":
+        return selected_from_recall(candidates)
+    adjustment_policy = policy.removesuffix("_fallback")
+    selected = strict_kind_select(adjusted_candidates(candidates, signals, adjustment_policy))
+    if not selected and policy.endswith("_fallback"):
+        return selected_from_recall(candidates)
+    return selected
 
 
 def load_scores(oracle_path: Path) -> dict[str, int]:
@@ -475,6 +512,12 @@ def main() -> None:
         "cluster_margin",
         "cluster_gate",
         "cluster_count_weighted",
+        "cluster_gate_min2",
+        "cluster_gate_mixed_demote",
+        "cluster_margin_min2",
+        "cluster_positive_only",
+        "cluster_margin_fallback",
+        "cluster_gate_mixed_demote_fallback",
     ]
     summaries = []
     for policy in policies:
@@ -496,11 +539,7 @@ def main() -> None:
                 for signal in signals.values()
                 if signal.positive_similarity is not None or signal.negative_similarity is not None
             )
-            selected_ids = (
-                selected_from_recall(candidates)
-                if policy == "baseline"
-                else strict_kind_select(adjusted_candidates(candidates, signals, policy))
-            )
+            selected_ids = policy_select(policy, candidates, signals)
             scores = load_scores(args.input_dir / f"oracle-{run_id}.json")
             cases.append(case_metrics(run_id, selected_ids, scores, active_signal_count))
         summary = summarize(policy, cases)

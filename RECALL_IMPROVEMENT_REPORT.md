@@ -101,3 +101,57 @@ target/cluster-rerank/*.summary.json
 target/cluster-rerank/*.details.jsonl
 target/cluster-rerank/text-embedding-3-small.query-embeddings.json
 ```
+
+## Cleaned Query Follow-up
+
+After adding recall-query noise stripping, the strict-kind baseline was rebuilt
+against the same frozen 200-anchor library:
+
+```bash
+BACKTEST_OUT_DIR=target/strict-kind-cleaned \
+BACKTEST_ANCHORS_FILE=target/strict-kind-production/anchors.tsv \
+scripts/backtest-recall-strategy.sh . strict-kind-cleaned
+```
+
+| Strategy | Avg Memories | Avg Known Score | Useful Known | Low Known | Useful Runs | Low Runs | Empty |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| old strict-kind-production | 2.28 | 2.85 | 69 | 88 | 54 | 62 | 5 |
+| cleaned strict-kind | 2.28 | 2.81 | 65 | 84 | 51 | 60 | 5 |
+
+Query cleaning by itself is not an overall recall-quality win on the frozen
+library. It removes some bad recall, but also removes more useful recall than
+expected. This suggests the stripped internal/environment context was sometimes
+acting as accidental retrieval signal for YAAML-heavy sessions.
+
+The cluster reranker was then replayed against the cleaned strict-kind outputs:
+
+```bash
+source ~/.zshrc >/dev/null 2>&1
+python3 scripts/recall-cluster-rerank.py \
+  --input-dir target/strict-kind-cleaned \
+  --label strict-kind-cleaned \
+  --out-dir target/cluster-rerank-cleaned-tuned
+```
+
+| Strategy | Avg Memories | Avg Known Score | Useful Known | Low Known | Useful Runs | Low Runs | Empty |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| cleaned baseline | 2.28 | 2.81 | 65 | 84 | 51 | 60 | 5 |
+| cluster_boost | 2.33 | 2.83 | 67 | 84 | 53 | 61 | 4 |
+| cluster_gate | 2.27 | 2.80 | 66 | 80 | 52 | 62 | 7 |
+| cluster_margin | 2.29 | 2.84 | 69 | 82 | 53 | 61 | 8 |
+| cluster_margin_fallback | 2.31 | 2.84 | 69 | 82 | 53 | 61 | 4 |
+| cluster_gate_mixed_demote | 2.31 | 2.82 | 66 | 83 | 52 | 60 | 4 |
+| cluster_gate_min2 | 2.30 | 2.83 | 65 | 83 | 51 | 59 | 4 |
+
+Best next candidate: `cluster_margin_fallback`.
+
+- Restores useful known memory count from 65 back to 69.
+- Reduces low known memories from old baseline 88 to 82.
+- Improves empty recalls versus cleaned baseline, 5 to 4.
+- Still trails old useful-run count, 53 vs. 54.
+- Slightly increases low-run count versus cleaned baseline, 61 vs. 60.
+
+The next production-oriented experiment should implement `cluster_margin_fallback`
+behind a disabled config flag and replay it through the Rust path, then compare
+against both old strict-kind and cleaned strict-kind before enabling it by
+default.

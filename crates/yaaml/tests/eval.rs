@@ -652,6 +652,199 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     assert!(human_stdout.contains("Useful memory"));
 }
 
+#[test]
+fn eval_memories_reports_memory_level_mixed_scores() {
+    let tmp = TempDir::new().unwrap();
+    let home = tmp.path().join("home");
+    let project = tmp.path().join("project");
+    fs::create_dir_all(home.join(".yaaml")).unwrap();
+    fs::create_dir_all(&project).unwrap();
+    let db_path = home.join(".yaaml").join("yaaml.db");
+    fs::write(
+        home.join(".yaaml").join("config.toml"),
+        format!(
+            r#"
+db_path = "{}"
+embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
+"#,
+            db_path.display()
+        ),
+    )
+    .unwrap();
+    let mut db = Database::open(&db_path).unwrap();
+    db.migrate().unwrap();
+    db.upsert_session(&SessionRecord {
+        id: "session-1".to_string(),
+        agent_type: AgentType::Codex,
+        project_id: project.display().to_string(),
+        transcript_file_path: "/tmp/session.jsonl".to_string(),
+        started_at: Some("2026-06-08T00:00:00Z".to_string()),
+        last_seen_at: Some("2026-06-08T00:00:01Z".to_string()),
+    })
+    .unwrap();
+    db.insert_turn(&TurnRecord {
+        session_id: "session-1".to_string(),
+        turn_id: Some("turn-1".to_string()),
+        ordinal: 7,
+        byte_start: 0,
+        byte_end: 10,
+        observed_at: Some("2026-06-08T00:00:02Z".to_string()),
+        status: TurnStatus::Completed,
+        display_text: Some("use recall".to_string()),
+        cwd: None,
+        context: None,
+    })
+    .unwrap();
+    let turn_row_id = db
+        .turn_row_id_for_session_ordinal("session-1", 7)
+        .unwrap()
+        .unwrap();
+    let mixed_memory_id = db
+        .insert_memory(&MemoryRecord {
+            id: None,
+            title: "Context-sensitive memory".to_string(),
+            body: "Useful in one task and noisy in another".to_string(),
+            scope: MemoryScope::Project,
+            kind: MemoryKind::Lesson,
+            task_keys: Vec::new(),
+            source_turn_refs: Vec::new(),
+            created_at: "2026-06-08T00:00:01Z".to_string(),
+            updated_at: "2026-06-08T00:00:01Z".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some(project.display().to_string()),
+            project_descriptor: Some("yaaml".to_string()),
+            lineage_refs: Vec::new(),
+        })
+        .unwrap();
+    let low_memory_id = db
+        .insert_memory(&MemoryRecord {
+            id: None,
+            title: "Mostly bad memory".to_string(),
+            body: "Usually unrelated".to_string(),
+            scope: MemoryScope::Project,
+            kind: MemoryKind::TaskState,
+            task_keys: Vec::new(),
+            source_turn_refs: Vec::new(),
+            created_at: "2026-06-08T00:00:01Z".to_string(),
+            updated_at: "2026-06-08T00:00:01Z".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some(project.display().to_string()),
+            project_descriptor: Some("yaaml".to_string()),
+            lineage_refs: Vec::new(),
+        })
+        .unwrap();
+    let first_run_id = db
+        .insert_eval_run(
+            "recall_1_to_5",
+            "2026-06-08T00:00:03Z",
+            r#"{"session_id":"session-1","turn_ordinal":7}"#,
+        )
+        .unwrap();
+    db.insert_eval_result(
+        first_run_id,
+        turn_row_id,
+        Some(mixed_memory_id),
+        "2",
+        "too broad",
+        "2026-06-08T00:00:04Z",
+    )
+    .unwrap();
+    db.insert_eval_result(
+        first_run_id,
+        turn_row_id,
+        Some(low_memory_id),
+        "1",
+        "wrong task",
+        "2026-06-08T00:00:04Z",
+    )
+    .unwrap();
+    db.complete_eval_run(first_run_id, "2026-06-08T00:00:05Z")
+        .unwrap();
+    let second_run_id = db
+        .insert_eval_run(
+            "recall_1_to_5",
+            "2026-06-08T00:00:06Z",
+            r#"{"session_id":"session-1","turn_ordinal":7}"#,
+        )
+        .unwrap();
+    db.insert_eval_result(
+        second_run_id,
+        turn_row_id,
+        Some(mixed_memory_id),
+        "5",
+        "directly actionable",
+        "2026-06-08T00:00:07Z",
+    )
+    .unwrap();
+    db.complete_eval_run(second_run_id, "2026-06-08T00:00:08Z")
+        .unwrap();
+
+    let binary = env!("CARGO_BIN_EXE_yaaml");
+    let output = Command::new(binary)
+        .arg("eval")
+        .arg("memories")
+        .arg("--json")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(value["eval_runs_considered"], 2);
+    assert_eq!(value["result_rows_considered"], 3);
+    assert_eq!(value["memories_considered"], 2);
+    assert_eq!(value["memories"][0]["memory_id"], mixed_memory_id);
+    assert_eq!(value["memories"][0]["selected_count"], 2);
+    assert_eq!(value["memories"][0]["useful_count"], 1);
+    assert_eq!(value["memories"][0]["low_count"], 1);
+    assert_eq!(value["memories"][0]["average_score"], 3.5);
+    assert_eq!(value["memories"][0]["mixed_useful_and_low"], true);
+    assert_eq!(value["memories"][0]["latest_run_id"], second_run_id);
+    assert_eq!(value["memories"][0]["latest_score"], "5");
+
+    let low_sorted = Command::new(binary)
+        .arg("eval")
+        .arg("memories")
+        .arg("--sort")
+        .arg("low")
+        .arg("--json")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .output()
+        .unwrap();
+    assert!(
+        low_sorted.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&low_sorted.stderr)
+    );
+    let low_value: serde_json::Value = serde_json::from_slice(&low_sorted.stdout).unwrap();
+    assert_eq!(low_value["sort"], "low");
+    assert_eq!(low_value["memories"][0]["memory_id"], mixed_memory_id);
+
+    let human = Command::new(binary)
+        .arg("eval")
+        .arg("memories")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .output()
+        .unwrap();
+    assert!(
+        human.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&human.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&human.stdout);
+    assert!(stdout.contains("Eval memory diagnostics"));
+    assert!(stdout.contains("Context-sensitive memory"));
+    assert!(stdout.contains("mixed=true"));
+}
+
 struct FakeServer {
     base_url: String,
     handle: thread::JoinHandle<()>,

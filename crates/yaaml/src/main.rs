@@ -117,6 +117,8 @@ enum EvalCommand {
     Show(EvalShowArgs),
     /// Summarize recent recall eval quality.
     Summary(EvalSummaryArgs),
+    /// Summarize eval outcomes by recalled memory.
+    Memories(EvalMemoriesArgs),
 }
 
 #[derive(Debug, Parser)]
@@ -159,6 +161,30 @@ struct EvalSummaryArgs {
     /// Emit machine-readable JSON.
     #[arg(long)]
     json: bool,
+}
+
+#[derive(Debug, Parser)]
+struct EvalMemoriesArgs {
+    /// Maximum recent eval runs to inspect.
+    #[arg(long, default_value_t = 200)]
+    eval_limit: usize,
+    /// Maximum memories to show.
+    #[arg(long, default_value_t = 25)]
+    limit: usize,
+    /// Sort mode for the memory diagnostics.
+    #[arg(long, value_enum, default_value_t = EvalMemorySort::Mixed)]
+    sort: EvalMemorySort,
+    /// Emit machine-readable JSON.
+    #[arg(long)]
+    json: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+enum EvalMemorySort {
+    Mixed,
+    Low,
+    Useful,
+    Count,
 }
 
 #[derive(Debug, Parser)]
@@ -1169,6 +1195,7 @@ fn eval(args: EvalArgs) -> anyhow::Result<()> {
         EvalCommand::List(args) => eval_list(args),
         EvalCommand::Show(args) => eval_show(args),
         EvalCommand::Summary(args) => eval_summary(args),
+        EvalCommand::Memories(args) => eval_memories(args),
     }
 }
 
@@ -1488,6 +1515,267 @@ fn eval_summary(args: EvalSummaryArgs) -> anyhow::Result<()> {
         print_human_eval_summary(&summary);
     }
     Ok(())
+}
+
+fn eval_memories(args: EvalMemoriesArgs) -> anyhow::Result<()> {
+    let cwd = env::current_dir().context("failed to determine current directory")?;
+    let config = Config::load_for_cwd(&cwd).context("failed to load config")?;
+    let db_path = config.db_path().context("failed to resolve db_path")?;
+    let mut db = Database::open(&db_path)
+        .with_context(|| format!("failed to open {}", display(&db_path)))?;
+    db.migrate().context("failed to migrate database")?;
+    let runs = db
+        .list_eval_runs(args.eval_limit)
+        .context("failed to list eval runs")?;
+    let diagnostics = build_eval_memory_diagnostics(&db, runs, args.sort, args.limit)?;
+
+    if args.json {
+        println!("{}", serde_json::to_string_pretty(&diagnostics)?);
+    } else {
+        print_human_eval_memory_diagnostics(&diagnostics);
+    }
+    Ok(())
+}
+
+#[derive(Debug, Serialize)]
+struct EvalMemoryDiagnostics {
+    eval_runs_considered: usize,
+    result_rows_considered: usize,
+    memories_considered: usize,
+    sort: String,
+    memories: Vec<EvalMemoryDiagnostic>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct EvalMemoryDiagnostic {
+    memory_id: i64,
+    title: Option<String>,
+    kind: Option<String>,
+    scope: Option<String>,
+    is_active: Option<bool>,
+    project_id: Option<String>,
+    selected_count: u64,
+    judged_count: u64,
+    useful_count: u64,
+    low_count: u64,
+    neutral_count: u64,
+    insufficient_context_count: u64,
+    average_score: Option<f64>,
+    mixed_useful_and_low: bool,
+    latest_run_id: i64,
+    latest_turn_ordinal: Option<u64>,
+    latest_score: Option<String>,
+    latest_rationale: Option<String>,
+}
+
+#[derive(Debug, Default)]
+struct EvalMemoryAccumulator {
+    memory_id: i64,
+    selected_count: u64,
+    judged_scores: Vec<u8>,
+    useful_count: u64,
+    low_count: u64,
+    neutral_count: u64,
+    insufficient_context_count: u64,
+    latest_run_id: i64,
+    latest_turn_ordinal: Option<u64>,
+    latest_score: Option<String>,
+    latest_rationale: Option<String>,
+}
+
+fn build_eval_memory_diagnostics(
+    db: &Database,
+    runs: Vec<EvalRunRecord>,
+    sort: EvalMemorySort,
+    limit: usize,
+) -> anyhow::Result<EvalMemoryDiagnostics> {
+    let mut accumulators = BTreeMap::<i64, EvalMemoryAccumulator>::new();
+    let mut result_rows_considered = 0_usize;
+
+    for run in &runs {
+        let run_context = eval_run_context(run);
+        let results = db
+            .eval_results_for_run(run.id)
+            .with_context(|| format!("failed to load eval results for run {}", run.id))?;
+        for result in results {
+            let Some(memory_id) = result.memory_id else {
+                continue;
+            };
+            result_rows_considered += 1;
+            let accumulator =
+                accumulators
+                    .entry(memory_id)
+                    .or_insert_with(|| EvalMemoryAccumulator {
+                        memory_id,
+                        latest_run_id: run.id,
+                        latest_turn_ordinal: run_context.turn_ordinal,
+                        ..EvalMemoryAccumulator::default()
+                    });
+            accumulator.selected_count += 1;
+            if run.id >= accumulator.latest_run_id {
+                accumulator.latest_run_id = run.id;
+                accumulator.latest_turn_ordinal = run_context.turn_ordinal;
+                accumulator.latest_score = result
+                    .judge_score
+                    .as_deref()
+                    .map(|score| display_eval_score(score.to_string()));
+                accumulator.latest_rationale =
+                    result.rationale.as_deref().map(eval_summary_snippet);
+            }
+            match result.judge_score.as_deref() {
+                Some("insufficient_context") => accumulator.insufficient_context_count += 1,
+                Some(score) => {
+                    if let Some(numeric_score) = numeric_eval_score(score) {
+                        accumulator.judged_scores.push(numeric_score);
+                        if numeric_score >= 4 {
+                            accumulator.useful_count += 1;
+                        } else if numeric_score <= 2 {
+                            accumulator.low_count += 1;
+                        } else {
+                            accumulator.neutral_count += 1;
+                        }
+                    }
+                }
+                None => {}
+            }
+        }
+    }
+
+    let memory_ids = accumulators.keys().copied().collect::<Vec<_>>();
+    let memory_by_id = db
+        .list_memories_by_ids(&memory_ids)
+        .context("failed to load eval memories")?
+        .into_iter()
+        .filter_map(|memory| memory.id.map(|id| (id, memory)))
+        .collect::<HashMap<_, _>>();
+    let mut memories = accumulators
+        .into_values()
+        .map(|accumulator| {
+            let memory_id = accumulator.memory_id;
+            eval_memory_diagnostic(accumulator, memory_by_id.get(&memory_id))
+        })
+        .collect::<Vec<_>>();
+    sort_eval_memory_diagnostics(&mut memories, sort);
+    memories.truncate(limit);
+
+    Ok(EvalMemoryDiagnostics {
+        eval_runs_considered: runs.len(),
+        result_rows_considered,
+        memories_considered: memory_ids.len(),
+        sort: eval_memory_sort_name(sort).to_string(),
+        memories,
+    })
+}
+
+fn eval_memory_diagnostic(
+    accumulator: EvalMemoryAccumulator,
+    memory: Option<&MemoryRecord>,
+) -> EvalMemoryDiagnostic {
+    let average_score = if accumulator.judged_scores.is_empty() {
+        None
+    } else {
+        Some(
+            accumulator
+                .judged_scores
+                .iter()
+                .map(|score| f64::from(*score))
+                .sum::<f64>()
+                / accumulator.judged_scores.len() as f64,
+        )
+    };
+    EvalMemoryDiagnostic {
+        memory_id: accumulator.memory_id,
+        title: memory.map(|memory| memory.title.clone()),
+        kind: memory.map(|memory| format!("{:?}", memory.kind)),
+        scope: memory.map(|memory| format!("{:?}", memory.scope)),
+        is_active: memory.map(|memory| memory.is_active),
+        project_id: memory.and_then(|memory| memory.project_id.clone()),
+        selected_count: accumulator.selected_count,
+        judged_count: accumulator.judged_scores.len() as u64,
+        useful_count: accumulator.useful_count,
+        low_count: accumulator.low_count,
+        neutral_count: accumulator.neutral_count,
+        insufficient_context_count: accumulator.insufficient_context_count,
+        average_score,
+        mixed_useful_and_low: accumulator.useful_count > 0 && accumulator.low_count > 0,
+        latest_run_id: accumulator.latest_run_id,
+        latest_turn_ordinal: accumulator.latest_turn_ordinal,
+        latest_score: accumulator.latest_score,
+        latest_rationale: accumulator.latest_rationale,
+    }
+}
+
+fn sort_eval_memory_diagnostics(memories: &mut [EvalMemoryDiagnostic], sort: EvalMemorySort) {
+    memories.sort_by(|left, right| {
+        let ordering = match sort {
+            EvalMemorySort::Mixed => (
+                right.mixed_useful_and_low,
+                right.useful_count.min(right.low_count),
+                right.selected_count,
+            )
+                .cmp(&(
+                    left.mixed_useful_and_low,
+                    left.useful_count.min(left.low_count),
+                    left.selected_count,
+                )),
+            EvalMemorySort::Low => {
+                (right.low_count, right.selected_count).cmp(&(left.low_count, left.selected_count))
+            }
+            EvalMemorySort::Useful => (right.useful_count, right.selected_count)
+                .cmp(&(left.useful_count, left.selected_count)),
+            EvalMemorySort::Count => right.selected_count.cmp(&left.selected_count),
+        };
+        ordering.then_with(|| left.memory_id.cmp(&right.memory_id))
+    });
+}
+
+fn eval_memory_sort_name(sort: EvalMemorySort) -> &'static str {
+    match sort {
+        EvalMemorySort::Mixed => "mixed",
+        EvalMemorySort::Low => "low",
+        EvalMemorySort::Useful => "useful",
+        EvalMemorySort::Count => "count",
+    }
+}
+
+fn print_human_eval_memory_diagnostics(diagnostics: &EvalMemoryDiagnostics) {
+    println!("Eval memory diagnostics");
+    println!("  eval runs: {}", diagnostics.eval_runs_considered);
+    println!("  result rows: {}", diagnostics.result_rows_considered);
+    println!("  memories: {}", diagnostics.memories_considered);
+    println!("  sort: {}", diagnostics.sort);
+    for memory in &diagnostics.memories {
+        let average_score = memory
+            .average_score
+            .map(|score| format!("{score:.2}"))
+            .unwrap_or_else(|| "n/a".to_string());
+        let status = memory
+            .is_active
+            .map(|active| if active { "active" } else { "inactive" })
+            .unwrap_or("missing");
+        let title = memory.title.as_deref().unwrap_or("missing");
+        println!(
+            "  memory={} {} avg={} selected={} useful={} low={} neutral={} n/a={} mixed={} latest_run={} latest_score={} title={}",
+            memory.memory_id,
+            status,
+            average_score,
+            memory.selected_count,
+            memory.useful_count,
+            memory.low_count,
+            memory.neutral_count,
+            memory.insufficient_context_count,
+            memory.mixed_useful_and_low,
+            memory.latest_run_id,
+            memory.latest_score.as_deref().unwrap_or("-"),
+            title
+        );
+        if let Some(project_id) = &memory.project_id {
+            println!("    project={project_id}");
+        }
+        if let Some(rationale) = &memory.latest_rationale {
+            println!("    latest rationale: {rationale}");
+        }
+    }
 }
 
 #[derive(Debug, Serialize)]

@@ -606,11 +606,25 @@ pub fn build_recall_query(
     tool_output_truncation_chars: usize,
 ) -> String {
     let mut query = String::new();
+    let mut suppressed_block: Option<&'static str> = None;
     for turn in turns {
         let Some(display_text) = &turn.display_text else {
             continue;
         };
         for line in display_text.lines() {
+            if let Some(end_tag) = suppressed_block {
+                if line.trim_start().starts_with(end_tag) {
+                    suppressed_block = None;
+                }
+                continue;
+            }
+            if let Some(end_tag) = recall_query_suppressed_block_end(line) {
+                suppressed_block = Some(end_tag);
+                continue;
+            }
+            if recall_query_suppressed_line(line) {
+                continue;
+            }
             let line = if line.trim_start().starts_with("tool output:") {
                 truncate_chars(line, tool_output_truncation_chars)
             } else {
@@ -626,6 +640,24 @@ pub fn build_recall_query(
         }
     }
     query
+}
+
+fn recall_query_suppressed_block_end(line: &str) -> Option<&'static str> {
+    let line = line.trim_start();
+    if line.starts_with("<codex_internal_context") {
+        Some("</codex_internal_context>")
+    } else if line.starts_with("<environment_context>") {
+        Some("</environment_context>")
+    } else {
+        None
+    }
+}
+
+fn recall_query_suppressed_line(line: &str) -> bool {
+    let line = line.trim();
+    line.starts_with("Working (")
+        || line.starts_with("Thinking (")
+        || line.starts_with("Continue working toward the active thread goal.")
 }
 
 pub fn recall_file_path(recall_dir: &Path, project_id: &Path) -> PathBuf {
@@ -1037,6 +1069,53 @@ mod tests {
         assert!(query.contains("user: fix it"));
         assert!(query.contains("assistant: done"));
         assert!(!query.contains(&"x".repeat(200)));
+    }
+
+    #[test]
+    fn recall_query_strips_codex_internal_context_blocks() {
+        let turn = TurnRecord {
+            session_id: "session-1".to_string(),
+            turn_id: Some("turn-1".to_string()),
+            ordinal: 0,
+            byte_start: 0,
+            byte_end: 1,
+            observed_at: None,
+            status: TurnStatus::Completed,
+            display_text: Some(
+                "user: investigate recall\n<codex_internal_context source=\"goal\">\nContinue working toward the active thread goal.\n<objective>unrelated prior objective</objective>\n</codex_internal_context>\nassistant: checking production code".to_string(),
+            ),
+            cwd: None,
+            context: None,
+        };
+
+        let query = build_recall_query(&[turn], 2_000, 80);
+
+        assert!(query.contains("user: investigate recall"));
+        assert!(query.contains("assistant: checking production code"));
+        assert!(!query.contains("unrelated prior objective"));
+        assert!(!query.contains("codex_internal_context"));
+    }
+
+    #[test]
+    fn recall_query_strips_environment_context_blocks_and_progress_lines() {
+        let turn = TurnRecord {
+            session_id: "session-1".to_string(),
+            turn_id: Some("turn-1".to_string()),
+            ordinal: 0,
+            byte_start: 0,
+            byte_end: 1,
+            observed_at: None,
+            status: TurnStatus::Completed,
+            display_text: Some(
+                "user: fix recall\n<environment_context>\n<cwd>/tmp/wrong</cwd>\n</environment_context>\nWorking (15s - esc to interrupt)\nassistant: done".to_string(),
+            ),
+            cwd: None,
+            context: None,
+        };
+
+        let query = build_recall_query(&[turn], 2_000, 80);
+
+        assert_eq!(query, "user: fix recall\nassistant: done");
     }
 
     #[test]

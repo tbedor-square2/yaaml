@@ -20,7 +20,7 @@ use yaaml_core::{
     infer_context_from_text, infer_memory_kind, merge_contexts, parse_eval_judge_response,
     parse_memory_ids, rank_recall_candidates, recall_file_path, render_recall_markdown,
     session_recall_file_path, write_recall_file, Config, ConfigPaths, ContextMetadata,
-    EmbeddingRecord, MemoryRecord, MemoryScope, RecallMemory, RecallRankDetails,
+    EmbeddingRecord, MemoryKind, MemoryRecord, MemoryScope, RecallMemory, RecallRankDetails,
     RecallRankingOptions, RecallWrite, SessionRecord, TurnRecord, VectorIndex,
 };
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
@@ -230,12 +230,30 @@ struct MemoriesArgs {
 enum MemoriesCommand {
     /// Show memory counts by scope, kind, and project.
     Stats(MemoriesStatsArgs),
+    /// Diagnose recall performance failure modes by memory.
+    Health(MemoriesHealthArgs),
     /// Soft-deactivate active memories and requeue transcript-backed formulation.
     Rebuild(MemoriesRebuildArgs),
 }
 
 #[derive(Debug, Parser)]
 struct MemoriesStatsArgs {
+    /// Emit machine-readable JSON.
+    #[arg(long)]
+    json: bool,
+}
+
+#[derive(Debug, Parser)]
+struct MemoriesHealthArgs {
+    /// Maximum recent eval runs to inspect.
+    #[arg(long, default_value_t = 1000)]
+    eval_limit: usize,
+    /// Maximum diagnosed memories to show.
+    #[arg(long, default_value_t = 25)]
+    limit: usize,
+    /// Include inactive memories in the ranked output.
+    #[arg(long)]
+    include_inactive: bool,
     /// Emit machine-readable JSON.
     #[arg(long)]
     json: bool,
@@ -859,9 +877,58 @@ struct MemoryRebuildOutput {
     queued_memory_jobs: u64,
 }
 
+#[derive(Debug, Serialize)]
+struct MemoryHealthOutput {
+    eval_runs_considered: usize,
+    result_rows_considered: usize,
+    memories_considered: usize,
+    active_memories_considered: usize,
+    include_inactive: bool,
+    failure_mode_counts: Vec<MemoryFailureModeCount>,
+    recommendation_counts: Vec<MemoryRecommendationCount>,
+    memories: Vec<MemoryHealthDiagnostic>,
+}
+
+#[derive(Debug, Serialize)]
+struct MemoryFailureModeCount {
+    failure_mode: String,
+    count: usize,
+}
+
+#[derive(Debug, Serialize)]
+struct MemoryRecommendationCount {
+    recommendation: String,
+    count: usize,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct MemoryHealthDiagnostic {
+    memory_id: i64,
+    title: String,
+    kind: String,
+    scope: String,
+    is_active: bool,
+    project_id: Option<String>,
+    selected_count: u64,
+    judged_count: u64,
+    useful_count: u64,
+    low_count: u64,
+    neutral_count: u64,
+    insufficient_context_count: u64,
+    low_rate: f64,
+    useful_rate: f64,
+    average_score: Option<f64>,
+    failure_mode: String,
+    recommended_action: String,
+    evidence: Vec<String>,
+    latest_low_rationale: Option<String>,
+    latest_useful_rationale: Option<String>,
+}
+
 fn memories(args: MemoriesArgs) -> anyhow::Result<()> {
     match args.command {
         MemoriesCommand::Stats(args) => memories_stats(args),
+        MemoriesCommand::Health(args) => memories_health(args),
         MemoriesCommand::Rebuild(args) => memories_rebuild(args),
     }
 }
@@ -873,6 +940,20 @@ fn memories_stats(args: MemoriesStatsArgs) -> anyhow::Result<()> {
         println!("{}", serde_json::to_string_pretty(&stats)?);
     } else {
         print_human_memory_stats(&stats);
+    }
+    Ok(())
+}
+
+fn memories_health(args: MemoriesHealthArgs) -> anyhow::Result<()> {
+    let (_config, db) = open_database_for_cwd()?;
+    let runs = db
+        .list_eval_runs(args.eval_limit)
+        .context("failed to list eval runs")?;
+    let health = build_memory_health(&db, runs, args.include_inactive, args.limit)?;
+    if args.json {
+        println!("{}", serde_json::to_string_pretty(&health)?);
+    } else {
+        print_human_memory_health(&health);
     }
     Ok(())
 }
@@ -969,6 +1050,449 @@ fn build_memory_stats(db: &Database) -> anyhow::Result<MemoryStatsOutput> {
             .collect(),
         top_projects,
     })
+}
+
+#[derive(Debug, Default)]
+struct MemoryHealthAccumulator {
+    memory_id: i64,
+    selected_count: u64,
+    judged_scores: Vec<u8>,
+    useful_count: u64,
+    low_count: u64,
+    neutral_count: u64,
+    insufficient_context_count: u64,
+    latest_low_rationale: Option<String>,
+    latest_useful_rationale: Option<String>,
+}
+
+fn build_memory_health(
+    db: &Database,
+    runs: Vec<EvalRunRecord>,
+    include_inactive: bool,
+    limit: usize,
+) -> anyhow::Result<MemoryHealthOutput> {
+    let mut accumulators = BTreeMap::<i64, MemoryHealthAccumulator>::new();
+    let mut result_rows_considered = 0_usize;
+
+    for run in &runs {
+        let results = db
+            .eval_results_for_run(run.id)
+            .with_context(|| format!("failed to load eval results for run {}", run.id))?;
+        for result in results {
+            let Some(memory_id) = result.memory_id else {
+                continue;
+            };
+            result_rows_considered += 1;
+            let accumulator =
+                accumulators
+                    .entry(memory_id)
+                    .or_insert_with(|| MemoryHealthAccumulator {
+                        memory_id,
+                        ..MemoryHealthAccumulator::default()
+                    });
+            accumulator.selected_count += 1;
+            match result.judge_score.as_deref() {
+                Some("insufficient_context") => accumulator.insufficient_context_count += 1,
+                Some(score) => {
+                    if let Some(numeric_score) = numeric_eval_score(score) {
+                        accumulator.judged_scores.push(numeric_score);
+                        if numeric_score >= 4 {
+                            accumulator.useful_count += 1;
+                            if let Some(rationale) = result.rationale.as_deref() {
+                                accumulator.latest_useful_rationale =
+                                    Some(eval_summary_snippet(rationale));
+                            }
+                        } else if numeric_score <= 2 {
+                            accumulator.low_count += 1;
+                            if let Some(rationale) = result.rationale.as_deref() {
+                                accumulator.latest_low_rationale =
+                                    Some(eval_summary_snippet(rationale));
+                            }
+                        } else {
+                            accumulator.neutral_count += 1;
+                        }
+                    }
+                }
+                None => {}
+            }
+        }
+    }
+
+    let memory_ids = accumulators.keys().copied().collect::<Vec<_>>();
+    let memory_by_id = db
+        .list_memories_by_ids(&memory_ids)
+        .context("failed to load memories for health diagnostics")?
+        .into_iter()
+        .filter_map(|memory| memory.id.map(|id| (id, memory)))
+        .collect::<HashMap<_, _>>();
+
+    let active_memories_considered = memory_by_id
+        .values()
+        .filter(|memory| memory.is_active)
+        .count();
+    let mut diagnostics = accumulators
+        .into_values()
+        .filter_map(|accumulator| {
+            let memory = memory_by_id.get(&accumulator.memory_id)?;
+            if !include_inactive && !memory.is_active {
+                return None;
+            }
+            Some(memory_health_diagnostic(accumulator, memory))
+        })
+        .collect::<Vec<_>>();
+    diagnostics.sort_by(|left, right| {
+        health_severity(right)
+            .cmp(&health_severity(left))
+            .then_with(|| right.selected_count.cmp(&left.selected_count))
+            .then_with(|| left.memory_id.cmp(&right.memory_id))
+    });
+    let failure_mode_counts = count_failure_modes(&diagnostics);
+    let recommendation_counts = count_recommendations(&diagnostics);
+    diagnostics.truncate(limit);
+
+    Ok(MemoryHealthOutput {
+        eval_runs_considered: runs.len(),
+        result_rows_considered,
+        memories_considered: memory_ids.len(),
+        active_memories_considered,
+        include_inactive,
+        failure_mode_counts,
+        recommendation_counts,
+        memories: diagnostics,
+    })
+}
+
+fn memory_health_diagnostic(
+    accumulator: MemoryHealthAccumulator,
+    memory: &MemoryRecord,
+) -> MemoryHealthDiagnostic {
+    let judged_count = accumulator.judged_scores.len() as u64;
+    let average_score = if accumulator.judged_scores.is_empty() {
+        None
+    } else {
+        Some(
+            accumulator
+                .judged_scores
+                .iter()
+                .map(|score| f64::from(*score))
+                .sum::<f64>()
+                / accumulator.judged_scores.len() as f64,
+        )
+    };
+    let low_rate = ratio(accumulator.low_count, judged_count);
+    let useful_rate = ratio(accumulator.useful_count, judged_count);
+    let mut evidence = memory_health_evidence(memory, &accumulator, low_rate, useful_rate);
+    let failure_mode = diagnose_memory_failure(memory, &accumulator, low_rate, useful_rate);
+    let recommended_action = recommended_memory_action(&failure_mode);
+    evidence.insert(
+        0,
+        format!(
+            "judged={} useful={} low={} low_rate={:.1}% useful_rate={:.1}%",
+            judged_count,
+            accumulator.useful_count,
+            accumulator.low_count,
+            low_rate * 100.0,
+            useful_rate * 100.0
+        ),
+    );
+
+    MemoryHealthDiagnostic {
+        memory_id: accumulator.memory_id,
+        title: memory.title.clone(),
+        kind: memory.kind.as_str().to_string(),
+        scope: memory.scope.as_str().to_string(),
+        is_active: memory.is_active,
+        project_id: memory.project_id.clone(),
+        selected_count: accumulator.selected_count,
+        judged_count,
+        useful_count: accumulator.useful_count,
+        low_count: accumulator.low_count,
+        neutral_count: accumulator.neutral_count,
+        insufficient_context_count: accumulator.insufficient_context_count,
+        low_rate,
+        useful_rate,
+        average_score,
+        failure_mode,
+        recommended_action,
+        evidence,
+        latest_low_rationale: accumulator.latest_low_rationale,
+        latest_useful_rationale: accumulator.latest_useful_rationale,
+    }
+}
+
+fn diagnose_memory_failure(
+    memory: &MemoryRecord,
+    accumulator: &MemoryHealthAccumulator,
+    low_rate: f64,
+    useful_rate: f64,
+) -> String {
+    let judged_count = accumulator.judged_scores.len() as u64;
+    let body_len = memory.body.chars().count();
+    let task_key_count = memory.task_keys.len();
+    let latest_low = accumulator
+        .latest_low_rationale
+        .as_deref()
+        .unwrap_or("")
+        .to_ascii_lowercase();
+
+    if judged_count >= 5 && accumulator.useful_count == 0 && low_rate >= 0.70 {
+        if rationale_mentions_wrong_context(&latest_low) {
+            return "wrong_context".to_string();
+        }
+        if looks_stale_or_episodic(memory, &latest_low) {
+            return "stale_episodic".to_string();
+        }
+        if body_len < 300 {
+            return "vague_under_contextualized".to_string();
+        }
+        if task_key_count >= 6 {
+            return "noisy_metadata".to_string();
+        }
+        return "consistently_low_value".to_string();
+    }
+
+    if judged_count >= 5 && useful_rate >= 0.70 {
+        return "proven_useful".to_string();
+    }
+
+    if accumulator.useful_count > 0 && accumulator.low_count > 0 {
+        if rationale_mentions_wrong_context(&latest_low)
+            || memory.kind == MemoryKind::TaskState
+            || memory.kind == MemoryKind::ProjectFact
+        {
+            return "context_sensitive".to_string();
+        }
+        return "mixed_performance".to_string();
+    }
+
+    if judged_count > 0 && low_rate >= 0.70 {
+        if body_len < 300 {
+            return "vague_under_contextualized".to_string();
+        }
+        if task_key_count >= 6 {
+            return "noisy_metadata".to_string();
+        }
+        return "likely_low_value".to_string();
+    }
+
+    if accumulator.insufficient_context_count > 0 && judged_count == 0 {
+        return "insufficient_eval_context".to_string();
+    }
+
+    "unproven".to_string()
+}
+
+fn memory_health_evidence(
+    memory: &MemoryRecord,
+    accumulator: &MemoryHealthAccumulator,
+    low_rate: f64,
+    useful_rate: f64,
+) -> Vec<String> {
+    let mut evidence = Vec::new();
+    let task_key_count = memory.task_keys.len();
+    let body_len = memory.body.chars().count();
+    if memory.project_id.as_deref() == Some(&home_dir_string()) {
+        evidence.push("project_id is home root".to_string());
+    }
+    if task_key_count >= 6 {
+        evidence.push(format!("many task keys ({task_key_count})"));
+    } else if task_key_count == 0 {
+        evidence.push("no task keys".to_string());
+    }
+    if body_len < 300 {
+        evidence.push(format!("short body ({body_len} chars)"));
+    }
+    if memory.kind == MemoryKind::TaskState || memory.kind == MemoryKind::ProjectFact {
+        evidence.push(format!("episodic kind ({})", memory.kind.as_str()));
+    }
+    let latest_low = accumulator
+        .latest_low_rationale
+        .as_deref()
+        .unwrap_or("")
+        .to_ascii_lowercase();
+    if rationale_mentions_wrong_context(&latest_low) {
+        evidence.push("latest low rationale says unrelated/wrong context".to_string());
+    }
+    if looks_stale_or_episodic(memory, &latest_low) {
+        evidence.push("memory/rationale has stale episodic signals".to_string());
+    }
+    if accumulator.useful_count > 0 && accumulator.low_count > 0 {
+        evidence.push(format!(
+            "mixed eval outcomes: useful_rate={:.1}% low_rate={:.1}%",
+            useful_rate * 100.0,
+            low_rate * 100.0
+        ));
+    }
+    evidence
+}
+
+fn recommended_memory_action(failure_mode: &str) -> String {
+    match failure_mode {
+        "wrong_context" => "regenerate_metadata_or_tighten_gates",
+        "stale_episodic" => "move_to_dormant",
+        "vague_under_contextualized" => "refine_or_suppress",
+        "noisy_metadata" => "regenerate_task_keys",
+        "consistently_low_value" => "suppress_or_tombstone",
+        "context_sensitive" => "require_stronger_context_match",
+        "mixed_performance" => "context_sensitive_rerank",
+        "likely_low_value" => "suppress_pending_more_evals",
+        "insufficient_eval_context" => "re_eval_when_context_available",
+        "proven_useful" => "boost_or_keep_active",
+        _ => "keep_observing",
+    }
+    .to_string()
+}
+
+fn ratio(numerator: u64, denominator: u64) -> f64 {
+    if denominator == 0 {
+        0.0
+    } else {
+        numerator as f64 / denominator as f64
+    }
+}
+
+fn rationale_mentions_wrong_context(rationale: &str) -> bool {
+    [
+        "unrelated",
+        "wrong context",
+        "different project",
+        "different domain",
+        "no connection",
+        "no bearing",
+        "irrelevant",
+        "mismatch",
+    ]
+    .iter()
+    .any(|needle| rationale.contains(needle))
+}
+
+fn looks_stale_or_episodic(memory: &MemoryRecord, rationale: &str) -> bool {
+    let text = format!(
+        "{}\n{}\n{}",
+        memory.title.to_ascii_lowercase(),
+        memory.body.to_ascii_lowercase(),
+        rationale
+    );
+    memory.kind == MemoryKind::TaskState
+        || [
+            "stale",
+            "obsolete",
+            "old pr",
+            "draft pr",
+            "paused",
+            "blocked",
+            "remaining",
+            "open questions",
+            "completed",
+            "rollout",
+            "temporary",
+            "current progress",
+        ]
+        .iter()
+        .any(|needle| text.contains(needle))
+}
+
+fn home_dir_string() -> String {
+    env::var("HOME").unwrap_or_default()
+}
+
+fn health_severity(memory: &MemoryHealthDiagnostic) -> (u8, u64, u64) {
+    let mode_rank = match memory.failure_mode.as_str() {
+        "wrong_context" => 10,
+        "stale_episodic" => 9,
+        "noisy_metadata" => 8,
+        "consistently_low_value" => 7,
+        "vague_under_contextualized" => 6,
+        "context_sensitive" => 5,
+        "mixed_performance" => 4,
+        "likely_low_value" => 3,
+        "insufficient_eval_context" => 2,
+        "unproven" => 1,
+        "proven_useful" => 0,
+        _ => 0,
+    };
+    (mode_rank, memory.low_count, memory.judged_count)
+}
+
+fn count_failure_modes(diagnostics: &[MemoryHealthDiagnostic]) -> Vec<MemoryFailureModeCount> {
+    let mut counts = BTreeMap::<String, usize>::new();
+    for diagnostic in diagnostics {
+        *counts.entry(diagnostic.failure_mode.clone()).or_default() += 1;
+    }
+    counts
+        .into_iter()
+        .map(|(failure_mode, count)| MemoryFailureModeCount {
+            failure_mode,
+            count,
+        })
+        .collect()
+}
+
+fn count_recommendations(diagnostics: &[MemoryHealthDiagnostic]) -> Vec<MemoryRecommendationCount> {
+    let mut counts = BTreeMap::<String, usize>::new();
+    for diagnostic in diagnostics {
+        *counts
+            .entry(diagnostic.recommended_action.clone())
+            .or_default() += 1;
+    }
+    counts
+        .into_iter()
+        .map(|(recommendation, count)| MemoryRecommendationCount {
+            recommendation,
+            count,
+        })
+        .collect()
+}
+
+fn print_human_memory_health(health: &MemoryHealthOutput) {
+    println!("Memory health diagnostics");
+    println!("  eval runs: {}", health.eval_runs_considered);
+    println!("  result rows: {}", health.result_rows_considered);
+    println!(
+        "  memories: {} considered ({} active)",
+        health.memories_considered, health.active_memories_considered
+    );
+    println!("  include inactive: {}", health.include_inactive);
+    println!("  failure modes:");
+    for count in &health.failure_mode_counts {
+        println!("    {}: {}", count.failure_mode, count.count);
+    }
+    println!("  recommendations:");
+    for count in &health.recommendation_counts {
+        println!("    {}: {}", count.recommendation, count.count);
+    }
+    for memory in &health.memories {
+        let average_score = memory
+            .average_score
+            .map(|score| format!("{score:.2}"))
+            .unwrap_or_else(|| "n/a".to_string());
+        let status = if memory.is_active {
+            "active"
+        } else {
+            "inactive"
+        };
+        println!(
+            "  memory={} {} mode={} action={} avg={} selected={} useful={} low={} title={}",
+            memory.memory_id,
+            status,
+            memory.failure_mode,
+            memory.recommended_action,
+            average_score,
+            memory.selected_count,
+            memory.useful_count,
+            memory.low_count,
+            memory.title
+        );
+        if let Some(project_id) = &memory.project_id {
+            println!("    project={project_id}");
+        }
+        if !memory.evidence.is_empty() {
+            println!("    evidence: {}", memory.evidence.join("; "));
+        }
+        if let Some(rationale) = &memory.latest_low_rationale {
+            println!("    latest low rationale: {rationale}");
+        }
+    }
 }
 
 fn task_list(args: TaskListArgs) -> anyhow::Result<()> {

@@ -631,6 +631,86 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
 }
 
 #[test]
+fn bare_recall_invalidates_file_that_exceeds_result_limit() {
+    let tmp = TempDir::new().unwrap();
+    let home = tmp.path().join("home");
+    let project = tmp.path().join("project");
+    fs::create_dir_all(home.join(".yaaml")).unwrap();
+    fs::create_dir_all(&project).unwrap();
+    let db_path = home.join(".yaaml").join("yaaml.db");
+    let recall_dir = home.join(".yaaml").join("recall");
+    fs::write(
+        home.join(".yaaml").join("config.toml"),
+        format!(
+            r#"
+db_path = "{}"
+recall_dir = "{}"
+recall_result_limit = 2
+embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
+"#,
+            db_path.display(),
+            recall_dir.display()
+        ),
+    )
+    .unwrap();
+
+    let project_id = project.canonicalize().unwrap();
+    let mut db = Database::open(&db_path).unwrap();
+    db.migrate().unwrap();
+    let memory_ids = ["Old first", "Old second", "Old third"]
+        .into_iter()
+        .map(|title| {
+            db.insert_memory(&MemoryRecord {
+                id: None,
+                title: title.to_string(),
+                body: "This cached recall file has more memories than the current limit."
+                    .to_string(),
+                scope: MemoryScope::Project,
+                kind: MemoryKind::Lesson,
+                task_keys: Vec::new(),
+                source_turn_refs: Vec::new(),
+                created_at: "2026-06-08T00:00:00Z".to_string(),
+                updated_at: "2026-06-08T00:00:00Z".to_string(),
+                is_active: true,
+                session_id: None,
+                project_id: Some(project_id.display().to_string()),
+                project_descriptor: Some("yaaml, Rust CLI memory daemon".to_string()),
+                lineage_refs: Vec::new(),
+            })
+            .unwrap()
+        })
+        .collect::<Vec<_>>();
+    let recall_path = recall_file_path(&recall_dir, &project_id);
+    fs::create_dir_all(recall_path.parent().unwrap()).unwrap();
+    fs::write(
+        &recall_path,
+        format!(
+            "# YAAML Recall\n\nmemory_count: 3\nmemory_ids: {},{},{}\n\n## Old first\n\nstale\n\n## Old second\n\nstale\n\n## Old third\n\nstale\n",
+            memory_ids[0], memory_ids[1], memory_ids[2]
+        ),
+    )
+    .unwrap();
+
+    let output = Command::new(env!("CARGO_BIN_EXE_yaaml"))
+        .arg("recall")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .env_remove("CODEX_THREAD_ID")
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(!stdout.contains("Old first"));
+    assert!(stdout.contains("no recall file"));
+    assert!(!recall_path.exists());
+}
+
+#[test]
 fn recall_query_writes_current_session_file_when_session_id_is_available() {
     let tmp = TempDir::new().unwrap();
     let home = tmp.path().join("home");

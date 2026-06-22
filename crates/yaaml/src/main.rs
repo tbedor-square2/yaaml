@@ -3116,7 +3116,9 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
         if args.json || args.debug_ranking {
             bail!("--json and --debug-ranking require --query or --session/--turn");
         }
-        if let Some(contents) = read_active_recall_file(&db, &recall_path)? {
+        if let Some(contents) =
+            read_active_recall_file(&db, &recall_path, config.recall_result_limit)?
+        {
             print!("{contents}");
             return Ok(());
         }
@@ -3128,7 +3130,9 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
         }
         let project_recall_path = recall_file_path(&recall_dir, &project_id_path);
         if project_recall_path != recall_path {
-            if let Some(contents) = read_active_recall_file(&db, &project_recall_path)? {
+            if let Some(contents) =
+                read_active_recall_file(&db, &project_recall_path, config.recall_result_limit)?
+            {
                 print!("{contents}");
                 return Ok(());
             }
@@ -3215,7 +3219,9 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
     match write {
         RecallWrite::Written | RecallWrite::Unchanged => print!("{rendered}"),
         RecallWrite::NoopEmptyResults => {
-            if let Some(contents) = read_active_recall_file(&db, &recall_path)? {
+            if let Some(contents) =
+                read_active_recall_file(&db, &recall_path, config.recall_result_limit)?
+            {
                 print!("{contents}");
             } else {
                 println!("no recall results");
@@ -3310,6 +3316,7 @@ fn refresh_missing_recall_file(
 fn read_active_recall_file(
     db: &Database,
     recall_path: &std::path::Path,
+    recall_result_limit: usize,
 ) -> anyhow::Result<Option<String>> {
     if !recall_path.exists() {
         return Ok(None);
@@ -3317,6 +3324,10 @@ fn read_active_recall_file(
     let contents = fs::read_to_string(recall_path).context("failed to read recall file")?;
     let memory_ids = parse_memory_ids(&contents);
     if memory_ids.is_empty() {
+        invalidate_recall_file(recall_path)?;
+        return Ok(None);
+    }
+    if memory_ids.len() > recall_result_limit {
         invalidate_recall_file(recall_path)?;
         return Ok(None);
     }

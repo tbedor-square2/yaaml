@@ -475,6 +475,7 @@ struct StatsOutput {
     non_empty_recall_runs: usize,
     non_empty_recall_rate: f64,
     non_empty_per_recall_rate: f64,
+    abstention: StatsAbstention,
     volume: StatsVolume,
     useful: StatsUseful,
     llm_filter: StatsLlmFilter,
@@ -497,6 +498,18 @@ struct StatsMemoryCountBuckets {
     one_to_two: usize,
     three_to_five: usize,
     more_than_five: usize,
+}
+
+#[derive(Debug, Serialize)]
+struct StatsAbstention {
+    empty_recall_runs: usize,
+    evaluated_empty_recall_runs: usize,
+    clean_abstention_runs: usize,
+    missed_useful_abstention_runs: usize,
+    unjudged_empty_recall_runs: usize,
+    clean_abstention_rate_per_empty_recall: f64,
+    missed_useful_abstention_rate_per_empty_recall: f64,
+    missed_useful_abstention_rate_per_evaluated_empty_recall: f64,
 }
 
 #[derive(Debug, Serialize)]
@@ -554,7 +567,7 @@ fn build_stats(db: &Database, eval_limit: usize) -> anyhow::Result<StatsOutput> 
         .filter(|anchor| eligible.contains(anchor))
         .collect::<HashSet<_>>();
 
-    let mut volume_by_anchor = BTreeMap::<StatsAnchor, StatsRecallVolumeRun>::new();
+    let mut recall_eval_by_anchor = BTreeMap::<StatsAnchor, StatsRecallVolumeRun>::new();
     for task in db
         .list_tasks_by_kind(yaaml::daemon::TASK_KIND_RECALL_EVAL)
         .context("failed to list recall eval tasks")?
@@ -562,11 +575,11 @@ fn build_stats(db: &Database, eval_limit: usize) -> anyhow::Result<StatsOutput> 
         let Some((anchor, volume)) = recall_eval_task_volume(&task.payload_json) else {
             continue;
         };
-        if !eligible.contains(&anchor) || volume.memory_count == 0 {
+        if !eligible.contains(&anchor) {
             continue;
         }
         recall_runs.insert(anchor.clone());
-        volume_by_anchor.entry(anchor).or_insert(volume);
+        recall_eval_by_anchor.entry(anchor).or_insert(volume);
     }
 
     let mut latest_eval_run_by_anchor = BTreeMap::<StatsAnchor, EvalRunRecord>::new();
@@ -588,12 +601,16 @@ fn build_stats(db: &Database, eval_limit: usize) -> anyhow::Result<StatsOutput> 
     let mut good_memory_results = 0_usize;
     let mut low_memory_results = 0_usize;
     let mut insufficient_context_results = 0_usize;
+    let mut eval_outcome_by_anchor = BTreeMap::<StatsAnchor, StatsEvalOutcome>::new();
     for run in latest_eval_run_by_anchor.values() {
         let results = db
             .eval_results_for_run(run.id)
             .with_context(|| format!("failed to load eval results for run {}", run.id))?;
         let mut has_numeric_score = false;
         let mut has_useful_score = false;
+        let Some(anchor) = eval_run_anchor(&run.config_json) else {
+            continue;
+        };
         for result in results {
             match result.judge_score.as_deref().and_then(numeric_eval_score) {
                 Some(score) => {
@@ -619,14 +636,32 @@ fn build_stats(db: &Database, eval_limit: usize) -> anyhow::Result<StatsOutput> 
         if has_useful_score {
             useful_recall_runs += 1;
         }
+        eval_outcome_by_anchor.insert(
+            anchor,
+            StatsEvalOutcome {
+                has_numeric_score,
+                has_useful_score,
+            },
+        );
     }
 
-    let volumes = volume_by_anchor.values().cloned().collect::<Vec<_>>();
+    let non_empty_by_anchor = recall_eval_by_anchor
+        .iter()
+        .filter(|(_, volume)| volume.memory_count > 0)
+        .map(|(anchor, volume)| (anchor.clone(), volume.clone()))
+        .collect::<BTreeMap<_, _>>();
+    let empty_recall_anchors = recall_eval_by_anchor
+        .iter()
+        .filter(|(_, volume)| volume.memory_count == 0)
+        .map(|(anchor, _)| anchor.clone())
+        .collect::<Vec<_>>();
+    let abstention = build_abstention_stats(&empty_recall_anchors, &eval_outcome_by_anchor);
+    let volumes = non_empty_by_anchor.values().cloned().collect::<Vec<_>>();
     let volume = build_volume_stats(&volumes);
     let llm_filter = build_llm_filter_stats(&volumes);
     let eligible_count = eligible.len();
     let recall_count = recall_runs.len();
-    let non_empty_count = volume_by_anchor.len();
+    let non_empty_count = non_empty_by_anchor.len();
     let useful = StatsUseful {
         evaluated_recall_runs,
         useful_recall_runs,
@@ -647,10 +682,17 @@ fn build_stats(db: &Database, eval_limit: usize) -> anyhow::Result<StatsOutput> 
         non_empty_recall_runs: non_empty_count,
         non_empty_recall_rate: rate(non_empty_count, eligible_count),
         non_empty_per_recall_rate: rate(non_empty_count, recall_count),
+        abstention,
         volume,
         useful,
         llm_filter,
     })
+}
+
+#[derive(Debug, Clone)]
+struct StatsEvalOutcome {
+    has_numeric_score: bool,
+    has_useful_score: bool,
 }
 
 fn recall_task_anchor(payload_json: &str) -> Option<StatsAnchor> {
@@ -753,6 +795,50 @@ fn build_llm_filter_stats(volumes: &[StatsRecallVolumeRun]) -> StatsLlmFilter {
     }
 }
 
+fn build_abstention_stats(
+    empty_recall_anchors: &[StatsAnchor],
+    eval_outcome_by_anchor: &BTreeMap<StatsAnchor, StatsEvalOutcome>,
+) -> StatsAbstention {
+    let mut evaluated_empty_recall_runs = 0_usize;
+    let mut clean_abstention_runs = 0_usize;
+    let mut missed_useful_abstention_runs = 0_usize;
+    let mut unjudged_empty_recall_runs = 0_usize;
+
+    for anchor in empty_recall_anchors {
+        match eval_outcome_by_anchor.get(anchor) {
+            Some(outcome) if outcome.has_numeric_score => {
+                evaluated_empty_recall_runs += 1;
+                if outcome.has_useful_score {
+                    missed_useful_abstention_runs += 1;
+                } else {
+                    clean_abstention_runs += 1;
+                }
+            }
+            _ => unjudged_empty_recall_runs += 1,
+        }
+    }
+
+    StatsAbstention {
+        empty_recall_runs: empty_recall_anchors.len(),
+        evaluated_empty_recall_runs,
+        clean_abstention_runs,
+        missed_useful_abstention_runs,
+        unjudged_empty_recall_runs,
+        clean_abstention_rate_per_empty_recall: rate(
+            clean_abstention_runs,
+            empty_recall_anchors.len(),
+        ),
+        missed_useful_abstention_rate_per_empty_recall: rate(
+            missed_useful_abstention_runs,
+            empty_recall_anchors.len(),
+        ),
+        missed_useful_abstention_rate_per_evaluated_empty_recall: rate(
+            missed_useful_abstention_runs,
+            evaluated_empty_recall_runs,
+        ),
+    }
+}
+
 fn rate(numerator: usize, denominator: usize) -> f64 {
     if denominator == 0 {
         0.0
@@ -808,6 +894,17 @@ fn print_human_stats(stats: &StatsOutput) {
         stats.volume.memory_count_buckets.one_to_two,
         stats.volume.memory_count_buckets.three_to_five,
         stats.volume.memory_count_buckets.more_than_five
+    );
+    println!(
+        "  abstention: empty={} evaluated={} clean={} ({}) missed_useful={} ({} of empty, {} of evaluated empty) unjudged={}",
+        stats.abstention.empty_recall_runs,
+        stats.abstention.evaluated_empty_recall_runs,
+        stats.abstention.clean_abstention_runs,
+        percent(stats.abstention.clean_abstention_rate_per_empty_recall),
+        stats.abstention.missed_useful_abstention_runs,
+        percent(stats.abstention.missed_useful_abstention_rate_per_empty_recall),
+        percent(stats.abstention.missed_useful_abstention_rate_per_evaluated_empty_recall),
+        stats.abstention.unjudged_empty_recall_runs
     );
     println!(
         "  useful recall: {} / {} evaluated runs ({}); {} of eligible turns",

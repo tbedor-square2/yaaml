@@ -76,6 +76,28 @@ fn stats_json_reports_recall_rates_volume_and_usefulness() {
         })
         .to_string(),
     );
+    enqueue_task(
+        &db,
+        "recall_eval",
+        json!({
+            "session_id": "session-1",
+            "turn_ordinal": 1,
+            "recall_text": "",
+            "memory_ids": []
+        })
+        .to_string(),
+    );
+    enqueue_task(
+        &db,
+        "recall_eval",
+        json!({
+            "session_id": "session-1",
+            "turn_ordinal": 2,
+            "recall_text": "",
+            "memory_ids": []
+        })
+        .to_string(),
+    );
 
     let run_id = db
         .insert_eval_run(
@@ -93,6 +115,48 @@ fn stats_json_reports_recall_rates_volume_and_usefulness() {
     db.insert_eval_result(run_id, turn_row_id, Some(12), "2", "noisy", "unix:101")
         .unwrap();
     db.complete_eval_run(run_id, "unix:102").unwrap();
+    let clean_run_id = db
+        .insert_eval_run(
+            "recall_1_to_5",
+            "unix:110",
+            &json!({"session_id": "session-1", "turn_ordinal": 1}).to_string(),
+        )
+        .unwrap();
+    let clean_turn_row_id = db
+        .turn_row_id_for_session_ordinal("session-1", 1)
+        .unwrap()
+        .unwrap();
+    db.insert_eval_result(
+        clean_run_id,
+        clean_turn_row_id,
+        Some(21),
+        "2",
+        "no useful recall was missed",
+        "unix:111",
+    )
+    .unwrap();
+    db.complete_eval_run(clean_run_id, "unix:112").unwrap();
+    let missed_run_id = db
+        .insert_eval_run(
+            "recall_1_to_5",
+            "unix:120",
+            &json!({"session_id": "session-1", "turn_ordinal": 2}).to_string(),
+        )
+        .unwrap();
+    let missed_turn_row_id = db
+        .turn_row_id_for_session_ordinal("session-1", 2)
+        .unwrap()
+        .unwrap();
+    db.insert_eval_result(
+        missed_run_id,
+        missed_turn_row_id,
+        Some(31),
+        "4",
+        "a useful memory existed but recall abstained",
+        "unix:121",
+    )
+    .unwrap();
+    db.complete_eval_run(missed_run_id, "unix:122").unwrap();
 
     let output = Command::new(env!("CARGO_BIN_EXE_yaaml"))
         .arg("stats")
@@ -109,13 +173,22 @@ fn stats_json_reports_recall_rates_volume_and_usefulness() {
     );
     let stats: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
     assert_eq!(stats["eligible_turns"], 3);
-    assert_eq!(stats["recall_runs"], 2);
+    assert_eq!(stats["recall_runs"], 3);
     assert_eq!(stats["non_empty_recall_runs"], 1);
     assert_eq!(stats["volume"]["average_memories_per_non_empty_run"], 2.0);
-    assert_eq!(stats["useful"]["evaluated_recall_runs"], 1);
-    assert_eq!(stats["useful"]["useful_recall_runs"], 1);
-    assert_eq!(stats["useful"]["good_memory_results"], 1);
-    assert_eq!(stats["useful"]["low_memory_results"], 1);
+    assert_eq!(stats["abstention"]["empty_recall_runs"], 2);
+    assert_eq!(stats["abstention"]["evaluated_empty_recall_runs"], 2);
+    assert_eq!(stats["abstention"]["clean_abstention_runs"], 1);
+    assert_eq!(stats["abstention"]["missed_useful_abstention_runs"], 1);
+    assert_eq!(stats["abstention"]["unjudged_empty_recall_runs"], 0);
+    assert_eq!(
+        stats["abstention"]["missed_useful_abstention_rate_per_evaluated_empty_recall"],
+        0.5
+    );
+    assert_eq!(stats["useful"]["evaluated_recall_runs"], 3);
+    assert_eq!(stats["useful"]["useful_recall_runs"], 2);
+    assert_eq!(stats["useful"]["good_memory_results"], 2);
+    assert_eq!(stats["useful"]["low_memory_results"], 2);
     assert_eq!(stats["llm_filter"]["llm_applied_runs"], 1);
     let removed_key = ["llm_empty", "fallback_runs"].join("_");
     assert!(!stats["llm_filter"]

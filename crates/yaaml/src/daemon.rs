@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::io::{Read, Write};
 use std::os::unix::net::{UnixListener, UnixStream};
@@ -397,7 +397,23 @@ fn run_memory_formulation_task(
         })
         .collect::<Vec<_>>();
     let project_descriptor = derive_project_descriptor(Path::new(&session.project_id), None);
-    let prompt = formulation_prompt(config, &project_descriptor, &turns);
+    let embedding_client = OpenAiEmbeddingClient::new(
+        OpenAiEmbeddingConfig::from_config(config),
+        ReqwestTransport::default(),
+    );
+    let refinement_candidates = formulation_refinement_candidates(
+        db,
+        config,
+        &embedding_client,
+        &project_descriptor,
+        &turns,
+    )
+    .context("failed to load formulation refinement candidates")?;
+    let refinement_candidate_by_id = refinement_candidates
+        .iter()
+        .filter_map(|memory| memory.id.map(|id| (id, memory.clone())))
+        .collect::<HashMap<_, _>>();
+    let prompt = formulation_prompt(config, &project_descriptor, &turns, &refinement_candidates);
     let summary_client = AnthropicMessageClient::new(
         AnthropicMessageConfig::summary_from_config(config),
         ReqwestTransport::default(),
@@ -409,25 +425,38 @@ fn run_memory_formulation_task(
     };
     let drafts = parse_formulation_response(&value, &project_descriptor, config.max_memory_length)
         .context("failed to parse memory formulation")?;
-    let embedding_client = OpenAiEmbeddingClient::new(
-        OpenAiEmbeddingConfig::from_config(config),
-        ReqwestTransport::default(),
-    );
     let now = unix_timestamp();
     for draft in drafts {
-        let memory = draft.into_record(
+        let refine_memory_id = draft.refine_memory_id;
+        let mut memory = draft.into_record(
             source_turn_refs.clone(),
             now.clone(),
             Some(session.id.clone()),
             Some(session.project_id.clone()),
         );
+        if memory.scope == MemoryScope::Global {
+            memory.project_id = None;
+        }
+        let refinement_target = refine_memory_id
+            .and_then(|memory_id| refinement_candidate_by_id.get(&memory_id).cloned())
+            .filter(|existing| valid_refinement_target(existing, &memory, &session.project_id));
+        if let Some(existing) = &refinement_target {
+            memory.source_turn_refs =
+                merge_existing_and_new_source_refs(existing, memory.source_turn_refs.clone());
+            memory.lineage_refs = refinement_lineage(existing);
+        }
         let text = embedding_text(&memory);
         let vector = embedding_client
             .embed(&text)
             .context("failed to embed memory")?;
-        let memory_id = db
-            .insert_memory(&memory)
-            .context("failed to insert memory")?;
+        let memory_id = if let Some(existing) = &refinement_target {
+            let existing_id = existing.id.context("refinement candidate missing id")?;
+            db.consolidate_memories(&[existing_id], &memory, &now)
+                .context("failed to insert refined memory")?
+        } else {
+            db.insert_memory(&memory)
+                .context("failed to insert memory")?
+        };
         db.upsert_embedding(&EmbeddingRecord {
             memory_id,
             embedding_model: config.embedding_model.clone(),
@@ -1041,12 +1070,60 @@ fn merged_source_turn_refs(memories: &[MemoryRecord]) -> Vec<SourceTurnRef> {
     refs
 }
 
+fn merge_existing_and_new_source_refs(
+    existing: &MemoryRecord,
+    new_refs: Vec<SourceTurnRef>,
+) -> Vec<SourceTurnRef> {
+    let mut seen = HashSet::new();
+    let mut refs = Vec::new();
+    for source_ref in existing.source_turn_refs.iter().chain(new_refs.iter()) {
+        let key = (source_ref.session_id.clone(), source_ref.ordinal);
+        if seen.insert(key) {
+            refs.push(source_ref.clone());
+        }
+    }
+    refs
+}
+
+fn refinement_lineage(existing: &MemoryRecord) -> Vec<i64> {
+    let mut refs = Vec::new();
+    if let Some(id) = existing.id {
+        refs.push(id);
+    }
+    for lineage_ref in &existing.lineage_refs {
+        if !refs.contains(lineage_ref) {
+            refs.push(*lineage_ref);
+        }
+    }
+    refs
+}
+
+fn valid_refinement_target(
+    existing: &MemoryRecord,
+    replacement: &MemoryRecord,
+    current_project_id: &str,
+) -> bool {
+    if !existing.is_active || existing.scope != replacement.scope {
+        return false;
+    }
+    match replacement.scope {
+        MemoryScope::Global => existing.project_id.is_none(),
+        MemoryScope::Project => {
+            existing.project_id.as_deref() == Some(current_project_id)
+                && replacement.project_id.as_deref() == Some(current_project_id)
+        }
+    }
+}
+
 fn formulation_system_prompt() -> &'static str {
     concat!(
         "Create concise durable memories from coding-agent transcript turns. ",
-        "Return only JSON shaped as {\"memories\":[{\"title\":\"...\",\"body\":\"...\",\"scope\":\"project\"|\"global\",\"kind\":\"preference\"|\"lesson\"|\"workflow\"|\"project_fact\"|\"task_state\",\"task_keys\":[\"type:value\"],\"project_descriptor\":\"...\"}]}. ",
+        "Return only JSON shaped as {\"memories\":[{\"title\":\"...\",\"body\":\"...\",\"scope\":\"project\"|\"global\",\"kind\":\"preference\"|\"lesson\"|\"workflow\"|\"project_fact\"|\"task_state\",\"task_keys\":[\"type:value\"],\"project_descriptor\":\"...\",\"refine_memory_id\":123|null}]}. ",
         "Return {\"memories\":[]} when the turns contain only ordinary progress updates, one-off command output, transient narration, or no durable lesson. ",
         "Prefer zero or one small, granular memory per batch; create multiple memories only when the turns contain distinct durable lessons or preferences. ",
+        "If new turns correct, extend, or make more specific one of the provided existing candidate memories, return a full replacement memory and set refine_memory_id to that candidate id. ",
+        "If the insight is distinct from the candidates, omit refine_memory_id or set it to null. ",
+        "Do not refine a candidate unless the replacement preserves still-true durable details from the existing memory. ",
         "Focus memories on insights gained while solving the problem and on redirection provided by the user. ",
         "Always capture repeated user corrections, preferences, and process guidance as their own concise memories, including coding style preferences such as functional vs imperative style. ",
         "Use project scope when the preference is tied to the current project or language; use global scope only for durable cross-project user preferences or agent workflow patterns. ",
@@ -1082,8 +1159,29 @@ fn formulation_prompt(
     config: &Config,
     project_descriptor: &str,
     turns: &[yaaml_core::TurnRecord],
+    refinement_candidates: &[MemoryRecord],
 ) -> String {
-    let mut prompt = format!("Project descriptor: {project_descriptor}\n\nTurns:\n");
+    let mut prompt = format!("Project descriptor: {project_descriptor}\n\n");
+    if refinement_candidates.is_empty() {
+        prompt.push_str("Existing candidate memories: none\n\n");
+    } else {
+        prompt.push_str(
+            "Existing candidate memories that may be refined. Only use these ids for refine_memory_id:\n",
+        );
+        for memory in refinement_candidates {
+            prompt.push_str(&format!(
+                "\nMemory {}\nTitle: {}\nScope: {}\nKind: {}\nProject: {}\nBody:\n{}\n",
+                memory.id.unwrap_or_default(),
+                truncate_chars(&memory.title, 240),
+                memory.scope.as_str(),
+                memory.kind.as_str(),
+                memory.project_descriptor.as_deref().unwrap_or("unknown"),
+                truncate_chars(&memory.body, 1_200)
+            ));
+        }
+        prompt.push('\n');
+    }
+    prompt.push_str("Turns:\n");
     let max_prompt_chars = config.max_formulation_tokens.saturating_mul(3).min(80_000);
     for turn in turns {
         if prompt.chars().count() >= max_prompt_chars {
@@ -1099,6 +1197,59 @@ fn formulation_prompt(
         prompt.push_str(&format!("\nTurn {}:\n{}\n", turn.ordinal, text));
     }
     prompt
+}
+
+fn formulation_similarity_query(
+    config: &Config,
+    project_descriptor: &str,
+    turns: &[yaaml_core::TurnRecord],
+) -> String {
+    let mut query = format!("Project descriptor: {project_descriptor}\n\nTurns:\n");
+    let max_chars = 12_000;
+    for turn in turns {
+        if query.chars().count() >= max_chars {
+            break;
+        }
+        let remaining = max_chars.saturating_sub(query.chars().count());
+        let text = formulation_turn_text(
+            turn.display_text.as_deref().unwrap_or(""),
+            remaining,
+            config.tool_call_truncation_chars,
+        );
+        query.push_str(&format!("\nTurn {}:\n{}\n", turn.ordinal, text));
+    }
+    query
+}
+
+fn formulation_refinement_candidates(
+    db: &Database,
+    config: &Config,
+    embedding_client: &OpenAiEmbeddingClient<ReqwestTransport>,
+    project_descriptor: &str,
+    turns: &[yaaml_core::TurnRecord],
+) -> anyhow::Result<Vec<MemoryRecord>> {
+    let active_memories = db
+        .list_memories()
+        .context("failed to list active memories for formulation refinement")?
+        .into_iter()
+        .filter(|memory| memory.is_active)
+        .collect::<Vec<_>>();
+    if active_memories.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    let query = formulation_similarity_query(config, project_descriptor, turns);
+    let query_embedding = match embedding_client.embed(&query) {
+        Ok(embedding) => embedding,
+        Err(_) => return Ok(Vec::new()),
+    };
+    let index = SqliteExactVectorIndex::new(db, config.embedding_model.clone(), unix_timestamp());
+    let hits = index
+        .search(&query_embedding, 5, 0.70)
+        .context("failed to search candidate memories for formulation refinement")?;
+    let memory_ids = hits.iter().map(|hit| hit.memory_id).collect::<Vec<_>>();
+    db.list_active_memories_by_ids(&memory_ids)
+        .context("failed to load formulation refinement candidates")
 }
 
 fn consolidation_prompt(memories: &[MemoryRecord]) -> String {
@@ -1742,16 +1893,45 @@ mod tests {
             context: None,
         }];
 
-        let prompt = formulation_prompt(&config, "yaaml", &turns);
+        let prompt = formulation_prompt(&config, "yaaml", &turns, &[]);
 
         assert!(prompt.chars().count() <= 360);
         assert!(prompt.contains("[truncated]"));
     }
 
     #[test]
+    fn formulation_prompt_includes_refinement_candidates() {
+        let config = Config::default();
+        let candidates = vec![MemoryRecord {
+            id: Some(42),
+            title: "Java style preference".to_string(),
+            body: "Prefer stream-style transformations.".to_string(),
+            scope: MemoryScope::Project,
+            kind: yaaml_core::MemoryKind::Preference,
+            task_keys: Vec::new(),
+            source_turn_refs: Vec::new(),
+            created_at: "unix:1".to_string(),
+            updated_at: "unix:1".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some("/tmp/java".to_string()),
+            project_descriptor: Some("java, riskarbiter".to_string()),
+            lineage_refs: Vec::new(),
+        }];
+
+        let prompt = formulation_prompt(&config, "java", &[], &candidates);
+
+        assert!(prompt.contains("Only use these ids for refine_memory_id"));
+        assert!(prompt.contains("Memory 42"));
+        assert!(prompt.contains("Java style preference"));
+    }
+
+    #[test]
     fn formulation_system_prompt_mentions_user_preferences() {
         let prompt = formulation_system_prompt();
 
+        assert!(prompt.contains("refine_memory_id"));
+        assert!(prompt.contains("full replacement memory"));
         assert!(prompt.contains("insights gained while solving the problem"));
         assert!(prompt.contains("redirection provided by the user"));
         assert!(prompt.contains("repeated user corrections"));

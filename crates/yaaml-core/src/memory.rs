@@ -24,6 +24,7 @@ pub struct MemoryDraft {
     pub kind: MemoryKind,
     pub task_keys: Vec<String>,
     pub project_descriptor: String,
+    pub refine_memory_id: Option<i64>,
 }
 
 impl MemoryDraft {
@@ -69,6 +70,8 @@ struct FormulatedMemory {
     kind: Option<String>,
     task_keys: Option<Vec<String>>,
     project_descriptor: Option<String>,
+    refine_memory_id: Option<i64>,
+    existing_memory_id: Option<i64>,
 }
 
 pub fn parse_formulation_response(
@@ -118,6 +121,7 @@ pub fn parse_formulation_response(
                 kind,
                 task_keys,
                 project_descriptor,
+                refine_memory_id: memory.refine_memory_id.or(memory.existing_memory_id),
             })
         })
         .collect()
@@ -304,6 +308,33 @@ version = "0.1.0"
         assert_eq!(memories.len(), 2);
         assert_eq!(memories[0].project_descriptor, "yaaml");
         assert_eq!(memories[1].scope, MemoryScope::Global);
+    }
+
+    #[test]
+    fn parses_optional_refinement_target() {
+        let memories = parse_formulation_response(
+            &json!({
+                "memories": [
+                    {
+                        "title":"Updated preference",
+                        "body":"Prefer functional style in Java transformations.",
+                        "refine_memory_id": 42,
+                        "project_descriptor":"java"
+                    },
+                    {
+                        "title":"Legacy alias",
+                        "body":"Keep prompts compact.",
+                        "existing_memory_id": 43
+                    }
+                ]
+            }),
+            "default",
+            100,
+        )
+        .unwrap();
+
+        assert_eq!(memories[0].refine_memory_id, Some(42));
+        assert_eq!(memories[1].refine_memory_id, Some(43));
     }
 
     #[test]

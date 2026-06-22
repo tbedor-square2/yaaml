@@ -94,7 +94,7 @@ impl Default for Config {
             turns_between_memory: 10,
             session_idle_memory_seconds: 600,
             consolidation_dark_period_seconds: 300,
-            recall_result_limit: 3,
+            recall_result_limit: 2,
             recall_candidate_pool: 16,
             recall_live_turn_window: 3,
             recall_query_max_chars: 12_000,
@@ -207,7 +207,7 @@ mod tests {
 
         assert_eq!(config.turns_between_memory, 10);
         assert_eq!(config.session_idle_memory_seconds, 600);
-        assert_eq!(config.recall_result_limit, 3);
+        assert_eq!(config.recall_result_limit, 2);
         assert_eq!(config.recall_candidate_pool, 16);
         assert_eq!(config.recall_live_turn_window, 3);
         assert_eq!(config.recall_query_max_chars, 12_000);

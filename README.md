@@ -137,7 +137,7 @@ Common defaults include:
 
 ```toml
 turns_between_memory = 10
-recall_result_limit = 3
+recall_result_limit = 2
 recall_live_turn_window = 3
 recall_similarity_threshold = 0.3
 

@@ -217,6 +217,99 @@ recall_llm_filter_enabled = false
 }
 
 #[test]
+fn recall_query_defaults_to_two_selected_memories() {
+    let tmp = TempDir::new().unwrap();
+    let home = tmp.path().join("home");
+    let project = tmp.path().join("project");
+    fs::create_dir_all(home.join(".yaaml")).unwrap();
+    fs::create_dir_all(&project).unwrap();
+    let db_path = home.join(".yaaml").join("yaaml.db");
+    let server = fake_embedding_server();
+    fs::write(
+        home.join(".yaaml").join("config.toml"),
+        format!(
+            r#"
+db_path = "{}"
+embedding_base_url = "{}"
+recall_llm_filter_enabled = false
+"#,
+            db_path.display(),
+            server.base_url
+        ),
+    )
+    .unwrap();
+
+    let project_id = project.canonicalize().unwrap().display().to_string();
+    let mut db = Database::open(&db_path).unwrap();
+    db.migrate().unwrap();
+    let memory_specs = [
+        (
+            "Default limit lesson",
+            "Recall default limits should keep the strongest durable lesson without returning too much context.",
+            MemoryKind::Lesson,
+        ),
+        (
+            "Default limit workflow",
+            "Recall default limits should include a relevant workflow but avoid bloating the response.",
+            MemoryKind::Workflow,
+        ),
+        (
+            "Default limit preference",
+            "Recall default limits should not surface every relevant memory when the top two are enough.",
+            MemoryKind::Preference,
+        ),
+    ];
+    let memory_ids = memory_specs
+        .into_iter()
+        .map(|(title, body, kind)| {
+            insert_memory_with_embedding(
+                &mut db,
+                MemoryRecord {
+                    id: None,
+                    title: title.to_string(),
+                    body: body.to_string(),
+                    scope: MemoryScope::Project,
+                    kind,
+                    task_keys: Vec::new(),
+                    source_turn_refs: Vec::new(),
+                    created_at: "2026-06-08T00:00:00Z".to_string(),
+                    updated_at: "2026-06-08T00:00:00Z".to_string(),
+                    is_active: true,
+                    session_id: None,
+                    project_id: Some(project_id.clone()),
+                    project_descriptor: Some("yaaml, Rust CLI memory daemon".to_string()),
+                    lineage_refs: Vec::new(),
+                },
+            )
+        })
+        .collect::<Vec<_>>();
+
+    let output = Command::new(env!("CARGO_BIN_EXE_yaaml"))
+        .arg("recall")
+        .arg("--query")
+        .arg("default recall result limit")
+        .arg("--json")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .env("OPENAI_API_KEY", "test-key")
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    server.join();
+    let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let selected = value["selected_memory_ids"].as_array().unwrap();
+    assert_eq!(selected.len(), 2);
+    assert!(selected
+        .iter()
+        .all(|id| memory_ids.contains(&id.as_i64().unwrap())));
+}
+
+#[test]
 fn recall_query_debug_shows_dropped_task_state_without_task_key_match() {
     let tmp = TempDir::new().unwrap();
     let home = tmp.path().join("home");

@@ -1,0 +1,48 @@
+{
+  "abstention_metrics": [
+    "empty_recall_rate",
+    "empty_recall_runs",
+    "clean_abstention_runs",
+    "missed_useful_empty_runs",
+    "missed_useful_empty_rate"
+  ],
+  "anchors": 200,
+  "cohorts": 10,
+  "date": "2026-06-22",
+  "db": "/Users/tbedor/.yaaml/yaaml.db",
+  "details_path": "experiments/recall/2026-06-22-health-10x10/details.jsonl",
+  "health_diagnoses": [
+    "consistently_low_value",
+    "context_sensitive",
+    "likely_low_value",
+    "mixed_performance",
+    "noisy_metadata",
+    "proven_useful",
+    "stale_episodic",
+    "vague_under_contextualized",
+    "wrong_context"
+  ],
+  "input_dir": "target/strict-kind-production",
+  "label": "strict-kind-production",
+  "manifest_path": "experiments/recall/2026-06-22-health-10x10/manifest.json",
+  "primary_metrics": [
+    "average_known_score",
+    "useful_known_selected",
+    "low_known_selected",
+    "useful_capture_runs"
+  ],
+  "report_path": "experiments/recall/2026-06-22-health-10x10/REPORT.md",
+  "strategies": [
+    "baseline_strict_kind",
+    "eval_health_rerank",
+    "wrong_context_gate",
+    "wrong_context_rerank",
+    "stale_low_filter",
+    "noisy_metadata_rekey",
+    "context_sensitive_gate",
+    "health_action_filter",
+    "health_action_rerank",
+    "health_precision_abstain"
+  ],
+  "summary_path": "experiments/recall/2026-06-22-health-10x10/summary.json"
+}

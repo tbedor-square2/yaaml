@@ -32,3 +32,7 @@ exercise from a `scripts/backtest-recall-strategy.sh` output directory.
 Use `scripts/recall-10x10-experiment.py` for the expanded exercise. It compares
 ten strategy variants over ten deterministic cohorts, then reports aggregate
 results plus cohort stability.
+
+Use `scripts/recall-health-10x10-experiment.py` for the health-aware exercise.
+It compares failure-mode-specific recall policies using the same frozen ranking
+and oracle inputs plus memory health diagnostics from the local YAAML database.

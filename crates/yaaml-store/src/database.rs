@@ -2,7 +2,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use rusqlite::{params, Connection, OptionalExtension};
+use rusqlite::{params, params_from_iter, Connection, OptionalExtension};
 use serde::Serialize;
 use thiserror::Error;
 use yaaml_core::status::{BacklogStatus, Status, TaskFailure, WorkerStatus};
@@ -55,6 +55,14 @@ pub struct EvalResultRecord {
     pub judge_score: Option<String>,
     pub rationale: Option<String>,
     pub created_at: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct MemoryEvalHistoryRecord {
+    pub id: i64,
+    pub memory_id: i64,
+    pub judge_score: String,
+    pub rationale: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -1385,6 +1393,39 @@ impl Database {
             results.push(row?);
         }
         Ok(results)
+    }
+
+    pub fn eval_history_for_memories(
+        &self,
+        memory_ids: &[i64],
+    ) -> Result<Vec<MemoryEvalHistoryRecord>, DatabaseError> {
+        if memory_ids.is_empty() {
+            return Ok(Vec::new());
+        }
+        let placeholders = std::iter::repeat_n("?", memory_ids.len())
+            .collect::<Vec<_>>()
+            .join(",");
+        let sql = format!(
+            "SELECT id, memory_id, judge_score, rationale
+             FROM eval_results
+             WHERE memory_id IN ({placeholders})
+               AND judge_score IN ('1', '2', '3', '4', '5')
+             ORDER BY memory_id, id"
+        );
+        let mut stmt = self.conn.prepare(&sql)?;
+        let rows = stmt.query_map(params_from_iter(memory_ids.iter()), |row| {
+            Ok(MemoryEvalHistoryRecord {
+                id: row.get(0)?,
+                memory_id: row.get(1)?,
+                judge_score: row.get(2)?,
+                rationale: row.get(3)?,
+            })
+        })?;
+        let mut history = Vec::new();
+        for row in rows {
+            history.push(row?);
+        }
+        Ok(history)
     }
 
     fn count(&self, sql: &str) -> Result<u64, DatabaseError> {

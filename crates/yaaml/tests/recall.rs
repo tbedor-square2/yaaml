@@ -314,6 +314,154 @@ recall_llm_filter_enabled = false
 }
 
 #[test]
+fn recall_query_reranks_with_memory_health() {
+    let tmp = TempDir::new().unwrap();
+    let home = tmp.path().join("home");
+    let project = tmp.path().join("project");
+    fs::create_dir_all(home.join(".yaaml")).unwrap();
+    fs::create_dir_all(&project).unwrap();
+    let db_path = home.join(".yaaml").join("yaaml.db");
+    let server = fake_embedding_server();
+    fs::write(
+        home.join(".yaaml").join("config.toml"),
+        format!(
+            r#"
+db_path = "{}"
+embedding_base_url = "{}"
+recall_llm_filter_enabled = false
+recall_result_limit = 1
+"#,
+            db_path.display(),
+            server.base_url
+        ),
+    )
+    .unwrap();
+
+    let project_id = project.canonicalize().unwrap().display().to_string();
+    let mut db = Database::open(&db_path).unwrap();
+    db.migrate().unwrap();
+    db.upsert_session(&SessionRecord {
+        id: "health-session".to_string(),
+        agent_type: AgentType::Codex,
+        project_id: project_id.clone(),
+        transcript_file_path: "/tmp/health-session.jsonl".to_string(),
+        started_at: Some("unix:1".to_string()),
+        last_seen_at: Some("unix:2".to_string()),
+    })
+    .unwrap();
+    db.insert_turn(&TurnRecord {
+        session_id: "health-session".to_string(),
+        turn_id: Some("turn-0".to_string()),
+        ordinal: 0,
+        byte_start: 0,
+        byte_end: 1,
+        observed_at: Some("unix:2".to_string()),
+        status: TurnStatus::Completed,
+        display_text: Some("recall health ranking".to_string()),
+        cwd: None,
+        context: None,
+    })
+    .unwrap();
+    let turn_id = db
+        .turn_row_id_for_session_ordinal("health-session", 0)
+        .unwrap()
+        .unwrap();
+    let low_memory_id = insert_memory_with_embedding(
+        &mut db,
+        MemoryRecord {
+            id: None,
+            title: "Repeatedly low memory".to_string(),
+            body: "This memory has historically been a poor fit for recall, despite looking semantically close to the current query. It includes enough durable-looking text that the health classifier treats the bad outcomes as a low-value memory problem rather than simply a short or vague memory. The reranker should suppress it after repeated low eval scores.".to_string(),
+            scope: MemoryScope::Project,
+            kind: MemoryKind::Lesson,
+            task_keys: Vec::new(),
+            source_turn_refs: Vec::new(),
+            created_at: "unix:1".to_string(),
+            updated_at: "unix:1".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some(project_id.clone()),
+            project_descriptor: Some("yaaml".to_string()),
+            lineage_refs: Vec::new(),
+        },
+    );
+    let useful_memory_id = insert_memory_with_embedding(
+        &mut db,
+        MemoryRecord {
+            id: None,
+            title: "Proven useful memory".to_string(),
+            body: "Use memory health evidence to rerank recall candidates when prior evals repeatedly show that a memory was helpful. This durable guidance should surface ahead of similarly ranked memories with poor eval history.".to_string(),
+            scope: MemoryScope::Project,
+            kind: MemoryKind::Workflow,
+            task_keys: Vec::new(),
+            source_turn_refs: Vec::new(),
+            created_at: "unix:1".to_string(),
+            updated_at: "unix:1".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some(project_id),
+            project_descriptor: Some("yaaml".to_string()),
+            lineage_refs: Vec::new(),
+        },
+    );
+    let run_id = db.insert_eval_run("recall", "unix:3", "{}").unwrap();
+    for (index, score) in ["1", "2", "1", "2", "1"].iter().enumerate() {
+        db.insert_eval_result(
+            run_id,
+            turn_id,
+            Some(low_memory_id),
+            score,
+            "The memory was not useful in this recall context.",
+            &format!("unix:{}", 4 + index),
+        )
+        .unwrap();
+    }
+    for (index, score) in ["5", "4", "5", "4", "5"].iter().enumerate() {
+        db.insert_eval_result(
+            run_id,
+            turn_id,
+            Some(useful_memory_id),
+            score,
+            "The memory was useful and actionable.",
+            &format!("unix:{}", 10 + index),
+        )
+        .unwrap();
+    }
+    db.complete_eval_run(run_id, "unix:20").unwrap();
+
+    let output = Command::new(env!("CARGO_BIN_EXE_yaaml"))
+        .arg("recall")
+        .arg("--query")
+        .arg("recall health ranking")
+        .arg("--json")
+        .arg("--debug-ranking")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .env("OPENAI_API_KEY", "test-key")
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    server.join();
+    let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(value["selected_memory_ids"][0], useful_memory_id);
+    let ranking = value["ranking"].as_array().unwrap();
+    assert_eq!(ranking[0]["memory_id"], useful_memory_id);
+    assert!(ranking
+        .iter()
+        .find(|candidate| candidate["memory_id"] == low_memory_id)
+        .unwrap()["rank"]["penalties"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|penalty| penalty.as_str().unwrap().contains("health_action_rerank")));
+}
+
+#[test]
 fn bare_recall_invalidates_file_with_inactive_memory_ids() {
     let tmp = TempDir::new().unwrap();
     let home = tmp.path().join("home");

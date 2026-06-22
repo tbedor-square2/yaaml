@@ -30,6 +30,7 @@ use yaaml_transcript::codex::parse_codex_file_from_offset_with_session;
 use yaaml_transcript::discovery::discover_codex_backlog;
 
 use crate::llm_judge::JudgeClient;
+use crate::memory_health::{apply_health_action_rerank, build_memory_health_summaries};
 use crate::recall_filter::{select_recall_candidates_with_llm_filter, RecallFilterTelemetry};
 use crate::turn_hydration::{context_from_turns, hydrate_turns};
 
@@ -1716,6 +1717,15 @@ pub fn refresh_recall_with_embedding(
             project_score_bonus: config.recall_project_score_bonus,
         },
     );
+    let candidate_ids = candidates
+        .iter()
+        .map(|candidate| candidate.memory_id)
+        .collect::<Vec<_>>();
+    let eval_history = db
+        .eval_history_for_memories(&candidate_ids)
+        .context("failed to load recall candidate eval history")?;
+    let memory_health = build_memory_health_summaries(&memories, &eval_history);
+    let candidates = apply_health_action_rerank(candidates, &memories, &memory_health);
     let filter_result = select_recall_candidates_with_llm_filter(
         config,
         candidates,

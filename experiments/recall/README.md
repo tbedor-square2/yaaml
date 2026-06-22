@@ -36,3 +36,11 @@ results plus cohort stability.
 Use `scripts/recall-health-10x10-experiment.py` for the health-aware exercise.
 It compares failure-mode-specific recall policies using the same frozen ranking
 and oracle inputs plus memory health diagnostics from the local YAAML database.
+
+Use `scripts/recall-candidate-5x5-experiment.py` to compare recall-improvement
+candidate families. It runs five strategies across five cohorts for candidate
+pool sizing, dynamic recall count, query-signal proxies, hybrid-generation
+proxies, memory lifecycle suppression, and abstention gates. Query-signal and
+hybrid-generation families replay over already retrieved candidates; they do
+not measure candidates that a fresh query embedding or lexical retrieval pass
+would newly retrieve.

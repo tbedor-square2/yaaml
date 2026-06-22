@@ -1,0 +1,60 @@
+{
+  "anchors": 200,
+  "cohorts": 5,
+  "date": "2026-06-22",
+  "db": "/Users/tbedor/.yaaml/yaaml.db",
+  "details_path": "experiments/recall/2026-06-22-candidate-5x5/details.jsonl",
+  "families": {
+    "abstention_gate": [
+      "production_health_action",
+      "score_floor_0_95",
+      "score_floor_1_05",
+      "score_floor_1_15",
+      "evidence_or_1_05"
+    ],
+    "candidate_pool": [
+      "pool_3",
+      "pool_5",
+      "pool_8",
+      "pool_12",
+      "pool_16"
+    ],
+    "dynamic_recall_count": [
+      "production_health_action",
+      "top_1",
+      "top_2",
+      "within_0_15_of_top",
+      "stop_on_0_20_gap"
+    ],
+    "hybrid_generation_proxy": [
+      "production_health_action",
+      "task_signal_boost",
+      "strong_task_first",
+      "project_bonus_boost",
+      "durable_kind_boost"
+    ],
+    "memory_lifecycle": [
+      "production_health_action",
+      "suppress_stale_and_low",
+      "suppress_likely_low",
+      "suppress_vague",
+      "suppress_all_bad_modes"
+    ],
+    "query_signal_proxy": [
+      "production_health_action",
+      "vector_only_proxy",
+      "context_heavy_proxy",
+      "task_key_heavy_proxy",
+      "project_context_proxy"
+    ]
+  },
+  "input_dir": "target/strict-kind-production",
+  "label": "strict-kind-production",
+  "limitations": [
+    "candidate_pool limited to saved top-16 candidates",
+    "query_signal_proxy and hybrid_generation_proxy do not retrieve new candidates"
+  ],
+  "manifest_path": "experiments/recall/2026-06-22-candidate-5x5/manifest.json",
+  "report_path": "experiments/recall/2026-06-22-candidate-5x5/REPORT.md",
+  "summary_path": "experiments/recall/2026-06-22-candidate-5x5/summary.json"
+}

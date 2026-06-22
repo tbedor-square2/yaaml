@@ -1,0 +1,25 @@
+{
+  "anchors": 200,
+  "date": "2026-06-22",
+  "db": "/Users/tbedor/.yaaml/yaaml.db",
+  "details_path": "experiments/recall/2026-06-22-5x5/details.jsonl",
+  "input_dir": "target/strict-kind-production",
+  "label": "strict-kind-production",
+  "manifest_path": "experiments/recall/2026-06-22-5x5/manifest.json",
+  "primary_metrics": [
+    "average_known_score",
+    "useful_known_selected",
+    "low_known_selected",
+    "useful_capture_runs",
+    "empty_recall_runs"
+  ],
+  "report_path": "experiments/recall/2026-06-22-5x5/REPORT.md",
+  "strategies": [
+    "baseline_strict_kind",
+    "context_fit_gate",
+    "eval_health_suppress",
+    "eval_health_rerank",
+    "context_score_rerank"
+  ],
+  "summary_path": "experiments/recall/2026-06-22-5x5/summary.json"
+}

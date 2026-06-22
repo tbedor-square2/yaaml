@@ -243,6 +243,8 @@ def case_metrics(
         "selected_any_known_low": any(value <= 2 for value in known_scores),
         "oracle_has_useful": any(value >= 4 for value in scores.values()),
         "empty_recall": len(selected_ids) == 0,
+        "empty_with_oracle_useful": len(selected_ids) == 0 and any(value >= 4 for value in scores.values()),
+        "empty_without_oracle_useful": len(selected_ids) == 0 and not any(value >= 4 for value in scores.values()),
     }
 
 
@@ -250,9 +252,14 @@ def summarize(strategy: str, cases: list[Case], baseline: Case | None = None) ->
     known_averages = [
         case["average_known_score"] for case in cases if case["average_known_score"] is not None
     ]
+    anchors = len(cases)
+    oracle_useful_runs = sum(1 for case in cases if case["oracle_has_useful"])
+    empty_recall_runs = sum(1 for case in cases if case["empty_recall"])
+    missed_useful_empty_runs = sum(1 for case in cases if case["empty_with_oracle_useful"])
+    clean_abstention_runs = sum(1 for case in cases if case["empty_without_oracle_useful"])
     summary = {
         "strategy": strategy,
-        "anchors": len(cases),
+        "anchors": anchors,
         "selected_memories": sum(case["selected_count"] for case in cases),
         "average_selected_per_anchor": average([float(case["selected_count"]) for case in cases]),
         "known_selected_memories": sum(case["known_selected_count"] for case in cases),
@@ -262,8 +269,15 @@ def summarize(strategy: str, cases: list[Case], baseline: Case | None = None) ->
         "low_known_selected": sum(case["low_known_selected"] for case in cases),
         "useful_capture_runs": sum(1 for case in cases if case["captured_any_known_useful"]),
         "low_selection_runs": sum(1 for case in cases if case["selected_any_known_low"]),
-        "empty_recall_runs": sum(1 for case in cases if case["empty_recall"]),
-        "oracle_useful_runs": sum(1 for case in cases if case["oracle_has_useful"]),
+        "empty_recall_runs": empty_recall_runs,
+        "empty_recall_rate": empty_recall_runs / anchors if anchors else None,
+        "missed_useful_empty_runs": missed_useful_empty_runs,
+        "missed_useful_empty_rate": (
+            missed_useful_empty_runs / oracle_useful_runs if oracle_useful_runs else None
+        ),
+        "clean_abstention_runs": clean_abstention_runs,
+        "clean_abstention_rate": clean_abstention_runs / anchors if anchors else None,
+        "oracle_useful_runs": oracle_useful_runs,
     }
     if baseline:
         summary["delta_vs_baseline"] = {
@@ -279,6 +293,11 @@ def summarize(strategy: str, cases: list[Case], baseline: Case | None = None) ->
                 "useful_capture_runs",
                 "low_selection_runs",
                 "empty_recall_runs",
+                "missed_useful_empty_runs",
+                "clean_abstention_runs",
+                "empty_recall_rate",
+                "missed_useful_empty_rate",
+                "clean_abstention_rate",
                 "average_selected_per_anchor",
             ]
         }
@@ -317,45 +336,66 @@ def write_report(
         "This run replays saved `yaaml recall --debug-ranking` outputs against saved eval oracle results.",
         "No embedding or LLM provider calls are made during replay.",
         "",
-        "Five strategies are compared against five primary metrics: average known score, useful known selected, low known selected, useful capture runs, and empty recall runs.",
+        "Scoring metrics only use memories that were actually selected and judged. Empty responses are tracked separately as abstentions, not as low-quality recall.",
         "",
-        "## Results",
+        "## Score Results",
         "",
-        "| Strategy | Avg known score | Useful selected | Low selected | Useful runs | Empty runs | Avg memories |",
+        "| Strategy | Avg known score | Useful selected | Low selected | Useful runs | Low runs | Avg memories |",
         "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
     for summary in summaries:
         lines.append(
-            "| {strategy} | {average_known_score:.2f} | {useful_known_selected} | {low_known_selected} | {useful_capture_runs} | {empty_recall_runs} | {average_selected_per_anchor:.2f} |".format(
+            "| {strategy} | {average_known_score:.2f} | {useful_known_selected} | {low_known_selected} | {useful_capture_runs} | {low_selection_runs} | {average_selected_per_anchor:.2f} |".format(
                 strategy=summary["strategy"],
                 average_known_score=summary["average_known_score"] or 0.0,
                 useful_known_selected=summary["useful_known_selected"],
                 low_known_selected=summary["low_known_selected"],
                 useful_capture_runs=summary["useful_capture_runs"],
-                empty_recall_runs=summary["empty_recall_runs"],
+                low_selection_runs=summary["low_selection_runs"],
                 average_selected_per_anchor=summary["average_selected_per_anchor"] or 0.0,
             )
         )
     lines.extend(
         [
             "",
-            "## Deltas vs Baseline",
+            "## Score Deltas vs Baseline",
             "",
-            "| Strategy | Avg score | Useful selected | Low selected | Useful runs | Low runs | Empty runs |",
+            "| Strategy | Avg score | Useful selected | Low selected | Useful runs | Low runs | Avg memories |",
             "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
         ]
     )
     for summary in summaries[1:]:
         delta = summary.get("delta_vs_baseline") or {}
         lines.append(
-            "| {strategy} | {average_known_score:+.2f} | {useful_known_selected:+} | {low_known_selected:+} | {useful_capture_runs:+} | {low_selection_runs:+} | {empty_recall_runs:+} |".format(
+            "| {strategy} | {average_known_score:+.2f} | {useful_known_selected:+} | {low_known_selected:+} | {useful_capture_runs:+} | {low_selection_runs:+} | {average_selected_per_anchor:+.2f} |".format(
                 strategy=summary["strategy"],
                 average_known_score=delta.get("average_known_score") or 0.0,
                 useful_known_selected=delta.get("useful_known_selected") or 0,
                 low_known_selected=delta.get("low_known_selected") or 0,
                 useful_capture_runs=delta.get("useful_capture_runs") or 0,
                 low_selection_runs=delta.get("low_selection_runs") or 0,
-                empty_recall_runs=delta.get("empty_recall_runs") or 0,
+                average_selected_per_anchor=delta.get("average_selected_per_anchor") or 0.0,
+            )
+        )
+    lines.extend(
+        [
+            "",
+            "## Abstention Metrics",
+            "",
+            "| Strategy | Empty rate | Empty runs | Clean abstain | Missed-useful empty | Missed-useful rate |",
+            "| --- | ---: | ---: | ---: | ---: | ---: |",
+        ]
+    )
+    for summary in summaries:
+        missed_rate = summary["missed_useful_empty_rate"]
+        lines.append(
+            "| {strategy} | {empty_recall_rate:.1%} | {empty_recall_runs} | {clean_abstention_runs} | {missed_useful_empty_runs} | {missed_useful_empty_rate} |".format(
+                strategy=summary["strategy"],
+                empty_recall_rate=summary["empty_recall_rate"] or 0.0,
+                empty_recall_runs=summary["empty_recall_runs"],
+                clean_abstention_runs=summary["clean_abstention_runs"],
+                missed_useful_empty_runs=summary["missed_useful_empty_runs"],
+                missed_useful_empty_rate="n/a" if missed_rate is None else f"{missed_rate:.1%}",
             )
         )
     lines.extend(["", "## Readout", ""])
@@ -365,9 +405,9 @@ def write_report(
             "",
             "## Recommendation",
             "",
-            "`eval_health_rerank` is the best precision signal in this run, but it is too willing to abstain. The next production experiment should keep the eval-health score adjustment and tune the abstention threshold explicitly against recall-rate metrics, rather than silently filling empty results.",
+            "`eval_health_rerank` is the best precision signal in this run. Its extra empty responses are tracked as abstentions, not score penalties; the relevant coverage regression is missed-useful abstention, where the oracle had a known useful memory and recall returned nothing.",
             "",
-            "`eval_health_suppress` is the safer production candidate: it keeps useful recall count flat while removing 19 known low-scoring selections and 10 low-selection runs. It also increases empty runs, so it should be paired with recall-rate monitoring before enabling by default.",
+            "`eval_health_suppress` is the safer production candidate: it keeps useful recall count flat while removing 19 known low-scoring selections and 10 low-selection runs. It should be paired with missed-useful-abstention monitoring before enabling by default.",
             "",
             "`context_fit_gate` and `context_score_rerank` reduced low selections by dropping too much useful context. This suggests the current context metadata is useful as a secondary feature, but too lossy as a hard gate.",
         ]
@@ -433,7 +473,7 @@ def main() -> None:
         "`context_fit_gate` and `context_score_rerank` test whether wrong-context recall is better handled by stricter context fit or by reranking.",
         "`eval_health_rerank` tests whether aggregate eval history is useful; it is intentionally not context-sensitive, so regressions indicate global memory health is too blunt.",
         "Unknown selected memories are tracked separately in JSON, so the average score only reflects candidates with saved eval labels.",
-        "Empty recall is counted as a first-class outcome because lower context cost is only useful when recall is not missing helpful context.",
+        "Empty recall is treated as abstention. Clean abstentions are good; missed-useful abstentions are the failure mode to reduce.",
     ]
 
     manifest_path = args.out_dir / "manifest.json"
@@ -451,7 +491,13 @@ def main() -> None:
             "useful_known_selected",
             "low_known_selected",
             "useful_capture_runs",
+        ],
+        "abstention_metrics": [
+            "empty_recall_rate",
             "empty_recall_runs",
+            "clean_abstention_runs",
+            "missed_useful_empty_runs",
+            "missed_useful_empty_rate",
         ],
         "manifest_path": str(manifest_path),
         "summary_path": str(summary_path),

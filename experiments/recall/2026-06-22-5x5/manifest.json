@@ -1,4 +1,11 @@
 {
+  "abstention_metrics": [
+    "empty_recall_rate",
+    "empty_recall_runs",
+    "clean_abstention_runs",
+    "missed_useful_empty_runs",
+    "missed_useful_empty_rate"
+  ],
   "anchors": 200,
   "date": "2026-06-22",
   "db": "/Users/tbedor/.yaaml/yaaml.db",
@@ -10,8 +17,7 @@
     "average_known_score",
     "useful_known_selected",
     "low_known_selected",
-    "useful_capture_runs",
-    "empty_recall_runs"
+    "useful_capture_runs"
   ],
   "report_path": "experiments/recall/2026-06-22-5x5/REPORT.md",
   "strategies": [

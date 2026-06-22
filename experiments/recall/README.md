@@ -11,7 +11,7 @@ Each experiment directory should contain:
   oracle comparison metrics.
 - `REPORT.md`: human-readable readout generated from the structured files.
 
-Primary metrics for 5x5 recall experiments:
+Primary metrics for recall experiments:
 
 - `average_known_score`
 - `useful_known_selected`
@@ -26,5 +26,9 @@ Abstention metrics are tracked separately from score metrics:
 - `missed_useful_empty_runs`
 - `missed_useful_empty_rate`
 
-Use `scripts/recall-5x5-experiment.py` to replay saved recall rankings from a
-`scripts/backtest-recall-strategy.sh` output directory.
+Use `scripts/recall-5x5-experiment.py` to replay the original five-strategy
+exercise from a `scripts/backtest-recall-strategy.sh` output directory.
+
+Use `scripts/recall-10x10-experiment.py` for the expanded exercise. It compares
+ten strategy variants over ten deterministic cohorts, then reports aggregate
+results plus cohort stability.

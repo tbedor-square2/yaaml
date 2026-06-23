@@ -1,6 +1,7 @@
-pub const EXPECTED_SCHEMA_VERSION: i64 = 1;
+pub const EXPECTED_SCHEMA_VERSION: i64 = 2;
 
-pub const MIGRATIONS: &[&str] = &[r#"
+pub const MIGRATIONS: &[&str] = &[
+    r#"
 CREATE TABLE IF NOT EXISTS schema_version (
     version INTEGER NOT NULL
 );
@@ -130,4 +131,12 @@ CREATE TABLE IF NOT EXISTS eval_results (
 );
 
 UPDATE schema_version SET version = 1;
-"#];
+"#,
+    r#"
+UPDATE turns
+SET display_text = NULL
+WHERE display_text IS NOT NULL;
+
+UPDATE schema_version SET version = 2;
+"#,
+];

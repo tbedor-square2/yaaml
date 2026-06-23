@@ -1743,6 +1743,42 @@ mod tests {
     }
 
     #[test]
+    fn migration_clears_persisted_turn_display_text() {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+        db.upsert_session(&SessionRecord {
+            id: "session-1".to_string(),
+            agent_type: yaaml_core::AgentType::Codex,
+            project_id: "/tmp/project".to_string(),
+            transcript_file_path: "/tmp/session.jsonl".to_string(),
+            started_at: None,
+            last_seen_at: None,
+        })
+        .unwrap();
+        db.insert_turn(&TurnRecord {
+            session_id: "session-1".to_string(),
+            turn_id: Some("turn-1".to_string()),
+            ordinal: 0,
+            byte_start: 0,
+            byte_end: 10,
+            observed_at: None,
+            status: yaaml_core::TurnStatus::Completed,
+            display_text: Some("cached transcript text".to_string()),
+            cwd: None,
+            context: None,
+        })
+        .unwrap();
+
+        db.migrate().unwrap();
+
+        let display_text: Option<String> = db
+            .conn
+            .query_row("SELECT display_text FROM turns", [], |row| row.get(0))
+            .unwrap();
+        assert_eq!(display_text, None);
+    }
+
+    #[test]
     fn file_database_uses_wal_and_busy_timeout() {
         let tmp = tempfile::TempDir::new().unwrap();
         let db = Database::open(tmp.path().join("yaaml.db")).unwrap();

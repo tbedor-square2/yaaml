@@ -1,6 +1,7 @@
 use std::fs;
 use std::io::{Read, Write};
 use std::net::TcpListener;
+use std::path::Path;
 use std::process::Command;
 use std::thread;
 
@@ -32,28 +33,7 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     .unwrap();
     let mut db = Database::open(&db_path).unwrap();
     db.migrate().unwrap();
-    db.upsert_session(&SessionRecord {
-        id: "session-1".to_string(),
-        agent_type: AgentType::Codex,
-        project_id: project.display().to_string(),
-        transcript_file_path: "/tmp/session.jsonl".to_string(),
-        started_at: Some("2026-06-08T00:00:00Z".to_string()),
-        last_seen_at: Some("2026-06-08T00:00:01Z".to_string()),
-    })
-    .unwrap();
-    db.insert_turn(&TurnRecord {
-        session_id: "session-1".to_string(),
-        turn_id: Some("turn-1".to_string()),
-        ordinal: 0,
-        byte_start: 0,
-        byte_end: 10,
-        observed_at: Some("2026-06-08T00:00:02Z".to_string()),
-        status: TurnStatus::Completed,
-        display_text: Some("use recall".to_string()),
-        cwd: None,
-        context: None,
-    })
-    .unwrap();
+    insert_transcript_backed_turn(&db, tmp.path(), &project, "use recall");
     db.insert_memory(&MemoryRecord {
         id: None,
         title: "Earlier memory".to_string(),
@@ -317,28 +297,7 @@ eval_judge_api_key_env = "YAAML_TEST_ANTHROPIC_KEY"
     .unwrap();
     let mut db = Database::open(&db_path).unwrap();
     db.migrate().unwrap();
-    db.upsert_session(&SessionRecord {
-        id: "session-1".to_string(),
-        agent_type: AgentType::Codex,
-        project_id: project.display().to_string(),
-        transcript_file_path: "/tmp/session.jsonl".to_string(),
-        started_at: Some("2026-06-08T00:00:00Z".to_string()),
-        last_seen_at: Some("2026-06-08T00:00:01Z".to_string()),
-    })
-    .unwrap();
-    db.insert_turn(&TurnRecord {
-        session_id: "session-1".to_string(),
-        turn_id: Some("turn-1".to_string()),
-        ordinal: 0,
-        byte_start: 0,
-        byte_end: 10,
-        observed_at: Some("2026-06-08T00:00:02Z".to_string()),
-        status: TurnStatus::Completed,
-        display_text: Some("use recall".to_string()),
-        cwd: None,
-        context: None,
-    })
-    .unwrap();
+    insert_transcript_backed_turn(&db, tmp.path(), &project, "use recall");
     db.insert_memory(&MemoryRecord {
         id: None,
         title: "Earlier memory".to_string(),
@@ -873,4 +832,88 @@ fn fake_anthropic_server() -> FakeServer {
     });
 
     FakeServer { base_url, handle }
+}
+
+fn insert_transcript_backed_turn(db: &Database, root: &Path, project: &Path, text: &str) {
+    let transcript_path = root.join("session.jsonl");
+    let project_id = project.display().to_string();
+    let lines = [
+        serde_json::json!({
+            "timestamp": "2026-06-08T00:00:00Z",
+            "type": "session_meta",
+            "payload": {
+                "id": "session-1",
+                "timestamp": "2026-06-08T00:00:00Z",
+                "cwd": project_id,
+            },
+        }),
+        serde_json::json!({
+            "timestamp": "2026-06-08T00:00:01Z",
+            "type": "event_msg",
+            "payload": {
+                "type": "task_started",
+                "turn_id": "turn-1",
+            },
+        }),
+        serde_json::json!({
+            "timestamp": "2026-06-08T00:00:01Z",
+            "type": "turn_context",
+            "payload": {
+                "turn_id": "turn-1",
+                "cwd": project_id,
+            },
+        }),
+        serde_json::json!({
+            "timestamp": "2026-06-08T00:00:02Z",
+            "type": "response_item",
+            "payload": {
+                "type": "message",
+                "role": "user",
+                "content": [
+                    {
+                        "type": "input_text",
+                        "text": text,
+                    },
+                ],
+            },
+        }),
+        serde_json::json!({
+            "timestamp": "2026-06-08T00:00:03Z",
+            "type": "event_msg",
+            "payload": {
+                "type": "task_complete",
+                "turn_id": "turn-1",
+            },
+        }),
+    ];
+    let transcript = lines
+        .into_iter()
+        .map(|line| line.to_string())
+        .collect::<Vec<_>>()
+        .join("\n")
+        + "\n";
+    fs::write(&transcript_path, &transcript).unwrap();
+
+    db.upsert_session(&SessionRecord {
+        id: "session-1".to_string(),
+        agent_type: AgentType::Codex,
+        project_id: project_id.clone(),
+        transcript_file_path: transcript_path.display().to_string(),
+        started_at: Some("2026-06-08T00:00:00Z".to_string()),
+        last_seen_at: Some("2026-06-08T00:00:03Z".to_string()),
+    })
+    .unwrap();
+    db.insert_turn(&TurnRecord {
+        session_id: "session-1".to_string(),
+        turn_id: Some("turn-1".to_string()),
+        ordinal: 0,
+        byte_start: 0,
+        byte_end: transcript.len() as u64,
+        observed_at: Some("2026-06-08T00:00:03Z".to_string()),
+        status: TurnStatus::Completed,
+        display_text: None,
+        cwd: Some(project_id),
+        context: Some(yaaml_core::infer_context_from_path(project)),
+    })
+    .unwrap();
 }

@@ -9,7 +9,7 @@ fn migration_creates_expected_tables_and_is_idempotent() {
     db.migrate().unwrap();
     db.migrate().unwrap();
 
-    assert_eq!(db.schema_version().unwrap(), 1);
+    assert_eq!(db.schema_version().unwrap(), 2);
     let tables = db
         .table_names()
         .unwrap()

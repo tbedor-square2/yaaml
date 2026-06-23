@@ -2,6 +2,7 @@ use std::fs;
 use std::process::Command;
 
 use tempfile::TempDir;
+use yaaml::turn_hydration::hydrate_turns;
 use yaaml_store::Database;
 
 #[test]
@@ -44,7 +45,7 @@ fn ingest_json_reports_processed_codex_backlog() {
 }
 
 #[test]
-fn ingest_persists_display_text_without_rehydrating_transcript() {
+fn ingest_persists_cursor_and_hydrates_display_text_from_transcript() {
     let tmp = TempDir::new().unwrap();
     let home = tmp.path().join("home");
     let project = tmp.path().join("project");
@@ -69,16 +70,15 @@ fn ingest_persists_display_text_without_rehydrating_transcript() {
         "stderr: {}",
         String::from_utf8_lossy(&output.stderr)
     );
-    fs::remove_file(transcript_path).unwrap();
     let mut db = Database::open(&db_path).unwrap();
     db.migrate().unwrap();
     let turns = db.turns_for_session("session-1", 1).unwrap();
 
-    assert_eq!(
-        turns[0].display_text.as_deref(),
-        Some("hello"),
-        "display text should be stored in SQLite, not only recoverable from transcript bytes"
-    );
+    assert_eq!(turns[0].display_text, None);
+    assert!(turns[0].byte_start < turns[0].byte_end);
+
+    let hydrated = hydrate_turns(&db, &turns).unwrap();
+    assert_eq!(hydrated[0].display_text.as_deref(), Some("hello"));
 }
 
 #[test]

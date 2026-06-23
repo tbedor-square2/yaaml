@@ -166,6 +166,7 @@ pub fn ingest_codex_file(db: &Database, transcript_path: &Path) -> anyhow::Resul
     for turn in &parsed.turns {
         let mut turn = turn.clone();
         turn.ordinal += ordinal_base;
+        turn.display_text = None;
         if db
             .insert_turn(&turn)
             .context("failed to persist Codex turn")?

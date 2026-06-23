@@ -232,11 +232,7 @@ fn codex_cursor_waits_for_incomplete_turn_before_advancing() {
         .completed_turns_for_session_range("session-1", 0, u64::MAX)
         .unwrap();
     assert_eq!(turns.len(), 1);
-    assert!(turns[0]
-        .display_text
-        .as_ref()
-        .unwrap()
-        .contains("prefer functional style"));
+    assert_eq!(turns[0].display_text, None);
     let hydrated = hydrate_turns(&db, &turns).unwrap();
     assert!(hydrated[0]
         .display_text

@@ -1,6 +1,7 @@
 use std::fs;
 use std::io::{Read, Write};
 use std::net::TcpListener;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::thread;
 
@@ -831,28 +832,36 @@ recall_llm_filter_enabled = false
     .unwrap();
 
     let project_id = project.canonicalize().unwrap().display().to_string();
+    let (transcript_path, turn_ranges) = write_codex_transcript(
+        tmp.path(),
+        "session-without-recall-file.jsonl",
+        "session-without-recall-file",
+        &project,
+        &["agent should recall missing session files"],
+    );
     let mut db = Database::open(&db_path).unwrap();
     db.migrate().unwrap();
     db.upsert_session(&SessionRecord {
         id: "session-without-recall-file".to_string(),
         agent_type: AgentType::Codex,
         project_id: project_id.clone(),
-        transcript_file_path: "/tmp/session-without-recall-file.jsonl".to_string(),
+        transcript_file_path: transcript_path.display().to_string(),
         started_at: Some("2026-06-08T00:00:00Z".to_string()),
         last_seen_at: Some("2026-06-08T00:00:03Z".to_string()),
     })
     .unwrap();
+    let (byte_start, byte_end) = turn_ranges[0];
     db.insert_turn(&TurnRecord {
         session_id: "session-without-recall-file".to_string(),
         turn_id: Some("turn-1".to_string()),
         ordinal: 1,
-        byte_start: 10,
-        byte_end: 20,
+        byte_start,
+        byte_end,
         observed_at: Some("2026-06-08T00:00:03Z".to_string()),
         status: TurnStatus::Completed,
-        display_text: Some("agent should recall missing session files".to_string()),
-        cwd: None,
-        context: None,
+        display_text: None,
+        cwd: Some(project_id.clone()),
+        context: Some(yaaml_core::infer_context_from_path(&project)),
     })
     .unwrap();
     let memory = MemoryRecord {
@@ -1052,29 +1061,41 @@ recall_live_turn_window = 2
     .unwrap();
 
     let project_id = project.canonicalize().unwrap().display().to_string();
+    let (transcript_path, turn_ranges) = write_codex_transcript(
+        tmp.path(),
+        "replay.jsonl",
+        "replay-session",
+        &project,
+        &[
+            "completed context turn 0",
+            "completed context turn 1",
+            "completed context turn 2",
+        ],
+    );
     let mut db = Database::open(&db_path).unwrap();
     db.migrate().unwrap();
     db.upsert_session(&SessionRecord {
         id: "replay-session".to_string(),
         agent_type: AgentType::Codex,
         project_id: project_id.clone(),
-        transcript_file_path: "/tmp/replay.jsonl".to_string(),
+        transcript_file_path: transcript_path.display().to_string(),
         started_at: Some("2026-06-08T00:00:00Z".to_string()),
         last_seen_at: Some("2026-06-08T00:02:00Z".to_string()),
     })
     .unwrap();
     for ordinal in 0..3 {
+        let (byte_start, byte_end) = turn_ranges[ordinal as usize];
         db.insert_turn(&TurnRecord {
             session_id: "replay-session".to_string(),
             turn_id: Some(format!("turn-{ordinal}")),
             ordinal,
-            byte_start: ordinal * 10,
-            byte_end: ordinal * 10 + 9,
+            byte_start,
+            byte_end,
             observed_at: Some(format!("2026-06-08T00:00:0{ordinal}Z")),
             status: TurnStatus::Completed,
-            display_text: Some(format!("completed context turn {ordinal}")),
-            cwd: None,
-            context: None,
+            display_text: None,
+            cwd: Some(project_id.clone()),
+            context: Some(yaaml_core::infer_context_from_path(&project)),
         })
         .unwrap();
     }
@@ -1166,6 +1187,95 @@ fn insert_memory_with_embedding(db: &mut Database, memory: MemoryRecord) -> i64 
     })
     .unwrap();
     memory_id
+}
+
+fn write_codex_transcript(
+    root: &Path,
+    file_name: &str,
+    session_id: &str,
+    project: &Path,
+    turn_texts: &[&str],
+) -> (PathBuf, Vec<(u64, u64)>) {
+    let transcript_path = root.join(file_name);
+    let project_id = project.display().to_string();
+    let mut transcript = String::new();
+    append_jsonl(
+        &mut transcript,
+        serde_json::json!({
+            "timestamp": "2026-06-08T00:00:00Z",
+            "type": "session_meta",
+            "payload": {
+                "id": session_id,
+                "timestamp": "2026-06-08T00:00:00Z",
+                "cwd": project_id,
+            },
+        }),
+    );
+
+    let mut ranges = Vec::new();
+    for (index, text) in turn_texts.iter().enumerate() {
+        let start = transcript.len() as u64;
+        let turn_id = format!("turn-{index}");
+        append_jsonl(
+            &mut transcript,
+            serde_json::json!({
+                "timestamp": format!("2026-06-08T00:00:0{}Z", index + 1),
+                "type": "event_msg",
+                "payload": {
+                    "type": "task_started",
+                    "turn_id": turn_id,
+                },
+            }),
+        );
+        append_jsonl(
+            &mut transcript,
+            serde_json::json!({
+                "timestamp": format!("2026-06-08T00:00:0{}Z", index + 1),
+                "type": "turn_context",
+                "payload": {
+                    "turn_id": turn_id,
+                    "cwd": project_id,
+                },
+            }),
+        );
+        append_jsonl(
+            &mut transcript,
+            serde_json::json!({
+                "timestamp": format!("2026-06-08T00:00:0{}Z", index + 1),
+                "type": "response_item",
+                "payload": {
+                    "type": "message",
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "input_text",
+                            "text": text,
+                        },
+                    ],
+                },
+            }),
+        );
+        append_jsonl(
+            &mut transcript,
+            serde_json::json!({
+                "timestamp": format!("2026-06-08T00:00:0{}Z", index + 1),
+                "type": "event_msg",
+                "payload": {
+                    "type": "task_complete",
+                    "turn_id": turn_id,
+                },
+            }),
+        );
+        ranges.push((start, transcript.len() as u64));
+    }
+
+    fs::write(&transcript_path, transcript).unwrap();
+    (transcript_path, ranges)
+}
+
+fn append_jsonl(output: &mut String, value: serde_json::Value) {
+    output.push_str(&value.to_string());
+    output.push('\n');
 }
 
 impl FakeServer {

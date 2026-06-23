@@ -1,0 +1,25 @@
+{
+  "cohorts": [
+    "git",
+    "yarn",
+    "apply_patch_source",
+    "apply_patch_text",
+    "other"
+  ],
+  "db_path": "/Users/tbedor/.yaaml/yaaml.db",
+  "details_path": "experiments/recall/2026-06-23-tool-cooldown-5x5/details.jsonl",
+  "generated_at": "2026-06-23T23:16:36.938978+00:00",
+  "kind": "tool_recall_narrowing_5x5",
+  "manifest_path": "experiments/recall/2026-06-23-tool-cooldown-5x5/manifest.json",
+  "report_path": "experiments/recall/2026-06-23-tool-cooldown-5x5/REPORT.md",
+  "run_count": 56,
+  "since_unix": 1782251960,
+  "strategies": [
+    "baseline",
+    "session_cooldown_20m",
+    "family_cooldown_20m",
+    "command_family_gate",
+    "targeted_cooldown"
+  ],
+  "summary_path": "experiments/recall/2026-06-23-tool-cooldown-5x5/summary.json"
+}

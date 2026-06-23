@@ -510,7 +510,7 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
         kind: "recall_eval".to_string(),
         status: TaskStatus::Queued,
         priority: 10,
-        payload_json: r#"{"session_id":"session-1","turn_ordinal":9,"recall_text":"","memory_ids":[],"recall_origin":"session_background"}"#.to_string(),
+        payload_json: r#"{"session_id":"session-1","turn_ordinal":9,"recall_text":"","memory_ids":[],"recall_origin":"tool_pre_use","tool_name":"Bash","injected":false,"tool_input_summary":"cargo test"}"#.to_string(),
         attempts: 1,
         max_attempts: 5,
         next_run_at: Some("unix:1781206000".to_string()),
@@ -571,6 +571,17 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     );
     assert_eq!(value["queued_recall_evals"][0]["session_id"], "session-1");
     assert_eq!(value["queued_recall_evals"][0]["turn_ordinal"], 9);
+    assert_eq!(
+        value["queued_recall_evals"][0]["recall_origin"],
+        "tool_pre_use"
+    );
+    assert_eq!(value["queued_recall_evals"][0]["tool_name"], "Bash");
+    assert_eq!(value["queued_recall_evals"][0]["injected"], false);
+    assert_eq!(value["queued_recall_evals"][0]["memory_count"], 0);
+    assert_eq!(
+        value["queued_recall_evals"][0]["tool_input_summary"],
+        "cargo test"
+    );
 
     let shown = Command::new(binary)
         .arg("eval")
@@ -612,6 +623,10 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     assert!(human_stdout.contains("Session breakdown"));
     assert!(human_stdout.contains("N/a evals with later turns"));
     assert!(human_stdout.contains("Queued recall evals"));
+    assert!(human_stdout.contains("origin=tool_pre_use"));
+    assert!(human_stdout.contains("tool=Bash"));
+    assert!(human_stdout.contains("memories=0"));
+    assert!(human_stdout.contains("input: cargo test"));
     assert!(human_stdout.contains("Weak memory"));
     assert!(human_stdout.contains("Useful memory"));
 }

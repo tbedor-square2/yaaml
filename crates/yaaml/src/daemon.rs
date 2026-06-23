@@ -20,7 +20,7 @@ use yaaml_core::{
     parse_formulation_response, rank_recall_candidates, recall_file_path, render_recall_markdown,
     session_recall_file_path, write_recall_file, ClusterMemory, Config, EmbeddingRecord,
     MemoryRecord, MemoryScope, RecallMemory, RecallRankingOptions, SourceTurnRef, TaskRecord,
-    TaskStatus, VectorIndex,
+    TaskStatus, TurnRecord, VectorIndex,
 };
 use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
@@ -334,15 +334,20 @@ pub fn run_queued_tasks(db: &Database, config: &Config, limit: usize) -> anyhow:
         let task_id = task.id.context("queued task missing id")?;
         db.mark_task_running(task_id, &unix_timestamp())
             .context("failed to mark task running")?;
-        let result = match task.kind.as_str() {
-            TASK_KIND_MEMORY_FORMULATION => run_memory_formulation_task(db, config, &task),
-            TASK_KIND_MEMORY_CONSOLIDATION => run_memory_consolidation_task(db, config, &task),
-            TASK_KIND_RECALL => run_recall_task(db, config, &task),
-            TASK_KIND_RECALL_EVAL => run_recall_eval_task(db, config, &task),
-            _ => Ok(()),
-        };
+        let result =
+            match task.kind.as_str() {
+                TASK_KIND_MEMORY_FORMULATION => run_memory_formulation_task(db, config, &task)
+                    .map(|()| TaskRunOutcome::Complete),
+                TASK_KIND_MEMORY_CONSOLIDATION => run_memory_consolidation_task(db, config, &task)
+                    .map(|()| TaskRunOutcome::Complete),
+                TASK_KIND_RECALL => {
+                    run_recall_task(db, config, &task).map(|()| TaskRunOutcome::Complete)
+                }
+                TASK_KIND_RECALL_EVAL => run_recall_eval_task(db, config, &task),
+                _ => Ok(TaskRunOutcome::Complete),
+            };
         match result {
-            Ok(()) => {
+            Ok(TaskRunOutcome::Complete) => {
                 if task.kind == TASK_KIND_MEMORY_FORMULATION {
                     dedupe_active_memories(db, &unix_timestamp())
                         .context("failed to dedupe active memories")?;
@@ -353,6 +358,7 @@ pub fn run_queued_tasks(db: &Database, config: &Config, limit: usize) -> anyhow:
                     .context("failed to complete task")?;
                 completed += 1;
             }
+            Ok(TaskRunOutcome::Deferred) => {}
             Err(error) => {
                 db.park_task(
                     task_id,
@@ -364,6 +370,11 @@ pub fn run_queued_tasks(db: &Database, config: &Config, limit: usize) -> anyhow:
         }
     }
     Ok(completed)
+}
+
+enum TaskRunOutcome {
+    Complete,
+    Deferred,
 }
 
 fn format_error_chain(error: &dyn std::error::Error) -> String {
@@ -619,7 +630,11 @@ fn run_recall_task(db: &Database, config: &Config, task: &TaskRecord) -> anyhow:
     .map(|_| ())
 }
 
-fn run_recall_eval_task(db: &Database, config: &Config, task: &TaskRecord) -> anyhow::Result<()> {
+fn run_recall_eval_task(
+    db: &Database,
+    config: &Config,
+    task: &TaskRecord,
+) -> anyhow::Result<TaskRunOutcome> {
     let payload: RecallEvalTaskPayload =
         serde_json::from_str(&task.payload_json).context("failed to parse recall eval payload")?;
     let session_id = payload.session_id.as_str();
@@ -631,12 +646,11 @@ fn run_recall_eval_task(db: &Database, config: &Config, task: &TaskRecord) -> an
     else {
         defer_recall_eval_until_anchor_exists(db, task)
             .context("failed to defer recall eval task")?;
-        return Ok(());
+        return Ok(TaskRunOutcome::Deferred);
     };
     let turn_row_id = anchor.turn_row_id;
     let turn_ordinal = anchor.turn_ordinal;
-    let later_turns = db
-        .completed_turns_for_session_after_ordinal(session_id, turn_ordinal, 20)
+    let later_turns = recall_eval_context_turns(db, &payload, session_id, turn_ordinal)
         .context("failed to load turns after recall")?;
     let later_turns =
         hydrate_turns(db, &later_turns).context("failed to hydrate recall eval turns")?;
@@ -646,7 +660,7 @@ fn run_recall_eval_task(db: &Database, config: &Config, task: &TaskRecord) -> an
     {
         defer_recall_eval_until_later_turns_exist(db, task)
             .context("failed to defer recall eval task")?;
-        return Ok(());
+        return Ok(TaskRunOutcome::Deferred);
     }
     let run_id = db
         .insert_eval_run_with_metadata(
@@ -695,7 +709,7 @@ fn run_recall_eval_task(db: &Database, config: &Config, task: &TaskRecord) -> an
         }
         db.complete_eval_run(run_id, &unix_timestamp())
             .context("failed to complete recall eval run")?;
-        return Ok(());
+        return Ok(TaskRunOutcome::Complete);
     }
     let judge_client = JudgeClient::from_config(config, false)
         .context("recall eval judge provider is unavailable")?;
@@ -705,11 +719,16 @@ fn run_recall_eval_task(db: &Database, config: &Config, task: &TaskRecord) -> an
             .structured_json(recall_eval_system_prompt(), &prompt)
             .map(|value| parse_eval_judge_response(&value))
             .context("failed to rate recall")?;
+        let score = if memory_ids.is_empty() {
+            abstention_eval_score(&outcome.score)
+        } else {
+            outcome.score.as_str()
+        };
         db.insert_eval_result(
             run_id,
             turn_row_id,
             target.memory_id,
-            &outcome.score,
+            score,
             &outcome.rationale,
             &now,
         )
@@ -717,7 +736,40 @@ fn run_recall_eval_task(db: &Database, config: &Config, task: &TaskRecord) -> an
     }
     db.complete_eval_run(run_id, &unix_timestamp())
         .context("failed to complete recall eval run")?;
-    Ok(())
+    Ok(TaskRunOutcome::Complete)
+}
+
+fn abstention_eval_score(score: &str) -> &'static str {
+    match numeric_eval_score(score) {
+        Some(score) if score >= 4 => "missed_useful_abstention",
+        _ => "clean_abstention",
+    }
+}
+
+fn numeric_eval_score(score: &str) -> Option<u8> {
+    match score.trim() {
+        "1" => Some(1),
+        "2" => Some(2),
+        "3" => Some(3),
+        "4" => Some(4),
+        "5" => Some(5),
+        _ => None,
+    }
+}
+
+fn recall_eval_context_turns(
+    db: &Database,
+    payload: &RecallEvalTaskPayload,
+    session_id: &str,
+    turn_ordinal: u64,
+) -> anyhow::Result<Vec<TurnRecord>> {
+    if payload.recall_origin == "tool_pre_use" {
+        return db
+            .completed_turns_for_session_range(session_id, turn_ordinal, turn_ordinal + 1)
+            .context("failed to load tool recall anchor turn");
+    }
+    db.completed_turns_for_session_after_ordinal(session_id, turn_ordinal, 20)
+        .context("failed to load turns after recall")
 }
 
 struct RecallEvalResolvedAnchor {
@@ -749,23 +801,18 @@ fn recall_eval_task_anchor(
 }
 
 fn defer_recall_eval_until_anchor_exists(db: &Database, task: &TaskRecord) -> anyhow::Result<i64> {
+    let task_id = task.id.context("recall eval task missing id")?;
     let next_run_seconds = unix_timestamp_seconds() + 60;
     let now = format!("unix:{}", unix_timestamp_seconds());
-    let deferred = TaskRecord {
-        id: None,
-        kind: task.kind.clone(),
-        status: TaskStatus::Queued,
-        priority: task.priority,
-        payload_json: task.payload_json.clone(),
-        attempts: task.attempts.saturating_add(1),
-        max_attempts: task.max_attempts,
-        next_run_at: Some(format!("unix:{next_run_seconds}")),
-        last_error: Some("waiting for recall eval anchor turn".to_string()),
-        created_at: task.created_at.clone(),
-        updated_at: now,
-    };
-    db.enqueue_task(&deferred)
-        .context("failed to enqueue deferred recall eval task")
+    db.reschedule_task(
+        task_id,
+        task.attempts.saturating_add(1),
+        &format!("unix:{next_run_seconds}"),
+        "waiting for recall eval anchor turn",
+        &now,
+    )
+    .context("failed to reschedule deferred recall eval task")?;
+    Ok(task_id)
 }
 
 fn should_defer_recall_eval_for_later_turns(
@@ -790,23 +837,18 @@ fn defer_recall_eval_until_later_turns_exist(
     db: &Database,
     task: &TaskRecord,
 ) -> anyhow::Result<i64> {
+    let task_id = task.id.context("recall eval task missing id")?;
     let next_run_seconds = unix_timestamp_seconds() + 600;
     let now = format!("unix:{}", unix_timestamp_seconds());
-    let deferred = TaskRecord {
-        id: None,
-        kind: task.kind.clone(),
-        status: TaskStatus::Queued,
-        priority: task.priority,
-        payload_json: task.payload_json.clone(),
-        attempts: task.attempts.saturating_add(1),
-        max_attempts: task.max_attempts,
-        next_run_at: Some(format!("unix:{next_run_seconds}")),
-        last_error: Some("waiting for subsequent turns before recall eval".to_string()),
-        created_at: task.created_at.clone(),
-        updated_at: now,
-    };
-    db.enqueue_task(&deferred)
-        .context("failed to enqueue deferred recall eval task")
+    db.reschedule_task(
+        task_id,
+        task.attempts.saturating_add(1),
+        &format!("unix:{next_run_seconds}"),
+        "waiting for subsequent turns before recall eval",
+        &now,
+    )
+    .context("failed to reschedule deferred recall eval task")?;
+    Ok(task_id)
 }
 
 struct RecallEvalTarget {

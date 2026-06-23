@@ -665,12 +665,26 @@ fn build_stats(db: &Database, eval_limit: usize) -> anyhow::Result<StatsOutput> 
             .with_context(|| format!("failed to load eval results for run {}", run.id))?;
         let mut has_numeric_score = false;
         let mut has_useful_score = false;
+        let mut has_clean_abstention = false;
+        let mut has_missed_useful_abstention = false;
         let Some(anchor) = eval_run_anchor(run) else {
             continue;
         };
         for result in results {
-            match result.judge_score.as_deref().and_then(numeric_eval_score) {
+            match result.judge_score.as_deref() {
+                Some("clean_abstention") => {
+                    has_clean_abstention = true;
+                }
+                Some("missed_useful_abstention") => {
+                    has_missed_useful_abstention = true;
+                }
                 Some(score) => {
+                    let Some(score) = numeric_eval_score(score) else {
+                        if score == "insufficient_context" {
+                            insufficient_context_results += 1;
+                        }
+                        continue;
+                    };
                     has_numeric_score = true;
                     judged_memory_results += 1;
                     if score >= 4 {
@@ -680,11 +694,7 @@ fn build_stats(db: &Database, eval_limit: usize) -> anyhow::Result<StatsOutput> 
                         low_memory_results += 1;
                     }
                 }
-                None => {
-                    if result.judge_score.as_deref() == Some("insufficient_context") {
-                        insufficient_context_results += 1;
-                    }
-                }
+                None => {}
             }
         }
         if has_numeric_score {
@@ -698,6 +708,8 @@ fn build_stats(db: &Database, eval_limit: usize) -> anyhow::Result<StatsOutput> 
             StatsEvalOutcome {
                 has_numeric_score,
                 has_useful_score,
+                has_clean_abstention,
+                has_missed_useful_abstention,
             },
         );
     }
@@ -774,6 +786,8 @@ fn build_stats(db: &Database, eval_limit: usize) -> anyhow::Result<StatsOutput> 
 struct StatsEvalOutcome {
     has_numeric_score: bool,
     has_useful_score: bool,
+    has_clean_abstention: bool,
+    has_missed_useful_abstention: bool,
 }
 
 #[derive(Debug, Default)]
@@ -1000,6 +1014,14 @@ fn build_abstention_stats(
 
     for anchor in empty_recall_anchors {
         match eval_outcome_by_anchor.get(anchor) {
+            Some(outcome) if outcome.has_missed_useful_abstention => {
+                evaluated_empty_recall_runs += 1;
+                missed_useful_abstention_runs += 1;
+            }
+            Some(outcome) if outcome.has_clean_abstention => {
+                evaluated_empty_recall_runs += 1;
+                clean_abstention_runs += 1;
+            }
             Some(outcome) if outcome.has_numeric_score => {
                 evaluated_empty_recall_runs += 1;
                 if outcome.has_useful_score {
@@ -2702,6 +2724,11 @@ struct EvalQueuedRecallTask {
     next_run_at_human: Option<String>,
     session_id: Option<String>,
     turn_ordinal: Option<u64>,
+    recall_origin: String,
+    tool_name: Option<String>,
+    injected: Option<bool>,
+    memory_count: u64,
+    tool_input_summary: Option<String>,
     last_error: Option<String>,
 }
 
@@ -3043,6 +3070,13 @@ impl From<RecallEvalTaskRecord> for EvalQueuedRecallTask {
             next_run_at_human,
             session_id: task.session_id,
             turn_ordinal: task.turn_ordinal,
+            recall_origin: task
+                .recall_origin
+                .unwrap_or_else(|| "session_background".to_string()),
+            tool_name: task.tool_name,
+            injected: task.injected,
+            memory_count: task.memory_count,
+            tool_input_summary: task.tool_input_summary.as_deref().map(eval_summary_snippet),
             last_error: task.last_error,
         }
     }
@@ -3200,9 +3234,15 @@ fn print_queued_recall_evals(tasks: &[EvalQueuedRecallTask]) {
     println!("Queued recall evals");
     for task in tasks {
         println!(
-            "  task={} status={} attempts={}/{} session={} turn={} next_run={}",
+            "  task={} status={} origin={} tool={} injected={} memories={} attempts={}/{} session={} turn={} next_run={}",
             task.task_id,
             task.status,
+            task.recall_origin,
+            task.tool_name.as_deref().unwrap_or("-"),
+            task.injected
+                .map(|injected| injected.to_string())
+                .unwrap_or_else(|| "-".to_string()),
+            task.memory_count,
             task.attempts,
             task.max_attempts,
             task.session_id.as_deref().unwrap_or("-"),
@@ -3216,6 +3256,9 @@ fn print_queued_recall_evals(tasks: &[EvalQueuedRecallTask]) {
         );
         if let Some(error) = &task.last_error {
             println!("    {error}");
+        }
+        if let Some(summary) = &task.tool_input_summary {
+            println!("    input: {summary}");
         }
     }
 }

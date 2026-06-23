@@ -93,6 +93,11 @@ pub struct RecallEvalTaskRecord {
     pub last_error: Option<String>,
     pub session_id: Option<String>,
     pub turn_ordinal: Option<u64>,
+    pub recall_origin: Option<String>,
+    pub tool_name: Option<String>,
+    pub injected: Option<bool>,
+    pub memory_count: u64,
+    pub tool_input_summary: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -205,6 +210,7 @@ impl Database {
             "ALTER TABLE eval_runs ADD COLUMN injected INTEGER",
         )?;
         self.backfill_eval_run_metadata()?;
+        self.backfill_empty_recall_eval_scores()?;
         Ok(())
     }
 
@@ -246,6 +252,26 @@ impl Database {
             "DELETE FROM tasks
              WHERE kind = 'recall_eval'
                AND json_extract(payload_json, '$.recall_origin') IS NULL",
+            [],
+        )?;
+        Ok(())
+    }
+
+    fn backfill_empty_recall_eval_scores(&self) -> Result<(), DatabaseError> {
+        self.conn.execute(
+            "UPDATE eval_results
+             SET judge_score = CASE
+                 WHEN CAST(judge_score AS INTEGER) >= 4 THEN 'missed_useful_abstention'
+                 ELSE 'clean_abstention'
+             END
+             WHERE memory_id IS NULL
+               AND judge_score IN ('1', '2', '3', '4', '5')
+               AND eval_run_id IN (
+                   SELECT id
+                   FROM eval_runs
+                   WHERE strategy = 'recall_1_to_5'
+                     AND json_array_length(json_extract(config_json, '$.memory_ids')) = 0
+               )",
             [],
         )?;
         Ok(())
@@ -1152,7 +1178,12 @@ impl Database {
         let mut stmt = self.conn.prepare(
             "SELECT id, status, attempts, max_attempts, next_run_at, last_error,
                     json_extract(payload_json, '$.session_id') AS session_id,
-                    CAST(json_extract(payload_json, '$.turn_ordinal') AS INTEGER) AS turn_ordinal
+                    CAST(json_extract(payload_json, '$.turn_ordinal') AS INTEGER) AS turn_ordinal,
+                    json_extract(payload_json, '$.recall_origin') AS recall_origin,
+                    json_extract(payload_json, '$.tool_name') AS tool_name,
+                    json_extract(payload_json, '$.injected') AS injected,
+                    json_array_length(json_extract(payload_json, '$.memory_ids')) AS memory_count,
+                    json_extract(payload_json, '$.tool_input_summary') AS tool_input_summary
              FROM tasks
              WHERE kind = 'recall_eval'
                AND status IN ('queued', 'running')
@@ -1170,6 +1201,11 @@ impl Database {
                 last_error: row.get(5)?,
                 session_id: row.get(6)?,
                 turn_ordinal: turn_ordinal.map(i64_to_u64),
+                recall_origin: row.get(8)?,
+                tool_name: row.get(9)?,
+                injected: row.get(10)?,
+                memory_count: row.get::<_, Option<i64>>(11)?.map(i64_to_u64).unwrap_or(0),
+                tool_input_summary: row.get(12)?,
             })
         })?;
         let mut tasks = Vec::new();
@@ -1258,6 +1294,33 @@ impl Database {
                  updated_at = ?1
              WHERE id = ?2",
             params![updated_at, task_id],
+        )?;
+        Ok(())
+    }
+
+    pub fn reschedule_task(
+        &self,
+        task_id: i64,
+        attempts: u64,
+        next_run_at: &str,
+        last_error: &str,
+        updated_at: &str,
+    ) -> Result<(), DatabaseError> {
+        self.conn.execute(
+            "UPDATE tasks
+             SET status = 'queued',
+                 attempts = ?1,
+                 next_run_at = ?2,
+                 last_error = ?3,
+                 updated_at = ?4
+             WHERE id = ?5",
+            params![
+                u64_to_i64(attempts),
+                next_run_at,
+                last_error,
+                updated_at,
+                task_id,
+            ],
         )?;
         Ok(())
     }
@@ -2448,5 +2511,60 @@ mod tests {
         assert_eq!(results.len(), 3);
         assert_eq!(results[0].judge_score.as_deref(), Some("useful"));
         assert_eq!(results[0].rationale.as_deref(), Some("helped"));
+    }
+
+    #[test]
+    fn migrate_backfills_empty_recall_eval_scores_to_abstention_categories() {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+        let empty_run_id = db
+            .insert_eval_run(
+                "recall_1_to_5",
+                "2026-06-08T00:00:00Z",
+                r#"{"memory_ids":[]}"#,
+            )
+            .unwrap();
+        let memory_run_id = db
+            .insert_eval_run(
+                "recall_1_to_5",
+                "2026-06-08T00:00:00Z",
+                r#"{"memory_ids":[1]}"#,
+            )
+            .unwrap();
+        db.insert_eval_result(
+            empty_run_id,
+            1,
+            None,
+            "1",
+            "empty recall was fine",
+            "2026-06-08T00:00:01Z",
+        )
+        .unwrap();
+        db.insert_eval_result(
+            empty_run_id,
+            1,
+            None,
+            "5",
+            "empty recall missed useful context",
+            "2026-06-08T00:00:01Z",
+        )
+        .unwrap();
+        db.insert_eval_result(
+            memory_run_id,
+            1,
+            Some(1),
+            "5",
+            "actual memory was useful",
+            "2026-06-08T00:00:01Z",
+        )
+        .unwrap();
+
+        db.migrate().unwrap();
+
+        assert_eq!(
+            db.eval_scores_for_run(empty_run_id).unwrap(),
+            vec!["clean_abstention", "missed_useful_abstention"]
+        );
+        assert_eq!(db.eval_scores_for_run(memory_run_id).unwrap(), vec!["5"]);
     }
 }

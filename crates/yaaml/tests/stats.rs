@@ -136,7 +136,7 @@ fn stats_json_reports_recall_rates_volume_and_usefulness() {
         clean_run_id,
         clean_turn_row_id,
         Some(21),
-        "2",
+        "clean_abstention",
         "no useful recall was missed",
         "unix:111",
     )
@@ -158,7 +158,7 @@ fn stats_json_reports_recall_rates_volume_and_usefulness() {
         missed_run_id,
         missed_turn_row_id,
         Some(31),
-        "4",
+        "missed_useful_abstention",
         "a useful memory existed but recall abstained",
         "unix:121",
     )
@@ -192,10 +192,10 @@ fn stats_json_reports_recall_rates_volume_and_usefulness() {
         stats["abstention"]["missed_useful_abstention_rate_per_evaluated_empty_recall"],
         0.5
     );
-    assert_eq!(stats["useful"]["evaluated_recall_runs"], 3);
-    assert_eq!(stats["useful"]["useful_recall_runs"], 2);
-    assert_eq!(stats["useful"]["good_memory_results"], 2);
-    assert_eq!(stats["useful"]["low_memory_results"], 2);
+    assert_eq!(stats["useful"]["evaluated_recall_runs"], 1);
+    assert_eq!(stats["useful"]["useful_recall_runs"], 1);
+    assert_eq!(stats["useful"]["good_memory_results"], 1);
+    assert_eq!(stats["useful"]["low_memory_results"], 1);
     assert_eq!(stats["llm_filter"]["llm_applied_runs"], 1);
     let removed_key = ["llm_empty", "fallback_runs"].join("_");
     assert!(!stats["llm_filter"]

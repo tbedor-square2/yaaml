@@ -196,7 +196,7 @@ fn codex_hook_config_block(script_path: &Path) -> String {
     format!(
         r#"{YAAML_HOOK_BEGIN}
 [[hooks.PreToolUse]]
-matcher = "*"
+matcher = "Bash|apply_patch|Edit|Write"
 
 [[hooks.PreToolUse.hooks]]
 type = "command"
@@ -221,6 +221,7 @@ fn codex_pre_tool_hook_script(yaaml_binary: &Path) -> String {
         r#"#!/usr/bin/env python3
 import json
 import os
+import shlex
 import subprocess
 import sys
 
@@ -233,6 +234,110 @@ def first_string(data, keys):
         if isinstance(value, str) and value.strip():
             return value.strip()
     return None
+
+
+def tool_command(tool_input):
+    if not isinstance(tool_input, dict):
+        return None
+    for key in ["command", "cmd"]:
+        value = tool_input.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    nested = tool_input.get("tool_input") or tool_input.get("toolInput")
+    if isinstance(nested, dict):
+        return tool_command(nested)
+    return None
+
+
+def first_words(command):
+    try:
+        return shlex.split(command)
+    except ValueError:
+        return command.split()
+
+
+def starts_with(words, prefix):
+    return words[: len(prefix)] == prefix
+
+
+def should_run_recall(tool_name, tool_input):
+    normalized_tool = (tool_name or "").strip()
+    if normalized_tool in ["apply_patch", "Edit", "Write"]:
+        return True
+    if normalized_tool != "Bash":
+        return False
+
+    command = tool_command(tool_input)
+    if not command:
+        return False
+    words = first_words(command)
+    if not words:
+        return False
+    executable = os.path.basename(words[0])
+    if executable in ["yaaml", "rg", "grep", "sed", "cat", "nl", "ls", "pwd", "find", "head", "tail", "wc", "awk", "jq"]:
+        return False
+    if executable == "git":
+        read_only_git = [
+            ["git", "status"],
+            ["git", "diff"],
+            ["git", "log"],
+            ["git", "show"],
+            ["git", "branch"],
+            ["git", "remote"],
+            ["git", "ls-files"],
+            ["git", "rev-parse"],
+            ["git", "grep"],
+        ]
+        if any(starts_with(words, prefix) for prefix in read_only_git):
+            return False
+        return len(words) > 1
+    if executable == "gh":
+        interesting_gh = [
+            ["gh", "pr", "comment"],
+            ["gh", "pr", "review"],
+            ["gh", "pr", "merge"],
+            ["gh", "api"],
+        ]
+        return any(starts_with(words, prefix) for prefix in interesting_gh)
+
+    build_or_test = [
+        "bazel",
+        "buck",
+        "cargo",
+        "go",
+        "gradle",
+        "just",
+        "make",
+        "mvn",
+        "npm",
+        "pnpm",
+        "pytest",
+        "yarn",
+    ]
+    if executable in build_or_test:
+        return True
+    infrastructure = ["docker", "helm", "kubectl", "podman", "terraform", "tofu"]
+    if executable in infrastructure:
+        return True
+    if executable in ["python", "python3", "ruby", "node", "bash", "zsh", "sh"]:
+        lower_command = command.lower()
+        interesting_fragments = [
+            "bazel ",
+            "cargo test",
+            "cargo build",
+            "just quality",
+            "just test",
+            "gh pr comment",
+            "gh pr review",
+            "git commit",
+            "git push",
+            "git rebase",
+            "git merge",
+            "terraform ",
+            "kubectl ",
+        ]
+        return any(fragment in lower_command for fragment in interesting_fragments)
+    return False
 
 
 def main():
@@ -256,6 +361,9 @@ def main():
         or payload.get("arguments")
         or payload
     )
+    if not should_run_recall(tool_name, tool_input):
+        print("{{}}")
+        return 0
 
     cmd = [
         YAAML_BINARY,
@@ -377,12 +485,18 @@ mod tests {
         let config = fs::read_to_string(&paths.codex_config).unwrap();
         assert_eq!(config.matches(YAAML_HOOK_BEGIN).count(), 1);
         assert_eq!(config.matches("[[hooks.PreToolUse]]").count(), 1);
+        assert!(config.contains("matcher = \"Bash|apply_patch|Edit|Write\""));
+        assert!(!config.contains("matcher = \"*\""));
         assert!(config.contains("python3 \\\""));
         assert!(config.contains("yaaml-pre-tool-use.py"));
         let script =
             fs::read_to_string(paths.codex_hooks_dir.join("yaaml-pre-tool-use.py")).unwrap();
         assert!(script.contains("YAAML_BINARY = \"/bin/yaaml\""));
         assert!(script.contains("--codex-hook-output"));
+        assert!(script.contains("def should_run_recall"));
+        assert!(script.contains("\"rg\""));
+        assert!(script.contains("\"bazel\""));
+        assert!(script.contains("\"terraform\""));
     }
 
     #[test]

@@ -9,7 +9,7 @@ fn migration_creates_expected_tables_and_is_idempotent() {
     db.migrate().unwrap();
     db.migrate().unwrap();
 
-    assert_eq!(db.schema_version().unwrap(), 2);
+    assert_eq!(db.schema_version().unwrap(), 3);
     let tables = db
         .table_names()
         .unwrap()
@@ -29,5 +29,21 @@ fn migration_creates_expected_tables_and_is_idempotent() {
         "turns",
     ] {
         assert!(tables.contains(expected), "missing table {expected}");
+    }
+    let eval_run_columns = db.column_names("eval_runs").unwrap();
+    for expected in [
+        "session_id",
+        "turn_ordinal",
+        "agent_turn_id",
+        "recall_origin",
+        "tool_name",
+        "tool_use_id",
+        "tool_input_summary",
+        "injected",
+    ] {
+        assert!(
+            eval_run_columns.contains(&expected.to_string()),
+            "missing eval_runs column {expected}"
+        );
     }
 }

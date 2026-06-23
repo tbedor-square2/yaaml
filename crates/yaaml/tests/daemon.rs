@@ -20,7 +20,7 @@ use yaaml_core::{
     session_recall_file_path, AgentType, Config, EmbeddingRecord, MemoryKind, MemoryRecord,
     MemoryScope, SessionRecord, SourceTurnRef, TaskRecord, TaskStatus, TurnRecord,
 };
-use yaaml_store::database::encode_f32_embedding;
+use yaaml_store::database::{encode_f32_embedding, EvalRunMetadata};
 use yaaml_store::Database;
 
 #[test]
@@ -853,7 +853,7 @@ fn stale_insufficient_context_eval_is_queued_for_rerun() {
         .unwrap()
         .unwrap();
     let run_id = db
-        .insert_eval_run(
+        .insert_eval_run_with_metadata(
             "recall_1_to_5",
             "2026-06-08T00:00:03Z",
             &serde_json::json!({
@@ -862,6 +862,12 @@ fn stale_insufficient_context_eval_is_queued_for_rerun() {
                 "memory_ids": [memory_id],
             })
             .to_string(),
+            EvalRunMetadata {
+                session_id: Some("session-1".to_string()),
+                turn_ordinal: Some(0),
+                recall_origin: "session_background".to_string(),
+                ..EvalRunMetadata::default()
+            },
         )
         .unwrap();
     db.insert_eval_result(
@@ -951,6 +957,7 @@ fn recall_eval_scores_each_recalled_memory() {
             "turn_ordinal": 0,
             "recall_text": "full recall text",
             "memory_ids": [first, second],
+            "recall_origin": "session_background",
         })
         .to_string(),
         attempts: 0,
@@ -1188,6 +1195,7 @@ fn recall_eval_task_defers_until_anchor_turn_is_ingested() {
             "turn_ordinal":0,
             "recall_text":"# YAAML Recall\n\nmemory_ids: 1\n\n## Relevant memory\n\nUse YAAML recall.",
             "memory_ids":[1],
+            "recall_origin":"session_background",
             "recall_at":"unix:1",
             "eval_after":"unix:1"
         }"##
@@ -1256,6 +1264,7 @@ fn recall_eval_records_insufficient_context_without_later_turns() {
             "turn_ordinal":0,
             "recall_text":"# YAAML Recall\n\nmemory_ids: 1\n\n## Relevant memory\n\nUse YAAML recall.",
             "memory_ids":[1],
+            "recall_origin":"session_background",
             "recall_at":"unix:1",
             "eval_after":"unix:1"
         }"##
@@ -1331,6 +1340,7 @@ fn recall_eval_defers_without_later_turns_while_session_is_active() {
             "turn_ordinal":0,
             "recall_text":"# YAAML Recall\n\nmemory_ids: 1\n\n## Relevant memory\n\nUse YAAML recall.",
             "memory_ids":[1],
+            "recall_origin":"session_background",
             "recall_at":"unix:1",
             "eval_after":"unix:1"
         }"##

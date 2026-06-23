@@ -25,6 +25,7 @@ use yaaml_core::{
 use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
 use yaaml_llm::{ProviderError, ReqwestTransport};
+use yaaml_store::database::EvalRunMetadata;
 use yaaml_store::{Database, SqliteExactVectorIndex};
 use yaaml_transcript::codex::parse_codex_file_from_offset_with_session;
 use yaaml_transcript::discovery::discover_codex_backlog;
@@ -65,18 +66,29 @@ struct RecallTaskPayload {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct RecallEvalTaskPayload {
     session_id: String,
-    turn_ordinal: u64,
+    turn_ordinal: Option<u64>,
+    turn_id: Option<String>,
     recall_text: String,
-    #[serde(default)]
     memory_ids: Vec<i64>,
-    #[serde(default)]
     recall_at: Option<String>,
-    #[serde(default)]
     eval_after: Option<String>,
-    #[serde(default)]
     rerun_for_eval_run_id: Option<i64>,
-    #[serde(default)]
     filter_telemetry: Option<RecallFilterTelemetry>,
+    recall_origin: String,
+    tool_name: Option<String>,
+    tool_use_id: Option<String>,
+    tool_input_summary: Option<String>,
+    injected: Option<bool>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RecallEvalMetadata {
+    pub recall_origin: String,
+    pub turn_id: Option<String>,
+    pub tool_name: Option<String>,
+    pub tool_use_id: Option<String>,
+    pub tool_input_summary: Option<String>,
+    pub injected: Option<bool>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -611,18 +623,18 @@ fn run_recall_eval_task(db: &Database, config: &Config, task: &TaskRecord) -> an
     let payload: RecallEvalTaskPayload =
         serde_json::from_str(&task.payload_json).context("failed to parse recall eval payload")?;
     let session_id = payload.session_id.as_str();
-    let turn_ordinal = payload.turn_ordinal;
     let recall_text = payload.recall_text.as_str();
-    let memory_ids = payload.memory_ids;
+    let memory_ids = payload.memory_ids.clone();
     let rerun_for_eval_run_id = payload.rerun_for_eval_run_id;
-    let Some(turn_row_id) = db
-        .turn_row_id_for_session_ordinal(session_id, turn_ordinal)
-        .context("failed to load recall eval anchor turn")?
+    let Some(anchor) =
+        recall_eval_task_anchor(db, &payload).context("failed to load recall eval anchor turn")?
     else {
         defer_recall_eval_until_anchor_exists(db, task)
             .context("failed to defer recall eval task")?;
         return Ok(());
     };
+    let turn_row_id = anchor.turn_row_id;
+    let turn_ordinal = anchor.turn_ordinal;
     let later_turns = db
         .completed_turns_for_session_after_ordinal(session_id, turn_ordinal, 20)
         .context("failed to load turns after recall")?;
@@ -637,18 +649,34 @@ fn run_recall_eval_task(db: &Database, config: &Config, task: &TaskRecord) -> an
         return Ok(());
     }
     let run_id = db
-        .insert_eval_run(
+        .insert_eval_run_with_metadata(
             "recall_1_to_5",
             &now,
             &json!({
                 "session_id": session_id,
+                "turn_id": payload.turn_id,
                 "turn_ordinal": turn_ordinal,
                 "memory_ids": memory_ids,
                 "rerun_for_eval_run_id": rerun_for_eval_run_id,
                 "rating_delay_seconds": 600,
                 "rubric": "1-5 recall relevance, concision, and actionability",
+                "recall_origin": payload.recall_origin,
+                "tool_name": payload.tool_name,
+                "tool_use_id": payload.tool_use_id,
+                "tool_input_summary": payload.tool_input_summary,
+                "injected": payload.injected,
             })
             .to_string(),
+            EvalRunMetadata {
+                session_id: Some(session_id.to_string()),
+                turn_ordinal: Some(turn_ordinal),
+                agent_turn_id: payload.turn_id.clone(),
+                recall_origin: payload.recall_origin.clone(),
+                tool_name: payload.tool_name.clone(),
+                tool_use_id: payload.tool_use_id.clone(),
+                tool_input_summary: payload.tool_input_summary.clone(),
+                injected: payload.injected,
+            },
         )
         .context("failed to create recall eval run")?;
     let eval_targets = recall_eval_targets(db, &memory_ids, recall_text)
@@ -690,6 +718,34 @@ fn run_recall_eval_task(db: &Database, config: &Config, task: &TaskRecord) -> an
     db.complete_eval_run(run_id, &unix_timestamp())
         .context("failed to complete recall eval run")?;
     Ok(())
+}
+
+struct RecallEvalResolvedAnchor {
+    turn_row_id: i64,
+    turn_ordinal: u64,
+}
+
+fn recall_eval_task_anchor(
+    db: &Database,
+    payload: &RecallEvalTaskPayload,
+) -> anyhow::Result<Option<RecallEvalResolvedAnchor>> {
+    if let Some(turn_ordinal) = payload.turn_ordinal {
+        return Ok(db
+            .turn_row_id_for_session_ordinal(&payload.session_id, turn_ordinal)?
+            .map(|turn_row_id| RecallEvalResolvedAnchor {
+                turn_row_id,
+                turn_ordinal,
+            }));
+    }
+    let Some(turn_id) = payload.turn_id.as_deref() else {
+        return Ok(None);
+    };
+    Ok(db
+        .turn_row_for_session_turn_id(&payload.session_id, turn_id)?
+        .map(|(turn_row_id, turn_ordinal)| RecallEvalResolvedAnchor {
+            turn_row_id,
+            turn_ordinal,
+        }))
 }
 
 fn defer_recall_eval_until_anchor_exists(db: &Database, task: &TaskRecord) -> anyhow::Result<i64> {
@@ -871,13 +927,19 @@ pub fn queue_stale_recall_eval_tasks(db: &Database, limit: usize) -> anyhow::Res
         }
         let payload_json = serde_json::to_string(&RecallEvalTaskPayload {
             session_id: session_id.to_string(),
-            turn_ordinal,
+            turn_ordinal: Some(turn_ordinal),
+            turn_id: None,
             recall_text,
             memory_ids,
             recall_at: None,
             eval_after: None,
             rerun_for_eval_run_id: Some(run.id),
             filter_telemetry: None,
+            recall_origin: run.recall_origin,
+            tool_name: run.tool_name,
+            tool_use_id: run.tool_use_id,
+            tool_input_summary: run.tool_input_summary,
+            injected: run.injected,
         })
         .context("failed to serialize stale recall eval task payload")?;
         if db
@@ -1642,22 +1704,64 @@ pub fn queue_recall_eval_after_turn(
     filter_telemetry: Option<&RecallFilterTelemetry>,
     priority: i64,
 ) -> anyhow::Result<i64> {
+    queue_recall_eval_after_turn_with_metadata(
+        db,
+        session_id,
+        Some(turn_ordinal),
+        None,
+        recall_text,
+        memory_ids,
+        filter_telemetry,
+        RecallEvalMetadata {
+            recall_origin: "session_background".to_string(),
+            turn_id: None,
+            tool_name: None,
+            tool_use_id: None,
+            tool_input_summary: None,
+            injected: None,
+        },
+        priority,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn queue_recall_eval_after_turn_with_metadata(
+    db: &Database,
+    session_id: &str,
+    turn_ordinal: Option<u64>,
+    turn_id: Option<String>,
+    recall_text: &str,
+    memory_ids: &[i64],
+    filter_telemetry: Option<&RecallFilterTelemetry>,
+    metadata: RecallEvalMetadata,
+    priority: i64,
+) -> anyhow::Result<i64> {
     let now_seconds = unix_timestamp_seconds();
-    if db
-        .recall_eval_exists_for_anchor(session_id, turn_ordinal)
-        .context("failed to check existing recall eval task")?
-    {
-        return Ok(0);
+    if metadata.recall_origin == "session_background" {
+        if let Some(turn_ordinal) = turn_ordinal {
+            if db
+                .recall_eval_exists_for_anchor(session_id, turn_ordinal)
+                .context("failed to check existing recall eval task")?
+            {
+                return Ok(0);
+            }
+        }
     }
     let payload_json = serde_json::to_string(&RecallEvalTaskPayload {
         session_id: session_id.to_string(),
         turn_ordinal,
+        turn_id,
         recall_text: recall_text.to_string(),
         memory_ids: memory_ids.to_vec(),
         recall_at: Some(format!("unix:{now_seconds}")),
         eval_after: Some(format!("unix:{}", now_seconds + 600)),
         rerun_for_eval_run_id: None,
         filter_telemetry: filter_telemetry.cloned(),
+        recall_origin: metadata.recall_origin,
+        tool_name: metadata.tool_name,
+        tool_use_id: metadata.tool_use_id,
+        tool_input_summary: metadata.tool_input_summary,
+        injected: metadata.injected,
     })
     .context("failed to serialize recall eval task payload")?;
     let now = format!("unix:{now_seconds}");

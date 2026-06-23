@@ -4,6 +4,7 @@ use std::process::Command;
 use serde_json::json;
 use tempfile::TempDir;
 use yaaml_core::{AgentType, SessionRecord, TaskRecord, TaskStatus, TurnRecord, TurnStatus};
+use yaaml_store::database::EvalRunMetadata;
 use yaaml_store::Database;
 
 #[test]
@@ -65,6 +66,7 @@ fn stats_json_reports_recall_rates_volume_and_usefulness() {
             "turn_ordinal": 0,
             "recall_text": "remember this",
             "memory_ids": [11, 12],
+            "recall_origin": "session_background",
             "filter_telemetry": {
                 "candidate_count": 4,
                 "deterministic_selected_count": 3,
@@ -83,7 +85,8 @@ fn stats_json_reports_recall_rates_volume_and_usefulness() {
             "session_id": "session-1",
             "turn_ordinal": 1,
             "recall_text": "",
-            "memory_ids": []
+            "memory_ids": [],
+            "recall_origin": "session_background"
         })
         .to_string(),
     );
@@ -94,16 +97,18 @@ fn stats_json_reports_recall_rates_volume_and_usefulness() {
             "session_id": "session-1",
             "turn_ordinal": 2,
             "recall_text": "",
-            "memory_ids": []
+            "memory_ids": [],
+            "recall_origin": "session_background"
         })
         .to_string(),
     );
 
     let run_id = db
-        .insert_eval_run(
+        .insert_eval_run_with_metadata(
             "recall_1_to_5",
             "unix:100",
             &json!({"session_id": "session-1", "turn_ordinal": 0}).to_string(),
+            recall_metadata(0),
         )
         .unwrap();
     let turn_row_id = db
@@ -116,10 +121,11 @@ fn stats_json_reports_recall_rates_volume_and_usefulness() {
         .unwrap();
     db.complete_eval_run(run_id, "unix:102").unwrap();
     let clean_run_id = db
-        .insert_eval_run(
+        .insert_eval_run_with_metadata(
             "recall_1_to_5",
             "unix:110",
             &json!({"session_id": "session-1", "turn_ordinal": 1}).to_string(),
+            recall_metadata(1),
         )
         .unwrap();
     let clean_turn_row_id = db
@@ -137,10 +143,11 @@ fn stats_json_reports_recall_rates_volume_and_usefulness() {
     .unwrap();
     db.complete_eval_run(clean_run_id, "unix:112").unwrap();
     let missed_run_id = db
-        .insert_eval_run(
+        .insert_eval_run_with_metadata(
             "recall_1_to_5",
             "unix:120",
             &json!({"session_id": "session-1", "turn_ordinal": 2}).to_string(),
+            recall_metadata(2),
         )
         .unwrap();
     let missed_turn_row_id = db
@@ -199,6 +206,15 @@ fn stats_json_reports_recall_rates_volume_and_usefulness() {
         stats["llm_filter"]["average_dropped_memories_per_applied_run"],
         1.0
     );
+}
+
+fn recall_metadata(turn_ordinal: u64) -> EvalRunMetadata {
+    EvalRunMetadata {
+        session_id: Some("session-1".to_string()),
+        turn_ordinal: Some(turn_ordinal),
+        recall_origin: "session_background".to_string(),
+        ..EvalRunMetadata::default()
+    }
 }
 
 fn enqueue_task(db: &Database, kind: &str, payload_json: String) {

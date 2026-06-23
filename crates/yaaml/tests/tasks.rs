@@ -153,12 +153,24 @@ fn task(
     next_run_at: Option<&str>,
     last_error: Option<&str>,
 ) -> TaskRecord {
+    let payload_json = if kind == "recall_eval" {
+        serde_json::json!({
+            "session_id": "session-1",
+            "turn_ordinal": 0,
+            "recall_text": "",
+            "memory_ids": [],
+            "recall_origin": "session_background",
+        })
+        .to_string()
+    } else {
+        "{}".to_string()
+    };
     TaskRecord {
         id: None,
         kind: kind.to_string(),
         status,
         priority: 0,
-        payload_json: "{}".to_string(),
+        payload_json,
         attempts: u64::from(status == TaskStatus::Parked),
         max_attempts: 5,
         next_run_at: next_run_at.map(str::to_string),

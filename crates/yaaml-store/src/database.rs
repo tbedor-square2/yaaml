@@ -39,10 +39,28 @@ pub struct EvalRunRecord {
     pub started_at: String,
     pub completed_at: Option<String>,
     pub config_json: String,
-    pub result_count: u64,
     pub session_id: Option<String>,
     pub turn_ordinal: Option<u64>,
+    pub agent_turn_id: Option<String>,
+    pub recall_origin: String,
+    pub tool_name: Option<String>,
+    pub tool_use_id: Option<String>,
+    pub tool_input_summary: Option<String>,
+    pub injected: Option<bool>,
+    pub result_count: u64,
     pub score: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct EvalRunMetadata {
+    pub session_id: Option<String>,
+    pub turn_ordinal: Option<u64>,
+    pub agent_turn_id: Option<String>,
+    pub recall_origin: String,
+    pub tool_name: Option<String>,
+    pub tool_use_id: Option<String>,
+    pub tool_input_summary: Option<String>,
+    pub injected: Option<bool>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -146,6 +164,47 @@ impl Database {
             "task_keys",
             "ALTER TABLE memories ADD COLUMN task_keys TEXT NOT NULL DEFAULT '[]'",
         )?;
+        self.ensure_column(
+            "eval_runs",
+            "session_id",
+            "ALTER TABLE eval_runs ADD COLUMN session_id TEXT",
+        )?;
+        self.ensure_column(
+            "eval_runs",
+            "turn_ordinal",
+            "ALTER TABLE eval_runs ADD COLUMN turn_ordinal INTEGER",
+        )?;
+        self.ensure_column(
+            "eval_runs",
+            "agent_turn_id",
+            "ALTER TABLE eval_runs ADD COLUMN agent_turn_id TEXT",
+        )?;
+        self.ensure_column(
+            "eval_runs",
+            "recall_origin",
+            "ALTER TABLE eval_runs ADD COLUMN recall_origin TEXT NOT NULL DEFAULT 'replay'",
+        )?;
+        self.ensure_column(
+            "eval_runs",
+            "tool_name",
+            "ALTER TABLE eval_runs ADD COLUMN tool_name TEXT",
+        )?;
+        self.ensure_column(
+            "eval_runs",
+            "tool_use_id",
+            "ALTER TABLE eval_runs ADD COLUMN tool_use_id TEXT",
+        )?;
+        self.ensure_column(
+            "eval_runs",
+            "tool_input_summary",
+            "ALTER TABLE eval_runs ADD COLUMN tool_input_summary TEXT",
+        )?;
+        self.ensure_column(
+            "eval_runs",
+            "injected",
+            "ALTER TABLE eval_runs ADD COLUMN injected INTEGER",
+        )?;
+        self.backfill_eval_run_metadata()?;
         Ok(())
     }
 
@@ -163,6 +222,32 @@ impl Database {
             }
         }
         self.conn.execute_batch(alter_sql)?;
+        Ok(())
+    }
+
+    fn backfill_eval_run_metadata(&self) -> Result<(), DatabaseError> {
+        self.conn.execute(
+            "UPDATE eval_runs
+             SET session_id = json_extract(config_json, '$.session_id'),
+                 turn_ordinal = CAST(json_extract(config_json, '$.turn_ordinal') AS INTEGER),
+                 agent_turn_id = json_extract(config_json, '$.turn_id'),
+                 recall_origin = COALESCE(json_extract(config_json, '$.recall_origin'), 'session_background'),
+                 tool_name = json_extract(config_json, '$.tool_name'),
+                 tool_use_id = json_extract(config_json, '$.tool_use_id'),
+                 tool_input_summary = json_extract(config_json, '$.tool_input_summary'),
+                 injected = CAST(json_extract(config_json, '$.injected') AS INTEGER)
+             WHERE strategy = 'recall_1_to_5'
+               AND session_id IS NULL
+               AND turn_ordinal IS NULL
+               AND agent_turn_id IS NULL",
+            [],
+        )?;
+        self.conn.execute(
+            "DELETE FROM tasks
+             WHERE kind = 'recall_eval'
+               AND json_extract(payload_json, '$.recall_origin') IS NULL",
+            [],
+        )?;
         Ok(())
     }
 
@@ -234,6 +319,16 @@ impl Database {
             "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name",
         )?;
         let rows = stmt.query_map([], |row| row.get(0))?;
+        let mut names = Vec::new();
+        for row in rows {
+            names.push(row?);
+        }
+        Ok(names)
+    }
+
+    pub fn column_names(&self, table: &str) -> Result<Vec<String>, DatabaseError> {
+        let mut stmt = self.conn.prepare(&format!("PRAGMA table_info({table})"))?;
+        let rows = stmt.query_map([], |row| row.get(1))?;
         let mut names = Vec::new();
         for row in rows {
             names.push(row?);
@@ -475,6 +570,24 @@ impl Database {
                 "SELECT id FROM turns WHERE session_id = ?1 AND ordinal = ?2",
                 params![session_id, u64_to_i64(ordinal)],
                 |row| row.get(0),
+            )
+            .optional()
+            .map_err(DatabaseError::from)
+    }
+
+    pub fn turn_row_for_session_turn_id(
+        &self,
+        session_id: &str,
+        turn_id: &str,
+    ) -> Result<Option<(i64, u64)>, DatabaseError> {
+        self.conn
+            .query_row(
+                "SELECT id, ordinal FROM turns WHERE session_id = ?1 AND turn_id = ?2",
+                params![session_id, turn_id],
+                |row| {
+                    let ordinal: i64 = row.get(1)?;
+                    Ok((row.get(0)?, i64_to_u64(ordinal)))
+                },
             )
             .optional()
             .map_err(DatabaseError::from)
@@ -1270,10 +1383,44 @@ impl Database {
         started_at: &str,
         config_json: &str,
     ) -> Result<i64, DatabaseError> {
+        self.insert_eval_run_with_metadata(
+            strategy,
+            started_at,
+            config_json,
+            EvalRunMetadata {
+                recall_origin: "replay".to_string(),
+                ..EvalRunMetadata::default()
+            },
+        )
+    }
+
+    pub fn insert_eval_run_with_metadata(
+        &self,
+        strategy: &str,
+        started_at: &str,
+        config_json: &str,
+        metadata: EvalRunMetadata,
+    ) -> Result<i64, DatabaseError> {
         self.conn.execute(
-            "INSERT INTO eval_runs (strategy, started_at, completed_at, config_json)
-             VALUES (?1, ?2, NULL, ?3)",
-            params![strategy, started_at, config_json],
+            "INSERT INTO eval_runs (
+                strategy, started_at, completed_at, config_json, session_id, turn_ordinal,
+                agent_turn_id, recall_origin, tool_name, tool_use_id, tool_input_summary, injected
+             ) VALUES (?1, ?2, NULL, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+            params![
+                strategy,
+                started_at,
+                config_json,
+                metadata.session_id,
+                metadata.turn_ordinal.map(u64_to_i64),
+                metadata.agent_turn_id,
+                metadata.recall_origin,
+                metadata.tool_name,
+                metadata.tool_use_id,
+                metadata.tool_input_summary,
+                metadata
+                    .injected
+                    .map(|value| if value { 1_i64 } else { 0_i64 }),
+            ],
         )?;
         Ok(self.conn.last_insert_rowid())
     }
@@ -1330,9 +1477,9 @@ impl Database {
     pub fn list_eval_runs(&self, limit: usize) -> Result<Vec<EvalRunRecord>, DatabaseError> {
         let mut stmt = self.conn.prepare(
             "SELECT r.id, r.strategy, r.started_at, r.completed_at, r.config_json,
+                    r.session_id, r.turn_ordinal, r.agent_turn_id, r.recall_origin,
+                    r.tool_name, r.tool_use_id, r.tool_input_summary, r.injected,
                     COUNT(er.id) AS result_count,
-                    json_extract(r.config_json, '$.session_id') AS session_id,
-                    CAST(json_extract(r.config_json, '$.turn_ordinal') AS INTEGER) AS turn_ordinal,
                     CASE
                         WHEN COUNT(er.judge_score) = 0 THEN NULL
                         WHEN COUNT(DISTINCT er.judge_score) = 1 THEN MAX(er.judge_score)
@@ -1356,9 +1503,9 @@ impl Database {
         self.conn
             .query_row(
                 "SELECT r.id, r.strategy, r.started_at, r.completed_at, r.config_json,
+                        r.session_id, r.turn_ordinal, r.agent_turn_id, r.recall_origin,
+                        r.tool_name, r.tool_use_id, r.tool_input_summary, r.injected,
                         COUNT(er.id) AS result_count,
-                        json_extract(r.config_json, '$.session_id') AS session_id,
-                        CAST(json_extract(r.config_json, '$.turn_ordinal') AS INTEGER) AS turn_ordinal,
                         CASE
                             WHEN COUNT(er.judge_score) = 0 THEN NULL
                             WHEN COUNT(DISTINCT er.judge_score) = 1 THEN MAX(er.judge_score)
@@ -1584,17 +1731,24 @@ fn read_session_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<SessionRecor
 }
 
 fn read_eval_run_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<EvalRunRecord> {
-    let turn_ordinal: Option<i64> = row.get(7)?;
+    let turn_ordinal: Option<i64> = row.get(6)?;
+    let injected: Option<i64> = row.get(12)?;
     Ok(EvalRunRecord {
         id: row.get(0)?,
         strategy: row.get(1)?,
         started_at: row.get(2)?,
         completed_at: row.get(3)?,
         config_json: row.get(4)?,
-        result_count: i64_to_u64(row.get(5)?),
-        session_id: row.get(6)?,
+        session_id: row.get(5)?,
         turn_ordinal: turn_ordinal.map(i64_to_u64),
-        score: row.get(8)?,
+        agent_turn_id: row.get(7)?,
+        recall_origin: row.get(8)?,
+        tool_name: row.get(9)?,
+        tool_use_id: row.get(10)?,
+        tool_input_summary: row.get(11)?,
+        injected: injected.map(|value| value != 0),
+        result_count: i64_to_u64(row.get(13)?),
+        score: row.get(14)?,
     })
 }
 

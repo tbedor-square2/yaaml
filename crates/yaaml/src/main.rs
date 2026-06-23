@@ -341,18 +341,56 @@ struct RecallArgs {
     /// User input to embed and search against stored memories. Omit to print existing recall.
     #[arg(long)]
     query: Option<String>,
+    /// Recall source for eval segmentation.
+    #[arg(long, value_enum)]
+    origin: Option<RecallOriginArg>,
+    /// Tool name for tool-triggered recall, e.g. Bash or apply_patch.
+    #[arg(long)]
+    tool_name: Option<String>,
+    /// Codex tool-use id for tool-triggered recall.
+    #[arg(long)]
+    tool_use_id: Option<String>,
+    /// Short command/input summary for tool-triggered recall.
+    #[arg(long)]
+    tool_input_summary: Option<String>,
+    /// Raw tool input JSON; Bash/apply_patch commands are summarized automatically.
+    #[arg(long)]
+    tool_input_json: Option<String>,
+    /// Emit Codex PreToolUse hook JSON with additionalContext.
+    #[arg(long)]
+    codex_hook_output: bool,
     /// Session id to replay recall for.
     #[arg(long)]
     session: Option<String>,
     /// Completed turn ordinal to use as the recall anchor.
     #[arg(long)]
     turn: Option<u64>,
+    /// Agent turn id to use as a deferred eval anchor.
+    #[arg(long)]
+    turn_id: Option<String>,
     /// Emit machine-readable JSON.
     #[arg(long)]
     json: bool,
     /// Include per-memory ranking components in JSON output.
     #[arg(long)]
     debug_ranking: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+enum RecallOriginArg {
+    SessionBackground,
+    ManualQuery,
+    ToolPreUse,
+}
+
+impl RecallOriginArg {
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::SessionBackground => "session_background",
+            Self::ManualQuery => "manual_query",
+            Self::ToolPreUse => "tool_pre_use",
+        }
+    }
 }
 
 #[derive(Debug, Parser)]
@@ -447,18 +485,12 @@ struct StatsRecallTaskPayload {
 #[derive(Debug, Deserialize)]
 struct StatsRecallEvalTaskPayload {
     session_id: String,
-    turn_ordinal: u64,
-    recall_text: String,
-    #[serde(default)]
-    memory_ids: Vec<i64>,
-    #[serde(default)]
-    filter_telemetry: Option<RecallFilterTelemetry>,
-}
-
-#[derive(Debug, Deserialize)]
-struct StatsEvalRunConfig {
-    session_id: Option<String>,
     turn_ordinal: Option<u64>,
+    recall_text: String,
+    memory_ids: Vec<i64>,
+    filter_telemetry: Option<RecallFilterTelemetry>,
+    recall_origin: String,
+    tool_name: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -466,6 +498,8 @@ struct StatsRecallVolumeRun {
     memory_count: usize,
     recall_chars: usize,
     filter_telemetry: Option<RecallFilterTelemetry>,
+    recall_origin: String,
+    tool_name: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -480,6 +514,22 @@ struct StatsOutput {
     volume: StatsVolume,
     useful: StatsUseful,
     llm_filter: StatsLlmFilter,
+    by_origin: Vec<StatsSegment>,
+    by_tool: Vec<StatsSegment>,
+}
+
+#[derive(Debug, Default, Clone, Serialize)]
+struct StatsSegment {
+    name: String,
+    recall_runs: usize,
+    non_empty_recall_runs: usize,
+    evaluated_recall_runs: usize,
+    useful_recall_runs: usize,
+    judged_memory_results: usize,
+    good_memory_results: usize,
+    low_memory_results: usize,
+    average_score: Option<f64>,
+    average_recall_chars_per_non_empty_run: f64,
 }
 
 #[derive(Debug, Serialize)]
@@ -569,6 +619,7 @@ fn build_stats(db: &Database, eval_limit: usize) -> anyhow::Result<StatsOutput> 
         .collect::<HashSet<_>>();
 
     let mut recall_eval_by_anchor = BTreeMap::<StatsAnchor, StatsRecallVolumeRun>::new();
+    let mut volume_runs = Vec::<StatsRecallVolumeRun>::new();
     for task in db
         .list_tasks_by_kind(yaaml::daemon::TASK_KIND_RECALL_EVAL)
         .context("failed to list recall eval tasks")?
@@ -576,23 +627,28 @@ fn build_stats(db: &Database, eval_limit: usize) -> anyhow::Result<StatsOutput> 
         let Some((anchor, volume)) = recall_eval_task_volume(&task.payload_json) else {
             continue;
         };
-        if !eligible.contains(&anchor) {
-            continue;
+        volume_runs.push(volume.clone());
+        if let Some(anchor) = anchor {
+            if !eligible.contains(&anchor) {
+                continue;
+            }
+            recall_runs.insert(anchor.clone());
+            recall_eval_by_anchor.entry(anchor).or_insert(volume);
         }
-        recall_runs.insert(anchor.clone());
-        recall_eval_by_anchor.entry(anchor).or_insert(volume);
     }
 
-    let mut latest_eval_run_by_anchor = BTreeMap::<StatsAnchor, EvalRunRecord>::new();
-    for run in db
+    let eval_runs = db
         .list_eval_runs(eval_limit)
-        .context("failed to list eval runs")?
-    {
-        let Some(anchor) = eval_run_anchor(&run.config_json) else {
+        .context("failed to list eval runs")?;
+    let mut latest_eval_run_by_anchor = BTreeMap::<StatsAnchor, EvalRunRecord>::new();
+    for run in &eval_runs {
+        let Some(anchor) = eval_run_anchor(run) else {
             continue;
         };
         if eligible.contains(&anchor) {
-            latest_eval_run_by_anchor.entry(anchor).or_insert(run);
+            latest_eval_run_by_anchor
+                .entry(anchor)
+                .or_insert_with(|| run.clone());
         }
     }
 
@@ -609,7 +665,7 @@ fn build_stats(db: &Database, eval_limit: usize) -> anyhow::Result<StatsOutput> 
             .with_context(|| format!("failed to load eval results for run {}", run.id))?;
         let mut has_numeric_score = false;
         let mut has_useful_score = false;
-        let Some(anchor) = eval_run_anchor(&run.config_json) else {
+        let Some(anchor) = eval_run_anchor(run) else {
             continue;
         };
         for result in results {
@@ -660,6 +716,28 @@ fn build_stats(db: &Database, eval_limit: usize) -> anyhow::Result<StatsOutput> 
     let volumes = non_empty_by_anchor.values().cloned().collect::<Vec<_>>();
     let volume = build_volume_stats(&volumes);
     let llm_filter = build_llm_filter_stats(&volumes);
+    let (mut segment_accumulators, mut tool_accumulators) =
+        build_stats_segment_accumulators(db, &eval_runs)?;
+    for volume_run in &volume_runs {
+        let segment = segment_accumulators
+            .entry(volume_run.recall_origin.clone())
+            .or_default();
+        segment.recall_runs += 1;
+        if volume_run.memory_count > 0 {
+            segment.non_empty_runs += 1;
+            segment.recall_chars.push(volume_run.recall_chars);
+        }
+        if let Some(tool_name) = &volume_run.tool_name {
+            let tool_segment = tool_accumulators.entry(tool_name.clone()).or_default();
+            tool_segment.recall_runs += 1;
+            if volume_run.memory_count > 0 {
+                tool_segment.non_empty_runs += 1;
+                tool_segment.recall_chars.push(volume_run.recall_chars);
+            }
+        }
+    }
+    let by_origin = stats_segments(segment_accumulators);
+    let by_tool = stats_segments(tool_accumulators);
     let eligible_count = eligible.len();
     let recall_count = recall_runs.len();
     let non_empty_count = non_empty_by_anchor.len();
@@ -687,6 +765,8 @@ fn build_stats(db: &Database, eval_limit: usize) -> anyhow::Result<StatsOutput> 
         volume,
         useful,
         llm_filter,
+        by_origin,
+        by_tool,
     })
 }
 
@@ -694,6 +774,115 @@ fn build_stats(db: &Database, eval_limit: usize) -> anyhow::Result<StatsOutput> 
 struct StatsEvalOutcome {
     has_numeric_score: bool,
     has_useful_score: bool,
+}
+
+#[derive(Debug, Default)]
+struct StatsSegmentAccumulator {
+    recall_runs: usize,
+    non_empty_runs: usize,
+    eval_runs: usize,
+    evaluated_runs: usize,
+    useful_runs: usize,
+    numeric_scores: Vec<u8>,
+    recall_chars: Vec<usize>,
+}
+
+fn stats_segments(accumulators: BTreeMap<String, StatsSegmentAccumulator>) -> Vec<StatsSegment> {
+    let mut segments = accumulators
+        .into_iter()
+        .map(|(name, accumulator)| {
+            let good_memory_results = accumulator
+                .numeric_scores
+                .iter()
+                .filter(|score| **score >= 4)
+                .count();
+            let low_memory_results = accumulator
+                .numeric_scores
+                .iter()
+                .filter(|score| **score <= 2)
+                .count();
+            let average_score = if accumulator.numeric_scores.is_empty() {
+                None
+            } else {
+                Some(
+                    accumulator
+                        .numeric_scores
+                        .iter()
+                        .map(|score| f64::from(*score))
+                        .sum::<f64>()
+                        / accumulator.numeric_scores.len() as f64,
+                )
+            };
+            StatsSegment {
+                name,
+                recall_runs: accumulator.recall_runs.max(accumulator.eval_runs),
+                non_empty_recall_runs: accumulator.non_empty_runs,
+                evaluated_recall_runs: accumulator.evaluated_runs,
+                useful_recall_runs: accumulator.useful_runs,
+                judged_memory_results: accumulator.numeric_scores.len(),
+                good_memory_results,
+                low_memory_results,
+                average_score,
+                average_recall_chars_per_non_empty_run: average(&accumulator.recall_chars),
+            }
+        })
+        .collect::<Vec<_>>();
+    segments.sort_by_key(|segment| std::cmp::Reverse(segment.recall_runs));
+    segments
+}
+
+fn build_stats_segment_accumulators(
+    db: &Database,
+    runs: &[EvalRunRecord],
+) -> anyhow::Result<(
+    BTreeMap<String, StatsSegmentAccumulator>,
+    BTreeMap<String, StatsSegmentAccumulator>,
+)> {
+    let mut origin_accumulators = BTreeMap::<String, StatsSegmentAccumulator>::new();
+    let mut tool_accumulators = BTreeMap::<String, StatsSegmentAccumulator>::new();
+    for run in runs {
+        let origin = run.recall_origin.clone();
+        let origin_accumulator = origin_accumulators.entry(origin).or_default();
+        origin_accumulator.eval_runs += 1;
+        let mut tool_accumulator = run
+            .tool_name
+            .clone()
+            .map(|tool_name| tool_accumulators.entry(tool_name).or_default());
+        if let Some(tool_accumulator) = tool_accumulator.as_mut() {
+            tool_accumulator.eval_runs += 1;
+        }
+        let results = db
+            .eval_results_for_run(run.id)
+            .with_context(|| format!("failed to load eval results for run {}", run.id))?;
+        let mut has_numeric_score = false;
+        let mut has_useful_score = false;
+        for result in results {
+            let Some(score) = result.judge_score.as_deref().and_then(numeric_eval_score) else {
+                continue;
+            };
+            has_numeric_score = true;
+            if score >= 4 {
+                has_useful_score = true;
+            }
+            origin_accumulator.numeric_scores.push(score);
+            if let Some(tool_accumulator) = tool_accumulator.as_mut() {
+                tool_accumulator.numeric_scores.push(score);
+            }
+        }
+        if has_numeric_score {
+            origin_accumulator.evaluated_runs += 1;
+            if let Some(tool_accumulator) = tool_accumulator.as_mut() {
+                tool_accumulator.evaluated_runs += 1;
+            }
+        }
+        if has_useful_score {
+            origin_accumulator.useful_runs += 1;
+            if let Some(tool_accumulator) = tool_accumulator.as_mut() {
+                tool_accumulator.useful_runs += 1;
+            }
+        }
+    }
+    Ok((origin_accumulators, tool_accumulators))
 }
 
 fn recall_task_anchor(payload_json: &str) -> Option<StatsAnchor> {
@@ -705,26 +894,30 @@ fn recall_task_anchor(payload_json: &str) -> Option<StatsAnchor> {
         })
 }
 
-fn recall_eval_task_volume(payload_json: &str) -> Option<(StatsAnchor, StatsRecallVolumeRun)> {
+fn recall_eval_task_volume(
+    payload_json: &str,
+) -> Option<(Option<StatsAnchor>, StatsRecallVolumeRun)> {
     let payload = serde_json::from_str::<StatsRecallEvalTaskPayload>(payload_json).ok()?;
+    let anchor = payload.turn_ordinal.map(|turn_ordinal| StatsAnchor {
+        session_id: payload.session_id,
+        turn_ordinal,
+    });
     Some((
-        StatsAnchor {
-            session_id: payload.session_id,
-            turn_ordinal: payload.turn_ordinal,
-        },
+        anchor,
         StatsRecallVolumeRun {
             memory_count: payload.memory_ids.len(),
             recall_chars: payload.recall_text.chars().count(),
             filter_telemetry: payload.filter_telemetry,
+            recall_origin: payload.recall_origin,
+            tool_name: payload.tool_name,
         },
     ))
 }
 
-fn eval_run_anchor(config_json: &str) -> Option<StatsAnchor> {
-    let config = serde_json::from_str::<StatsEvalRunConfig>(config_json).ok()?;
+fn eval_run_anchor(run: &EvalRunRecord) -> Option<StatsAnchor> {
     Some(StatsAnchor {
-        session_id: config.session_id?,
-        turn_ordinal: config.turn_ordinal?,
+        session_id: run.session_id.clone()?,
+        turn_ordinal: run.turn_ordinal?,
     })
 }
 
@@ -932,10 +1125,35 @@ fn print_human_stats(stats: &StatsOutput) {
         stats.llm_filter.average_candidates_per_filtered_run,
         stats.llm_filter.average_dropped_memories_per_applied_run
     );
+    print_stats_segments("by origin", &stats.by_origin);
+    print_stats_segments("by tool", &stats.by_tool);
 }
 
 fn percent(rate: f64) -> String {
     format!("{:.1}%", rate * 100.0)
+}
+
+fn print_stats_segments(label: &str, segments: &[StatsSegment]) {
+    if segments.is_empty() {
+        return;
+    }
+    println!("  {label}:");
+    for segment in segments {
+        let average_score = segment
+            .average_score
+            .map(|score| format!("{score:.2}"))
+            .unwrap_or_else(|| "-".to_string());
+        println!(
+            "    {}: recall={} non_empty={} evaluated={} useful={} avg_score={} avg_chars={:.0}",
+            segment.name,
+            segment.recall_runs,
+            segment.non_empty_recall_runs,
+            segment.evaluated_recall_runs,
+            segment.useful_recall_runs,
+            average_score,
+            segment.average_recall_chars_per_non_empty_run
+        );
+    }
 }
 
 fn tasks(args: TasksArgs) -> anyhow::Result<()> {
@@ -1956,9 +2174,19 @@ fn eval_list(args: EvalListArgs) -> anyhow::Result<()> {
                 .map(|ordinal| ordinal.to_string())
                 .unwrap_or_else(|| "-".to_string());
             let score = run.score.as_deref().unwrap_or("-");
+            let origin = run.recall_origin.as_str();
+            let tool = run.tool_name.as_deref().unwrap_or("-");
             println!(
-                "  {}  score={}  session={}  turn={}  started={}  completed={}  results={}",
-                run.id, score, session, turn, run.started_at_human, completed, run.result_count
+                "  {}  score={}  origin={}  tool={}  session={}  turn={}  started={}  completed={}  results={}",
+                run.id,
+                score,
+                origin,
+                tool,
+                session,
+                turn,
+                run.started_at_human,
+                completed,
+                run.result_count
             );
         }
     }
@@ -1975,6 +2203,12 @@ struct EvalListRun {
     completed_at_human: Option<String>,
     session_id: Option<String>,
     turn_ordinal: Option<u64>,
+    turn_id: Option<String>,
+    recall_origin: String,
+    tool_name: Option<String>,
+    tool_use_id: Option<String>,
+    tool_input_summary: Option<String>,
+    injected: Option<bool>,
     score: Option<String>,
     result_count: u64,
 }
@@ -1992,6 +2226,12 @@ impl From<EvalRunRecord> for EvalListRun {
             completed_at_human,
             session_id: run.session_id,
             turn_ordinal: run.turn_ordinal,
+            turn_id: run.agent_turn_id,
+            recall_origin: run.recall_origin,
+            tool_name: run.tool_name,
+            tool_use_id: run.tool_use_id,
+            tool_input_summary: run.tool_input_summary,
+            injected: run.injected,
             score: run.score.map(display_eval_score),
             result_count: run.result_count,
         }
@@ -2401,11 +2641,24 @@ struct EvalSummary {
     judged_results: usize,
     average_score: Option<f64>,
     score_counts: BTreeMap<String, u64>,
+    origin_breakdown: Vec<EvalSegmentSummary>,
+    tool_breakdown: Vec<EvalSegmentSummary>,
     session_breakdown: Vec<EvalSessionSummary>,
     stale_insufficient_context: Vec<EvalStaleInsufficientContext>,
     queued_recall_evals: Vec<EvalQueuedRecallTask>,
     low_score_examples: Vec<EvalSummaryExample>,
     high_score_examples: Vec<EvalSummaryExample>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct EvalSegmentSummary {
+    name: String,
+    runs: usize,
+    results: usize,
+    judged_results: usize,
+    average_score: Option<f64>,
+    score_counts: BTreeMap<String, u64>,
+    latest_run_id: i64,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -2449,6 +2702,8 @@ struct EvalSummaryExample {
     result_id: i64,
     session_id: Option<String>,
     turn_ordinal: Option<u64>,
+    recall_origin: String,
+    tool_name: Option<String>,
     score: String,
     memory_id: Option<i64>,
     memory_title: Option<String>,
@@ -2467,6 +2722,15 @@ struct EvalSessionAccumulator {
     latest_turn_ordinal: Option<u64>,
 }
 
+#[derive(Debug, Default)]
+struct EvalSegmentAccumulator {
+    runs: usize,
+    results: usize,
+    numeric_scores: Vec<u8>,
+    all_scores: Vec<String>,
+    latest_run_id: i64,
+}
+
 fn build_eval_summary(db: &Database, runs: Vec<EvalRunRecord>) -> anyhow::Result<EvalSummary> {
     let mut all_scores = Vec::new();
     let mut numeric_scores = Vec::new();
@@ -2474,6 +2738,8 @@ fn build_eval_summary(db: &Database, runs: Vec<EvalRunRecord>) -> anyhow::Result
     let mut high_score_examples = Vec::new();
     let mut stale_insufficient_context = Vec::new();
     let mut session_accumulators = BTreeMap::<String, EvalSessionAccumulator>::new();
+    let mut origin_accumulators = BTreeMap::<String, EvalSegmentAccumulator>::new();
+    let mut tool_accumulators = BTreeMap::<String, EvalSegmentAccumulator>::new();
     let mut results_considered = 0_usize;
 
     for run in &runs {
@@ -2481,6 +2747,22 @@ fn build_eval_summary(db: &Database, runs: Vec<EvalRunRecord>) -> anyhow::Result
             .eval_results_for_run(run.id)
             .with_context(|| format!("failed to load eval results for run {}", run.id))?;
         let run_context = eval_run_context(run);
+        let origin_key = run_context.recall_origin.clone();
+        let origin_accumulator = origin_accumulators.entry(origin_key).or_default();
+        origin_accumulator.runs += 1;
+        if run.id > origin_accumulator.latest_run_id {
+            origin_accumulator.latest_run_id = run.id;
+        }
+        let mut tool_accumulator = run_context
+            .tool_name
+            .clone()
+            .map(|tool_name| tool_accumulators.entry(tool_name).or_default());
+        if let Some(tool_accumulator) = tool_accumulator.as_mut() {
+            tool_accumulator.runs += 1;
+            if run.id > tool_accumulator.latest_run_id {
+                tool_accumulator.latest_run_id = run.id;
+            }
+        }
         let session_key = run_context
             .session_id
             .clone()
@@ -2529,14 +2811,30 @@ fn build_eval_summary(db: &Database, runs: Vec<EvalRunRecord>) -> anyhow::Result
         for result in results {
             results_considered += 1;
             accumulator.results += 1;
+            origin_accumulator.results += 1;
+            if let Some(tool_accumulator) = tool_accumulator.as_mut() {
+                tool_accumulator.results += 1;
+            }
             if let Some(score) = result.judge_score.as_deref() {
                 all_scores.push(display_eval_score(score.to_string()));
                 accumulator
                     .all_scores
                     .push(display_eval_score(score.to_string()));
+                origin_accumulator
+                    .all_scores
+                    .push(display_eval_score(score.to_string()));
+                if let Some(tool_accumulator) = tool_accumulator.as_mut() {
+                    tool_accumulator
+                        .all_scores
+                        .push(display_eval_score(score.to_string()));
+                }
                 if let Some(numeric_score) = numeric_eval_score(score) {
                     numeric_scores.push(numeric_score);
                     accumulator.numeric_scores.push(numeric_score);
+                    origin_accumulator.numeric_scores.push(numeric_score);
+                    if let Some(tool_accumulator) = tool_accumulator.as_mut() {
+                        tool_accumulator.numeric_scores.push(numeric_score);
+                    }
                     let example = eval_summary_example(&run_context, &result, score);
                     if numeric_score <= 2 && low_score_examples.len() < 5 {
                         low_score_examples.push(example);
@@ -2560,6 +2858,8 @@ fn build_eval_summary(db: &Database, runs: Vec<EvalRunRecord>) -> anyhow::Result
                 / numeric_scores.len() as f64,
         )
     };
+    let origin_breakdown = eval_segment_summaries(origin_accumulators);
+    let tool_breakdown = eval_segment_summaries(tool_accumulators);
     let mut session_breakdown = session_accumulators
         .into_values()
         .map(|accumulator| {
@@ -2602,6 +2902,8 @@ fn build_eval_summary(db: &Database, runs: Vec<EvalRunRecord>) -> anyhow::Result
         judged_results,
         average_score,
         score_counts: score_counts(all_scores.iter().map(String::as_str)),
+        origin_breakdown,
+        tool_breakdown,
         session_breakdown,
         stale_insufficient_context,
         queued_recall_evals,
@@ -2610,31 +2912,55 @@ fn build_eval_summary(db: &Database, runs: Vec<EvalRunRecord>) -> anyhow::Result
     })
 }
 
+fn eval_segment_summaries(
+    accumulators: BTreeMap<String, EvalSegmentAccumulator>,
+) -> Vec<EvalSegmentSummary> {
+    let mut summaries = accumulators
+        .into_iter()
+        .map(|(name, accumulator)| {
+            let average_score = if accumulator.numeric_scores.is_empty() {
+                None
+            } else {
+                Some(
+                    accumulator
+                        .numeric_scores
+                        .iter()
+                        .map(|score| f64::from(*score))
+                        .sum::<f64>()
+                        / accumulator.numeric_scores.len() as f64,
+                )
+            };
+            EvalSegmentSummary {
+                name,
+                runs: accumulator.runs,
+                results: accumulator.results,
+                judged_results: accumulator.numeric_scores.len(),
+                average_score,
+                score_counts: score_counts(accumulator.all_scores.iter().map(String::as_str)),
+                latest_run_id: accumulator.latest_run_id,
+            }
+        })
+        .collect::<Vec<_>>();
+    summaries.sort_by_key(|summary| std::cmp::Reverse(summary.latest_run_id));
+    summaries
+}
+
 #[derive(Debug, Clone)]
 struct EvalRunContext {
     run_id: i64,
     session_id: Option<String>,
     turn_ordinal: Option<u64>,
     memory_ids: Vec<i64>,
+    recall_origin: String,
+    tool_name: Option<String>,
 }
 
 fn eval_run_context(run: &EvalRunRecord) -> EvalRunContext {
     let config = serde_json::from_str::<serde_json::Value>(&run.config_json).ok();
     EvalRunContext {
         run_id: run.id,
-        session_id: run.session_id.clone().or_else(|| {
-            config
-                .as_ref()
-                .and_then(|value| value.get("session_id"))
-                .and_then(serde_json::Value::as_str)
-                .map(str::to_string)
-        }),
-        turn_ordinal: run.turn_ordinal.or_else(|| {
-            config
-                .as_ref()
-                .and_then(|value| value.get("turn_ordinal"))
-                .and_then(serde_json::Value::as_u64)
-        }),
+        session_id: run.session_id.clone(),
+        turn_ordinal: run.turn_ordinal,
         memory_ids: config
             .as_ref()
             .and_then(|value| value.get("memory_ids"))
@@ -2646,6 +2972,8 @@ fn eval_run_context(run: &EvalRunRecord) -> EvalRunContext {
                     .collect()
             })
             .unwrap_or_default(),
+        recall_origin: run.recall_origin.clone(),
+        tool_name: run.tool_name.clone(),
     }
 }
 
@@ -2721,6 +3049,8 @@ fn eval_summary_example(
         result_id: result.id,
         session_id: run_context.session_id.clone(),
         turn_ordinal: run_context.turn_ordinal,
+        recall_origin: run_context.recall_origin.clone(),
+        tool_name: run_context.tool_name.clone(),
         score: score.to_string(),
         memory_id: result.memory_id,
         memory_title: result.memory_title.clone(),
@@ -2767,11 +3097,40 @@ fn print_human_eval_summary(summary: &EvalSummary) {
             .join(", ");
         println!("  scores: {rendered}");
     }
+    print_eval_segment_breakdown("Origin breakdown", &summary.origin_breakdown);
+    print_eval_segment_breakdown("Tool breakdown", &summary.tool_breakdown);
     print_eval_session_breakdown(&summary.session_breakdown);
     print_stale_insufficient_context(&summary.stale_insufficient_context);
     print_queued_recall_evals(&summary.queued_recall_evals);
     print_eval_summary_examples("Low-score examples", &summary.low_score_examples);
     print_eval_summary_examples("High-score examples", &summary.high_score_examples);
+}
+
+fn print_eval_segment_breakdown(label: &str, segments: &[EvalSegmentSummary]) {
+    if segments.is_empty() {
+        return;
+    }
+    println!("{label}");
+    for segment in segments {
+        let average_score = segment
+            .average_score
+            .map(|score| format!("{score:.2}"))
+            .unwrap_or_else(|| "n/a".to_string());
+        let rendered_scores = if segment.score_counts.is_empty() {
+            "none".to_string()
+        } else {
+            segment
+                .score_counts
+                .iter()
+                .map(|(score, count)| format!("{score}={count}"))
+                .collect::<Vec<_>>()
+                .join(", ")
+        };
+        println!(
+            "  {} runs={} avg={} scores={} latest_run={}",
+            segment.name, segment.runs, average_score, rendered_scores, segment.latest_run_id
+        );
+    }
 }
 
 fn print_eval_session_breakdown(sessions: &[EvalSessionSummary]) {
@@ -2859,11 +3218,15 @@ fn print_eval_summary_examples(label: &str, examples: &[EvalSummaryExample]) {
     println!("{label}");
     for example in examples {
         let title = example.memory_title.as_deref().unwrap_or("no memory");
+        let origin = example.recall_origin.as_str();
+        let tool = example.tool_name.as_deref().unwrap_or("-");
         println!(
-            "  run={} result={} score={} memory={} title={}",
+            "  run={} result={} score={} origin={} tool={} memory={} title={}",
             example.run_id,
             example.result_id,
             example.score,
+            origin,
+            tool,
             example
                 .memory_id
                 .map(|id| id.to_string())
@@ -3107,12 +3470,16 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
         bail!("--debug-ranking requires --json");
     }
 
-    if args.session.is_some() || args.turn.is_some() {
+    let tool_input_summary = tool_input_summary(&args)?;
+    let tool_query = tool_recall_query(&args, tool_input_summary.as_deref());
+    let explicit_recall = args.query.is_some() || tool_query.is_some();
+
+    if !explicit_recall && (args.session.is_some() || args.turn.is_some()) {
         return recall_for_historical_turn(args, &config, &db);
     }
 
     let recall_path = contextual_recall_file_path(&recall_dir, &project_id_path, &db)?;
-    let Some(query) = args.query else {
+    let Some(query) = args.query.clone().or(tool_query) else {
         if args.json || args.debug_ranking {
             bail!("--json and --debug-ranking require --query or --session/--turn");
         }
@@ -3155,6 +3522,22 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
         .context("failed to embed recall query")?;
     let now = unix_timestamp();
     let project_id = project_id_path.display().to_string();
+    let recall_origin = args.origin.map(RecallOriginArg::as_str).unwrap_or(
+        if args.tool_name.is_some() || args.tool_input_json.is_some() {
+            "tool_pre_use"
+        } else {
+            "manual_query"
+        },
+    );
+    let query_source = match recall_origin {
+        "tool_pre_use" => args
+            .tool_name
+            .as_deref()
+            .map(|tool_name| format!("tool_pre_use:{tool_name}"))
+            .unwrap_or_else(|| "tool_pre_use".to_string()),
+        "manual_query" => "user input".to_string(),
+        other => other.to_string(),
+    };
     let recall_result = recall_from_embedding(
         &db,
         &config,
@@ -3163,7 +3546,7 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
             project_id: &project_id,
             query_text: &query,
             query_context: None,
-            query_source: "user input".to_string(),
+            query_source,
             query_timestamp: now.clone(),
         },
     )?;
@@ -3178,8 +3561,33 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
         markdown: rendered,
     } = recall_result;
     let selected_ids = selected_memory_ids.clone();
+    let anchor = recall_anchor_from_args_or_current(&db, &project_id, &args)?;
+    queue_query_recall_eval(
+        &db,
+        &anchor,
+        &rendered,
+        &selected_ids,
+        Some(&filter_telemetry),
+        yaaml::daemon::RecallEvalMetadata {
+            recall_origin: recall_origin.to_string(),
+            turn_id: args.turn_id.clone(),
+            tool_name: args.tool_name.clone(),
+            tool_use_id: args.tool_use_id.clone(),
+            tool_input_summary: tool_input_summary.clone(),
+            injected: (recall_origin == "tool_pre_use").then_some(!selected_ids.is_empty()),
+        },
+    )?;
+    if args.codex_hook_output {
+        println!(
+            "{}",
+            serde_json::to_string(&codex_hook_recall_output(
+                !selected_ids.is_empty(),
+                &rendered
+            ))?
+        );
+        return Ok(());
+    }
     if args.json {
-        let anchor = recall_eval_anchor(&db, &project_id)?;
         println!(
             "{}",
             serde_json::to_string_pretty(&RecallCommandOutput {
@@ -3187,7 +3595,9 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
                     .as_ref()
                     .map(|anchor| anchor.session_id.clone())
                     .unwrap_or_default(),
-                turn_ordinal: anchor.map(|anchor| anchor.turn_ordinal).unwrap_or_default(),
+                turn_ordinal: anchor
+                    .and_then(|anchor| anchor.turn_ordinal)
+                    .unwrap_or_default(),
                 query_timestamp,
                 query_source,
                 project_id: result_project_id,
@@ -3202,19 +3612,6 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
     }
     let write = write_recall_file(&recall_path, &rendered, &selected_ids)
         .context("failed to write recall file")?;
-    if !selected_ids.is_empty() && matches!(write, RecallWrite::Written | RecallWrite::Unchanged) {
-        if let Some(anchor) = recall_eval_anchor(&db, &project_id)? {
-            yaaml::daemon::queue_recall_eval_after_turn(
-                &db,
-                &anchor.session_id,
-                anchor.turn_ordinal,
-                &rendered,
-                &selected_ids,
-                Some(&filter_telemetry),
-                0,
-            )?;
-        }
-    }
 
     match write {
         RecallWrite::Written | RecallWrite::Unchanged => print!("{rendered}"),
@@ -3229,6 +3626,105 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
         }
     }
     Ok(())
+}
+
+fn tool_input_summary(args: &RecallArgs) -> anyhow::Result<Option<String>> {
+    if let Some(summary) = args.tool_input_summary.as_deref() {
+        let summary = summary.trim();
+        if !summary.is_empty() {
+            return Ok(Some(truncate_chars(summary, 500)));
+        }
+    }
+    let Some(input_json) = args.tool_input_json.as_deref() else {
+        return Ok(None);
+    };
+    let value: serde_json::Value =
+        serde_json::from_str(input_json).context("failed to parse --tool-input-json")?;
+    let summary = value
+        .get("command")
+        .and_then(serde_json::Value::as_str)
+        .or_else(|| {
+            value
+                .pointer("/tool_input/command")
+                .and_then(serde_json::Value::as_str)
+        })
+        .or_else(|| value.get("cmd").and_then(serde_json::Value::as_str))
+        .map(str::to_string)
+        .unwrap_or_else(|| truncate_chars(&value.to_string(), 500));
+    Ok(Some(truncate_chars(summary.trim(), 500)))
+}
+
+fn tool_recall_query(args: &RecallArgs, tool_input_summary: Option<&str>) -> Option<String> {
+    let tool_name = args.tool_name.as_deref()?;
+    let mut parts = vec![format!("tool:{tool_name}")];
+    if let Some(summary) = tool_input_summary {
+        if !summary.trim().is_empty() {
+            parts.push(format!("tool input: {summary}"));
+        }
+    }
+    Some(parts.join("\n"))
+}
+
+fn recall_anchor_from_args_or_current(
+    db: &Database,
+    project_id: &str,
+    args: &RecallArgs,
+) -> anyhow::Result<Option<QueryRecallAnchor>> {
+    if let Some(session_id) = args.session.as_deref() {
+        return Ok(Some(QueryRecallAnchor {
+            session_id: session_id.to_string(),
+            turn_ordinal: args.turn,
+        }));
+    }
+    Ok(
+        recall_eval_anchor(db, project_id)?.map(|anchor| QueryRecallAnchor {
+            session_id: anchor.session_id,
+            turn_ordinal: Some(anchor.turn_ordinal),
+        }),
+    )
+}
+
+struct QueryRecallAnchor {
+    session_id: String,
+    turn_ordinal: Option<u64>,
+}
+
+fn queue_query_recall_eval(
+    db: &Database,
+    anchor: &Option<QueryRecallAnchor>,
+    rendered: &str,
+    selected_ids: &[i64],
+    filter_telemetry: Option<&RecallFilterTelemetry>,
+    metadata: yaaml::daemon::RecallEvalMetadata,
+) -> anyhow::Result<()> {
+    let Some(anchor) = anchor else {
+        return Ok(());
+    };
+    yaaml::daemon::queue_recall_eval_after_turn_with_metadata(
+        db,
+        &anchor.session_id,
+        anchor.turn_ordinal,
+        metadata.turn_id.clone(),
+        rendered,
+        selected_ids,
+        filter_telemetry,
+        metadata,
+        0,
+    )?;
+    Ok(())
+}
+
+fn codex_hook_recall_output(injected: bool, rendered: &str) -> serde_json::Value {
+    if injected {
+        serde_json::json!({
+            "hookSpecificOutput": {
+                "hookEventName": "PreToolUse",
+                "additionalContext": rendered,
+            },
+        })
+    } else {
+        serde_json::json!({})
+    }
 }
 
 fn refresh_missing_recall_file(

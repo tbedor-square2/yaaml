@@ -1,4 +1,4 @@
-pub const EXPECTED_SCHEMA_VERSION: i64 = 2;
+pub const EXPECTED_SCHEMA_VERSION: i64 = 3;
 
 pub const MIGRATIONS: &[&str] = &[
     r#"
@@ -138,5 +138,8 @@ SET display_text = NULL
 WHERE display_text IS NOT NULL;
 
 UPDATE schema_version SET version = 2;
+"#,
+    r#"
+UPDATE schema_version SET version = 3;
 "#,
 ];

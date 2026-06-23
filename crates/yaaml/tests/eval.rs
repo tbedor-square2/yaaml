@@ -10,6 +10,7 @@ use yaaml_core::{
     AgentType, MemoryKind, MemoryRecord, MemoryScope, SessionRecord, TaskRecord, TaskStatus,
     TurnRecord, TurnStatus,
 };
+use yaaml_store::database::EvalRunMetadata;
 use yaaml_store::Database;
 
 #[test]
@@ -195,20 +196,22 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
         .unwrap()
         .unwrap();
     let run_id = db
-        .insert_eval_run(
+        .insert_eval_run_with_metadata(
             "recall_1_to_5",
             "unix:1781205326",
             r#"{"session_id":"session-1","turn_ordinal":7,"memory_ids":[1]}"#,
+            eval_metadata(7, "session_background"),
         )
         .unwrap();
     db.insert_eval_result(run_id, turn_row_id, None, "5", "great", "unix:1781205330")
         .unwrap();
     db.complete_eval_run(run_id, "unix:1781205331").unwrap();
     let insufficient_run_id = db
-        .insert_eval_run(
+        .insert_eval_run_with_metadata(
             "recall_1_to_5",
             "unix:1781205400",
             r#"{"session_id":"session-1","turn_ordinal":8,"memory_ids":[1]}"#,
+            eval_metadata(8, "session_background"),
         )
         .unwrap();
     db.insert_eval_result(
@@ -453,10 +456,11 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
         })
         .unwrap();
     let run_id = db
-        .insert_eval_run(
+        .insert_eval_run_with_metadata(
             "default",
             "2026-06-08T00:00:03Z",
             r#"{"session_id":"session-1","turn_ordinal":7}"#,
+            eval_metadata(7, "replay"),
         )
         .unwrap();
     db.insert_eval_result(
@@ -480,13 +484,14 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     db.complete_eval_run(run_id, "2026-06-08T00:00:06Z")
         .unwrap();
     let stale_run_id = db
-        .insert_eval_run(
+        .insert_eval_run_with_metadata(
             "recall_1_to_5",
             "2026-06-08T00:00:08Z",
             &format!(
                 r#"{{"session_id":"session-1","turn_ordinal":8,"memory_ids":[{}]}}"#,
                 low_memory_id
             ),
+            eval_metadata(8, "session_background"),
         )
         .unwrap();
     db.insert_eval_result(
@@ -505,7 +510,7 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
         kind: "recall_eval".to_string(),
         status: TaskStatus::Queued,
         priority: 10,
-        payload_json: r#"{"session_id":"session-1","turn_ordinal":9}"#.to_string(),
+        payload_json: r#"{"session_id":"session-1","turn_ordinal":9,"recall_text":"","memory_ids":[],"recall_origin":"session_background"}"#.to_string(),
         attempts: 1,
         max_attempts: 5,
         next_run_at: Some("unix:1781206000".to_string()),
@@ -695,10 +700,11 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
         })
         .unwrap();
     let first_run_id = db
-        .insert_eval_run(
+        .insert_eval_run_with_metadata(
             "recall_1_to_5",
             "2026-06-08T00:00:03Z",
             r#"{"session_id":"session-1","turn_ordinal":7}"#,
+            eval_metadata(7, "session_background"),
         )
         .unwrap();
     db.insert_eval_result(
@@ -722,10 +728,11 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     db.complete_eval_run(first_run_id, "2026-06-08T00:00:05Z")
         .unwrap();
     let second_run_id = db
-        .insert_eval_run(
+        .insert_eval_run_with_metadata(
             "recall_1_to_5",
             "2026-06-08T00:00:06Z",
             r#"{"session_id":"session-1","turn_ordinal":7}"#,
+            eval_metadata(7, "session_background"),
         )
         .unwrap();
     db.insert_eval_result(
@@ -916,4 +923,13 @@ fn insert_transcript_backed_turn(db: &Database, root: &Path, project: &Path, tex
         context: Some(yaaml_core::infer_context_from_path(project)),
     })
     .unwrap();
+}
+
+fn eval_metadata(turn_ordinal: u64, recall_origin: &str) -> EvalRunMetadata {
+    EvalRunMetadata {
+        session_id: Some("session-1".to_string()),
+        turn_ordinal: Some(turn_ordinal),
+        recall_origin: recall_origin.to_string(),
+        ..EvalRunMetadata::default()
+    }
 }

@@ -806,6 +806,129 @@ recall_llm_filter_enabled = false
 }
 
 #[test]
+fn tool_pre_use_recall_emits_codex_hook_context_and_eval_metadata() {
+    let tmp = TempDir::new().unwrap();
+    let home = tmp.path().join("home");
+    let project = tmp.path().join("project");
+    fs::create_dir_all(home.join(".yaaml")).unwrap();
+    fs::create_dir_all(&project).unwrap();
+    let db_path = home.join(".yaaml").join("yaaml.db");
+    let recall_dir = home.join(".yaaml").join("recall");
+    let server = fake_embedding_server();
+    fs::write(
+        home.join(".yaaml").join("config.toml"),
+        format!(
+            r#"
+db_path = "{}"
+recall_dir = "{}"
+embedding_base_url = "{}"
+recall_llm_filter_enabled = false
+"#,
+            db_path.display(),
+            recall_dir.display(),
+            server.base_url
+        ),
+    )
+    .unwrap();
+
+    let project_id = project.canonicalize().unwrap().display().to_string();
+    let mut db = Database::open(&db_path).unwrap();
+    db.migrate().unwrap();
+    db.upsert_session(&SessionRecord {
+        id: "tool-session".to_string(),
+        agent_type: AgentType::Codex,
+        project_id: project_id.clone(),
+        transcript_file_path: "/tmp/tool-session.jsonl".to_string(),
+        started_at: Some("2026-06-08T00:00:00Z".to_string()),
+        last_seen_at: Some("2026-06-08T00:00:03Z".to_string()),
+    })
+    .unwrap();
+    db.insert_turn(&TurnRecord {
+        session_id: "tool-session".to_string(),
+        turn_id: Some("turn-0".to_string()),
+        ordinal: 0,
+        byte_start: 0,
+        byte_end: 1,
+        observed_at: Some("2026-06-08T00:00:01Z".to_string()),
+        status: TurnStatus::Completed,
+        display_text: None,
+        cwd: Some(project_id.clone()),
+        context: Some(yaaml_core::infer_context_from_path(&project)),
+    })
+    .unwrap();
+    let memory_id = insert_memory_with_embedding(
+        &mut db,
+        MemoryRecord {
+            id: None,
+            title: "Bazel tool guidance".to_string(),
+            body: "Before running Bazel tests, prefer the repo-local bin/bazel wrapper."
+                .to_string(),
+            scope: MemoryScope::Project,
+            kind: MemoryKind::Workflow,
+            task_keys: vec!["bazel".to_string()],
+            source_turn_refs: Vec::new(),
+            created_at: "2026-06-08T00:00:00Z".to_string(),
+            updated_at: "2026-06-08T00:00:00Z".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some(project_id),
+            project_descriptor: Some("yaaml, Rust CLI memory daemon".to_string()),
+            lineage_refs: Vec::new(),
+        },
+    );
+
+    let output = Command::new(env!("CARGO_BIN_EXE_yaaml"))
+        .arg("recall")
+        .arg("--origin")
+        .arg("tool-pre-use")
+        .arg("--tool-name")
+        .arg("Bash")
+        .arg("--tool-use-id")
+        .arg("toolu-1")
+        .arg("--tool-input-json")
+        .arg(r#"{"command":"bazel test //foo:bar"}"#)
+        .arg("--session")
+        .arg("tool-session")
+        .arg("--turn")
+        .arg("0")
+        .arg("--codex-hook-output")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .env("OPENAI_API_KEY", "test-key")
+        .env_remove("CODEX_THREAD_ID")
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    server.join();
+    let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(value["hookSpecificOutput"]["hookEventName"], "PreToolUse");
+    let additional_context = value["hookSpecificOutput"]["additionalContext"]
+        .as_str()
+        .unwrap();
+    assert!(additional_context.contains("## Bazel tool guidance"));
+    assert!(additional_context.contains(&format!("memory_ids: {memory_id}")));
+    assert!(!session_recall_file_path(&recall_dir, "tool-session").exists());
+
+    let db = Database::open(&db_path).unwrap();
+    let tasks = db.list_tasks_by_kind(TASK_KIND_RECALL_EVAL).unwrap();
+    assert_eq!(tasks.len(), 1);
+    let payload: serde_json::Value = serde_json::from_str(&tasks[0].payload_json).unwrap();
+    assert_eq!(payload["session_id"], "tool-session");
+    assert_eq!(payload["turn_ordinal"], 0);
+    assert_eq!(payload["memory_ids"][0], memory_id);
+    assert_eq!(payload["recall_origin"], "tool_pre_use");
+    assert_eq!(payload["tool_name"], "Bash");
+    assert_eq!(payload["tool_use_id"], "toolu-1");
+    assert_eq!(payload["tool_input_summary"], "bazel test //foo:bar");
+    assert_eq!(payload["injected"], true);
+}
+
+#[test]
 fn bare_recall_refreshes_missing_current_session_file() {
     let tmp = TempDir::new().unwrap();
     let home = tmp.path().join("home");

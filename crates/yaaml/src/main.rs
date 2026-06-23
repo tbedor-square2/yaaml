@@ -1983,7 +1983,8 @@ fn ingest(args: IngestArgs) -> anyhow::Result<()> {
 
 fn init() -> anyhow::Result<()> {
     let home = yaaml_core::paths::home_dir().context("failed to resolve HOME")?;
-    let paths = yaaml::skills::InitPaths::for_home(&home);
+    let binary = env::current_exe().context("failed to resolve current executable")?;
+    let paths = yaaml::skills::InitPaths::for_home_with_binary(&home, binary);
     let report = yaaml::skills::init(&paths)?;
 
     println!(
@@ -2001,6 +2002,14 @@ fn init() -> anyhow::Result<()> {
     println!(
         "installed Claude remember skill: {}",
         report.claude_remember_skill.display()
+    );
+    println!(
+        "installed Codex PreToolUse hook script: {}",
+        report.codex_pre_tool_hook_script.display()
+    );
+    println!(
+        "updated Codex config for YAAML hook: {}",
+        report.codex_config.display()
     );
     Ok(())
 }

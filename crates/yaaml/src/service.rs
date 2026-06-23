@@ -50,7 +50,10 @@ impl ServicePaths {
 }
 
 pub fn install(paths: &ServicePaths) -> anyhow::Result<ServiceInstallReport> {
-    let init = skills::init(&InitPaths::for_home(&paths.home))?;
+    let init = skills::init(&InitPaths::for_home_with_binary(
+        &paths.home,
+        paths.binary_path.clone(),
+    ))?;
     let service_file = if cfg!(target_os = "macos") {
         let path = paths.launch_agent_path();
         write_file(&path, &render_launch_agent(paths))?;

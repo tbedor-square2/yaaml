@@ -28,9 +28,19 @@ fn init_installs_codex_and_claude_skills() {
         .path()
         .join(".claude/skills/yaaml-remember/SKILL.md")
         .exists());
+    assert!(tmp
+        .path()
+        .join(".codex/hooks/yaaml-pre-tool-use.py")
+        .exists());
+    let codex_config = tmp.path().join(".codex/config.toml");
+    assert!(codex_config.exists());
+    let config = std::fs::read_to_string(codex_config).unwrap();
+    assert!(config.contains("[[hooks.PreToolUse]]"));
+    assert!(config.contains("yaaml-pre-tool-use.py"));
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(stdout.contains("installed Codex recall skill"));
     assert!(stdout.contains("installed Claude remember skill"));
+    assert!(stdout.contains("installed Codex PreToolUse hook script"));
 }
 
 #[test]

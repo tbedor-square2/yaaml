@@ -24,7 +24,7 @@ Limitations:
 4. Selection Budgeting: best balanced `top_2` (score=3.40, useful_runs=53, low=41, avg_mem=1.42). Lowest lows `top_1` (low=22, useful=36); lowest volume `top_1` (avg_mem=0.77, useful_runs=36). Baseline `production_health_action` score=3.24, useful_runs=53, low=53, avg_mem=1.85.
 5. LLM Filter Proxy: best balanced `abstain_if_weak_top` (score=3.28, useful_runs=53, low=49, avg_mem=1.79). Lowest lows `llm_one_best_proxy` (low=22, useful=36); lowest volume `llm_one_best_proxy` (avg_mem=0.74, useful_runs=36). Baseline `production_health_action` score=3.24, useful_runs=53, low=53, avg_mem=1.85.
 6. Memory Corpus Quality: best balanced `suppress_vague` (score=3.24, useful_runs=53, low=53, avg_mem=1.85). Lowest lows `suppress_vague` (low=53, useful=74); lowest volume `suppress_likely_low` (avg_mem=1.80, useful_runs=53). Baseline `production_health_action` score=3.24, useful_runs=53, low=53, avg_mem=1.85.
-7. Eval Feedback: best balanced `eval_ratio_rerank` (score=3.08, useful_runs=57, low=68, avg_mem=1.96). Lowest lows `precision_abstain` (low=42, useful=73); lowest volume `precision_abstain` (avg_mem=1.53, useful_runs=52). Baseline `strict_kind_no_eval` score=2.85, useful_runs=53, low=82, avg_mem=2.11.
+7. Eval Feedback: best balanced `eval_ratio_rerank` (score=3.08, useful_runs=57, low=68, avg_mem=1.96). Lowest lows `precision_abstain` (low=42, useful=73); lowest volume `precision_abstain` (avg_mem=1.52, useful_runs=52). Baseline `strict_kind_no_eval` score=2.85, useful_runs=53, low=82, avg_mem=2.11.
 
 ## Directional Takeaways
 
@@ -137,8 +137,8 @@ Stability across five cohorts:
 | production_health_action | 3.24 | 74 | 53 | 53 | 41 | 1.85 | 23.5% | 6.4% |
 | top_1 | 3.27 | 36 | 22 | 36 | 22 | 0.77 | 23.5% | 6.4% |
 | top_2 | 3.40 | 63 | 41 | 53 | 33 | 1.42 | 23.5% | 6.4% |
-| within_0_15_of_top | 3.27 | 43 | 32 | 40 | 25 | 1.00 | 23.5% | 6.4% |
-| stop_on_0_20_gap | 3.27 | 52 | 38 | 43 | 29 | 1.18 | 23.5% | 6.4% |
+| within_0_15_of_top | 3.27 | 43 | 32 | 40 | 25 | 1.01 | 23.5% | 6.4% |
+| stop_on_0_20_gap | 3.25 | 55 | 39 | 43 | 30 | 1.19 | 23.5% | 6.4% |
 
 Deltas vs first strategy in category:
 
@@ -146,8 +146,8 @@ Deltas vs first strategy in category:
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | top_1 | +0.03 | -38 | -31 | -17 | -19 | -1.08 | +0 |
 | top_2 | +0.15 | -11 | -12 | +0 | -8 | -0.43 | +0 |
-| within_0_15_of_top | +0.03 | -31 | -21 | -13 | -16 | -0.85 | +0 |
-| stop_on_0_20_gap | +0.03 | -22 | -15 | -10 | -12 | -0.68 | +0 |
+| within_0_15_of_top | +0.03 | -31 | -21 | -13 | -16 | -0.84 | +0 |
+| stop_on_0_20_gap | +0.01 | -19 | -14 | -10 | -11 | -0.66 | +0 |
 
 Stability across five cohorts:
 
@@ -157,7 +157,7 @@ Stability across five cohorts:
 | top_1 | 0 | 4 | 3.00-3.90 |
 | top_2 | 0 | 4 | 3.06-3.79 |
 | within_0_15_of_top | 0 | 4 | 3.00-3.64 |
-| stop_on_0_20_gap | 0 | 4 | 2.98-3.62 |
+| stop_on_0_20_gap | 0 | 4 | 2.98-3.54 |
 
 ## LLM Filter Proxy
 
@@ -165,7 +165,7 @@ Stability across five cohorts:
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | production_health_action | 3.24 | 74 | 53 | 53 | 41 | 1.85 | 23.5% | 6.4% |
 | abstain_if_weak_top | 3.28 | 74 | 49 | 53 | 39 | 1.79 | 27.0% | 8.5% |
-| llm_conservative_proxy | 3.33 | 73 | 43 | 52 | 36 | 1.55 | 26.0% | 8.5% |
+| llm_conservative_proxy | 3.33 | 73 | 43 | 52 | 36 | 1.54 | 26.0% | 8.5% |
 | llm_strict_proxy | 3.45 | 64 | 35 | 49 | 29 | 1.20 | 35.0% | 17.0% |
 | llm_one_best_proxy | 3.27 | 36 | 22 | 36 | 22 | 0.74 | 26.0% | 7.4% |
 
@@ -174,7 +174,7 @@ Deltas vs first strategy in category:
 | Strategy | Avg score | Useful selected | Low selected | Useful runs | Low runs | Avg memories | Missed useful empty |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | abstain_if_weak_top | +0.04 | +0 | -4 | +0 | -2 | -0.06 | +2 |
-| llm_conservative_proxy | +0.09 | -1 | -10 | -1 | -5 | -0.30 | +2 |
+| llm_conservative_proxy | +0.09 | -1 | -10 | -1 | -5 | -0.31 | +2 |
 | llm_strict_proxy | +0.21 | -10 | -18 | -4 | -12 | -0.65 | +10 |
 | llm_one_best_proxy | +0.03 | -38 | -31 | -17 | -19 | -1.11 | +1 |
 
@@ -224,7 +224,7 @@ Stability across five cohorts:
 | strict_kind_no_eval | 2.85 | 67 | 82 | 53 | 61 | 2.11 | 15.0% | 3.2% |
 | eval_ratio_rerank | 3.08 | 72 | 68 | 57 | 52 | 1.96 | 21.5% | 4.3% |
 | failure_mode_rerank | 3.24 | 74 | 53 | 53 | 41 | 1.85 | 23.5% | 6.4% |
-| precision_abstain | 3.36 | 73 | 42 | 52 | 35 | 1.53 | 26.5% | 8.5% |
+| precision_abstain | 3.36 | 73 | 42 | 52 | 35 | 1.52 | 26.5% | 8.5% |
 | proven_or_context_gate | 3.26 | 74 | 52 | 53 | 40 | 1.73 | 26.0% | 10.6% |
 
 Deltas vs first strategy in category:
@@ -233,7 +233,7 @@ Deltas vs first strategy in category:
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | eval_ratio_rerank | +0.22 | +5 | -14 | +4 | -9 | -0.15 | +1 |
 | failure_mode_rerank | +0.39 | +7 | -29 | +0 | -20 | -0.26 | +3 |
-| precision_abstain | +0.51 | +6 | -40 | -1 | -26 | -0.57 | +5 |
+| precision_abstain | +0.51 | +6 | -40 | -1 | -26 | -0.58 | +5 |
 | proven_or_context_gate | +0.40 | +7 | -30 | +0 | -21 | -0.38 | +7 |
 
 Stability across five cohorts:

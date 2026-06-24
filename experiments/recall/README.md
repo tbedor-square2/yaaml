@@ -51,3 +51,9 @@ technique category: candidate generation, hard gating, reranking, selection
 budgeting, LLM-filter proxies, memory corpus quality, and eval feedback. The
 report is intended to compare useful recall against context volume, not just
 average recall score.
+
+Use `scripts/export-recall-training-data.py` to convert saved recall backtest
+artifacts into candidate-level JSONL for selection experiments. Use
+`scripts/recall-feature-model-experiment.py` to compare a small local feature
+model against production and simple heuristic selectors before considering any
+fine-tuned text model.

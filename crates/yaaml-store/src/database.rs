@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -1638,6 +1639,39 @@ impl Database {
         Ok(history)
     }
 
+    pub fn recent_recalled_memory_ids(
+        &self,
+        session_id: &str,
+        since_unix: i64,
+    ) -> Result<HashSet<i64>, DatabaseError> {
+        let mut ids = HashSet::new();
+        let mut task_stmt = self.conn.prepare(
+            "SELECT DISTINCT CAST(json_each.value AS INTEGER)
+             FROM tasks, json_each(json_extract(tasks.payload_json, '$.memory_ids'))
+             WHERE tasks.kind = 'recall_eval'
+               AND json_extract(tasks.payload_json, '$.session_id') = ?1
+               AND CAST(substr(COALESCE(json_extract(tasks.payload_json, '$.recall_at'), tasks.created_at), 6) AS INTEGER) >= ?2",
+        )?;
+        let task_rows = task_stmt.query_map(params![session_id, since_unix], |row| row.get(0))?;
+        for row in task_rows {
+            ids.insert(row?);
+        }
+
+        let mut eval_stmt = self.conn.prepare(
+            "SELECT DISTINCT er.memory_id
+             FROM eval_runs r
+             JOIN eval_results er ON er.eval_run_id = r.id
+             WHERE r.session_id = ?1
+               AND er.memory_id IS NOT NULL
+               AND CAST(substr(r.started_at, 6) AS INTEGER) >= ?2",
+        )?;
+        let eval_rows = eval_stmt.query_map(params![session_id, since_unix], |row| row.get(0))?;
+        for row in eval_rows {
+            ids.insert(row?);
+        }
+        Ok(ids)
+    }
+
     fn count(&self, sql: &str) -> Result<u64, DatabaseError> {
         let count: i64 = self.conn.query_row(sql, [], |row| row.get(0))?;
         Ok(count.try_into().unwrap_or(0))
@@ -2511,6 +2545,55 @@ mod tests {
         assert_eq!(results.len(), 3);
         assert_eq!(results[0].judge_score.as_deref(), Some("useful"));
         assert_eq!(results[0].rationale.as_deref(), Some("helped"));
+    }
+
+    #[test]
+    fn recent_recalled_memory_ids_reads_queued_tasks_and_eval_runs() {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+        let task = TaskRecord {
+            id: None,
+            kind: "recall_eval".to_string(),
+            status: TaskStatus::Queued,
+            priority: 0,
+            payload_json:
+                r#"{"session_id":"session-1","memory_ids":[11,12],"recall_at":"unix:100"}"#
+                    .to_string(),
+            attempts: 0,
+            max_attempts: 5,
+            next_run_at: None,
+            last_error: None,
+            created_at: "unix:101".to_string(),
+            updated_at: "unix:101".to_string(),
+        };
+        db.enqueue_task(&task).unwrap();
+        let run_id = db
+            .insert_eval_run_with_metadata(
+                "recall",
+                "unix:120",
+                "{}",
+                EvalRunMetadata {
+                    session_id: Some("session-1".to_string()),
+                    recall_origin: "manual_query".to_string(),
+                    ..EvalRunMetadata::default()
+                },
+            )
+            .unwrap();
+        db.insert_eval_result(run_id, 1, Some(13), "4", "useful", "unix:121")
+            .unwrap();
+
+        assert_eq!(
+            db.recent_recalled_memory_ids("session-1", 90).unwrap(),
+            HashSet::from([11, 12, 13])
+        );
+        assert_eq!(
+            db.recent_recalled_memory_ids("session-1", 110).unwrap(),
+            HashSet::from([13])
+        );
+        assert!(db
+            .recent_recalled_memory_ids("session-2", 90)
+            .unwrap()
+            .is_empty());
     }
 
     #[test]

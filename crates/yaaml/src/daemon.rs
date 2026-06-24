@@ -32,7 +32,10 @@ use yaaml_transcript::discovery::discover_codex_backlog;
 
 use crate::llm_judge::JudgeClient;
 use crate::memory_health::{apply_health_action_rerank, build_memory_health_summaries};
-use crate::recall_filter::{select_recall_candidates_with_llm_filter, RecallFilterTelemetry};
+use crate::recall_filter::{
+    select_recall_candidates_with_llm_filter, suppress_recently_recalled_candidates,
+    RecallFilterTelemetry,
+};
 use crate::turn_hydration::{context_from_turns, hydrate_turns};
 
 pub const TASK_KIND_MEMORY_FORMULATION: &str = "memory_formulation";
@@ -1873,7 +1876,7 @@ pub fn refresh_recall_with_embedding(
         .context("failed to load recall candidate eval history")?;
     let memory_health = build_memory_health_summaries(&memories, &eval_history);
     let candidates = apply_health_action_rerank(candidates, &memories, &memory_health);
-    let filter_result = select_recall_candidates_with_llm_filter(
+    let mut filter_result = select_recall_candidates_with_llm_filter(
         config,
         candidates,
         &memories,
@@ -1882,7 +1885,30 @@ pub fn refresh_recall_with_embedding(
         &query_context,
         &query_task_keys,
     );
-    let selected = filter_result.selected;
+    let recent_memory_ids = recent_turns
+        .last()
+        .map(|turn| &turn.session_id)
+        .zip(cooldown_since_unix(
+            &now,
+            config.recall_memory_cooldown_seconds,
+        ))
+        .map(|(session_id, since_unix)| {
+            filter_result.telemetry.cooldown_since_unix = Some(since_unix);
+            db.recent_recalled_memory_ids(session_id, since_unix)
+                .context("failed to load recent recall memory ids")
+        })
+        .transpose()?
+        .unwrap_or_default();
+    let selected_before_cooldown = filter_result.selected.len();
+    filter_result.telemetry.recent_recall_candidate_count = recent_memory_ids.len();
+    let selected = suppress_recently_recalled_candidates(
+        filter_result.selected,
+        &mut filter_result.debug_candidates,
+        &recent_memory_ids,
+    );
+    filter_result.telemetry.cooldown_suppressed_count =
+        selected_before_cooldown.saturating_sub(selected.len());
+    filter_result.telemetry.final_selected_count = selected.len();
     let selected_ids = selected
         .iter()
         .map(|candidate| candidate.memory_id)
@@ -1940,6 +1966,11 @@ pub fn refresh_recall_with_embedding(
         }
     }
     Ok(write)
+}
+
+fn cooldown_since_unix(query_timestamp: &str, cooldown_seconds: u64) -> Option<i64> {
+    let timestamp = query_timestamp.strip_prefix("unix:")?.parse::<i64>().ok()?;
+    Some(timestamp.saturating_sub(i64::try_from(cooldown_seconds).unwrap_or(i64::MAX)))
 }
 
 pub fn recover_running_tasks(db: &Database) -> anyhow::Result<u64> {

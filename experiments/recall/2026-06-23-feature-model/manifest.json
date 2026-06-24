@@ -1,0 +1,32 @@
+{
+  "name": "feature-model-recall-selection",
+  "date": "2026-06-23",
+  "input": {
+    "backtest_dir": "target/strict-kind-production",
+    "dataset": "target/recall-training-dataset.jsonl",
+    "dataset_summary": "experiments/recall/2026-06-23-feature-model/dataset-summary.json"
+  },
+  "scripts": [
+    "scripts/export-recall-training-data.py",
+    "scripts/recall-feature-model-experiment.py"
+  ],
+  "outputs": [
+    "experiments/recall/2026-06-23-feature-model/summary.json",
+    "experiments/recall/2026-06-23-feature-model/REPORT.md"
+  ],
+  "strategies": [
+    "production",
+    "top_2",
+    "weak_top_abstain",
+    "feature_model"
+  ],
+  "primary_result": {
+    "feature_model_average_known_score": 3.3013698630137007,
+    "feature_model_useful_capture_runs": 39,
+    "feature_model_low_known_selected": 27,
+    "production_average_known_score": 2.7421383647798723,
+    "production_useful_capture_runs": 54,
+    "production_low_known_selected": 88
+  },
+  "conclusion": "The feature model improves known precision by reducing low-scoring selections, but it loses useful-run coverage and relies on sparse labels. Do not fine-tune a tiny model yet."
+}

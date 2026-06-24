@@ -56,6 +56,7 @@ pub struct Config {
     pub recall_llm_filter_enabled: bool,
     pub recall_llm_filter_candidate_limit: usize,
     pub recall_llm_filter_prompt_max_chars: usize,
+    pub recall_memory_cooldown_seconds: u64,
     pub recall_dir: String,
     pub db_path: String,
     pub vector_index_backend: String,
@@ -104,6 +105,7 @@ impl Default for Config {
             recall_llm_filter_enabled: false,
             recall_llm_filter_candidate_limit: 16,
             recall_llm_filter_prompt_max_chars: 12_000,
+            recall_memory_cooldown_seconds: 1200,
             recall_dir: "~/.yaaml/recall".to_string(),
             db_path: "~/.yaaml/yaaml.db".to_string(),
             vector_index_backend: "sqlite-exact".to_string(),
@@ -214,6 +216,7 @@ mod tests {
         assert_eq!(config.recall_similarity_threshold, 0.3);
         assert!(!config.recall_llm_filter_enabled);
         assert_eq!(config.recall_llm_filter_candidate_limit, 16);
+        assert_eq!(config.recall_memory_cooldown_seconds, 1200);
         assert_eq!(config.recall_dir, "~/.yaaml/recall");
         assert_eq!(config.vector_index_backend, "sqlite-exact");
         assert_eq!(config.memory_cluster_distance_threshold, 0.21125);

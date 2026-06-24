@@ -1,0 +1,11 @@
+{
+  "input_dir": "target/strict-kind-production",
+  "label": "strict-kind-production",
+  "labeled_rows": 413,
+  "low_labeled_rows": 302,
+  "output": "target/recall-training-dataset.jsonl",
+  "rows": 3200,
+  "runs": 200,
+  "unlabeled_rows": 2787,
+  "useful_labeled_rows": 106
+}

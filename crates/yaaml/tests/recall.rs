@@ -4,14 +4,15 @@ use std::net::TcpListener;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::thread;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use tempfile::TempDir;
 use yaaml::daemon::TASK_KIND_RECALL_EVAL;
 use yaaml_core::{
     recall_file_path, session_recall_file_path, AgentType, EmbeddingRecord, MemoryKind,
-    MemoryRecord, MemoryScope, SessionRecord, TaskStatus, TurnRecord, TurnStatus,
+    MemoryRecord, MemoryScope, SessionRecord, TaskRecord, TaskStatus, TurnRecord, TurnStatus,
 };
-use yaaml_store::database::encode_f32_embedding;
+use yaaml_store::database::{encode_f32_embedding, EvalRunMetadata};
 use yaaml_store::Database;
 
 #[test]
@@ -32,6 +33,7 @@ db_path = "{}"
 recall_dir = "{}"
 embedding_base_url = "{}"
 recall_llm_filter_enabled = false
+recall_memory_cooldown_seconds = 1200
 "#,
             db_path.display(),
             recall_dir.display(),
@@ -308,6 +310,163 @@ recall_llm_filter_enabled = false
     assert!(selected
         .iter()
         .all(|id| memory_ids.contains(&id.as_i64().unwrap())));
+}
+
+#[test]
+fn recall_query_suppresses_recently_recalled_memory_in_same_session() {
+    let tmp = TempDir::new().unwrap();
+    let home = tmp.path().join("home");
+    let project = tmp.path().join("project");
+    fs::create_dir_all(home.join(".yaaml")).unwrap();
+    fs::create_dir_all(&project).unwrap();
+    let db_path = home.join(".yaaml").join("yaaml.db");
+    let server = fake_embedding_server();
+    fs::write(
+        home.join(".yaaml").join("config.toml"),
+        format!(
+            r#"
+db_path = "{}"
+embedding_base_url = "{}"
+recall_llm_filter_enabled = false
+"#,
+            db_path.display(),
+            server.base_url
+        ),
+    )
+    .unwrap();
+
+    let project_id = project.canonicalize().unwrap().display().to_string();
+    let mut db = Database::open(&db_path).unwrap();
+    db.migrate().unwrap();
+    db.upsert_session(&SessionRecord {
+        id: "cooldown-session".to_string(),
+        agent_type: AgentType::Codex,
+        project_id: project_id.clone(),
+        transcript_file_path: "/tmp/cooldown-session.jsonl".to_string(),
+        started_at: Some("unix:1".to_string()),
+        last_seen_at: Some("unix:2".to_string()),
+    })
+    .unwrap();
+    db.insert_turn(&TurnRecord {
+        session_id: "cooldown-session".to_string(),
+        turn_id: Some("turn-0".to_string()),
+        ordinal: 0,
+        byte_start: 0,
+        byte_end: 1,
+        observed_at: Some("unix:2".to_string()),
+        status: TurnStatus::Completed,
+        display_text: Some("cooldown recall query".to_string()),
+        cwd: Some(project_id.clone()),
+        context: None,
+    })
+    .unwrap();
+    let memory_id = insert_memory_with_embedding(
+        &mut db,
+        MemoryRecord {
+            id: None,
+            title: "Cooldown memory".to_string(),
+            body: "This memory should be suppressed when it was just recalled in this session."
+                .to_string(),
+            scope: MemoryScope::Project,
+            kind: MemoryKind::Lesson,
+            task_keys: Vec::new(),
+            source_turn_refs: Vec::new(),
+            created_at: "unix:1".to_string(),
+            updated_at: "unix:1".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some(project_id),
+            project_descriptor: Some("yaaml".to_string()),
+            lineage_refs: Vec::new(),
+        },
+    );
+    let now_unix = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    db.enqueue_task(&TaskRecord {
+        id: None,
+        kind: TASK_KIND_RECALL_EVAL.to_string(),
+        status: TaskStatus::Queued,
+        priority: 0,
+        payload_json: format!(
+            r#"{{"session_id":"cooldown-session","memory_ids":[{memory_id}],"recall_at":"unix:{now_unix}"}}"#
+        ),
+        attempts: 0,
+        max_attempts: 5,
+        next_run_at: None,
+        last_error: None,
+        created_at: format!("unix:{now_unix}"),
+        updated_at: format!("unix:{now_unix}"),
+    })
+    .unwrap();
+    assert!(db
+        .recent_recalled_memory_ids("cooldown-session", now_unix as i64 - 1200)
+        .unwrap()
+        .contains(&memory_id));
+    let run_id = db
+        .insert_eval_run_with_metadata(
+            "recall",
+            &format!("unix:{now_unix}"),
+            "{}",
+            EvalRunMetadata {
+                session_id: Some("cooldown-session".to_string()),
+                turn_ordinal: Some(0),
+                recall_origin: "manual_query".to_string(),
+                ..EvalRunMetadata::default()
+            },
+        )
+        .unwrap();
+    db.insert_eval_result(
+        run_id,
+        1,
+        Some(memory_id),
+        "4",
+        "recently recalled",
+        &format!("unix:{now_unix}"),
+    )
+    .unwrap();
+    drop(db);
+    let readonly_db = Database::open(&db_path).unwrap();
+    assert!(readonly_db
+        .recent_recalled_memory_ids("cooldown-session", now_unix as i64 - 1200)
+        .unwrap()
+        .contains(&memory_id));
+    drop(readonly_db);
+
+    let output = Command::new(env!("CARGO_BIN_EXE_yaaml"))
+        .arg("recall")
+        .arg("--query")
+        .arg("cooldown recall query")
+        .arg("--session")
+        .arg("cooldown-session")
+        .arg("--json")
+        .arg("--debug-ranking")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .env("OPENAI_API_KEY", "test-key")
+        .env("CODEX_THREAD_ID", "cooldown-session")
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    server.join();
+    let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert!(
+        value["selected_memory_ids"].as_array().unwrap().is_empty(),
+        "{}",
+        serde_json::to_string_pretty(&value).unwrap()
+    );
+    assert_eq!(value["ranking"][0]["memory_id"], memory_id);
+    assert!(value["ranking"][0]["filter_reasons"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|reason| reason == "drop:recent_recall_cooldown"));
 }
 
 #[test]

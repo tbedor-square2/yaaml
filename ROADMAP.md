@@ -73,6 +73,7 @@ Use evals to guide ranking and memory formation changes.
 - Compare background recall, manual query recall, and imported native-memory recall.
 - Surface low-scoring recall patterns in `yaaml eval` output.
 - Use subsequent transcript evidence to identify memories that were relevant but not recalled.
+- Prefer feature-level recall experiments before fine-tuning a tiny text model; only revisit fine-tuning after feature models plateau on denser per-candidate labels and error analysis shows text-level judgment is the missing signal.
 
 ### Future Direction: Recall Cooldowns
 

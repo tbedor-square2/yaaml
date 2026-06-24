@@ -8,11 +8,21 @@ use yaaml_core::{
 
 use crate::llm_judge::JudgeClient;
 
+pub const RECALL_DYNAMIC_SELECTION_LIMIT: usize = 2;
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RecallFilterTelemetry {
     pub candidate_count: usize,
     pub deterministic_selected_count: usize,
     pub final_selected_count: usize,
+    #[serde(default)]
+    pub recent_recall_candidate_count: usize,
+    #[serde(default)]
+    pub cooldown_suppressed_count: usize,
+    #[serde(default)]
+    pub cooldown_window_seconds: u64,
+    #[serde(default)]
+    pub cooldown_since_unix: Option<i64>,
     pub llm_attempted: bool,
     pub llm_applied: bool,
     pub llm_error: Option<String>,
@@ -34,9 +44,10 @@ pub fn select_recall_candidates_with_llm_filter(
     query_context: &ContextMetadata,
     query_task_keys: &[String],
 ) -> RecallFilterResult {
+    let selection_limit = effective_recall_selection_limit(config);
     let filter_limit = config
         .recall_llm_filter_candidate_limit
-        .max(config.recall_result_limit);
+        .max(selection_limit);
     let (filter_pool, mut debug_candidates) = select_recall_candidates(
         candidates,
         memories,
@@ -45,16 +56,17 @@ pub fn select_recall_candidates_with_llm_filter(
         query_task_keys,
         filter_limit,
     );
-    let deterministic_selected = strict_kind_diverse_top_fallback_selection(
-        &filter_pool,
-        memories,
-        config.recall_result_limit,
-    );
+    let deterministic_selected =
+        strict_kind_diverse_top_fallback_selection(&filter_pool, memories, selection_limit);
     annotate_deterministic_selection(&mut debug_candidates, &deterministic_selected);
     let mut telemetry = RecallFilterTelemetry {
         candidate_count: filter_pool.len(),
         deterministic_selected_count: deterministic_selected.len(),
         final_selected_count: deterministic_selected.len(),
+        recent_recall_candidate_count: 0,
+        cooldown_suppressed_count: 0,
+        cooldown_window_seconds: config.recall_memory_cooldown_seconds,
+        cooldown_since_unix: None,
         llm_attempted: false,
         llm_applied: false,
         llm_error: None,
@@ -84,7 +96,7 @@ pub fn select_recall_candidates_with_llm_filter(
             let selected = filter_pool
                 .iter()
                 .filter(|candidate| selected_id_set.contains(&candidate.memory_id))
-                .take(config.recall_result_limit)
+                .take(selection_limit)
                 .cloned()
                 .collect::<Vec<_>>();
             telemetry.final_selected_count = selected.len();
@@ -104,6 +116,43 @@ pub fn select_recall_candidates_with_llm_filter(
             }
         }
     }
+}
+
+pub fn effective_recall_selection_limit(config: &Config) -> usize {
+    config
+        .recall_result_limit
+        .min(RECALL_DYNAMIC_SELECTION_LIMIT)
+}
+
+pub fn suppress_recently_recalled_candidates(
+    selected: Vec<RecallCandidate>,
+    debug_candidates: &mut [RecallCandidate],
+    recent_memory_ids: &HashSet<i64>,
+) -> Vec<RecallCandidate> {
+    if recent_memory_ids.is_empty() {
+        return selected;
+    }
+    let mut suppressed = HashSet::new();
+    let kept = selected
+        .into_iter()
+        .filter(|candidate| {
+            if recent_memory_ids.contains(&candidate.memory_id) {
+                suppressed.insert(candidate.memory_id);
+                false
+            } else {
+                true
+            }
+        })
+        .collect::<Vec<_>>();
+    for candidate in debug_candidates {
+        if suppressed.contains(&candidate.memory_id) {
+            candidate
+                .rank
+                .filter_reasons
+                .push("drop:recent_recall_cooldown".to_string());
+        }
+    }
+    kept
 }
 
 fn strict_kind_diverse_top_fallback_selection(
@@ -207,7 +256,7 @@ fn run_llm_filter(
 }
 
 fn recall_filter_system_prompt() -> &'static str {
-    "You filter memory recall for a coding agent. Return compact JSON only. Treat the deterministic ranking as a useful baseline and prune only memories that are clearly unrelated, stale, or too generic to justify context cost. Select 1-5 memories whenever any candidate is plausibly useful as background or actionable guidance. Return an empty list only when every candidate is clearly wrong for the current task. Do not invent memory ids."
+    "You filter memory recall for a coding agent. Return compact JSON only. Treat the deterministic ranking as a useful baseline and prune memories that are unrelated, stale, redundant, or too generic to justify context cost. Select 0-2 memories; empty recall is better than bad recall when no candidate is clearly useful. Do not invent memory ids."
 }
 
 fn recall_filter_prompt(
@@ -299,8 +348,8 @@ fn build_recall_filter_prompt(
         "current_project_id": current_project_id,
         "query_context": query_context,
         "current_turn_text": truncate_chars(query_text, turn_max_chars),
-        "max_selected_memories": config.recall_result_limit,
-        "selection_policy": "Prefer fewer memories than deterministic recall, but keep plausible background. Empty selection is allowed only when all candidates are clearly unrelated.",
+        "max_selected_memories": effective_recall_selection_limit(config),
+        "selection_policy": "Select at most two concise, useful memories. Prefer abstaining over adding weak or redundant context.",
         "candidate_memories": candidates_json,
         "response_schema": {
             "selected_memory_ids": ["integer memory ids to keep, in candidate order or fewer"],
@@ -339,8 +388,8 @@ fn build_compact_recall_filter_prompt(
     json!({
         "current_project_id": current_project_id,
         "current_turn_text": truncate_chars(query_text, turn_max_chars),
-        "max_selected_memories": config.recall_result_limit,
-        "selection_policy": "Keep only candidate memories plausibly useful to this turn. Empty only when all are clearly unrelated.",
+        "max_selected_memories": effective_recall_selection_limit(config),
+        "selection_policy": "Keep at most two candidate memories. Empty recall is acceptable when candidates are weak, redundant, or unrelated.",
         "candidate_memories": candidates_json,
         "response_schema": {"selected_memory_ids": ["integer memory ids"]}
     })
@@ -615,6 +664,56 @@ mod tests {
             .collect::<Vec<_>>();
 
         assert_eq!(selected, vec![1, 2]);
+    }
+
+    #[test]
+    fn deterministic_selection_caps_to_top_two_even_when_config_limit_is_higher() {
+        let config = Config {
+            recall_result_limit: 5,
+            ..Config::default()
+        };
+        let candidates = vec![
+            candidate_with_score(1, 1.20),
+            candidate_with_score(2, 1.10),
+            candidate_with_score(3, 1.00),
+        ];
+        let mut memories = vec![memory(1, "body"), memory(2, "body"), memory(3, "body")];
+        memories[1].kind = MemoryKind::Workflow;
+        memories[2].kind = MemoryKind::Preference;
+
+        let selected = select_recall_candidates_with_llm_filter(
+            &config,
+            candidates,
+            &memories,
+            "/tmp/yaaml",
+            "query",
+            &ContextMetadata::default(),
+            &[],
+        )
+        .selected
+        .into_iter()
+        .map(|candidate| candidate.memory_id)
+        .collect::<Vec<_>>();
+
+        assert_eq!(selected, vec![1, 2]);
+    }
+
+    #[test]
+    fn recent_recall_cooldown_suppresses_selected_memories() {
+        let selected = vec![candidate_with_score(1, 1.20), candidate_with_score(2, 1.10)];
+        let mut debug_candidates = selected.clone();
+        let recent = HashSet::from([1]);
+
+        let kept = suppress_recently_recalled_candidates(selected, &mut debug_candidates, &recent)
+            .into_iter()
+            .map(|candidate| candidate.memory_id)
+            .collect::<Vec<_>>();
+
+        assert_eq!(kept, vec![2]);
+        assert!(debug_candidates[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:recent_recall_cooldown".to_string()));
     }
 
     #[test]

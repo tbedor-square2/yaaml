@@ -13,7 +13,10 @@ use serde::Deserialize;
 use serde::Serialize;
 use yaaml::llm_judge::JudgeClient;
 use yaaml::memory_health::{apply_health_action_rerank, build_memory_health_summaries};
-use yaaml::recall_filter::{select_recall_candidates_with_llm_filter, RecallFilterTelemetry};
+use yaaml::recall_filter::{
+    effective_recall_selection_limit, select_recall_candidates_with_llm_filter,
+    suppress_recently_recalled_candidates, RecallFilterTelemetry,
+};
 use yaaml::turn_hydration::{context_from_turns, hydrate_turns};
 use yaaml_core::{
     context_score, counterfactual_citation_score, derive_project_descriptor, embedded_text_hash,
@@ -3531,12 +3534,12 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
     }
 
     let recall_path = contextual_recall_file_path(&recall_dir, &project_id_path, &db)?;
+    let recall_selection_limit = effective_recall_selection_limit(&config);
     let Some(query) = args.query.clone().or(tool_query) else {
         if args.json || args.debug_ranking {
             bail!("--json and --debug-ranking require --query or --session/--turn");
         }
-        if let Some(contents) =
-            read_active_recall_file(&db, &recall_path, config.recall_result_limit)?
+        if let Some(contents) = read_active_recall_file(&db, &recall_path, recall_selection_limit)?
         {
             print!("{contents}");
             return Ok(());
@@ -3550,7 +3553,7 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
         let project_recall_path = recall_file_path(&recall_dir, &project_id_path);
         if project_recall_path != recall_path {
             if let Some(contents) =
-                read_active_recall_file(&db, &project_recall_path, config.recall_result_limit)?
+                read_active_recall_file(&db, &project_recall_path, recall_selection_limit)?
             {
                 print!("{contents}");
                 return Ok(());
@@ -3590,12 +3593,14 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
         "manual_query" => "user input".to_string(),
         other => other.to_string(),
     };
+    let anchor = recall_anchor_from_args_or_current(&db, &project_id, &args)?;
     let recall_result = recall_from_embedding(
         &db,
         &config,
         RecallEmbeddingRequest {
             query_embedding: &query_embedding,
             project_id: &project_id,
+            session_id: anchor.as_ref().map(|anchor| anchor.session_id.as_str()),
             query_text: &query,
             query_context: None,
             query_source,
@@ -3613,7 +3618,6 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
         markdown: rendered,
     } = recall_result;
     let selected_ids = selected_memory_ids.clone();
-    let anchor = recall_anchor_from_args_or_current(&db, &project_id, &args)?;
     queue_query_recall_eval(
         &db,
         &anchor,
@@ -3669,7 +3673,7 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
         RecallWrite::Written | RecallWrite::Unchanged => print!("{rendered}"),
         RecallWrite::NoopEmptyResults => {
             if let Some(contents) =
-                read_active_recall_file(&db, &recall_path, config.recall_result_limit)?
+                read_active_recall_file(&db, &recall_path, recall_selection_limit)?
             {
                 print!("{contents}");
             } else {
@@ -3836,6 +3840,7 @@ fn refresh_missing_recall_file(
         RecallEmbeddingRequest {
             query_embedding: &query_embedding,
             project_id: &session.project_id,
+            session_id: Some(&session.id),
             query_text: &query,
             query_context: Some(query_context),
             query_source,
@@ -4028,6 +4033,7 @@ fn recall_for_historical_turn(
         RecallEmbeddingRequest {
             query_embedding: &query_embedding,
             project_id: &session.project_id,
+            session_id: None,
             query_text: &query,
             query_context: Some(query_context),
             query_source,
@@ -4062,6 +4068,7 @@ fn recall_for_historical_turn(
 struct RecallEmbeddingRequest<'a> {
     query_embedding: &'a [f32],
     project_id: &'a str,
+    session_id: Option<&'a str>,
     query_text: &'a str,
     query_context: Option<ContextMetadata>,
     query_source: String,
@@ -4118,7 +4125,7 @@ fn recall_from_embedding(
         .context("failed to load recall candidate eval history")?;
     let memory_health = build_memory_health_summaries(&memories, &eval_history);
     let candidates = apply_health_action_rerank(candidates, &memories, &memory_health);
-    let filter_result = select_recall_candidates_with_llm_filter(
+    let mut filter_result = select_recall_candidates_with_llm_filter(
         config,
         candidates,
         &memories,
@@ -4127,7 +4134,28 @@ fn recall_from_embedding(
         &query_context,
         &query_task_keys,
     );
-    let selected = filter_result.selected;
+    let cooldown_since = request.session_id.zip(cooldown_since_unix(
+        &request.query_timestamp,
+        config.recall_memory_cooldown_seconds,
+    ));
+    filter_result.telemetry.cooldown_since_unix =
+        cooldown_since.as_ref().map(|(_session_id, since)| *since);
+    let recent_memory_ids = if let Some((session_id, since_unix)) = cooldown_since {
+        db.recent_recalled_memory_ids(session_id, since_unix)
+            .context("failed to load recent recall memory ids")?
+    } else {
+        HashSet::new()
+    };
+    let selected_before_cooldown = filter_result.selected.len();
+    filter_result.telemetry.recent_recall_candidate_count = recent_memory_ids.len();
+    let selected = suppress_recently_recalled_candidates(
+        filter_result.selected,
+        &mut filter_result.debug_candidates,
+        &recent_memory_ids,
+    );
+    filter_result.telemetry.cooldown_suppressed_count =
+        selected_before_cooldown.saturating_sub(selected.len());
+    filter_result.telemetry.final_selected_count = selected.len();
     let debug_candidates = filter_result.debug_candidates;
     let selected_memory_ids = selected
         .iter()
@@ -4187,6 +4215,11 @@ fn recall_from_embedding(
         filter_telemetry: filter_result.telemetry,
         markdown,
     })
+}
+
+fn cooldown_since_unix(query_timestamp: &str, cooldown_seconds: u64) -> Option<i64> {
+    let timestamp = query_timestamp.strip_prefix("unix:")?.parse::<i64>().ok()?;
+    Some(timestamp.saturating_sub(i64::try_from(cooldown_seconds).unwrap_or(i64::MAX)))
 }
 
 fn remember(args: RememberArgs) -> anyhow::Result<()> {

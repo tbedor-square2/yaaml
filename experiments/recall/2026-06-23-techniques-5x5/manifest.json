@@ -1,0 +1,72 @@
+{
+  "anchors": 200,
+  "categories": [
+    "candidate_generation",
+    "hard_gating",
+    "reranking",
+    "selection_budgeting",
+    "llm_filter_proxy",
+    "memory_corpus_quality",
+    "eval_feedback"
+  ],
+  "date": "2026-06-23",
+  "db_path": "/Users/tbedor/.yaaml/yaaml.db",
+  "details_path": "experiments/recall/2026-06-23-techniques-5x5/details.jsonl",
+  "input_dir": "target/strict-kind-production",
+  "kind": "recall_techniques_5x5",
+  "label": "strict-kind-production",
+  "manifest_path": "experiments/recall/2026-06-23-techniques-5x5/manifest.json",
+  "report_path": "experiments/recall/2026-06-23-techniques-5x5/REPORT.md",
+  "strategies_by_category": {
+    "candidate_generation": [
+      "pool_3",
+      "pool_5",
+      "pool_8",
+      "pool_12",
+      "pool_16"
+    ],
+    "eval_feedback": [
+      "strict_kind_no_eval",
+      "eval_ratio_rerank",
+      "failure_mode_rerank",
+      "precision_abstain",
+      "proven_or_context_gate"
+    ],
+    "hard_gating": [
+      "production_health_action",
+      "task_state_requires_task",
+      "project_or_task_gate",
+      "evidence_gate",
+      "durable_or_context_gate"
+    ],
+    "llm_filter_proxy": [
+      "production_health_action",
+      "abstain_if_weak_top",
+      "llm_conservative_proxy",
+      "llm_strict_proxy",
+      "llm_one_best_proxy"
+    ],
+    "memory_corpus_quality": [
+      "production_health_action",
+      "suppress_vague",
+      "suppress_likely_low",
+      "suppress_all_bad_modes",
+      "proven_useful_boost"
+    ],
+    "reranking": [
+      "production_health_action",
+      "eval_ratio_rerank",
+      "context_heavy_proxy",
+      "task_key_heavy_proxy",
+      "project_context_proxy"
+    ],
+    "selection_budgeting": [
+      "production_health_action",
+      "top_1",
+      "top_2",
+      "within_0_15_of_top",
+      "stop_on_0_20_gap"
+    ]
+  },
+  "summary_path": "experiments/recall/2026-06-23-techniques-5x5/summary.json"
+}

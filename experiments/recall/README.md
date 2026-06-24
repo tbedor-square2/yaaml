@@ -44,3 +44,10 @@ proxies, memory lifecycle suppression, and abstention gates. Query-signal and
 hybrid-generation families replay over already retrieved candidates; they do
 not measure candidates that a fresh query embedding or lexical retrieval pass
 would newly retrieve.
+
+Use `scripts/recall-techniques-5x5-experiment.py` for a broader technique
+inventory. It runs five strategies across five cohorts for each recall
+technique category: candidate generation, hard gating, reranking, selection
+budgeting, LLM-filter proxies, memory corpus quality, and eval feedback. The
+report is intended to compare useful recall against context volume, not just
+average recall score.

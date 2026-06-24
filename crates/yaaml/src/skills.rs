@@ -260,37 +260,68 @@ def starts_with(words, prefix):
     return words[: len(prefix)] == prefix
 
 
-def should_run_recall(tool_name, tool_input):
-    normalized_tool = (tool_name or "").strip()
-    if normalized_tool in ["apply_patch", "Edit", "Write"]:
-        return True
-    if normalized_tool != "Bash":
-        return False
+def shell_segments(words):
+    segments = []
+    current = []
+    for word in words:
+        if word in ["&&", "||", ";"]:
+            if current:
+                segments.append(current)
+                current = []
+        else:
+            current.append(word)
+    if current:
+        segments.append(current)
+    return segments
 
-    command = tool_command(tool_input)
-    if not command:
-        return False
-    words = first_words(command)
+
+def is_low_signal_git(words):
+    low_signal_prefixes = [
+        ["git", "status"],
+        ["git", "diff"],
+        ["git", "log"],
+        ["git", "show"],
+        ["git", "branch"],
+        ["git", "remote"],
+        ["git", "ls-files"],
+        ["git", "rev-parse"],
+        ["git", "grep"],
+        ["git", "fetch"],
+        ["git", "ls-remote"],
+        ["git", "merge-base"],
+        ["git", "add"],
+        ["git", "restore", "--staged"],
+        ["git", "stash", "list"],
+        ["git", "worktree", "list"],
+    ]
+    return any(starts_with(words, prefix) for prefix in low_signal_prefixes)
+
+
+def is_interesting_command(command, words):
     if not words:
         return False
     executable = os.path.basename(words[0])
     if executable in ["yaaml", "rg", "grep", "sed", "cat", "nl", "ls", "pwd", "find", "head", "tail", "wc", "awk", "jq"]:
         return False
     if executable == "git":
-        read_only_git = [
-            ["git", "status"],
-            ["git", "diff"],
-            ["git", "log"],
-            ["git", "show"],
-            ["git", "branch"],
-            ["git", "remote"],
-            ["git", "ls-files"],
-            ["git", "rev-parse"],
-            ["git", "grep"],
-        ]
-        if any(starts_with(words, prefix) for prefix in read_only_git):
+        if is_low_signal_git(words):
             return False
-        return len(words) > 1
+        interesting_git = [
+            ["git", "commit"],
+            ["git", "rebase"],
+            ["git", "merge"],
+            ["git", "cherry-pick"],
+            ["git", "push"],
+            ["git", "worktree", "add"],
+        ]
+        return any(starts_with(words, prefix) for prefix in interesting_git)
+    if executable == "gt":
+        interesting_gt = [
+            ["gt", "create"],
+            ["gt", "modify"],
+            ["gt", "submit"],
+        ]
+        return any(starts_with(words, prefix) for prefix in interesting_gt)
     if executable == "gh":
         interesting_gh = [
             ["gh", "pr", "comment"],
@@ -338,6 +369,22 @@ def should_run_recall(tool_name, tool_input):
         ]
         return any(fragment in lower_command for fragment in interesting_fragments)
     return False
+
+
+def should_run_recall(tool_name, tool_input):
+    normalized_tool = (tool_name or "").strip()
+    if normalized_tool in ["apply_patch", "Edit", "Write"]:
+        return True
+    if normalized_tool != "Bash":
+        return False
+
+    command = tool_command(tool_input)
+    if not command:
+        return False
+    words = first_words(command)
+    if not words:
+        return False
+    return any(is_interesting_command(command, segment) for segment in shell_segments(words))
 
 
 def main():
@@ -494,9 +541,81 @@ mod tests {
         assert!(script.contains("YAAML_BINARY = \"/bin/yaaml\""));
         assert!(script.contains("--codex-hook-output"));
         assert!(script.contains("def should_run_recall"));
+        assert!(script.contains("def is_low_signal_git"));
+        assert!(script.contains("\"merge-base\""));
+        assert!(script.contains("\"ls-remote\""));
+        assert!(script.contains("\"add\""));
         assert!(script.contains("\"rg\""));
         assert!(script.contains("\"bazel\""));
         assert!(script.contains("\"terraform\""));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn pre_tool_hook_suppresses_low_signal_git_but_keeps_meaningful_commands() {
+        use std::io::Write;
+        use std::process::{Command, Stdio};
+
+        let tmp = TempDir::new().unwrap();
+        let calls_path = tmp.path().join("calls.log");
+        let fake_yaaml = tmp.path().join("yaaml");
+        fs::write(
+            &fake_yaaml,
+            format!(
+                "#!/bin/sh\nprintf '%s\\n' \"$*\" >> {}\nprintf '{{}}\\n'\n",
+                calls_path.display()
+            ),
+        )
+        .unwrap();
+        make_executable(&fake_yaaml).unwrap();
+
+        let paths = InitPaths::for_home_with_binary(tmp.path(), fake_yaaml);
+        init(&paths).unwrap();
+        let script_path = paths.codex_hooks_dir.join("yaaml-pre-tool-use.py");
+
+        let denied_payloads = [
+            r#"{"tool_name":"Bash","tool_input":{"command":"git fetch origin refs/heads/foo"}}"#,
+            r#"{"tool_name":"Bash","tool_input":{"command":"git ls-remote origin refs/heads/foo"}}"#,
+            r#"{"tool_name":"Bash","tool_input":{"command":"git merge-base --is-ancestor abc def"}}"#,
+            r#"{"tool_name":"Bash","tool_input":{"command":"git add src/lib.rs"}}"#,
+            r#"{"tool_name":"Bash","tool_input":{"command":"git worktree list"}}"#,
+        ];
+        for payload in denied_payloads {
+            let output = run_hook(&script_path, payload);
+            assert!(output.status.success());
+            assert_eq!(String::from_utf8_lossy(&output.stdout).trim(), "{}");
+        }
+        assert!(!calls_path.exists());
+
+        let allowed_payloads = [
+            r#"{"tool_name":"Bash","tool_input":{"command":"git push --force-with-lease"}}"#,
+            r#"{"tool_name":"Bash","tool_input":{"command":"git add src/lib.rs && gt modify"}}"#,
+            r#"{"tool_name":"Bash","tool_input":{"command":"bazel test //foo:bar"}}"#,
+        ];
+        for payload in allowed_payloads {
+            let output = run_hook(&script_path, payload);
+            assert!(output.status.success());
+        }
+        let calls = fs::read_to_string(calls_path).unwrap();
+        assert!(calls.contains("--tool-input-json"));
+        assert_eq!(calls.lines().count(), allowed_payloads.len());
+
+        fn run_hook(script_path: &Path, payload: &str) -> std::process::Output {
+            let mut child = Command::new("python3")
+                .arg(script_path)
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .spawn()
+                .unwrap();
+            child
+                .stdin
+                .as_mut()
+                .unwrap()
+                .write_all(payload.as_bytes())
+                .unwrap();
+            child.wait_with_output().unwrap()
+        }
     }
 
     #[test]

@@ -48,6 +48,15 @@ Improve provider failure recovery.
 
 ## Recall Quality
 
+### Recall Value Per Context Token
+
+Improve recall by reducing low-value context before increasing recall volume.
+
+- Track useful recall separately from context cost: useful selected memories, low-scoring selected memories, empty recall rate, missed-useful empties, and recall character/token volume.
+- Prefer policies that reduce low-scoring injected memories without sharply increasing missed-useful abstentions.
+- Treat empty recall as acceptable when the available memory set has no useful match.
+- Use recent evals and replay experiments to compare narrowing strategies before changing runtime recall behavior.
+
 ### Better Project Bias
 
 Keep same-project recall helpful without making it noisy.
@@ -64,6 +73,24 @@ Use evals to guide ranking and memory formation changes.
 - Compare background recall, manual query recall, and imported native-memory recall.
 - Surface low-scoring recall patterns in `yaaml eval` output.
 - Use subsequent transcript evidence to identify memories that were relevant but not recalled.
+
+### Future Direction: Recall Cooldowns
+
+Avoid repeatedly surfacing the same memory while it is likely already in the agent context.
+
+- Consider a session-level per-memory cooldown before recall injection.
+- Backtest cooldown windows against useful captures, low-scoring selections, missed-useful abstentions, and recall volume.
+- Keep cooldowns context-budget oriented: the goal is not fewer recalls for its own sake, but fewer repeated memories that add little incremental value.
+- Revisit command-chain awareness for adjacent verification steps where the same memory may remain useful across repeated commands.
+
+### Future Direction: Tool Activation Metadata
+
+Use deterministic tool and command signals when they can narrow recall without adding another lossy classifier.
+
+- Let memory creation optionally attach activation metadata such as tool name, command regex, repo, task key, or PR key.
+- At runtime, match against observable hook payloads and shell command patterns before vector ranking within the narrowed candidate set.
+- Keep this optional and evidence-driven; file watching and normal session recall should remain the primary path.
+- Avoid broad semantic labels such as `situation:pr-comment` until evals show they improve useful recall per context token.
 
 ## Memory Quality
 

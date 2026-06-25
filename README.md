@@ -120,6 +120,32 @@ Ingest existing Codex transcripts once:
 yaaml ingest
 ```
 
+## Recall Metrics and Evals
+
+YAAML evaluates recall along three axes:
+
+1. Recall rate: how often recall runs and how often it returns at least one memory.
+2. Recall volume: how many memories and characters are added when recall is non-empty.
+3. Recall usefulness: whether recalled memories were relevant enough to help later agent work.
+
+View the rollup:
+
+```sh
+yaaml stats
+yaaml stats --json
+```
+
+Run and inspect evals:
+
+```sh
+yaaml eval recall
+yaaml eval summary
+yaaml eval list
+yaaml eval memories
+```
+
+Numeric eval scores use a 1-5 scale where 5 is relevant, concise, and actionable, and 1 is not relevant. Empty recall is treated as abstention, not as a numeric failure: evals distinguish `clean_abstention` from `missed_useful_abstention`. Runs with no later transcript context are recorded as `insufficient_context` and excluded from numeric quality metrics.
+
 ## Configuration
 
 YAAML merges configuration from:
@@ -138,8 +164,10 @@ Common defaults include:
 ```toml
 turns_between_memory = 10
 recall_result_limit = 2
+recall_candidate_pool = 16
 recall_live_turn_window = 3
 recall_similarity_threshold = 0.3
+recall_memory_cooldown_seconds = 1200
 
 embedding_provider = "openai"
 embedding_model = "text-embedding-3-small"

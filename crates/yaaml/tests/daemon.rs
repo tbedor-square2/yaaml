@@ -1,5 +1,5 @@
 use std::fs::{self, OpenOptions};
-use std::io::{Read, Write};
+use std::io::{ErrorKind, Read, Write};
 use std::net::Shutdown;
 use std::net::TcpListener;
 use std::os::unix::net::UnixStream;
@@ -1558,7 +1558,11 @@ fn signal_socket_requests_shutdown_and_removes_socket() {
     let mut stream = UnixStream::connect(&socket).unwrap();
     stream.write_all(b"shutdown\n").unwrap();
     stream.flush().unwrap();
-    stream.shutdown(Shutdown::Write).unwrap();
+    match stream.shutdown(Shutdown::Write) {
+        Ok(()) => {}
+        Err(error) if error.kind() == ErrorKind::NotConnected => {}
+        Err(error) => panic!("failed to half-close signal socket: {error}"),
+    }
     let mut response = String::new();
     stream.read_to_string(&mut response).unwrap();
 

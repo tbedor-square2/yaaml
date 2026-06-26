@@ -55,6 +55,39 @@ pub struct TurnRecord {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ConversationSegmentStatus {
+    Active,
+    Superseded,
+    Completed,
+    Abandoned,
+}
+
+impl ConversationSegmentStatus {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Active => "active",
+            Self::Superseded => "superseded",
+            Self::Completed => "completed",
+            Self::Abandoned => "abandoned",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ConversationSegmentRecord {
+    pub id: Option<i64>,
+    pub session_id: String,
+    pub start_turn_ordinal: u64,
+    pub end_turn_ordinal: u64,
+    pub summary: String,
+    pub task_keys: Vec<String>,
+    pub context: Option<crate::ContextMetadata>,
+    pub status: ConversationSegmentStatus,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum MemoryScope {
     Project,
     Global,

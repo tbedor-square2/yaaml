@@ -15,13 +15,13 @@ use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use yaaml_core::{
-    active_segment_recall_turns, build_active_segment_recall_query, build_recall_query,
-    derive_project_descriptor, embedded_text_hash, embedding_text, extract_task_keys,
-    find_consolidation_clusters, parse_eval_judge_response, parse_formulation_response,
-    rank_recall_candidates, recall_file_path, render_recall_markdown, session_recall_file_path,
-    write_recall_file, ClusterMemory, Config, EmbeddingRecord, MemoryRecord, MemoryScope,
-    RecallMemory, RecallRankingOptions, SourceTurnRef, TaskRecord, TaskStatus, TurnRecord,
-    VectorIndex,
+    active_segment_recall_turns, build_active_segment_recall_query, build_conversation_segments,
+    build_recall_query, derive_project_descriptor, embedded_text_hash, embedding_text,
+    extract_task_keys, find_consolidation_clusters, parse_eval_judge_response,
+    parse_formulation_response, rank_recall_candidates, recall_file_path, render_recall_markdown,
+    session_recall_file_path, write_recall_file, ClusterMemory, Config, EmbeddingRecord,
+    MemoryRecord, MemoryScope, RecallMemory, RecallRankingOptions, SourceTurnRef, TaskRecord,
+    TaskStatus, TurnRecord, VectorIndex,
 };
 use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
@@ -201,6 +201,10 @@ pub fn ingest_codex_file(db: &Database, transcript_path: &Path) -> anyhow::Resul
         last_observed_at,
     )
     .context("failed to update transcript cursor")?;
+    if inserted_turns > 0 {
+        refresh_conversation_segments_for_session(db, &parsed.session.id)
+            .context("failed to refresh conversation segments")?;
+    }
 
     Ok(IngestReport {
         session_id: parsed.session.id,
@@ -208,6 +212,19 @@ pub fn ingest_codex_file(db: &Database, transcript_path: &Path) -> anyhow::Resul
         last_inserted_ordinal,
         next_offset: parsed.next_offset,
     })
+}
+
+pub fn refresh_conversation_segments_for_session(
+    db: &Database,
+    session_id: &str,
+) -> anyhow::Result<u64> {
+    let turns = db
+        .completed_turns_for_session_range(session_id, 0, u64::MAX)
+        .context("failed to load session turns for segment refresh")?;
+    let turns = hydrate_turns(db, &turns).context("failed to hydrate segment turns")?;
+    let segments = build_conversation_segments(session_id, &turns, &unix_timestamp());
+    db.replace_conversation_segments_for_session(session_id, &segments)
+        .context("failed to persist conversation segments")
 }
 
 pub fn process_codex_backlog(

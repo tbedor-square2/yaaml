@@ -389,6 +389,9 @@ pub fn extract_task_keys(text: &str) -> Vec<String> {
         if let Some(ticket) = ticket_key(token) {
             push_unique(&mut keys, ticket);
         }
+        if let Some(target) = target_key(token) {
+            push_unique(&mut keys, target);
+        }
         if let Some(path) = path_key(token) {
             push_unique(&mut keys, path);
         }
@@ -515,6 +518,8 @@ fn ticket_key(token: &str) -> Option<String> {
     let token = token.trim_matches(|ch: char| !ch.is_ascii_alphanumeric() && ch != '-');
     let (prefix, number) = token.split_once('-')?;
     if prefix.len() < 2
+        || number.is_empty()
+        || !prefix.chars().any(|ch| ch.is_ascii_alphabetic())
         || !prefix
             .chars()
             .all(|ch| ch.is_ascii_uppercase() || ch.is_ascii_digit())
@@ -526,14 +531,22 @@ fn ticket_key(token: &str) -> Option<String> {
 }
 
 fn path_key(token: &str) -> Option<String> {
-    let token =
-        token.trim_matches(|ch: char| matches!(ch, ',' | ';' | ':' | '"' | '\'' | ')' | ']' | '}'));
-    if token.starts_with("http://") || token.starts_with("https://") {
+    let token = token.trim_matches(|ch: char| {
+        matches!(ch, ',' | ';' | ':' | '"' | '\'' | ')' | ']' | '}' | '|')
+    });
+    if token.starts_with("//")
+        || token.contains("://")
+        || token.contains("](")
+        || token.contains('`')
+        || token.contains('<')
+        || token.contains('>')
+    {
         return None;
     }
     if !token.contains('/') || token.len() < 6 {
         return None;
     }
+    let token = strip_path_line_suffix(token);
     if !has_path_shape(token) {
         return None;
     }
@@ -550,36 +563,85 @@ fn path_key(token: &str) -> Option<String> {
     Some(format!("path:{normalized}"))
 }
 
+fn strip_path_line_suffix(token: &str) -> &str {
+    let Some((path, _suffix)) = token.split_once(':') else {
+        return token;
+    };
+    if path.rsplit('/').next().is_some_and(has_file_like_basename) {
+        path
+    } else {
+        token
+    }
+}
+
 fn has_path_shape(token: &str) -> bool {
-    if token.starts_with("./")
-        || token.starts_with("../")
-        || token.starts_with('/')
-        || token.starts_with("~/")
-        || token.starts_with("//")
-        || token.contains(':')
-        || token
-            .rsplit('/')
-            .next()
-            .is_some_and(|segment| segment.contains('.'))
-    {
+    if token.starts_with("./") || token.starts_with("../") {
+        return true;
+    }
+    if token.rsplit('/').next().is_some_and(has_file_like_basename) {
         return true;
     }
     let segments = token.split('/').collect::<Vec<_>>();
-    if segments.len() >= 3 {
-        return true;
+    let pathish_segments = ["crates", "docs", "src", "test", "tests"];
+    if segments.len() < 3 {
+        return false;
     }
-    let pathish_segments = [
-        "app", "apps", "bin", "build", "cmd", "config", "crates", "docs", "java", "js", "kotlin",
-        "lib", "packages", "py", "python", "src", "store", "test", "tests", "ts",
-    ];
     segments
         .iter()
         .any(|segment| pathish_segments.contains(&segment.to_ascii_lowercase().as_str()))
 }
 
+fn has_file_like_basename(segment: &str) -> bool {
+    let segment = segment.trim_matches(trim_task_key_punctuation);
+    if matches!(segment, "BUILD" | "BUILD.bazel" | "Makefile" | "justfile") {
+        return true;
+    }
+    let Some((_, extension)) = segment.rsplit_once('.') else {
+        return false;
+    };
+    matches!(
+        extension.to_ascii_lowercase().as_str(),
+        "bazel"
+            | "go"
+            | "gradle"
+            | "java"
+            | "js"
+            | "json"
+            | "jsx"
+            | "kt"
+            | "kts"
+            | "md"
+            | "proto"
+            | "py"
+            | "rb"
+            | "rs"
+            | "scala"
+            | "sh"
+            | "sql"
+            | "toml"
+            | "ts"
+            | "tsx"
+            | "yaml"
+            | "yml"
+            | "xml"
+    )
+}
+
+fn target_key(token: &str) -> Option<String> {
+    let token =
+        token.trim_matches(|ch: char| matches!(ch, ',' | ';' | '"' | '\'' | ')' | ']' | '}'));
+    if !token.starts_with("//") || !token.contains(':') || token.contains("://") {
+        return None;
+    }
+    Some(format!("target:{}", token.to_ascii_lowercase()))
+}
+
 fn branch_key(token: &str) -> Option<String> {
     let token = token.trim_matches(trim_task_key_punctuation);
-    if token.len() < 3 || token.starts_with('-') {
+    if token.len() < 3
+        || token.starts_with('-')
+        || !(token.contains('/') || token.contains('-') || token.starts_with("refs/"))
+    {
         return None;
     }
     Some(format!("branch:{}", token.to_ascii_lowercase()))
@@ -696,8 +758,14 @@ pub fn active_segment_recall_turns(turns: &[TurnRecord]) -> &[TurnRecord] {
 fn turn_segment_keys(turn: &TurnRecord) -> HashSet<String> {
     turn.display_text
         .as_deref()
-        .map(extract_task_keys)
+        .map(segment_task_keys)
         .unwrap_or_default()
+        .into_iter()
+        .collect()
+}
+
+pub fn segment_task_keys(text: &str) -> Vec<String> {
+    extract_task_keys(text)
         .into_iter()
         .filter(|key| is_strong_task_key(key))
         .collect()
@@ -882,21 +950,49 @@ mod tests {
     #[test]
     fn task_key_extraction_finds_pr_ticket_path_and_tool_keys() {
         let keys = extract_task_keys(
-            "PR 481245 updates riskarbiter/src/main/java/Foo.java for MLP-4400; run yaaml recall",
+            "PR 481245 updates riskarbiter/src/main/java/Foo.java:42:public and //riskarbiter/src/test:unit for MLP-4400; run yaaml recall",
         );
 
         assert!(keys.contains(&"pr:481245".to_string()));
         assert!(keys.contains(&"ticket:MLP-4400".to_string()));
         assert!(keys.contains(&"path:riskarbiter/src/main/java/foo.java".to_string()));
+        assert!(keys.contains(&"target://riskarbiter/src/test:unit".to_string()));
+        assert!(!keys.contains(&"path://riskarbiter/src/test:unit".to_string()));
         assert!(keys.contains(&"tool:yaaml".to_string()));
     }
 
     #[test]
     fn task_key_extraction_ignores_generic_slash_phrases() {
-        let keys = extract_task_keys("compare before/after and repair/validation notes");
+        let keys = extract_task_keys(
+            "compare before/after, repair/validation notes, restarts/crashloop/progress, create/fork/transfer, store/domain, </environment_context>, /objective, and ~/development",
+        );
 
         assert!(!keys.contains(&"path:before/after".to_string()));
         assert!(!keys.contains(&"path:repair/validation".to_string()));
+        assert!(!keys.contains(&"path:restarts/crashloop/progress".to_string()));
+        assert!(!keys.contains(&"path:create/fork/transfer".to_string()));
+        assert!(!keys.contains(&"path:store/domain".to_string()));
+        assert!(!keys.contains(&"path:/environment_context".to_string()));
+        assert!(!keys.contains(&"path:/objective".to_string()));
+        assert!(!keys.contains(&"path:~/development".to_string()));
+    }
+
+    #[test]
+    fn task_key_extraction_ignores_generic_branch_words() {
+        let keys =
+            extract_task_keys("branch state is clean but branch refs/heads/rust-impl matters");
+
+        assert!(!keys.contains(&"branch:state".to_string()));
+        assert!(!keys.contains(&"branch:clean".to_string()));
+        assert!(keys.contains(&"branch:refs/heads/rust-impl".to_string()));
+    }
+
+    #[test]
+    fn task_key_extraction_rejects_malformed_tickets() {
+        let keys = extract_task_keys("items 477- and 123-456 are not ticket keys");
+
+        assert!(!keys.contains(&"ticket:477-".to_string()));
+        assert!(!keys.contains(&"ticket:123-456".to_string()));
     }
 
     #[test]

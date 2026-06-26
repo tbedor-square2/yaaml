@@ -1,4 +1,4 @@
-pub const EXPECTED_SCHEMA_VERSION: i64 = 3;
+pub const EXPECTED_SCHEMA_VERSION: i64 = 4;
 
 pub const MIGRATIONS: &[&str] = &[
     r#"
@@ -141,5 +141,22 @@ UPDATE schema_version SET version = 2;
 "#,
     r#"
 UPDATE schema_version SET version = 3;
+"#,
+    r#"
+CREATE TABLE IF NOT EXISTS conversation_segments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id TEXT NOT NULL,
+    start_turn_ordinal INTEGER NOT NULL,
+    end_turn_ordinal INTEGER NOT NULL,
+    summary TEXT NOT NULL,
+    task_keys TEXT NOT NULL DEFAULT '[]',
+    context_json TEXT,
+    status TEXT NOT NULL DEFAULT 'active',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY(session_id) REFERENCES sessions(id)
+);
+
+UPDATE schema_version SET version = 4;
 "#,
 ];

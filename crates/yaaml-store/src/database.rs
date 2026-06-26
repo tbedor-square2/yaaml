@@ -9,8 +9,8 @@ use thiserror::Error;
 use yaaml_core::status::{BacklogStatus, Status, TaskFailure, WorkerStatus};
 use yaaml_core::{
     extract_task_keys, infer_context_from_memory, infer_context_from_path, ContextMetadata,
-    EmbeddingRecord, MemoryKind, MemoryRecord, MemoryScope, SessionRecord, SourceTurnRef,
-    TaskRecord, TaskStatus, TurnRecord,
+    ConversationSegmentRecord, ConversationSegmentStatus, EmbeddingRecord, MemoryKind,
+    MemoryRecord, MemoryScope, SessionRecord, SourceTurnRef, TaskRecord, TaskStatus, TurnRecord,
 };
 
 use crate::migrations::MIGRATIONS;
@@ -210,8 +210,69 @@ impl Database {
             "injected",
             "ALTER TABLE eval_runs ADD COLUMN injected INTEGER",
         )?;
+        self.ensure_conversation_segments_table()?;
         self.backfill_eval_run_metadata()?;
         self.backfill_empty_recall_eval_scores()?;
+        Ok(())
+    }
+
+    fn ensure_conversation_segments_table(&self) -> Result<(), DatabaseError> {
+        let columns = self.column_names("conversation_segments")?;
+        let required_columns = [
+            "session_id",
+            "start_turn_ordinal",
+            "end_turn_ordinal",
+            "summary",
+            "task_keys",
+            "context_json",
+            "status",
+            "created_at",
+            "updated_at",
+        ];
+        if !columns.is_empty()
+            && required_columns
+                .iter()
+                .any(|column| !columns.iter().any(|existing| existing == column))
+        {
+            self.drop_conversation_segments_table()?;
+        }
+        self.conn.execute_batch(
+            r#"
+CREATE TABLE IF NOT EXISTS conversation_segments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id TEXT NOT NULL,
+    start_turn_ordinal INTEGER NOT NULL,
+    end_turn_ordinal INTEGER NOT NULL,
+    summary TEXT NOT NULL,
+    task_keys TEXT NOT NULL DEFAULT '[]',
+    context_json TEXT,
+    status TEXT NOT NULL DEFAULT 'active',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY(session_id) REFERENCES sessions(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_conversation_segments_session
+    ON conversation_segments(session_id, start_turn_ordinal);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
+    ON conversation_segments(session_id, start_turn_ordinal, end_turn_ordinal);
+"#,
+        )?;
+        Ok(())
+    }
+
+    fn drop_conversation_segments_table(&self) -> Result<(), DatabaseError> {
+        let foreign_keys: i64 = self
+            .conn
+            .pragma_query_value(None, "foreign_keys", |row| row.get(0))?;
+        self.conn.pragma_update(None, "foreign_keys", "OFF")?;
+        let drop_result = self
+            .conn
+            .execute_batch("DROP TABLE IF EXISTS conversation_segments;");
+        if foreign_keys != 0 {
+            self.conn.pragma_update(None, "foreign_keys", "ON")?;
+        }
+        drop_result?;
         Ok(())
     }
 
@@ -984,6 +1045,81 @@ impl Database {
             turns.push(row?);
         }
         Ok(turns)
+    }
+
+    pub fn replace_conversation_segments_for_session(
+        &self,
+        session_id: &str,
+        segments: &[ConversationSegmentRecord],
+    ) -> Result<u64, DatabaseError> {
+        self.conn.execute(
+            "DELETE FROM conversation_segments WHERE session_id = ?1",
+            params![session_id],
+        )?;
+        let mut inserted = 0_u64;
+        for segment in segments {
+            let task_keys = serde_json::to_string(&segment.task_keys)?;
+            let context_json = segment
+                .context
+                .as_ref()
+                .map(serde_json::to_string)
+                .transpose()?;
+            self.conn.execute(
+                "INSERT INTO conversation_segments (
+                    session_id, start_turn_ordinal, end_turn_ordinal, summary, task_keys,
+                    context_json, status, created_at, updated_at
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+                params![
+                    segment.session_id,
+                    u64_to_i64(segment.start_turn_ordinal),
+                    u64_to_i64(segment.end_turn_ordinal),
+                    segment.summary,
+                    task_keys,
+                    context_json,
+                    segment.status.as_str(),
+                    segment.created_at,
+                    segment.updated_at,
+                ],
+            )?;
+            inserted += 1;
+        }
+        Ok(inserted)
+    }
+
+    pub fn list_conversation_segments(
+        &self,
+        session_id: Option<&str>,
+        limit: usize,
+    ) -> Result<Vec<ConversationSegmentRecord>, DatabaseError> {
+        let limit = u64_to_i64(limit as u64);
+        let mut segments = Vec::new();
+        if let Some(session_id) = session_id {
+            let mut stmt = self.conn.prepare(
+                "SELECT id, session_id, start_turn_ordinal, end_turn_ordinal, summary,
+                        task_keys, context_json, status, created_at, updated_at
+                 FROM conversation_segments
+                 WHERE session_id = ?1
+                 ORDER BY start_turn_ordinal DESC
+                 LIMIT ?2",
+            )?;
+            let rows = stmt.query_map(params![session_id, limit], read_conversation_segment)?;
+            for row in rows {
+                segments.push(row?);
+            }
+        } else {
+            let mut stmt = self.conn.prepare(
+                "SELECT id, session_id, start_turn_ordinal, end_turn_ordinal, summary,
+                        task_keys, context_json, status, created_at, updated_at
+                 FROM conversation_segments
+                 ORDER BY updated_at DESC, id DESC
+                 LIMIT ?1",
+            )?;
+            let rows = stmt.query_map(params![limit], read_conversation_segment)?;
+            for row in rows {
+                segments.push(row?);
+            }
+        }
+        Ok(segments)
     }
 
     pub fn upsert_embedding(&self, embedding: &EmbeddingRecord) -> Result<(), DatabaseError> {
@@ -1893,6 +2029,35 @@ fn read_turn_record_from_offset(
     })
 }
 
+fn read_conversation_segment(
+    row: &rusqlite::Row<'_>,
+) -> rusqlite::Result<ConversationSegmentRecord> {
+    let task_keys_json: String = row.get(5)?;
+    let task_keys = serde_json::from_str(&task_keys_json).map_err(json_decode_error)?;
+    let context_json: Option<String> = row.get(6)?;
+    let context = context_json
+        .map(|json| serde_json::from_str(&json).map_err(json_decode_error))
+        .transpose()?;
+    let status: String = row.get(7)?;
+    Ok(ConversationSegmentRecord {
+        id: row.get(0)?,
+        session_id: row.get(1)?,
+        start_turn_ordinal: i64_to_u64(row.get(2)?),
+        end_turn_ordinal: i64_to_u64(row.get(3)?),
+        summary: row.get(4)?,
+        task_keys,
+        context,
+        status: match status.as_str() {
+            "superseded" => ConversationSegmentStatus::Superseded,
+            "completed" => ConversationSegmentStatus::Completed,
+            "abandoned" => ConversationSegmentStatus::Abandoned,
+            _ => ConversationSegmentStatus::Active,
+        },
+        created_at: row.get(8)?,
+        updated_at: row.get(9)?,
+    })
+}
+
 fn read_memory_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<MemoryRecord> {
     let scope: String = row.get(3)?;
     let memory_kind: String = row.get(4)?;
@@ -1976,6 +2141,7 @@ mod tests {
         let tables = db.table_names().unwrap();
         for expected in [
             "backlog_progress",
+            "conversation_segments",
             "embeddings",
             "eval_results",
             "eval_runs",
@@ -1991,6 +2157,41 @@ mod tests {
                 "missing {expected}"
             );
         }
+    }
+
+    #[test]
+    fn migration_replaces_legacy_conversation_segments_table() {
+        let mut db = Database::in_memory().unwrap();
+        db.conn
+            .execute_batch(
+                r#"
+CREATE TABLE schema_version (version INTEGER NOT NULL);
+INSERT INTO schema_version (version) VALUES (3);
+CREATE TABLE conversation_segments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id TEXT NOT NULL,
+    start_ordinal INTEGER NOT NULL,
+    end_ordinal INTEGER NOT NULL,
+    topic_descriptor TEXT NOT NULL,
+    summary TEXT NOT NULL,
+    task_keys TEXT NOT NULL DEFAULT '[]',
+    representative_paths TEXT NOT NULL DEFAULT '[]',
+    status TEXT NOT NULL DEFAULT 'active',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+"#,
+            )
+            .unwrap();
+
+        db.migrate().unwrap();
+
+        let columns = db.column_names("conversation_segments").unwrap();
+        assert!(columns.contains(&"start_turn_ordinal".to_string()));
+        assert!(columns.contains(&"end_turn_ordinal".to_string()));
+        assert!(columns.contains(&"context_json".to_string()));
+        assert!(!columns.contains(&"start_ordinal".to_string()));
+        assert!(!columns.contains(&"topic_descriptor".to_string()));
     }
 
     #[test]
@@ -2106,6 +2307,65 @@ mod tests {
             db.cursor_paths().unwrap(),
             vec![PathBuf::from("/tmp/session.jsonl")]
         );
+    }
+
+    #[test]
+    fn conversation_segments_replace_and_list_by_session() {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+        db.upsert_session(&SessionRecord {
+            id: "session-1".to_string(),
+            agent_type: yaaml_core::AgentType::Codex,
+            project_id: "/tmp/project".to_string(),
+            transcript_file_path: "/tmp/session.jsonl".to_string(),
+            started_at: None,
+            last_seen_at: None,
+        })
+        .unwrap();
+
+        let segment = ConversationSegmentRecord {
+            id: None,
+            session_id: "session-1".to_string(),
+            start_turn_ordinal: 1,
+            end_turn_ordinal: 3,
+            summary: "Turns 1..=3 discuss PR work.".to_string(),
+            task_keys: vec!["pr:123".to_string()],
+            context: Some(ContextMetadata {
+                repo_id: Some("repo".to_string()),
+                ..ContextMetadata::default()
+            }),
+            status: ConversationSegmentStatus::Active,
+            created_at: "unix:1".to_string(),
+            updated_at: "unix:1".to_string(),
+        };
+
+        assert_eq!(
+            db.replace_conversation_segments_for_session("session-1", &[segment])
+                .unwrap(),
+            1
+        );
+        let segments = db
+            .list_conversation_segments(Some("session-1"), 10)
+            .unwrap();
+        assert_eq!(segments.len(), 1);
+        assert_eq!(segments[0].task_keys, vec!["pr:123".to_string()]);
+        assert_eq!(
+            segments[0]
+                .context
+                .as_ref()
+                .and_then(|context| context.repo_id.as_deref()),
+            Some("repo")
+        );
+
+        assert_eq!(
+            db.replace_conversation_segments_for_session("session-1", &[])
+                .unwrap(),
+            0
+        );
+        assert!(db
+            .list_conversation_segments(Some("session-1"), 10)
+            .unwrap()
+            .is_empty());
     }
 
     #[test]

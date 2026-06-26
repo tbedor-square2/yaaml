@@ -9,7 +9,7 @@ fn migration_creates_expected_tables_and_is_idempotent() {
     db.migrate().unwrap();
     db.migrate().unwrap();
 
-    assert_eq!(db.schema_version().unwrap(), 3);
+    assert_eq!(db.schema_version().unwrap(), 4);
     let tables = db
         .table_names()
         .unwrap()
@@ -18,6 +18,7 @@ fn migration_creates_expected_tables_and_is_idempotent() {
     for expected in [
         "backlog_progress",
         "context_metadata",
+        "conversation_segments",
         "embeddings",
         "eval_results",
         "eval_runs",

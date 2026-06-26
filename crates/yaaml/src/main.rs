@@ -23,9 +23,9 @@ use yaaml_core::{
     infer_context_from_memory, infer_context_from_path, infer_context_from_text, infer_memory_kind,
     merge_contexts, parse_eval_judge_response, parse_memory_ids, rank_recall_candidates,
     recall_file_path, render_recall_markdown, session_recall_file_path, write_recall_file, Config,
-    ConfigPaths, ContextMetadata, EmbeddingRecord, MemoryKind, MemoryRecord, MemoryScope,
-    RecallMemory, RecallRankDetails, RecallRankingOptions, RecallWrite, SessionRecord, TurnRecord,
-    VectorIndex,
+    ConfigPaths, ContextMetadata, ConversationSegmentRecord, EmbeddingRecord, MemoryKind,
+    MemoryRecord, MemoryScope, RecallMemory, RecallRankDetails, RecallRankingOptions, RecallWrite,
+    SessionRecord, TurnRecord, VectorIndex,
 };
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
 use yaaml_llm::ReqwestTransport;
@@ -65,6 +65,8 @@ enum Command {
     Tasks(TasksArgs),
     /// Inspect or rebuild stored memories.
     Memories(MemoriesArgs),
+    /// Backfill and inspect conversation segments.
+    Segments(SegmentsArgs),
     /// Resolve the current session or project's daemon-owned recall file path.
     Path,
     /// Print existing recall, or update it from user input.
@@ -228,6 +230,46 @@ struct TasksArgs {
 struct MemoriesArgs {
     #[command(subcommand)]
     command: MemoriesCommand,
+}
+
+#[derive(Debug, Parser)]
+struct SegmentsArgs {
+    #[command(subcommand)]
+    command: SegmentsCommand,
+}
+
+#[derive(Debug, Subcommand)]
+enum SegmentsCommand {
+    /// Rebuild deterministic segment metadata from stored transcript cursors.
+    Backfill(SegmentsBackfillArgs),
+    /// List stored conversation segments.
+    List(SegmentsListArgs),
+}
+
+#[derive(Debug, Parser)]
+struct SegmentsBackfillArgs {
+    /// Restrict backfill to one session id.
+    #[arg(long)]
+    session: Option<String>,
+    /// Maximum sessions to process. Omit or set 0 for all matching sessions.
+    #[arg(long, default_value_t = 0)]
+    limit: usize,
+    /// Emit machine-readable JSON.
+    #[arg(long)]
+    json: bool,
+}
+
+#[derive(Debug, Parser)]
+struct SegmentsListArgs {
+    /// Restrict output to one session id.
+    #[arg(long)]
+    session: Option<String>,
+    /// Maximum segments to show.
+    #[arg(long, default_value_t = 20)]
+    limit: usize,
+    /// Emit machine-readable JSON.
+    #[arg(long)]
+    json: bool,
 }
 
 #[derive(Debug, Subcommand)]
@@ -444,6 +486,7 @@ fn main() -> anyhow::Result<()> {
         Command::Config(args) => config(args),
         Command::Tasks(args) => tasks(args),
         Command::Memories(args) => memories(args),
+        Command::Segments(args) => segments(args),
         Command::Path => path(),
         Command::Recall(args) => recall(args),
         Command::Remember(args) => remember(args),
@@ -574,6 +617,119 @@ fn memories(args: MemoriesArgs) -> anyhow::Result<()> {
         MemoriesCommand::Stats(args) => memories_stats(args),
         MemoriesCommand::Health(args) => memories_health(args),
         MemoriesCommand::Rebuild(args) => memories_rebuild(args),
+    }
+}
+
+fn segments(args: SegmentsArgs) -> anyhow::Result<()> {
+    match args.command {
+        SegmentsCommand::Backfill(args) => segments_backfill(args),
+        SegmentsCommand::List(args) => segments_list(args),
+    }
+}
+
+#[derive(Debug, Serialize)]
+struct SegmentsBackfillOutput {
+    sessions_processed: usize,
+    segments_written: u64,
+    failures: usize,
+}
+
+fn segments_backfill(args: SegmentsBackfillArgs) -> anyhow::Result<()> {
+    let (_config, db) = open_database_for_cwd()?;
+    let explicit_session = args.session.is_some();
+    let sessions = if let Some(session_id) = args.session.as_deref() {
+        vec![db
+            .session_by_id(session_id)
+            .context("failed to load session")?
+            .with_context(|| format!("session {session_id} not found"))?]
+    } else {
+        db.sessions_with_completed_turn_counts()
+            .context("failed to list sessions")?
+            .into_iter()
+            .map(|(session, _count)| session)
+            .collect()
+    };
+    let limit = if args.limit == 0 {
+        sessions.len()
+    } else {
+        args.limit.min(sessions.len())
+    };
+    let mut sessions_processed = 0_usize;
+    let mut segments_written = 0_u64;
+    let mut failures = 0_usize;
+    for session in sessions.into_iter().take(limit) {
+        match yaaml::daemon::refresh_conversation_segments_for_session(&db, &session.id) {
+            Ok(written) => {
+                segments_written += written;
+                sessions_processed += 1;
+            }
+            Err(error) if explicit_session => {
+                return Err(error)
+                    .with_context(|| format!("failed to backfill session {}", session.id));
+            }
+            Err(_) => {
+                failures += 1;
+            }
+        }
+    }
+
+    let output = SegmentsBackfillOutput {
+        sessions_processed,
+        segments_written,
+        failures,
+    };
+    if args.json {
+        println!("{}", serde_json::to_string_pretty(&output)?);
+    } else {
+        println!("YAAML segment backfill");
+        println!("  sessions processed: {}", output.sessions_processed);
+        println!("  segments written: {}", output.segments_written);
+        println!("  failures: {}", output.failures);
+    }
+    Ok(())
+}
+
+fn segments_list(args: SegmentsListArgs) -> anyhow::Result<()> {
+    let (_config, db) = open_database_for_cwd()?;
+    let segments = db
+        .list_conversation_segments(args.session.as_deref(), args.limit)
+        .context("failed to list conversation segments")?;
+    if args.json {
+        println!("{}", serde_json::to_string_pretty(&segments)?);
+    } else {
+        print_segments(&segments);
+    }
+    Ok(())
+}
+
+fn print_segments(segments: &[ConversationSegmentRecord]) {
+    println!("Conversation segments");
+    if segments.is_empty() {
+        println!("  none");
+        return;
+    }
+    for (index, segment) in segments.iter().enumerate() {
+        let keys = if segment.task_keys.is_empty() {
+            "-".to_string()
+        } else {
+            segment
+                .task_keys
+                .iter()
+                .take(8)
+                .cloned()
+                .collect::<Vec<_>>()
+                .join(", ")
+        };
+        println!(
+            "  {}. session={} turns={}..={} status={} keys={}",
+            index + 1,
+            segment.session_id,
+            segment.start_turn_ordinal,
+            segment.end_turn_ordinal,
+            segment.status.as_str(),
+            keys
+        );
+        println!("     {}", segment.summary);
     }
 }
 

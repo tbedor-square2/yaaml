@@ -632,6 +632,14 @@ struct SegmentsBackfillOutput {
     sessions_processed: usize,
     segments_written: u64,
     failures: usize,
+    failure_details: Vec<SegmentsBackfillFailure>,
+}
+
+#[derive(Debug, Serialize)]
+struct SegmentsBackfillFailure {
+    session_id: String,
+    transcript_file_path: String,
+    error: String,
 }
 
 fn segments_backfill(args: SegmentsBackfillArgs) -> anyhow::Result<()> {
@@ -656,7 +664,7 @@ fn segments_backfill(args: SegmentsBackfillArgs) -> anyhow::Result<()> {
     };
     let mut sessions_processed = 0_usize;
     let mut segments_written = 0_u64;
-    let mut failures = 0_usize;
+    let mut failure_details = Vec::new();
     for session in sessions.into_iter().take(limit) {
         match yaaml::daemon::refresh_conversation_segments_for_session(&db, &session.id) {
             Ok(written) => {
@@ -667,8 +675,12 @@ fn segments_backfill(args: SegmentsBackfillArgs) -> anyhow::Result<()> {
                 return Err(error)
                     .with_context(|| format!("failed to backfill session {}", session.id));
             }
-            Err(_) => {
-                failures += 1;
+            Err(error) => {
+                failure_details.push(SegmentsBackfillFailure {
+                    session_id: session.id,
+                    transcript_file_path: session.transcript_file_path,
+                    error: format!("{error:#}"),
+                });
             }
         }
     }
@@ -676,7 +688,8 @@ fn segments_backfill(args: SegmentsBackfillArgs) -> anyhow::Result<()> {
     let output = SegmentsBackfillOutput {
         sessions_processed,
         segments_written,
-        failures,
+        failures: failure_details.len(),
+        failure_details,
     };
     if args.json {
         println!("{}", serde_json::to_string_pretty(&output)?);
@@ -685,6 +698,18 @@ fn segments_backfill(args: SegmentsBackfillArgs) -> anyhow::Result<()> {
         println!("  sessions processed: {}", output.sessions_processed);
         println!("  segments written: {}", output.segments_written);
         println!("  failures: {}", output.failures);
+        for failure in output.failure_details.iter().take(10) {
+            println!(
+                "    - session={} transcript={} error={}",
+                failure.session_id, failure.transcript_file_path, failure.error
+            );
+        }
+        if output.failure_details.len() > 10 {
+            println!(
+                "    ... {} more failures; rerun with --json for full details",
+                output.failure_details.len() - 10
+            );
+        }
     }
     Ok(())
 }

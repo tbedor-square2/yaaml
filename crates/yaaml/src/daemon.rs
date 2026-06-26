@@ -17,7 +17,7 @@ use serde_json::json;
 use yaaml_core::{
     active_segment_recall_turns, build_active_segment_recall_query, build_conversation_segments,
     build_recall_query, derive_project_descriptor, embedded_text_hash, embedding_text,
-    extract_task_keys, find_consolidation_clusters, parse_eval_judge_response,
+    extract_task_keys, find_consolidation_clusters, merge_task_keys, parse_eval_judge_response,
     parse_formulation_response, rank_recall_candidates, recall_file_path, render_recall_markdown,
     session_recall_file_path, write_recall_file, ClusterMemory, Config, EmbeddingRecord,
     MemoryRecord, MemoryScope, RecallMemory, RecallRankingOptions, SourceTurnRef, TaskRecord,
@@ -1886,7 +1886,7 @@ pub fn refresh_recall_with_embedding(
         config.tool_call_truncation_chars,
     );
     let query_context = context_from_turns(recall_turns, project_id, &query_text);
-    let query_task_keys = extract_task_keys(&query_text);
+    let query_task_keys = active_segment_task_keys(db, &query_text, recent_turns)?;
     let candidates = rank_recall_candidates(
         &hits,
         &memories,
@@ -1992,6 +1992,24 @@ pub fn refresh_recall_with_embedding(
         }
     }
     Ok(write)
+}
+
+fn active_segment_task_keys(
+    db: &Database,
+    query_text: &str,
+    recent_turns: &[TurnRecord],
+) -> anyhow::Result<Vec<String>> {
+    let query_task_keys = extract_task_keys(query_text);
+    let Some(latest_turn) = recent_turns.last() else {
+        return Ok(query_task_keys);
+    };
+    let Some(segment) = db
+        .conversation_segment_for_turn(&latest_turn.session_id, latest_turn.ordinal)
+        .context("failed to load active conversation segment for recall")?
+    else {
+        return Ok(query_task_keys);
+    };
+    Ok(merge_task_keys(&query_task_keys, &segment.task_keys))
 }
 
 fn cooldown_since_unix(query_timestamp: &str, cooldown_seconds: u64) -> Option<i64> {

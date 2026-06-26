@@ -21,11 +21,11 @@ use yaaml_core::{
     active_segment_recall_turns, context_score, counterfactual_citation_score,
     derive_project_descriptor, embedded_text_hash, embedding_text, extract_task_keys,
     infer_context_from_memory, infer_context_from_path, infer_context_from_text, infer_memory_kind,
-    merge_contexts, parse_eval_judge_response, parse_memory_ids, rank_recall_candidates,
-    recall_file_path, render_recall_markdown, session_recall_file_path, write_recall_file, Config,
-    ConfigPaths, ContextMetadata, ConversationSegmentRecord, EmbeddingRecord, MemoryKind,
-    MemoryRecord, MemoryScope, RecallMemory, RecallRankDetails, RecallRankingOptions, RecallWrite,
-    SessionRecord, TurnRecord, VectorIndex,
+    merge_contexts, merge_task_keys, parse_eval_judge_response, parse_memory_ids,
+    rank_recall_candidates, recall_file_path, render_recall_markdown, session_recall_file_path,
+    write_recall_file, Config, ConfigPaths, ContextMetadata, ConversationSegmentRecord,
+    EmbeddingRecord, MemoryKind, MemoryRecord, MemoryScope, RecallMemory, RecallRankDetails,
+    RecallRankingOptions, RecallWrite, SessionRecord, TurnRecord, VectorIndex,
 };
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
 use yaaml_llm::ReqwestTransport;
@@ -3247,6 +3247,7 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
             query_embedding: &query_embedding,
             project_id: &project_id,
             session_id: anchor.as_ref().map(|anchor| anchor.session_id.as_str()),
+            turn_ordinal: anchor.as_ref().and_then(|anchor| anchor.turn_ordinal),
             query_text: &query,
             query_context: None,
             query_source,
@@ -3495,6 +3496,7 @@ fn refresh_missing_recall_file(
             query_embedding: &query_embedding,
             project_id: &session.project_id,
             session_id: Some(&session.id),
+            turn_ordinal: Some(turn_ordinal),
             query_text: &query,
             query_context: Some(query_context),
             query_source,
@@ -3719,6 +3721,7 @@ fn recall_for_historical_turn(
             query_embedding: &query_embedding,
             project_id: &session.project_id,
             session_id: Some(session_id),
+            turn_ordinal: Some(turn_ordinal),
             query_text: &query,
             query_context: Some(query_context),
             query_source,
@@ -3754,6 +3757,7 @@ struct RecallEmbeddingRequest<'a> {
     query_embedding: &'a [f32],
     project_id: &'a str,
     session_id: Option<&'a str>,
+    turn_ordinal: Option<u64>,
     query_text: &'a str,
     query_context: Option<ContextMetadata>,
     query_source: String,
@@ -3789,7 +3793,12 @@ fn recall_from_embedding(
         );
         query_context
     });
-    let query_task_keys = extract_task_keys(request.query_text);
+    let query_task_keys = recall_query_task_keys(
+        db,
+        request.query_text,
+        request.session_id,
+        request.turn_ordinal,
+    )?;
     let candidates = rank_recall_candidates(
         &hits,
         &memories,
@@ -3900,6 +3909,25 @@ fn recall_from_embedding(
         filter_telemetry: filter_result.telemetry,
         markdown,
     })
+}
+
+fn recall_query_task_keys(
+    db: &Database,
+    query_text: &str,
+    session_id: Option<&str>,
+    turn_ordinal: Option<u64>,
+) -> anyhow::Result<Vec<String>> {
+    let query_task_keys = extract_task_keys(query_text);
+    let Some((session_id, turn_ordinal)) = session_id.zip(turn_ordinal) else {
+        return Ok(query_task_keys);
+    };
+    let Some(segment) = db
+        .conversation_segment_for_turn(session_id, turn_ordinal)
+        .context("failed to load conversation segment for recall query")?
+    else {
+        return Ok(query_task_keys);
+    };
+    Ok(merge_task_keys(&query_task_keys, &segment.task_keys))
 }
 
 fn cooldown_since_unix(query_timestamp: &str, cooldown_seconds: u64) -> Option<i64> {

@@ -1357,6 +1357,100 @@ fn recall_file_is_written_after_memory_exists_and_new_turn_completes() {
 }
 
 #[test]
+fn background_recall_uses_stored_segment_keys_for_task_state() {
+    let tmp = TempDir::new().unwrap();
+    let config = Config {
+        recall_dir: tmp.path().join("recall").display().to_string(),
+        ..Config::default()
+    };
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+    let project = tmp.path().join("project");
+    fs::create_dir_all(&project).unwrap();
+    let project_id = project.canonicalize().unwrap().display().to_string();
+    db.upsert_session(&SessionRecord {
+        id: "session-1".to_string(),
+        agent_type: AgentType::Codex,
+        project_id: project_id.clone(),
+        transcript_file_path: "/tmp/session-1.jsonl".to_string(),
+        started_at: Some("2026-06-08T00:00:00Z".to_string()),
+        last_seen_at: Some("2026-06-08T00:00:01Z".to_string()),
+    })
+    .unwrap();
+    let memory_id = db
+        .insert_memory(&MemoryRecord {
+            id: None,
+            title: "Current PR state".to_string(),
+            body: "PR 481583 needs the segment-key regression test before continuing.".to_string(),
+            scope: MemoryScope::Project,
+            kind: MemoryKind::TaskState,
+            task_keys: vec!["pr:481583".to_string()],
+            source_turn_refs: Vec::new(),
+            created_at: "2026-06-08T00:00:00Z".to_string(),
+            updated_at: "2026-06-08T00:00:00Z".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some(project_id.clone()),
+            project_descriptor: Some("yaaml, Rust".to_string()),
+            lineage_refs: Vec::new(),
+        })
+        .unwrap();
+    db.upsert_embedding(&EmbeddingRecord {
+        memory_id,
+        embedding_model: config.embedding_model.clone(),
+        dimensions: 2,
+        embedding_blob: encode_f32_embedding(&[1.0, 0.0]),
+        embedded_text_hash: "hash".to_string(),
+        updated_at: "2026-06-08T00:00:00Z".to_string(),
+    })
+    .unwrap();
+    let turn = TurnRecord {
+        session_id: "session-1".to_string(),
+        turn_id: Some("turn-1".to_string()),
+        ordinal: 0,
+        byte_start: 0,
+        byte_end: 10,
+        observed_at: None,
+        status: yaaml_core::TurnStatus::Completed,
+        display_text: Some("user: continue the active task".to_string()),
+        cwd: Some(project_id),
+        context: Some(yaaml_core::infer_context_from_path(&project)),
+    };
+    db.insert_turn(&turn).unwrap();
+    db.replace_conversation_segments_for_session(
+        "session-1",
+        &[ConversationSegmentRecord {
+            id: None,
+            session_id: "session-1".to_string(),
+            start_turn_ordinal: 0,
+            end_turn_ordinal: 0,
+            summary: "Turn 0 continues work on PR 481583.".to_string(),
+            task_keys: vec!["pr:481583".to_string()],
+            context: Some(yaaml_core::infer_context_from_path(&project)),
+            status: ConversationSegmentStatus::Active,
+            created_at: "unix:1".to_string(),
+            updated_at: "unix:1".to_string(),
+        }],
+    )
+    .unwrap();
+
+    refresh_recall_with_embedding(
+        &db,
+        &config,
+        &project.canonicalize().unwrap(),
+        std::slice::from_ref(&turn),
+        &[1.0, 0.0],
+        "new completed turn",
+    )
+    .unwrap();
+    let path = session_recall_file_path(&config.recall_dir().unwrap(), "session-1");
+    let markdown = fs::read_to_string(path).unwrap();
+
+    assert!(markdown.contains("## Current PR state"));
+    assert!(markdown.contains("memory_ids: 1"));
+}
+
+#[test]
 fn recall_eval_task_defers_until_anchor_turn_is_ingested() {
     let mut db = Database::in_memory().unwrap();
     db.migrate().unwrap();

@@ -788,6 +788,14 @@ fn push_unique(values: &mut Vec<String>, value: String) {
     }
 }
 
+pub fn merge_task_keys(primary: &[String], secondary: &[String]) -> Vec<String> {
+    let mut merged = Vec::new();
+    for key in primary.iter().chain(secondary.iter()) {
+        push_unique(&mut merged, key.clone());
+    }
+    merged
+}
+
 pub fn build_recall_query(
     turns: &[TurnRecord],
     max_chars: usize,
@@ -1148,6 +1156,27 @@ mod tests {
         );
 
         assert_eq!(candidates[0].score, 0.95);
+    }
+
+    #[test]
+    fn merge_task_keys_preserves_primary_order_and_dedupes() {
+        let merged = merge_task_keys(
+            &["pr:123".to_string(), "tool:yaaml".to_string()],
+            &[
+                "tool:yaaml".to_string(),
+                "ticket:MLP-4400".to_string(),
+                "pr:123".to_string(),
+            ],
+        );
+
+        assert_eq!(
+            merged,
+            vec![
+                "pr:123".to_string(),
+                "tool:yaaml".to_string(),
+                "ticket:MLP-4400".to_string()
+            ]
+        );
     }
 
     #[test]

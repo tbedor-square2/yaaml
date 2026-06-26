@@ -9,8 +9,9 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use tempfile::TempDir;
 use yaaml::daemon::TASK_KIND_RECALL_EVAL;
 use yaaml_core::{
-    recall_file_path, session_recall_file_path, AgentType, EmbeddingRecord, MemoryKind,
-    MemoryRecord, MemoryScope, SessionRecord, TaskRecord, TaskStatus, TurnRecord, TurnStatus,
+    recall_file_path, session_recall_file_path, AgentType, ConversationSegmentRecord,
+    ConversationSegmentStatus, EmbeddingRecord, MemoryKind, MemoryRecord, MemoryScope,
+    SessionRecord, TaskRecord, TaskStatus, TurnRecord, TurnStatus,
 };
 use yaaml_store::database::{encode_f32_embedding, EvalRunMetadata};
 use yaaml_store::Database;
@@ -1450,6 +1451,138 @@ recall_live_turn_window = 2
             .unwrap(),
         0
     );
+}
+
+#[test]
+fn historical_recall_uses_stored_segment_keys_for_task_state() {
+    let tmp = TempDir::new().unwrap();
+    let home = tmp.path().join("home");
+    let project = tmp.path().join("project");
+    fs::create_dir_all(home.join(".yaaml")).unwrap();
+    fs::create_dir_all(&project).unwrap();
+    let db_path = home.join(".yaaml").join("yaaml.db");
+    let recall_dir = home.join(".yaaml").join("recall");
+    let server = fake_embedding_server();
+    fs::write(
+        home.join(".yaaml").join("config.toml"),
+        format!(
+            r#"
+db_path = "{}"
+recall_dir = "{}"
+embedding_base_url = "{}"
+recall_llm_filter_enabled = false
+recall_live_turn_window = 2
+"#,
+            db_path.display(),
+            recall_dir.display(),
+            server.base_url
+        ),
+    )
+    .unwrap();
+
+    let project_id = project.canonicalize().unwrap().display().to_string();
+    let (transcript_path, turn_ranges) = write_codex_transcript(
+        tmp.path(),
+        "weak-task-state.jsonl",
+        "segment-key-session",
+        &project,
+        &["continue the active task", "ok, proceed with the next step"],
+    );
+    let mut db = Database::open(&db_path).unwrap();
+    db.migrate().unwrap();
+    db.upsert_session(&SessionRecord {
+        id: "segment-key-session".to_string(),
+        agent_type: AgentType::Codex,
+        project_id: project_id.clone(),
+        transcript_file_path: transcript_path.display().to_string(),
+        started_at: Some("2026-06-08T00:00:00Z".to_string()),
+        last_seen_at: Some("2026-06-08T00:02:00Z".to_string()),
+    })
+    .unwrap();
+    for ordinal in 0..2 {
+        let (byte_start, byte_end) = turn_ranges[ordinal as usize];
+        db.insert_turn(&TurnRecord {
+            session_id: "segment-key-session".to_string(),
+            turn_id: Some(format!("turn-{ordinal}")),
+            ordinal,
+            byte_start,
+            byte_end,
+            observed_at: Some(format!("2026-06-08T00:00:0{ordinal}Z")),
+            status: TurnStatus::Completed,
+            display_text: None,
+            cwd: Some(project_id.clone()),
+            context: Some(yaaml_core::infer_context_from_path(&project)),
+        })
+        .unwrap();
+    }
+    db.replace_conversation_segments_for_session(
+        "segment-key-session",
+        &[ConversationSegmentRecord {
+            id: None,
+            session_id: "segment-key-session".to_string(),
+            start_turn_ordinal: 0,
+            end_turn_ordinal: 1,
+            summary: "Turns 0..=1 continue work on PR 481583.".to_string(),
+            task_keys: vec!["pr:481583".to_string()],
+            context: Some(yaaml_core::infer_context_from_path(&project)),
+            status: ConversationSegmentStatus::Active,
+            created_at: "unix:1".to_string(),
+            updated_at: "unix:1".to_string(),
+        }],
+    )
+    .unwrap();
+    let memory_id = insert_memory_with_embedding(
+        &mut db,
+        MemoryRecord {
+            id: None,
+            title: "Current PR state".to_string(),
+            body: "PR 481583 needs the segment-key regression test before continuing.".to_string(),
+            scope: MemoryScope::Project,
+            kind: MemoryKind::TaskState,
+            task_keys: vec!["pr:481583".to_string()],
+            source_turn_refs: Vec::new(),
+            created_at: "2026-06-08T00:00:00Z".to_string(),
+            updated_at: "2026-06-08T00:00:00Z".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some(project_id),
+            project_descriptor: Some("yaaml, Rust CLI memory daemon".to_string()),
+            lineage_refs: Vec::new(),
+        },
+    );
+
+    let binary = env!("CARGO_BIN_EXE_yaaml");
+    let output = Command::new(binary)
+        .arg("recall")
+        .arg("--session")
+        .arg("segment-key-session")
+        .arg("--turn")
+        .arg("1")
+        .arg("--json")
+        .arg("--debug-ranking")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .env("OPENAI_API_KEY", "test-key")
+        .env_remove("CODEX_THREAD_ID")
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    server.join();
+    let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(value["selected_memory_ids"][0], memory_id);
+    assert!(value["markdown"]
+        .as_str()
+        .unwrap()
+        .contains("## Current PR state"));
+    assert!(value["ranking"][0]["rank"]["matched_task_keys"]
+        .as_array()
+        .unwrap()
+        .contains(&serde_json::json!("pr:481583")));
 }
 
 struct FakeServer {

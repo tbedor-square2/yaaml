@@ -233,7 +233,7 @@ fn rank_recall_candidate(
     };
     let mut penalty = 0.0;
     let mut penalties = Vec::new();
-    if !query_task_keys.is_empty()
+    if has_recall_match_task_key(query_task_keys)
         && matched_task_keys.is_empty()
         && memory.project_id.as_deref() == Some(current_project_id)
     {
@@ -471,15 +471,29 @@ pub fn normalize_memory_kind(
 fn matched_task_keys(query_task_keys: &[String], memory_task_keys: &[String]) -> Vec<String> {
     let mut matched = Vec::new();
     for query_key in query_task_keys {
+        if !is_recall_match_task_key(query_key) {
+            continue;
+        }
         let normalized_query_key = query_key.to_ascii_lowercase();
         if memory_task_keys
             .iter()
+            .filter(|memory_key| is_recall_match_task_key(memory_key))
             .any(|memory_key| memory_key.to_ascii_lowercase() == normalized_query_key)
         {
             push_unique(&mut matched, query_key.clone());
         }
     }
     matched
+}
+
+fn has_recall_match_task_key(task_keys: &[String]) -> bool {
+    task_keys.iter().any(|key| is_recall_match_task_key(key))
+}
+
+fn is_recall_match_task_key(key: &str) -> bool {
+    key.split_once(':')
+        .map(|(prefix, _)| prefix != "tool")
+        .unwrap_or(true)
 }
 
 fn is_strong_task_key(key: &str) -> bool {
@@ -1499,7 +1513,8 @@ assistant: still use yaaml recall for context.
                 project_score_bonus: 0.05,
             },
         );
-        assert!(ranked[0].rank.task_key_bonus > 0.0);
+        assert_eq!(ranked[0].rank.task_key_bonus, 0.0);
+        assert!(ranked[0].rank.matched_task_keys.is_empty());
 
         let (selected, debug) = select_recall_candidates(
             ranked,
@@ -1514,7 +1529,77 @@ assistant: still use yaaml recall for context.
         assert!(debug[0]
             .rank
             .filter_reasons
-            .contains(&"drop:task_state_without_identity_key_match".to_string()));
+            .contains(&"drop:task_state_without_task_key_match".to_string()));
+    }
+
+    #[test]
+    fn tool_key_overlap_does_not_hide_same_project_task_mismatch() {
+        let current_project = "/Users/tbedor/Development/yaaml";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![memory(
+            1,
+            "Old YAAML segment cleanup",
+            MemoryKind::Lesson,
+            Some(current_project),
+            vec!["tool:yaaml".to_string()],
+        )];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &[
+                "tool:yaaml".to_string(),
+                "path:crates/yaaml-core/src/recall.rs".to_string(),
+            ],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        assert_eq!(ranked[0].rank.task_key_bonus, 0.0);
+        assert!(ranked[0].rank.matched_task_keys.is_empty());
+        assert!(ranked[0]
+            .rank
+            .penalties
+            .contains(&"same_project_no_task_key_overlap".to_string()));
+    }
+
+    #[test]
+    fn tool_only_query_does_not_create_task_mismatch_penalty() {
+        let current_project = "/Users/tbedor/Development/yaaml";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![memory(
+            1,
+            "YAAML usage",
+            MemoryKind::Lesson,
+            Some(current_project),
+            vec!["tool:yaaml".to_string()],
+        )];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &["tool:yaaml".to_string()],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        assert_eq!(ranked[0].rank.task_key_bonus, 0.0);
+        assert!(!ranked[0]
+            .rank
+            .penalties
+            .contains(&"same_project_no_task_key_overlap".to_string()));
     }
 
     #[test]

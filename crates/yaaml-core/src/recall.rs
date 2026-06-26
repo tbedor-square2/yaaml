@@ -634,6 +634,8 @@ fn normalize_path_token(token: &str) -> Option<String> {
         || lower.contains('\r')
         || lower.contains("@@")
         || lower.contains('|')
+        || lower.contains('*')
+        || lower.contains('?')
         || lower.contains("/openai-docs-cache/")
         || lower.starts_with("/tmp/")
         || lower.starts_with("/var/")
@@ -654,7 +656,18 @@ fn normalize_path_token(token: &str) -> Option<String> {
     if normalized.starts_with('/') {
         return None;
     }
+    if is_placeholder_path(&normalized) {
+        return None;
+    }
     Some(normalized)
+}
+
+fn is_placeholder_path(path: &str) -> bool {
+    let lower = path.to_ascii_lowercase();
+    lower.contains("/path/to/")
+        || lower.starts_with("path/to/")
+        || lower.contains("/exemplar/")
+        || has_placeholder_package_segments(&lower)
 }
 
 fn strip_development_root(path: &str) -> Option<&str> {
@@ -788,10 +801,36 @@ fn clean_target_token(token: &str) -> Option<&str> {
         || token.contains(')')
         || token.contains('<')
         || token.contains('>')
+        || is_placeholder_target(token)
     {
         return None;
     }
     Some(token)
+}
+
+fn is_placeholder_target(target: &str) -> bool {
+    let lower = target.to_ascii_lowercase();
+    lower.contains("//path/to:")
+        || lower.contains("//path/to/")
+        || lower.contains("/path/to:")
+        || lower.contains("/path/to/")
+        || lower.contains("exemplar")
+        || is_generic_example_target(&lower)
+        || has_placeholder_package_segments(&lower)
+}
+
+fn is_generic_example_target(target: &str) -> bool {
+    let stripped = target.trim_start_matches("//");
+    stripped.starts_with("app/")
+        && stripped.ends_with(":test")
+        && (stripped.contains("/src/test/") || stripped.contains("/component_tests/"))
+}
+
+fn has_placeholder_package_segments(value: &str) -> bool {
+    let has_example_segment = value
+        .split(['/', ':', '.'])
+        .any(|segment| matches!(segment, "foo" | "bar" | "baz" | "example" | "sample"));
+    has_example_segment && (value.contains("/src/test/") || value.contains("/app/"))
 }
 
 fn branch_key(token: &str) -> Option<String> {
@@ -1261,6 +1300,30 @@ mod tests {
         assert!(!keys.contains(&"path:/objective".to_string()));
         assert!(!keys.contains(&"path:~/development".to_string()));
         assert!(!extract_task_keys("/README.md").contains(&"path:/readme.md".to_string()));
+    }
+
+    #[test]
+    fn task_key_extraction_rejects_placeholder_targets_and_glob_paths() {
+        let keys = extract_task_keys(
+            "//path/to:target //service/exemplar:app \
+             //app/src/test/java:test \
+             //app/component_tests/src/test/java:test \
+             //app/src/test/java/com/example/app/foo:footest \
+             //app/src/test/java/com/example/app/bar:bartest \
+             *App.java *AppModule.java \
+             riskarbiter/src/main/java/RealService.java \
+             //riskarbiter/src/main/java:lib",
+        );
+
+        assert!(!keys.contains(&"target://path/to:target".to_string()));
+        assert!(!keys.contains(&"target://service/exemplar:app".to_string()));
+        assert!(!keys.contains(&"target://app/src/test/java:test".to_string()));
+        assert!(!keys.contains(&"target://app/component_tests/src/test/java:test".to_string()));
+        assert!(!keys.iter().any(|key| key.contains("com/example/app/foo")));
+        assert!(!keys.iter().any(|key| key.contains("com/example/app/bar")));
+        assert!(!keys.iter().any(|key| key.contains("*app")));
+        assert!(keys.contains(&"path:riskarbiter/src/main/java/realservice.java".to_string()));
+        assert!(keys.contains(&"target://riskarbiter/src/main/java:lib".to_string()));
     }
 
     #[test]

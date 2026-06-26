@@ -831,7 +831,6 @@ pub fn active_segment_recall_turns(turns: &[TurnRecord]) -> &[TurnRecord] {
     for index in (0..seed_index).rev() {
         let keys = turn_segment_keys(&turns[index]);
         if keys.is_empty() {
-            start = index;
             continue;
         }
         if keys.iter().any(|key| active_keys.contains(key)) {
@@ -854,8 +853,22 @@ fn turn_segment_keys(turn: &TurnRecord) -> HashSet<String> {
 }
 
 pub fn segment_task_keys(text: &str) -> Vec<String> {
+    let user_keys = segment_task_keys_from_lines(
+        text.lines()
+            .filter(|line| line.trim_start().starts_with("user:")),
+    );
+    if !user_keys.is_empty() {
+        return user_keys;
+    }
+    segment_task_keys_from_lines(text.lines().filter(|line| {
+        let trimmed = line.trim_start();
+        !trimmed.starts_with("assistant:") && !trimmed.starts_with("message:")
+    }))
+}
+
+fn segment_task_keys_from_lines<'a>(lines: impl Iterator<Item = &'a str>) -> Vec<String> {
     let mut keys = Vec::new();
-    for line in text.lines() {
+    for line in lines {
         if segment_task_key_line_suppressed(line) {
             continue;
         }
@@ -1214,6 +1227,24 @@ assistant: still use yaaml recall for context.
 
         assert!(keys.contains(&"pr:481245".to_string()));
         assert!(keys.contains(&"ticket:MLP-4400".to_string()));
+    }
+
+    #[test]
+    fn segment_task_keys_ignore_assistant_diagnostic_examples() {
+        let keys = segment_task_keys(
+            "assistant: The latest segment list shows test/example text became active segment keys (`pr:534`, `datastore/src/main/java`).",
+        );
+
+        assert!(keys.is_empty());
+    }
+
+    #[test]
+    fn segment_task_keys_prefer_user_lines_over_assistant_examples() {
+        let keys = segment_task_keys(
+            "user: continue improving YAAML segment extraction\nassistant: Example stale key `pr:534` came from datastore/src/main/java.",
+        );
+
+        assert!(keys.is_empty());
     }
 
     #[test]

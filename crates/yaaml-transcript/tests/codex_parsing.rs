@@ -50,7 +50,10 @@ fn parses_single_completed_turn() {
     assert_eq!(parsed.turns.len(), 1);
     assert_eq!(parsed.turns[0].turn_id.as_deref(), Some("turn-1"));
     assert_eq!(parsed.turns[0].status, TurnStatus::Completed);
-    assert_eq!(parsed.turns[0].display_text.as_deref(), Some("done"));
+    assert_eq!(
+        parsed.turns[0].display_text.as_deref(),
+        Some("assistant: done")
+    );
 }
 
 #[test]
@@ -109,7 +112,10 @@ fn resumes_from_mid_file_offset_with_fallback_session() {
 
     assert_eq!(parsed.turns.len(), 1);
     assert_eq!(parsed.turns[0].turn_id.as_deref(), Some("turn-2"));
-    assert_eq!(parsed.turns[0].display_text.as_deref(), Some("second turn"));
+    assert_eq!(
+        parsed.turns[0].display_text.as_deref(),
+        Some("assistant: second turn")
+    );
     assert_eq!(parsed.next_offset, (prefix.len() + suffix.len()) as u64);
 }
 

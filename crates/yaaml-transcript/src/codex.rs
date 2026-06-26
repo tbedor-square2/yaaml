@@ -257,7 +257,13 @@ fn handle_event_msg(
                 turn.byte_end = line_end;
                 turn.observed_at = timestamp.or_else(|| turn.observed_at.clone());
                 if let Some(message) = value.pointer("/payload/message").and_then(Value::as_str) {
-                    turn.display_parts.push(message.to_string());
+                    let role = if payload_type == Some("user_message") {
+                        "user"
+                    } else {
+                        "assistant"
+                    };
+                    turn.display_parts
+                        .push(prefixed_display_text(role, message));
                 }
             }
         }
@@ -362,7 +368,12 @@ pub fn hydrate_codex_turn_bytes(bytes: &[u8]) -> Result<TurnHydration, CodexPars
                 if matches!(payload_type, Some("user_message") | Some("agent_message")) {
                     if let Some(message) = value.pointer("/payload/message").and_then(Value::as_str)
                     {
-                        display_parts.push(message.to_string());
+                        let role = if payload_type == Some("user_message") {
+                            "user"
+                        } else {
+                            "assistant"
+                        };
+                        display_parts.push(prefixed_display_text(role, message));
                     }
                 }
             }
@@ -391,7 +402,11 @@ fn extract_response_item_text(value: &Value, display_parts: &mut Vec<String>) {
                         .or_else(|| item.get("message"))
                         .and_then(Value::as_str)
                     {
-                        display_parts.push(text.to_string());
+                        let role = payload
+                            .get("role")
+                            .and_then(Value::as_str)
+                            .unwrap_or("message");
+                        display_parts.push(prefixed_display_text(role, text));
                     }
                 }
             }
@@ -425,6 +440,15 @@ fn compact_display_text(parts: Vec<String>) -> Option<String> {
     } else {
         Some(text)
     }
+}
+
+fn prefixed_display_text(role: &str, text: &str) -> String {
+    text.lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .map(|line| format!("{role}: {line}"))
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 fn truncate_chars(text: &str, max_chars: usize) -> String {

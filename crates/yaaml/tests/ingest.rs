@@ -78,7 +78,7 @@ fn ingest_persists_cursor_and_hydrates_display_text_from_transcript() {
     assert!(turns[0].byte_start < turns[0].byte_end);
 
     let hydrated = hydrate_turns(&db, &turns).unwrap();
-    assert_eq!(hydrated[0].display_text.as_deref(), Some("hello"));
+    assert_eq!(hydrated[0].display_text.as_deref(), Some("user: hello"));
 }
 
 #[test]

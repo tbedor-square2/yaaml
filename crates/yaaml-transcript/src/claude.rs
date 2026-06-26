@@ -143,7 +143,7 @@ pub fn parse_claude_jsonl(
                 if let Some(turn) = current.as_mut() {
                     turn.byte_end = line_end;
                     turn.observed_at = timestamp.or_else(|| turn.observed_at.clone());
-                    extract_content_text(content, &mut turn.display_parts);
+                    extract_content_text(Some("user"), content, &mut turn.display_parts);
                 }
             }
             Some("assistant") => {
@@ -162,7 +162,7 @@ pub fn parse_claude_jsonl(
                 if let Some(turn) = current.as_mut() {
                     turn.byte_end = line_end;
                     turn.observed_at = timestamp.clone().or_else(|| turn.observed_at.clone());
-                    extract_content_text(content, &mut turn.display_parts);
+                    extract_content_text(Some("assistant"), content, &mut turn.display_parts);
                 }
                 if content_has_text(content) && !content_has_type(content, "tool_use") {
                     finish_turn(&mut current, &mut turns, &session_id, line_end, timestamp);
@@ -227,10 +227,14 @@ pub fn hydrate_claude_turn_bytes(bytes: &[u8]) -> Result<TurnHydration, ClaudePa
             cwd = Some(line_cwd.to_string());
             context = Some(infer_context_from_path(Path::new(line_cwd)));
         }
+        let role = value
+            .get("role")
+            .or_else(|| value.pointer("/message/role"))
+            .and_then(Value::as_str);
         let content = value
             .get("content")
             .or_else(|| value.pointer("/message/content"));
-        extract_content_text(content, &mut display_parts);
+        extract_content_text(role, content, &mut display_parts);
     }
     Ok(TurnHydration {
         display_text: (!display_parts.is_empty()).then(|| display_parts.join("\n")),
@@ -245,13 +249,13 @@ pub fn display_text_from_claude_turn_bytes(
     hydrate_claude_turn_bytes(bytes).map(|hydration| hydration.display_text)
 }
 
-fn extract_content_text(content: Option<&Value>, output: &mut Vec<String>) {
+fn extract_content_text(role: Option<&str>, content: Option<&Value>, output: &mut Vec<String>) {
     match content {
-        Some(Value::String(text)) => output.push(text.clone()),
+        Some(Value::String(text)) => output.push(prefixed_display_text(role, text)),
         Some(Value::Array(items)) => {
             for item in items {
                 if let Some(text) = item.get("text").and_then(Value::as_str) {
-                    output.push(text.to_string());
+                    output.push(prefixed_display_text(role, text));
                 } else if let Some(name) = item.get("name").and_then(Value::as_str) {
                     output.push(format!("tool: {name}"));
                 } else if let Some(content) = item.get("content").and_then(Value::as_str) {
@@ -261,6 +265,18 @@ fn extract_content_text(content: Option<&Value>, output: &mut Vec<String>) {
         }
         _ => {}
     }
+}
+
+fn prefixed_display_text(role: Option<&str>, text: &str) -> String {
+    let Some(role) = role else {
+        return text.to_string();
+    };
+    text.lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .map(|line| format!("{role}: {line}"))
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 fn single_line_tool_output(text: &str) -> String {

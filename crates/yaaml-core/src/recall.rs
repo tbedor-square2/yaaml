@@ -657,11 +657,15 @@ fn tool_key(token: &str) -> Option<String> {
 }
 
 fn numeric_token(token: &str) -> Option<String> {
-    let number = token.trim_matches(|ch: char| !ch.is_ascii_digit());
+    let token = token.trim_start_matches(|ch: char| !ch.is_ascii_digit());
+    let number = token
+        .chars()
+        .take_while(char::is_ascii_digit)
+        .collect::<String>();
     if number.is_empty() {
         return None;
     }
-    Some(number.to_string())
+    Some(number)
 }
 
 fn push_unique(values: &mut Vec<String>, value: String) {
@@ -959,6 +963,15 @@ mod tests {
         assert!(keys.contains(&"target://riskarbiter/src/test:unit".to_string()));
         assert!(!keys.contains(&"path://riskarbiter/src/test:unit".to_string()));
         assert!(keys.contains(&"tool:yaaml".to_string()));
+    }
+
+    #[test]
+    fn task_key_extraction_normalizes_pr_urls_with_trailing_paths() {
+        let keys =
+            extract_task_keys("review https://github.com/squareup/java/pull/480115/changes#r1");
+
+        assert!(keys.contains(&"pr:480115".to_string()));
+        assert!(!keys.iter().any(|key| key.starts_with("pr:480115/changes")));
     }
 
     #[test]

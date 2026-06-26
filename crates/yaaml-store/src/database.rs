@@ -13,7 +13,7 @@ use yaaml_core::{
     MemoryRecord, MemoryScope, SessionRecord, SourceTurnRef, TaskRecord, TaskStatus, TurnRecord,
 };
 
-use crate::migrations::MIGRATIONS;
+use crate::migrations::{EXPECTED_SCHEMA_VERSION, MIGRATIONS};
 
 #[derive(Debug, Error)]
 pub enum DatabaseError {
@@ -149,11 +149,17 @@ impl Database {
     }
 
     pub fn migrate(&mut self) -> Result<(), DatabaseError> {
-        let tx = self.conn.transaction()?;
-        for migration in MIGRATIONS {
-            tx.execute_batch(migration)?;
+        let current_version = self.current_schema_version()?;
+        if current_version < EXPECTED_SCHEMA_VERSION {
+            let tx = self.conn.transaction()?;
+            for (index, migration) in MIGRATIONS.iter().enumerate() {
+                let migration_version = i64::try_from(index + 1).unwrap_or(i64::MAX);
+                if migration_version > current_version {
+                    tx.execute_batch(migration)?;
+                }
+            }
+            tx.commit()?;
         }
-        tx.commit()?;
         self.ensure_column("turns", "cwd", "ALTER TABLE turns ADD COLUMN cwd TEXT")?;
         self.ensure_column(
             "turns",
@@ -211,9 +217,33 @@ impl Database {
             "ALTER TABLE eval_runs ADD COLUMN injected INTEGER",
         )?;
         self.ensure_conversation_segments_table()?;
-        self.backfill_eval_run_metadata()?;
-        self.backfill_empty_recall_eval_scores()?;
+        if self.needs_eval_run_metadata_backfill()? {
+            self.backfill_eval_run_metadata()?;
+        }
+        if self.needs_stale_recall_eval_task_cleanup()? {
+            self.delete_stale_recall_eval_tasks()?;
+        }
+        if self.needs_empty_recall_eval_score_backfill()? {
+            self.backfill_empty_recall_eval_scores()?;
+        }
         Ok(())
+    }
+
+    fn current_schema_version(&self) -> Result<i64, DatabaseError> {
+        let exists = self.conn.query_row(
+            "SELECT EXISTS(
+                SELECT 1
+                FROM sqlite_master
+                WHERE type = 'table'
+                  AND name = 'schema_version'
+             )",
+            [],
+            |row| row.get::<_, i64>(0),
+        )? != 0;
+        if !exists {
+            return Ok(0);
+        }
+        self.schema_version()
     }
 
     fn ensure_conversation_segments_table(&self) -> Result<(), DatabaseError> {
@@ -235,6 +265,16 @@ impl Database {
                 .any(|column| !columns.iter().any(|existing| existing == column))
         {
             self.drop_conversation_segments_table()?;
+        }
+        let columns = self.column_names("conversation_segments")?;
+        let has_required_columns = !columns.is_empty()
+            && required_columns
+                .iter()
+                .all(|column| columns.iter().any(|existing| existing == column));
+        let has_required_indexes = self.index_exists("idx_conversation_segments_session")?
+            && self.index_exists("idx_conversation_segments_range_unique")?;
+        if has_required_columns && has_required_indexes {
+            return Ok(());
         }
         self.conn.execute_batch(
             r#"
@@ -293,6 +333,41 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
         Ok(())
     }
 
+    fn needs_eval_run_metadata_backfill(&self) -> Result<bool, DatabaseError> {
+        Ok(self.count(
+            "SELECT COUNT(*)
+             FROM eval_runs
+             WHERE strategy = 'recall_1_to_5'
+               AND session_id IS NULL
+               AND turn_ordinal IS NULL
+               AND agent_turn_id IS NULL",
+        )? > 0)
+    }
+
+    fn needs_stale_recall_eval_task_cleanup(&self) -> Result<bool, DatabaseError> {
+        Ok(self.count(
+            "SELECT COUNT(*)
+             FROM tasks
+             WHERE kind = 'recall_eval'
+               AND json_extract(payload_json, '$.recall_origin') IS NULL",
+        )? > 0)
+    }
+
+    fn needs_empty_recall_eval_score_backfill(&self) -> Result<bool, DatabaseError> {
+        Ok(self.count(
+            "SELECT COUNT(*)
+             FROM eval_results
+             WHERE memory_id IS NULL
+               AND judge_score IN ('1', '2', '3', '4', '5')
+               AND eval_run_id IN (
+                   SELECT id
+                   FROM eval_runs
+                   WHERE strategy = 'recall_1_to_5'
+                     AND json_array_length(json_extract(config_json, '$.memory_ids')) = 0
+               )",
+        )? > 0)
+    }
+
     fn backfill_eval_run_metadata(&self) -> Result<(), DatabaseError> {
         self.conn.execute(
             "UPDATE eval_runs
@@ -310,6 +385,10 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
                AND agent_turn_id IS NULL",
             [],
         )?;
+        Ok(())
+    }
+
+    fn delete_stale_recall_eval_tasks(&self) -> Result<(), DatabaseError> {
         self.conn.execute(
             "DELETE FROM tasks
              WHERE kind = 'recall_eval'
@@ -422,6 +501,19 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
             names.push(row?);
         }
         Ok(names)
+    }
+
+    fn index_exists(&self, index_name: &str) -> Result<bool, DatabaseError> {
+        Ok(self.conn.query_row(
+            "SELECT EXISTS(
+                SELECT 1
+                FROM sqlite_master
+                WHERE type = 'index'
+                  AND name = ?1
+             )",
+            params![index_name],
+            |row| row.get::<_, i64>(0),
+        )? != 0)
     }
 
     pub(crate) fn conn(&self) -> &Connection {
@@ -2130,7 +2222,7 @@ pub fn decode_f32_embedding(blob: &[u8]) -> Option<Vec<f32>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::migrations::EXPECTED_SCHEMA_VERSION;
+    use crate::migrations::{EXPECTED_SCHEMA_VERSION, MIGRATIONS};
 
     #[test]
     fn migrations_create_expected_tables() {
@@ -2160,13 +2252,22 @@ mod tests {
     }
 
     #[test]
+    fn current_schema_migration_is_read_only() {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+        db.conn.pragma_update(None, "query_only", "ON").unwrap();
+
+        db.migrate().unwrap();
+
+        db.conn.pragma_update(None, "query_only", "OFF").unwrap();
+    }
+
+    #[test]
     fn migration_replaces_legacy_conversation_segments_table() {
         let mut db = Database::in_memory().unwrap();
         db.conn
             .execute_batch(
                 r#"
-CREATE TABLE schema_version (version INTEGER NOT NULL);
-INSERT INTO schema_version (version) VALUES (3);
 CREATE TABLE conversation_segments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     session_id TEXT NOT NULL,
@@ -2183,6 +2284,9 @@ CREATE TABLE conversation_segments (
 "#,
             )
             .unwrap();
+        db.conn.execute_batch(MIGRATIONS[0]).unwrap();
+        db.conn.execute_batch(MIGRATIONS[1]).unwrap();
+        db.conn.execute_batch(MIGRATIONS[2]).unwrap();
 
         db.migrate().unwrap();
 
@@ -2197,7 +2301,7 @@ CREATE TABLE conversation_segments (
     #[test]
     fn migration_clears_persisted_turn_display_text() {
         let mut db = Database::in_memory().unwrap();
-        db.migrate().unwrap();
+        db.conn.execute_batch(MIGRATIONS[0]).unwrap();
         db.upsert_session(&SessionRecord {
             id: "session-1".to_string(),
             agent_type: yaaml_core::AgentType::Codex,

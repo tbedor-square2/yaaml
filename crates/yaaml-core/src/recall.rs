@@ -605,7 +605,7 @@ fn normalize_path_token(token: &str) -> Option<String> {
         .trim_start_matches("./")
         .trim_end_matches('/')
         .to_string();
-    if normalized.starts_with("/users/") || normalized.starts_with("/home/") {
+    if normalized.starts_with('/') {
         return None;
     }
     Some(normalized)
@@ -826,10 +826,94 @@ fn turn_segment_keys(turn: &TurnRecord) -> HashSet<String> {
 }
 
 pub fn segment_task_keys(text: &str) -> Vec<String> {
-    extract_task_keys(text)
-        .into_iter()
-        .filter(|key| is_strong_task_key(key))
-        .collect()
+    let mut keys = Vec::new();
+    let mut in_tool_output = false;
+    for line in text.lines() {
+        let trimmed = line.trim();
+        if trimmed.starts_with("tool call:") {
+            in_tool_output = false;
+            continue;
+        }
+        if trimmed.starts_with("tool output:") {
+            in_tool_output = true;
+            continue;
+        }
+        if in_tool_output {
+            continue;
+        }
+        if segment_task_key_line_suppressed(line) {
+            continue;
+        }
+        for key in extract_task_keys(line)
+            .into_iter()
+            .filter(|key| is_strong_task_key(key))
+        {
+            push_unique(&mut keys, key);
+        }
+    }
+    keys
+}
+
+fn segment_task_key_line_suppressed(line: &str) -> bool {
+    let line = line.trim();
+    let lower = line.to_ascii_lowercase();
+    line.is_empty()
+        || line.starts_with("Chunk ID:")
+        || line.starts_with("Wall time:")
+        || line.starts_with("Process exited with code")
+        || line.starts_with("Original token count:")
+        || line.starts_with("Output:")
+        || lower == "conversation segments"
+        || looks_like_segment_list_line(line)
+        || looks_like_search_result_line(line)
+        || lower.contains("# yaaml recall")
+        || lower.contains("query_timestamp:")
+        || lower.contains("query_source:")
+        || lower.contains("memory_count:")
+        || lower.contains("memory_ids:")
+        || (lower.contains("bogus") && lower.contains("key"))
+        || (lower.contains("stale") && lower.contains("key"))
+        || lower.contains("test fixture")
+        || line.starts_with("```")
+        || line.starts_with("@@")
+        || line.starts_with('+')
+        || line.starts_with('-')
+        || line.starts_with("assert!")
+        || line.starts_with("assert_eq!")
+        || line.starts_with("let ")
+        || (line.starts_with("use ") && line.contains("::"))
+        || line.starts_with("pub ")
+        || line.starts_with("fn ")
+        || line.contains("extract_task_keys(")
+        || line.contains("segment_task_keys(")
+        || line.contains("task_keys:")
+        || line.contains("MemoryRecord")
+        || line.contains("serde_json::json!")
+        || line.contains(".to_string()")
+        || line.contains("vec![")
+}
+
+fn looks_like_segment_list_line(line: &str) -> bool {
+    let Some((number, rest)) = line.split_once('.') else {
+        return false;
+    };
+    !number.is_empty()
+        && number.chars().all(|ch| ch.is_ascii_digit())
+        && rest.contains("session=")
+        && (rest.contains("turns=") || rest.contains("keys="))
+}
+
+fn looks_like_search_result_line(line: &str) -> bool {
+    let Some((path, rest)) = line.split_once(':') else {
+        return false;
+    };
+    if !(path.contains('/') || path.rsplit('/').next().is_some_and(has_file_like_basename)) {
+        return false;
+    }
+    let Some((line_number, _)) = rest.split_once(':') else {
+        return false;
+    };
+    !line_number.is_empty() && line_number.chars().all(|ch| ch.is_ascii_digit())
 }
 
 fn recall_query_suppressed_block_end(line: &str) -> Option<&'static str> {
@@ -1045,6 +1129,7 @@ mod tests {
         assert!(!keys.contains(&"path:/environment_context".to_string()));
         assert!(!keys.contains(&"path:/objective".to_string()));
         assert!(!keys.contains(&"path:~/development".to_string()));
+        assert!(!extract_task_keys("/README.md").contains(&"path:/readme.md".to_string()));
     }
 
     #[test]
@@ -1068,6 +1153,42 @@ mod tests {
         assert!(!keys.iter().any(|key| key.contains('|')));
         assert!(!keys.iter().any(|key| key.contains("\\n")));
         assert!(!keys.contains(&"path:a/crates/yaaml-store/src/database.rs".to_string()));
+    }
+
+    #[test]
+    fn segment_task_keys_ignore_code_fixture_literals() {
+        let keys = segment_task_keys(
+            r#"
+user: clean up segment key extraction for this YAAML task.
+let keys = extract_task_keys("PR 481245 updates riskarbiter/src/main/java/Foo.java for MLP-4400");
+assert!(keys.contains(&"pr:481245".to_string()));
+crates/yaaml-core/src/recall.rs:1014: "PR 481245 updates riskarbiter/src/main/java/Foo.java for MLP-4400"
+1. session=abc turns=1..=2 status=active keys=pr:480117, ticket:MLP-4401
+The live segment still has bogus PR/ticket keys pr:480118 and MLP-4402.
+tool output: PR #480115 appeared in a test fixture
+PR #480116 appeared on a later tool-output line
+assistant: still use yaaml recall for context.
+"#,
+        );
+
+        assert!(!keys.contains(&"pr:481245".to_string()));
+        assert!(!keys.contains(&"ticket:MLP-4400".to_string()));
+        assert!(!keys.contains(&"pr:480115".to_string()));
+        assert!(!keys.contains(&"pr:480116".to_string()));
+        assert!(!keys.contains(&"pr:480117".to_string()));
+        assert!(!keys.contains(&"ticket:MLP-4401".to_string()));
+        assert!(!keys.contains(&"pr:480118".to_string()));
+        assert!(!keys.contains(&"ticket:MLP-4402".to_string()));
+    }
+
+    #[test]
+    fn segment_task_keys_keep_natural_language_task_identity() {
+        let keys = segment_task_keys(
+            "user: work on PR #481245 for MLP-4400 and use yaaml recall before editing",
+        );
+
+        assert!(keys.contains(&"pr:481245".to_string()));
+        assert!(keys.contains(&"ticket:MLP-4400".to_string()));
     }
 
     #[test]

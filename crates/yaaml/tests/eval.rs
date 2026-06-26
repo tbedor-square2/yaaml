@@ -460,7 +460,14 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
             "default",
             "2026-06-08T00:00:03Z",
             r#"{"session_id":"session-1","turn_ordinal":7}"#,
-            eval_metadata(7, "replay"),
+            eval_metadata_with_segment(
+                7,
+                "replay",
+                7,
+                8,
+                "Turns 7..=8 evaluate whether recalled context helped.",
+                &["pr:123"],
+            ),
         )
         .unwrap();
     db.insert_eval_result(
@@ -491,7 +498,14 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
                 r#"{{"session_id":"session-1","turn_ordinal":8,"memory_ids":[{}]}}"#,
                 low_memory_id
             ),
-            eval_metadata(8, "session_background"),
+            eval_metadata_with_segment(
+                8,
+                "session_background",
+                7,
+                8,
+                "Turns 7..=8 evaluate whether recalled context helped.",
+                &["pr:123"],
+            ),
         )
         .unwrap();
     db.insert_eval_result(
@@ -562,6 +576,32 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     assert_eq!(value["session_breakdown"][0]["average_score"], 3.5);
     assert_eq!(value["session_breakdown"][0]["score_counts"]["n/a"], 1);
     assert_eq!(
+        value["conversation_segment_breakdown"][0]["session_id"],
+        "session-1"
+    );
+    assert_eq!(
+        value["conversation_segment_breakdown"][0]["start_turn_ordinal"],
+        7
+    );
+    assert_eq!(
+        value["conversation_segment_breakdown"][0]["end_turn_ordinal"],
+        8
+    );
+    assert_eq!(
+        value["conversation_segment_breakdown"][0]["summary"],
+        "Turns 7..=8 evaluate whether recalled context helped."
+    );
+    assert_eq!(
+        value["conversation_segment_breakdown"][0]["task_keys"][0],
+        "pr:123"
+    );
+    assert_eq!(value["conversation_segment_breakdown"][0]["runs"], 2);
+    assert_eq!(value["conversation_segment_breakdown"][0]["results"], 3);
+    assert_eq!(
+        value["conversation_segment_breakdown"][0]["score_counts"]["n/a"],
+        1
+    );
+    assert_eq!(
         value["stale_insufficient_context"][0]["run_id"],
         stale_run_id
     );
@@ -620,6 +660,10 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     let human_stdout = String::from_utf8_lossy(&human.stdout);
     assert!(human_stdout.contains("Eval summary"));
     assert!(human_stdout.contains("average score: 3.50"));
+    assert!(human_stdout.contains("Conversation segment breakdown"));
+    assert!(human_stdout.contains("turns=7..=8"));
+    assert!(human_stdout.contains("summary: Turns 7..=8 evaluate whether recalled context helped."));
+    assert!(human_stdout.contains("keys: pr:123"));
     assert!(human_stdout.contains("Session breakdown"));
     assert!(human_stdout.contains("N/a evals with later turns"));
     assert!(human_stdout.contains("Queued recall evals"));
@@ -946,5 +990,25 @@ fn eval_metadata(turn_ordinal: u64, recall_origin: &str) -> EvalRunMetadata {
         turn_ordinal: Some(turn_ordinal),
         recall_origin: recall_origin.to_string(),
         ..EvalRunMetadata::default()
+    }
+}
+
+fn eval_metadata_with_segment(
+    turn_ordinal: u64,
+    recall_origin: &str,
+    segment_start_turn_ordinal: u64,
+    segment_end_turn_ordinal: u64,
+    segment_summary: &str,
+    segment_task_keys: &[&str],
+) -> EvalRunMetadata {
+    EvalRunMetadata {
+        segment_start_turn_ordinal: Some(segment_start_turn_ordinal),
+        segment_end_turn_ordinal: Some(segment_end_turn_ordinal),
+        segment_summary: Some(segment_summary.to_string()),
+        segment_task_keys: segment_task_keys
+            .iter()
+            .map(|task_key| (*task_key).to_string())
+            .collect(),
+        ..eval_metadata(turn_ordinal, recall_origin)
     }
 }

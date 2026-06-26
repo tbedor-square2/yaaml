@@ -1,4 +1,4 @@
-pub const EXPECTED_SCHEMA_VERSION: i64 = 4;
+pub const EXPECTED_SCHEMA_VERSION: i64 = 5;
 
 pub const MIGRATIONS: &[&str] = &[
     r#"
@@ -158,5 +158,13 @@ CREATE TABLE IF NOT EXISTS conversation_segments (
 );
 
 UPDATE schema_version SET version = 4;
+"#,
+    r#"
+ALTER TABLE eval_runs ADD COLUMN segment_start_turn_ordinal INTEGER;
+ALTER TABLE eval_runs ADD COLUMN segment_end_turn_ordinal INTEGER;
+ALTER TABLE eval_runs ADD COLUMN segment_summary TEXT;
+ALTER TABLE eval_runs ADD COLUMN segment_task_keys TEXT NOT NULL DEFAULT '[]';
+
+UPDATE schema_version SET version = 5;
 "#,
 ];

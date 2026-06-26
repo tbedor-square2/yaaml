@@ -9,7 +9,7 @@ fn migration_creates_expected_tables_and_is_idempotent() {
     db.migrate().unwrap();
     db.migrate().unwrap();
 
-    assert_eq!(db.schema_version().unwrap(), 4);
+    assert_eq!(db.schema_version().unwrap(), 5);
     let tables = db
         .table_names()
         .unwrap()
@@ -41,6 +41,10 @@ fn migration_creates_expected_tables_and_is_idempotent() {
         "tool_use_id",
         "tool_input_summary",
         "injected",
+        "segment_start_turn_ordinal",
+        "segment_end_turn_ordinal",
+        "segment_summary",
+        "segment_task_keys",
     ] {
         assert!(
             eval_run_columns.contains(&expected.to_string()),

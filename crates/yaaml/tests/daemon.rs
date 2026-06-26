@@ -17,8 +17,9 @@ use yaaml::daemon::{
 };
 use yaaml::turn_hydration::hydrate_turns;
 use yaaml_core::{
-    session_recall_file_path, AgentType, Config, EmbeddingRecord, MemoryKind, MemoryRecord,
-    MemoryScope, SessionRecord, SourceTurnRef, TaskRecord, TaskStatus, TurnRecord,
+    session_recall_file_path, AgentType, Config, ConversationSegmentRecord,
+    ConversationSegmentStatus, EmbeddingRecord, MemoryKind, MemoryRecord, MemoryScope,
+    SessionRecord, SourceTurnRef, TaskRecord, TaskStatus, TurnRecord,
 };
 use yaaml_store::database::{encode_f32_embedding, EvalRunMetadata};
 use yaaml_store::Database;
@@ -947,6 +948,22 @@ fn recall_eval_scores_each_recalled_memory() {
             Some("/tmp/yaaml"),
         ))
         .unwrap();
+    db.replace_conversation_segments_for_session(
+        "session-1",
+        &[ConversationSegmentRecord {
+            id: None,
+            session_id: "session-1".to_string(),
+            start_turn_ordinal: 0,
+            end_turn_ordinal: 1,
+            summary: "Turns 0..=1 discuss recall eval segment metadata.".to_string(),
+            task_keys: vec!["pr:123".to_string()],
+            context: None,
+            status: ConversationSegmentStatus::Active,
+            created_at: "unix:1".to_string(),
+            updated_at: "unix:1".to_string(),
+        }],
+    )
+    .unwrap();
     db.enqueue_task(&TaskRecord {
         id: None,
         kind: TASK_KIND_RECALL_EVAL.to_string(),
@@ -979,6 +996,13 @@ fn recall_eval_scores_each_recalled_memory() {
 
     let runs = db.list_eval_runs(1).unwrap();
     assert_eq!(runs[0].result_count, 2);
+    assert_eq!(runs[0].segment_start_turn_ordinal, Some(0));
+    assert_eq!(runs[0].segment_end_turn_ordinal, Some(1));
+    assert_eq!(
+        runs[0].segment_summary.as_deref(),
+        Some("Turns 0..=1 discuss recall eval segment metadata.")
+    );
+    assert_eq!(runs[0].segment_task_keys, vec!["pr:123".to_string()]);
     let results = db.eval_results_for_run(runs[0].id).unwrap();
     let memory_ids = results
         .iter()

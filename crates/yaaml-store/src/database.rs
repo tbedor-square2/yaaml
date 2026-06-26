@@ -48,6 +48,10 @@ pub struct EvalRunRecord {
     pub tool_use_id: Option<String>,
     pub tool_input_summary: Option<String>,
     pub injected: Option<bool>,
+    pub segment_start_turn_ordinal: Option<u64>,
+    pub segment_end_turn_ordinal: Option<u64>,
+    pub segment_summary: Option<String>,
+    pub segment_task_keys: Vec<String>,
     pub result_count: u64,
     pub score: Option<String>,
 }
@@ -62,6 +66,10 @@ pub struct EvalRunMetadata {
     pub tool_use_id: Option<String>,
     pub tool_input_summary: Option<String>,
     pub injected: Option<bool>,
+    pub segment_start_turn_ordinal: Option<u64>,
+    pub segment_end_turn_ordinal: Option<u64>,
+    pub segment_summary: Option<String>,
+    pub segment_task_keys: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -215,6 +223,26 @@ impl Database {
             "eval_runs",
             "injected",
             "ALTER TABLE eval_runs ADD COLUMN injected INTEGER",
+        )?;
+        self.ensure_column(
+            "eval_runs",
+            "segment_start_turn_ordinal",
+            "ALTER TABLE eval_runs ADD COLUMN segment_start_turn_ordinal INTEGER",
+        )?;
+        self.ensure_column(
+            "eval_runs",
+            "segment_end_turn_ordinal",
+            "ALTER TABLE eval_runs ADD COLUMN segment_end_turn_ordinal INTEGER",
+        )?;
+        self.ensure_column(
+            "eval_runs",
+            "segment_summary",
+            "ALTER TABLE eval_runs ADD COLUMN segment_summary TEXT",
+        )?;
+        self.ensure_column(
+            "eval_runs",
+            "segment_task_keys",
+            "ALTER TABLE eval_runs ADD COLUMN segment_task_keys TEXT NOT NULL DEFAULT '[]'",
         )?;
         self.ensure_conversation_segments_table()?;
         if self.needs_eval_run_metadata_backfill()? {
@@ -1214,6 +1242,28 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
         Ok(segments)
     }
 
+    pub fn conversation_segment_for_turn(
+        &self,
+        session_id: &str,
+        turn_ordinal: u64,
+    ) -> Result<Option<ConversationSegmentRecord>, DatabaseError> {
+        self.conn
+            .query_row(
+                "SELECT id, session_id, start_turn_ordinal, end_turn_ordinal, summary,
+                        task_keys, context_json, status, created_at, updated_at
+                 FROM conversation_segments
+                 WHERE session_id = ?1
+                   AND start_turn_ordinal <= ?2
+                   AND end_turn_ordinal >= ?2
+                 ORDER BY start_turn_ordinal DESC, end_turn_ordinal DESC
+                 LIMIT 1",
+                params![session_id, u64_to_i64(turn_ordinal)],
+                read_conversation_segment,
+            )
+            .optional()
+            .map_err(DatabaseError::from)
+    }
+
     pub fn upsert_embedding(&self, embedding: &EmbeddingRecord) -> Result<(), DatabaseError> {
         self.conn.execute(
             "INSERT INTO embeddings (
@@ -1693,11 +1743,14 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
         config_json: &str,
         metadata: EvalRunMetadata,
     ) -> Result<i64, DatabaseError> {
+        let segment_task_keys = serde_json::to_string(&metadata.segment_task_keys)?;
         self.conn.execute(
             "INSERT INTO eval_runs (
                 strategy, started_at, completed_at, config_json, session_id, turn_ordinal,
-                agent_turn_id, recall_origin, tool_name, tool_use_id, tool_input_summary, injected
-             ) VALUES (?1, ?2, NULL, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+                agent_turn_id, recall_origin, tool_name, tool_use_id, tool_input_summary, injected,
+                segment_start_turn_ordinal, segment_end_turn_ordinal, segment_summary,
+                segment_task_keys
+             ) VALUES (?1, ?2, NULL, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)",
             params![
                 strategy,
                 started_at,
@@ -1712,6 +1765,10 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
                 metadata
                     .injected
                     .map(|value| if value { 1_i64 } else { 0_i64 }),
+                metadata.segment_start_turn_ordinal.map(u64_to_i64),
+                metadata.segment_end_turn_ordinal.map(u64_to_i64),
+                metadata.segment_summary,
+                segment_task_keys,
             ],
         )?;
         Ok(self.conn.last_insert_rowid())
@@ -1771,6 +1828,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
             "SELECT r.id, r.strategy, r.started_at, r.completed_at, r.config_json,
                     r.session_id, r.turn_ordinal, r.agent_turn_id, r.recall_origin,
                     r.tool_name, r.tool_use_id, r.tool_input_summary, r.injected,
+                    r.segment_start_turn_ordinal, r.segment_end_turn_ordinal,
+                    r.segment_summary, r.segment_task_keys,
                     COUNT(er.id) AS result_count,
                     CASE
                         WHEN COUNT(er.judge_score) = 0 THEN NULL
@@ -1797,6 +1856,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
                 "SELECT r.id, r.strategy, r.started_at, r.completed_at, r.config_json,
                         r.session_id, r.turn_ordinal, r.agent_turn_id, r.recall_origin,
                         r.tool_name, r.tool_use_id, r.tool_input_summary, r.injected,
+                        r.segment_start_turn_ordinal, r.segment_end_turn_ordinal,
+                        r.segment_summary, r.segment_task_keys,
                         COUNT(er.id) AS result_count,
                         CASE
                             WHEN COUNT(er.judge_score) = 0 THEN NULL
@@ -2058,6 +2119,13 @@ fn read_session_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<SessionRecor
 fn read_eval_run_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<EvalRunRecord> {
     let turn_ordinal: Option<i64> = row.get(6)?;
     let injected: Option<i64> = row.get(12)?;
+    let segment_start_turn_ordinal: Option<i64> = row.get(13)?;
+    let segment_end_turn_ordinal: Option<i64> = row.get(14)?;
+    let segment_task_keys_json: Option<String> = row.get(16)?;
+    let segment_task_keys = segment_task_keys_json
+        .map(|json| serde_json::from_str(&json).map_err(json_decode_error))
+        .transpose()?
+        .unwrap_or_default();
     Ok(EvalRunRecord {
         id: row.get(0)?,
         strategy: row.get(1)?,
@@ -2072,8 +2140,12 @@ fn read_eval_run_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<EvalRunReco
         tool_use_id: row.get(10)?,
         tool_input_summary: row.get(11)?,
         injected: injected.map(|value| value != 0),
-        result_count: i64_to_u64(row.get(13)?),
-        score: row.get(14)?,
+        segment_start_turn_ordinal: segment_start_turn_ordinal.map(i64_to_u64),
+        segment_end_turn_ordinal: segment_end_turn_ordinal.map(i64_to_u64),
+        segment_summary: row.get(15)?,
+        segment_task_keys,
+        result_count: i64_to_u64(row.get(17)?),
+        score: row.get(18)?,
     })
 }
 
@@ -2855,7 +2927,19 @@ CREATE TABLE conversation_segments (
         let mut db = Database::in_memory().unwrap();
         db.migrate().unwrap();
         let run_id = db
-            .insert_eval_run("default", "2026-06-08T00:00:00Z", "{}")
+            .insert_eval_run_with_metadata(
+                "default",
+                "2026-06-08T00:00:00Z",
+                "{}",
+                EvalRunMetadata {
+                    recall_origin: "session_background".to_string(),
+                    segment_start_turn_ordinal: Some(10),
+                    segment_end_turn_ordinal: Some(12),
+                    segment_summary: Some("Turns 10..=12 discuss eval persistence.".to_string()),
+                    segment_task_keys: vec!["pr:123".to_string()],
+                    ..EvalRunMetadata::default()
+                },
+            )
             .unwrap();
 
         db.insert_eval_result(
@@ -2896,6 +2980,13 @@ CREATE TABLE conversation_segments (
         assert_eq!(runs.len(), 1);
         assert_eq!(runs[0].id, run_id);
         assert_eq!(runs[0].result_count, 3);
+        assert_eq!(runs[0].segment_start_turn_ordinal, Some(10));
+        assert_eq!(runs[0].segment_end_turn_ordinal, Some(12));
+        assert_eq!(
+            runs[0].segment_summary.as_deref(),
+            Some("Turns 10..=12 discuss eval persistence.")
+        );
+        assert_eq!(runs[0].segment_task_keys, vec!["pr:123".to_string()]);
         assert_eq!(
             runs[0].completed_at.as_deref(),
             Some("2026-06-08T00:00:04Z")
@@ -2903,6 +2994,13 @@ CREATE TABLE conversation_segments (
 
         let run = db.eval_run_by_id(run_id).unwrap().unwrap();
         assert_eq!(run.result_count, 3);
+        assert_eq!(run.segment_start_turn_ordinal, Some(10));
+        assert_eq!(run.segment_end_turn_ordinal, Some(12));
+        assert_eq!(
+            run.segment_summary.as_deref(),
+            Some("Turns 10..=12 discuss eval persistence.")
+        );
+        assert_eq!(run.segment_task_keys, vec!["pr:123".to_string()]);
         assert!(db.eval_run_by_id(run_id + 1).unwrap().is_none());
 
         let results = db.eval_results_for_run(run_id).unwrap();

@@ -2129,11 +2129,27 @@ struct EvalSummary {
     score_counts: BTreeMap<String, u64>,
     origin_breakdown: Vec<EvalSegmentSummary>,
     tool_breakdown: Vec<EvalSegmentSummary>,
+    conversation_segment_breakdown: Vec<EvalConversationSegmentSummary>,
     session_breakdown: Vec<EvalSessionSummary>,
     stale_insufficient_context: Vec<EvalStaleInsufficientContext>,
     queued_recall_evals: Vec<EvalQueuedRecallTask>,
     low_score_examples: Vec<EvalSummaryExample>,
     high_score_examples: Vec<EvalSummaryExample>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct EvalConversationSegmentSummary {
+    session_id: Option<String>,
+    start_turn_ordinal: Option<u64>,
+    end_turn_ordinal: Option<u64>,
+    summary: Option<String>,
+    task_keys: Vec<String>,
+    runs: usize,
+    results: usize,
+    judged_results: usize,
+    average_score: Option<f64>,
+    score_counts: BTreeMap<String, u64>,
+    latest_run_id: i64,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -2222,6 +2238,20 @@ struct EvalSegmentAccumulator {
     latest_run_id: i64,
 }
 
+#[derive(Debug, Default)]
+struct EvalConversationSegmentAccumulator {
+    session_id: Option<String>,
+    start_turn_ordinal: Option<u64>,
+    end_turn_ordinal: Option<u64>,
+    summary: Option<String>,
+    task_keys: Vec<String>,
+    runs: usize,
+    results: usize,
+    numeric_scores: Vec<u8>,
+    all_scores: Vec<String>,
+    latest_run_id: i64,
+}
+
 fn build_eval_summary(db: &Database, runs: Vec<EvalRunRecord>) -> anyhow::Result<EvalSummary> {
     let mut all_scores = Vec::new();
     let mut numeric_scores = Vec::new();
@@ -2231,6 +2261,8 @@ fn build_eval_summary(db: &Database, runs: Vec<EvalRunRecord>) -> anyhow::Result
     let mut session_accumulators = BTreeMap::<String, EvalSessionAccumulator>::new();
     let mut origin_accumulators = BTreeMap::<String, EvalSegmentAccumulator>::new();
     let mut tool_accumulators = BTreeMap::<String, EvalSegmentAccumulator>::new();
+    let mut conversation_segment_accumulators =
+        BTreeMap::<String, EvalConversationSegmentAccumulator>::new();
     let mut results_considered = 0_usize;
 
     for run in &runs {
@@ -2253,6 +2285,22 @@ fn build_eval_summary(db: &Database, runs: Vec<EvalRunRecord>) -> anyhow::Result
             if run.id > tool_accumulator.latest_run_id {
                 tool_accumulator.latest_run_id = run.id;
             }
+        }
+        let segment_key = eval_conversation_segment_key(&run_context);
+        let segment_accumulator = conversation_segment_accumulators
+            .entry(segment_key)
+            .or_insert_with(|| EvalConversationSegmentAccumulator {
+                session_id: run_context.session_id.clone(),
+                start_turn_ordinal: run_context.segment_start_turn_ordinal,
+                end_turn_ordinal: run_context.segment_end_turn_ordinal,
+                summary: run_context.segment_summary.clone(),
+                task_keys: run_context.segment_task_keys.clone(),
+                latest_run_id: run.id,
+                ..EvalConversationSegmentAccumulator::default()
+            });
+        segment_accumulator.runs += 1;
+        if run.id > segment_accumulator.latest_run_id {
+            segment_accumulator.latest_run_id = run.id;
         }
         let session_key = run_context
             .session_id
@@ -2303,6 +2351,7 @@ fn build_eval_summary(db: &Database, runs: Vec<EvalRunRecord>) -> anyhow::Result
             results_considered += 1;
             accumulator.results += 1;
             origin_accumulator.results += 1;
+            segment_accumulator.results += 1;
             if let Some(tool_accumulator) = tool_accumulator.as_mut() {
                 tool_accumulator.results += 1;
             }
@@ -2314,6 +2363,9 @@ fn build_eval_summary(db: &Database, runs: Vec<EvalRunRecord>) -> anyhow::Result
                 origin_accumulator
                     .all_scores
                     .push(display_eval_score(score.to_string()));
+                segment_accumulator
+                    .all_scores
+                    .push(display_eval_score(score.to_string()));
                 if let Some(tool_accumulator) = tool_accumulator.as_mut() {
                     tool_accumulator
                         .all_scores
@@ -2323,6 +2375,7 @@ fn build_eval_summary(db: &Database, runs: Vec<EvalRunRecord>) -> anyhow::Result
                     numeric_scores.push(numeric_score);
                     accumulator.numeric_scores.push(numeric_score);
                     origin_accumulator.numeric_scores.push(numeric_score);
+                    segment_accumulator.numeric_scores.push(numeric_score);
                     if let Some(tool_accumulator) = tool_accumulator.as_mut() {
                         tool_accumulator.numeric_scores.push(numeric_score);
                     }
@@ -2351,6 +2404,8 @@ fn build_eval_summary(db: &Database, runs: Vec<EvalRunRecord>) -> anyhow::Result
     };
     let origin_breakdown = eval_segment_summaries(origin_accumulators);
     let tool_breakdown = eval_segment_summaries(tool_accumulators);
+    let conversation_segment_breakdown =
+        eval_conversation_segment_summaries(conversation_segment_accumulators);
     let mut session_breakdown = session_accumulators
         .into_values()
         .map(|accumulator| {
@@ -2395,6 +2450,7 @@ fn build_eval_summary(db: &Database, runs: Vec<EvalRunRecord>) -> anyhow::Result
         score_counts: score_counts(all_scores.iter().map(String::as_str)),
         origin_breakdown,
         tool_breakdown,
+        conversation_segment_breakdown,
         session_breakdown,
         stale_insufficient_context,
         queued_recall_evals,
@@ -2436,11 +2492,64 @@ fn eval_segment_summaries(
     summaries
 }
 
+fn eval_conversation_segment_summaries(
+    accumulators: BTreeMap<String, EvalConversationSegmentAccumulator>,
+) -> Vec<EvalConversationSegmentSummary> {
+    let mut summaries = accumulators
+        .into_values()
+        .map(|accumulator| {
+            let average_score = if accumulator.numeric_scores.is_empty() {
+                None
+            } else {
+                Some(
+                    accumulator
+                        .numeric_scores
+                        .iter()
+                        .map(|score| f64::from(*score))
+                        .sum::<f64>()
+                        / accumulator.numeric_scores.len() as f64,
+                )
+            };
+            EvalConversationSegmentSummary {
+                session_id: accumulator.session_id,
+                start_turn_ordinal: accumulator.start_turn_ordinal,
+                end_turn_ordinal: accumulator.end_turn_ordinal,
+                summary: accumulator.summary,
+                task_keys: accumulator.task_keys,
+                runs: accumulator.runs,
+                results: accumulator.results,
+                judged_results: accumulator.numeric_scores.len(),
+                average_score,
+                score_counts: score_counts(accumulator.all_scores.iter().map(String::as_str)),
+                latest_run_id: accumulator.latest_run_id,
+            }
+        })
+        .collect::<Vec<_>>();
+    summaries.sort_by_key(|summary| std::cmp::Reverse(summary.latest_run_id));
+    summaries
+}
+
+fn eval_conversation_segment_key(run_context: &EvalRunContext) -> String {
+    match (
+        run_context.session_id.as_deref(),
+        run_context.segment_start_turn_ordinal,
+        run_context.segment_end_turn_ordinal,
+    ) {
+        (Some(session_id), Some(start), Some(end)) => format!("{session_id}:{start}-{end}"),
+        (Some(session_id), None, None) => format!("{session_id}:unsegmented"),
+        _ => "(unknown)".to_string(),
+    }
+}
+
 #[derive(Debug, Clone)]
 struct EvalRunContext {
     run_id: i64,
     session_id: Option<String>,
     turn_ordinal: Option<u64>,
+    segment_start_turn_ordinal: Option<u64>,
+    segment_end_turn_ordinal: Option<u64>,
+    segment_summary: Option<String>,
+    segment_task_keys: Vec<String>,
     memory_ids: Vec<i64>,
     recall_origin: String,
     tool_name: Option<String>,
@@ -2452,6 +2561,10 @@ fn eval_run_context(run: &EvalRunRecord) -> EvalRunContext {
         run_id: run.id,
         session_id: run.session_id.clone(),
         turn_ordinal: run.turn_ordinal,
+        segment_start_turn_ordinal: run.segment_start_turn_ordinal,
+        segment_end_turn_ordinal: run.segment_end_turn_ordinal,
+        segment_summary: run.segment_summary.clone(),
+        segment_task_keys: run.segment_task_keys.clone(),
         memory_ids: config
             .as_ref()
             .and_then(|value| value.get("memory_ids"))
@@ -2597,6 +2710,7 @@ fn print_human_eval_summary(summary: &EvalSummary) {
     }
     print_eval_segment_breakdown("Origin breakdown", &summary.origin_breakdown);
     print_eval_segment_breakdown("Tool breakdown", &summary.tool_breakdown);
+    print_eval_conversation_segment_breakdown(&summary.conversation_segment_breakdown);
     print_eval_session_breakdown(&summary.session_breakdown);
     print_stale_insufficient_context(&summary.stale_insufficient_context);
     print_queued_recall_evals(&summary.queued_recall_evals);
@@ -2628,6 +2742,61 @@ fn print_eval_segment_breakdown(label: &str, segments: &[EvalSegmentSummary]) {
             "  {} runs={} avg={} scores={} latest_run={}",
             segment.name, segment.runs, average_score, rendered_scores, segment.latest_run_id
         );
+    }
+}
+
+fn print_eval_conversation_segment_breakdown(segments: &[EvalConversationSegmentSummary]) {
+    if segments.is_empty() {
+        return;
+    }
+    println!("Conversation segment breakdown");
+    for segment in segments.iter().take(10) {
+        let average_score = segment
+            .average_score
+            .map(|score| format!("{score:.2}"))
+            .unwrap_or_else(|| "n/a".to_string());
+        let rendered_scores = if segment.score_counts.is_empty() {
+            "none".to_string()
+        } else {
+            segment
+                .score_counts
+                .iter()
+                .map(|(score, count)| format!("{score}={count}"))
+                .collect::<Vec<_>>()
+                .join(", ")
+        };
+        let session_id = segment.session_id.as_deref().unwrap_or("-");
+        let turn_range = match (segment.start_turn_ordinal, segment.end_turn_ordinal) {
+            (Some(start), Some(end)) => format!("{start}..={end}"),
+            _ => "-".to_string(),
+        };
+        let summary = segment
+            .summary
+            .as_deref()
+            .map(eval_summary_snippet)
+            .unwrap_or_else(|| "unsegmented".to_string());
+        let task_keys = if segment.task_keys.is_empty() {
+            "-".to_string()
+        } else {
+            segment
+                .task_keys
+                .iter()
+                .take(6)
+                .cloned()
+                .collect::<Vec<_>>()
+                .join(", ")
+        };
+        println!(
+            "  session={} turns={} runs={} avg={} scores={} latest_run={}",
+            session_id,
+            turn_range,
+            segment.runs,
+            average_score,
+            rendered_scores,
+            segment.latest_run_id
+        );
+        println!("    summary: {summary}");
+        println!("    keys: {task_keys}");
     }
 }
 

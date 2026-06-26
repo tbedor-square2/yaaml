@@ -683,6 +683,9 @@ fn run_recall_eval_task(
             .context("failed to defer recall eval task")?;
         return Ok(TaskRunOutcome::Deferred);
     }
+    let segment = db
+        .conversation_segment_for_turn(session_id, turn_ordinal)
+        .context("failed to load recall eval conversation segment")?;
     let run_id = db
         .insert_eval_run_with_metadata(
             "recall_1_to_5",
@@ -711,6 +714,15 @@ fn run_recall_eval_task(
                 tool_use_id: payload.tool_use_id.clone(),
                 tool_input_summary: payload.tool_input_summary.clone(),
                 injected: payload.injected,
+                segment_start_turn_ordinal: segment
+                    .as_ref()
+                    .map(|segment| segment.start_turn_ordinal),
+                segment_end_turn_ordinal: segment.as_ref().map(|segment| segment.end_turn_ordinal),
+                segment_summary: segment.as_ref().map(|segment| segment.summary.clone()),
+                segment_task_keys: segment
+                    .as_ref()
+                    .map(|segment| segment.task_keys.clone())
+                    .unwrap_or_default(),
             },
         )
         .context("failed to create recall eval run")?;

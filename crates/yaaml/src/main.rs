@@ -18,13 +18,14 @@ use yaaml::recall_filter::{
 };
 use yaaml::turn_hydration::{context_from_turns, hydrate_turns};
 use yaaml_core::{
-    context_score, counterfactual_citation_score, derive_project_descriptor, embedded_text_hash,
-    embedding_text, extract_task_keys, infer_context_from_memory, infer_context_from_path,
-    infer_context_from_text, infer_memory_kind, merge_contexts, parse_eval_judge_response,
-    parse_memory_ids, rank_recall_candidates, recall_file_path, render_recall_markdown,
-    session_recall_file_path, write_recall_file, Config, ConfigPaths, ContextMetadata,
-    EmbeddingRecord, MemoryKind, MemoryRecord, MemoryScope, RecallMemory, RecallRankDetails,
-    RecallRankingOptions, RecallWrite, SessionRecord, TurnRecord, VectorIndex,
+    active_segment_recall_turns, context_score, counterfactual_citation_score,
+    derive_project_descriptor, embedded_text_hash, embedding_text, extract_task_keys,
+    infer_context_from_memory, infer_context_from_path, infer_context_from_text, infer_memory_kind,
+    merge_contexts, parse_eval_judge_response, parse_memory_ids, rank_recall_candidates,
+    recall_file_path, render_recall_markdown, session_recall_file_path, write_recall_file, Config,
+    ConfigPaths, ContextMetadata, EmbeddingRecord, MemoryKind, MemoryRecord, MemoryScope,
+    RecallMemory, RecallRankDetails, RecallRankingOptions, RecallWrite, SessionRecord, TurnRecord,
+    VectorIndex,
 };
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
 use yaaml_llm::ReqwestTransport;
@@ -3107,8 +3108,9 @@ fn refresh_missing_recall_file(
     if turns.is_empty() {
         return Ok(None);
     }
+    let recall_turns = active_segment_recall_turns(&turns);
     let query = yaaml_core::build_recall_query(
-        &turns,
+        recall_turns,
         config.recall_query_max_chars,
         config.tool_call_truncation_chars,
     );
@@ -3123,12 +3125,19 @@ fn refresh_missing_recall_file(
         .embed(&query)
         .context("failed to embed missing recall query")?;
     let now = unix_timestamp();
-    let query_source = format!(
-        "on-demand completed turns {start_ordinal}..={turn_ordinal}: {} chars",
-        query.len()
+    let query_context = context_from_turns(
+        recall_turns,
+        std::path::Path::new(&session.project_id),
+        &query,
     );
-    let query_context =
-        context_from_turns(&turns, std::path::Path::new(&session.project_id), &query);
+    let query_source = recall_query_source(
+        "on-demand active segment",
+        &turns,
+        recall_turns,
+        start_ordinal,
+        turn_ordinal,
+        query.len(),
+    );
     let result = recall_from_embedding(
         db,
         config,
@@ -3260,6 +3269,29 @@ struct RecallSearchResult {
     markdown: String,
 }
 
+fn recall_query_source(
+    label: &str,
+    window_turns: &[TurnRecord],
+    recall_turns: &[TurnRecord],
+    window_start_ordinal: u64,
+    window_end_ordinal: u64,
+    query_chars: usize,
+) -> String {
+    let active_start = recall_turns
+        .first()
+        .map(|turn| turn.ordinal)
+        .unwrap_or(window_start_ordinal);
+    let active_end = recall_turns
+        .last()
+        .map(|turn| turn.ordinal)
+        .unwrap_or(window_end_ordinal);
+    let window_count = window_turns.len();
+    let active_count = recall_turns.len();
+    format!(
+        "{label} turns {active_start}..={active_end} from window {window_start_ordinal}..={window_end_ordinal} ({active_count}/{window_count} turns): {query_chars} chars"
+    )
+}
+
 fn recall_for_historical_turn(
     args: RecallArgs,
     config: &Config,
@@ -3292,8 +3324,9 @@ fn recall_for_historical_turn(
     if turns.is_empty() {
         bail!("no completed turns found for session {session_id} through turn {turn_ordinal}");
     }
+    let recall_turns = active_segment_recall_turns(&turns);
     let query = yaaml_core::build_recall_query(
-        &turns,
+        recall_turns,
         config.recall_query_max_chars,
         config.tool_call_truncation_chars,
     );
@@ -3316,19 +3349,26 @@ fn recall_for_historical_turn(
         .embed(&query)
         .context("failed to embed historical recall query")?;
     let now = unix_timestamp();
-    let query_source = format!(
-        "session {session_id} completed turns {start_ordinal}..={turn_ordinal}: {} chars",
-        query.len()
+    let query_context = context_from_turns(
+        recall_turns,
+        std::path::Path::new(&session.project_id),
+        &query,
     );
-    let query_context =
-        context_from_turns(&turns, std::path::Path::new(&session.project_id), &query);
+    let query_source = recall_query_source(
+        &format!("session {session_id} active segment"),
+        &turns,
+        recall_turns,
+        start_ordinal,
+        turn_ordinal,
+        query.len(),
+    );
     let result = recall_from_embedding(
         db,
         config,
         RecallEmbeddingRequest {
             query_embedding: &query_embedding,
             project_id: &session.project_id,
-            session_id: None,
+            session_id: Some(session_id),
             query_text: &query,
             query_context: Some(query_context),
             query_source,

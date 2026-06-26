@@ -15,12 +15,13 @@ use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use yaaml_core::{
-    build_recall_query, derive_project_descriptor, embedded_text_hash, embedding_text,
-    extract_task_keys, find_consolidation_clusters, parse_eval_judge_response,
-    parse_formulation_response, rank_recall_candidates, recall_file_path, render_recall_markdown,
-    session_recall_file_path, write_recall_file, ClusterMemory, Config, EmbeddingRecord,
-    MemoryRecord, MemoryScope, RecallMemory, RecallRankingOptions, SourceTurnRef, TaskRecord,
-    TaskStatus, TurnRecord, VectorIndex,
+    active_segment_recall_turns, build_active_segment_recall_query, build_recall_query,
+    derive_project_descriptor, embedded_text_hash, embedding_text, extract_task_keys,
+    find_consolidation_clusters, parse_eval_judge_response, parse_formulation_response,
+    rank_recall_candidates, recall_file_path, render_recall_markdown, session_recall_file_path,
+    write_recall_file, ClusterMemory, Config, EmbeddingRecord, MemoryRecord, MemoryScope,
+    RecallMemory, RecallRankingOptions, SourceTurnRef, TaskRecord, TaskStatus, TurnRecord,
+    VectorIndex,
 };
 use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
@@ -606,7 +607,7 @@ fn run_recall_task(db: &Database, config: &Config, task: &TaskRecord) -> anyhow:
     if recent_turns.is_empty() {
         return Ok(());
     }
-    let query_text = build_recall_query(
+    let query_text = build_active_segment_recall_query(
         &recent_turns,
         config.recall_query_max_chars,
         config.tool_call_truncation_chars,
@@ -627,7 +628,7 @@ fn run_recall_task(db: &Database, config: &Config, task: &TaskRecord) -> anyhow:
         Path::new(&session.project_id),
         &recent_turns,
         &query_embedding,
-        "background completed turns",
+        "background active segment",
     )
     .context("failed to refresh recall")
     .map(|_| ())
@@ -1849,12 +1850,13 @@ pub fn refresh_recall_with_embedding(
         .list_active_memories_by_ids(&hit_ids)
         .context("failed to load active memories")?;
     let project_id_string = project_id.display().to_string();
+    let recall_turns = active_segment_recall_turns(recent_turns);
     let query_text = build_recall_query(
-        recent_turns,
+        recall_turns,
         config.recall_query_max_chars,
         config.tool_call_truncation_chars,
     );
-    let query_context = context_from_turns(recent_turns, project_id, &query_text);
+    let query_context = context_from_turns(recall_turns, project_id, &query_text);
     let query_task_keys = extract_task_keys(&query_text);
     let candidates = rank_recall_candidates(
         &hits,
@@ -1934,11 +1936,6 @@ pub fn refresh_recall_with_embedding(
                 })
         })
         .collect::<Vec<_>>();
-    let query_text = build_recall_query(
-        recent_turns,
-        config.recall_query_max_chars,
-        config.tool_call_truncation_chars,
-    );
     let source = if query_text.is_empty() {
         query_source.to_string()
     } else {

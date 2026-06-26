@@ -562,7 +562,7 @@ recall_llm_filter_enabled = false
     assert_eq!(stale["selected"], false);
     assert_eq!(
         stale["filter_reasons"][0],
-        "drop:task_state_without_task_key_match"
+        "drop:stale_task_state_semantic_context_only"
     );
 }
 
@@ -1440,7 +1440,7 @@ recall_live_turn_window = 2
     assert!(value["query_source"]
         .as_str()
         .unwrap()
-        .contains("completed turns 1..=2"));
+        .contains("active segment turns 1..=2"));
 
     let recall_path = session_recall_file_path(&recall_dir, "replay-session");
     assert!(!recall_path.exists());

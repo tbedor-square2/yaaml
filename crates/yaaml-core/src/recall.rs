@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
@@ -225,15 +226,16 @@ fn rank_recall_candidate(
     };
     let mut penalty = 0.0;
     let mut penalties = Vec::new();
-    if !query_task_keys.is_empty() && matched_task_keys.is_empty() {
-        if memory.project_id.as_deref() == Some(current_project_id) {
-            penalty += 0.24;
-            penalties.push("same_project_no_task_key_overlap".to_string());
-        }
-        if memory.kind == MemoryKind::TaskState {
-            penalty += 0.35;
-            penalties.push("task_state_without_task_key_overlap".to_string());
-        }
+    if !query_task_keys.is_empty()
+        && matched_task_keys.is_empty()
+        && memory.project_id.as_deref() == Some(current_project_id)
+    {
+        penalty += 0.24;
+        penalties.push("same_project_no_task_key_overlap".to_string());
+    }
+    if memory.kind == MemoryKind::TaskState && matched_task_keys.is_empty() {
+        penalty += 0.45;
+        penalties.push("task_state_without_task_key_overlap".to_string());
     }
     if memory.scope == MemoryScope::Global
         && memory.kind == MemoryKind::TaskState
@@ -274,7 +276,7 @@ fn recall_filter_decision(
     memory: &MemoryRecord,
     current_project_id: &str,
     query_context: &ContextMetadata,
-    query_task_keys: &[String],
+    _query_task_keys: &[String],
 ) -> RecallFilterDecision {
     let memory_context = crate::infer_context_from_memory(memory);
     let same_project = memory.project_id.as_deref() == Some(current_project_id);
@@ -303,21 +305,20 @@ fn recall_filter_decision(
 
     match memory.kind {
         MemoryKind::TaskState => {
-            if !query_task_keys.is_empty() {
-                reasons.push("drop:task_state_without_task_key_match".to_string());
-                return RecallFilterDecision {
-                    keep: false,
-                    reasons,
-                };
-            }
-            if same_project && strong_context {
-                reasons.push("keep:task_state_strong_context".to_string());
+            if strong_task_key_match {
+                reasons.push("keep:task_state_strong_task_key_match".to_string());
                 return RecallFilterDecision {
                     keep: true,
                     reasons,
                 };
             }
-            reasons.push("drop:task_state_weak_context".to_string());
+            if weak_task_key_match {
+                reasons.push("drop:task_state_without_strong_task_key_match".to_string());
+            } else if same_project && strong_context {
+                reasons.push("drop:stale_task_state_semantic_context_only".to_string());
+            } else {
+                reasons.push("drop:task_state_without_task_key_match".to_string());
+            }
             RecallFilterDecision {
                 keep: false,
                 reasons,
@@ -340,6 +341,13 @@ fn recall_filter_decision(
         }
         MemoryKind::Preference | MemoryKind::Lesson | MemoryKind::Workflow => {
             if memory.scope == MemoryScope::Global {
+                if candidate.rank.context_score < 0.0 && !weak_task_key_match {
+                    reasons.push("drop:global_durable_wrong_context".to_string());
+                    return RecallFilterDecision {
+                        keep: false,
+                        reasons,
+                    };
+                }
                 reasons.push("keep:global_durable".to_string());
             } else if same_project {
                 reasons.push("keep:same_project_durable".to_string());
@@ -642,6 +650,59 @@ pub fn build_recall_query(
     query
 }
 
+pub fn build_active_segment_recall_query(
+    turns: &[TurnRecord],
+    max_chars: usize,
+    tool_output_truncation_chars: usize,
+) -> String {
+    build_recall_query(
+        active_segment_recall_turns(turns),
+        max_chars,
+        tool_output_truncation_chars,
+    )
+}
+
+pub fn active_segment_recall_turns(turns: &[TurnRecord]) -> &[TurnRecord] {
+    const FALLBACK_SUFFIX_TURNS: usize = 3;
+    if turns.is_empty() {
+        return turns;
+    }
+
+    let Some(seed_index) = (0..turns.len())
+        .rev()
+        .find(|index| !turn_segment_keys(&turns[*index]).is_empty())
+    else {
+        return &turns[turns.len().saturating_sub(FALLBACK_SUFFIX_TURNS)..];
+    };
+
+    let mut active_keys = turn_segment_keys(&turns[seed_index]);
+    let mut start = seed_index;
+    for index in (0..seed_index).rev() {
+        let keys = turn_segment_keys(&turns[index]);
+        if keys.is_empty() {
+            start = index;
+            continue;
+        }
+        if keys.iter().any(|key| active_keys.contains(key)) {
+            active_keys.extend(keys);
+            start = index;
+        } else {
+            break;
+        }
+    }
+    &turns[start..]
+}
+
+fn turn_segment_keys(turn: &TurnRecord) -> HashSet<String> {
+    turn.display_text
+        .as_deref()
+        .map(extract_task_keys)
+        .unwrap_or_default()
+        .into_iter()
+        .filter(|key| is_strong_task_key(key))
+        .collect()
+}
+
 fn recall_query_suppressed_block_end(line: &str) -> Option<&'static str> {
     let line = line.trim_start();
     if line.starts_with("<codex_internal_context") {
@@ -756,6 +817,8 @@ fn truncate_chars(text: &str, max_chars: usize) -> String {
 
 #[cfg(test)]
 mod tests {
+    use crate::infer_context_from_text;
+
     use tempfile::TempDir;
 
     use crate::{MemoryKind, MemoryRecord, MemoryScope};
@@ -1005,7 +1068,127 @@ mod tests {
         assert!(debug[0]
             .rank
             .filter_reasons
-            .contains(&"drop:task_state_without_task_key_match".to_string()));
+            .contains(&"drop:task_state_without_strong_task_key_match".to_string()));
+    }
+
+    #[test]
+    fn semantic_context_alone_does_not_keep_task_state() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![MemoryRecord {
+            body: "RiskArbiter PR #483111 is ready for final review after rule archival changes."
+                .to_string(),
+            task_keys: vec!["pr:483111".to_string()],
+            project_descriptor: Some("java riskarbiter".to_string()),
+            ..memory(
+                1,
+                "Old RiskArbiter PR state",
+                MemoryKind::TaskState,
+                Some(current_project),
+                Vec::new(),
+            )
+        }];
+        let query_context = infer_context_from_text(
+            "RiskArbiter JVM startup troubleshooting in squareup/java with cloud profiler errors",
+        );
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &query_context,
+            &[],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+        assert!(ranked[0]
+            .rank
+            .penalties
+            .contains(&"task_state_without_task_key_overlap".to_string()));
+
+        let (selected, debug) =
+            select_recall_candidates(ranked, &memories, current_project, &query_context, &[], 5);
+
+        assert!(selected.is_empty());
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:stale_task_state_semantic_context_only".to_string()));
+    }
+
+    #[test]
+    fn global_durable_with_negative_context_and_no_task_match_abstains() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![MemoryRecord {
+            scope: MemoryScope::Global,
+            body: "Use Cloud CD retrigger deploy for stuck canary cleanup.".to_string(),
+            project_id: None,
+            project_descriptor: Some("cloud-cd".to_string()),
+            ..memory(
+                1,
+                "Cloud CD canary cleanup",
+                MemoryKind::Workflow,
+                None,
+                Vec::new(),
+            )
+        }];
+        let query_context =
+            infer_context_from_text("RiskArbiter JVM startup troubleshooting and test timeout");
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &query_context,
+            &[],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+        let (selected, debug) =
+            select_recall_candidates(ranked, &memories, current_project, &query_context, &[], 5);
+
+        assert!(selected.is_empty());
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:global_durable_wrong_context".to_string()));
+    }
+
+    #[test]
+    fn active_segment_query_uses_latest_contiguous_strong_task_keys() {
+        let turns = vec![
+            turn(1, "user: finish PR #483111 for MLP-4410 rule archival"),
+            turn(2, "assistant: final review fixes for PR #483111 are done"),
+            turn(
+                3,
+                "user: now debug PR #483601 timeout in riskarbiter/src/test/java/FooTest.java",
+            ),
+            turn(
+                4,
+                "assistant: update riskarbiter/src/test/java/FooTest.java and run bin/buildifier",
+            ),
+            turn(5, "assistant: tests are still timing out; checking logs"),
+        ];
+
+        let active = active_segment_recall_turns(&turns);
+        let query = build_active_segment_recall_query(&turns, 4_000, 80);
+
+        assert_eq!(
+            active.iter().map(|turn| turn.ordinal).collect::<Vec<_>>(),
+            vec![3, 4, 5]
+        );
+        assert!(!query.contains("PR #483111"));
+        assert!(query.contains("PR #483601"));
+        assert!(query.contains("FooTest.java"));
     }
 
     fn empty_rank() -> RecallRankDetails {
@@ -1043,6 +1226,21 @@ mod tests {
             project_id: project_id.map(str::to_string),
             project_descriptor: project_id.map(str::to_string),
             lineage_refs: Vec::new(),
+        }
+    }
+
+    fn turn(ordinal: u64, text: &str) -> TurnRecord {
+        TurnRecord {
+            session_id: "session-1".to_string(),
+            turn_id: Some(format!("turn-{ordinal}")),
+            ordinal,
+            byte_start: ordinal,
+            byte_end: ordinal + 1,
+            observed_at: None,
+            status: TurnStatus::Completed,
+            display_text: Some(text.to_string()),
+            cwd: None,
+            context: None,
         }
     }
 

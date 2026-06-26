@@ -3,6 +3,7 @@ use std::process::Command;
 
 use tempfile::TempDir;
 use yaaml::turn_hydration::hydrate_turns;
+use yaaml_core::{AgentType, SessionRecord, TurnRecord, TurnStatus};
 use yaaml_store::Database;
 
 #[test]
@@ -119,6 +120,44 @@ fn ingest_json_reports_appended_cursored_codex_file() {
     assert_eq!(value["discovered_files"], 0);
     assert_eq!(value["changed_files"], 1);
     assert_eq!(value["processed_turns"], 1);
+}
+
+#[test]
+fn hydration_recovers_from_stale_codex_byte_range_by_reparsing_transcript() {
+    let tmp = TempDir::new().unwrap();
+    let transcript_path = tmp.path().join("session.jsonl");
+    let transcript = format!("{}{}", transcript(), completed_turn(2));
+    fs::write(&transcript_path, &transcript).unwrap();
+    let stale_start = transcript.find("hello").unwrap() + 1;
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+    db.upsert_session(&SessionRecord {
+        id: "session-1".to_string(),
+        agent_type: AgentType::Codex,
+        project_id: "/tmp/yaaml".to_string(),
+        transcript_file_path: transcript_path.display().to_string(),
+        started_at: Some("2026-06-08T00:00:00Z".to_string()),
+        last_seen_at: Some("2026-06-08T00:00:04Z".to_string()),
+    })
+    .unwrap();
+    db.insert_turn(&TurnRecord {
+        session_id: "session-1".to_string(),
+        turn_id: Some("turn-2".to_string()),
+        ordinal: 1,
+        byte_start: stale_start as u64,
+        byte_end: transcript.len() as u64,
+        observed_at: Some("2026-06-08T00:00:04Z".to_string()),
+        status: TurnStatus::Completed,
+        display_text: None,
+        cwd: None,
+        context: None,
+    })
+    .unwrap();
+    let turns = db.turns_for_session("session-1", 1).unwrap();
+
+    let hydrated = hydrate_turns(&db, &turns).unwrap();
+
+    assert_eq!(hydrated[0].display_text.as_deref(), Some("user: turn 2"));
 }
 
 fn run_ingest(

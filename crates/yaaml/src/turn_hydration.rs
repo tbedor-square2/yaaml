@@ -8,8 +8,8 @@ use yaaml_core::{
     SessionRecord, TurnRecord,
 };
 use yaaml_store::Database;
-use yaaml_transcript::claude::hydrate_claude_turn_bytes;
-use yaaml_transcript::codex::hydrate_codex_turn_bytes;
+use yaaml_transcript::claude::{hydrate_claude_turn_bytes, parse_claude_jsonl};
+use yaaml_transcript::codex::{hydrate_codex_turn_bytes, parse_codex_jsonl};
 use yaaml_transcript::TurnHydration;
 
 pub fn hydrate_turns(db: &Database, turns: &[TurnRecord]) -> Result<Vec<TurnRecord>> {
@@ -62,16 +62,54 @@ fn hydrate_turn(
     else {
         return Ok(turn.clone());
     };
-    let hydrated = match transcript.agent_type {
-        AgentType::Codex => {
-            hydrate_codex_turn_bytes(slice).context("failed to hydrate Codex turn")?
-        }
-        AgentType::ClaudeCode => {
-            hydrate_claude_turn_bytes(slice).context("failed to hydrate Claude turn")?
+    let hydrated = match hydrate_turn_slice(transcript, slice) {
+        Ok(hydrated) => hydrated,
+        Err(error) => {
+            return hydrate_turn_from_full_parse(transcript, turn)
+                .with_context(|| format!("failed to hydrate stored turn slice: {error:#}"));
         }
     };
 
     Ok(apply_hydration(turn, hydrated))
+}
+
+fn hydrate_turn_slice(transcript: &TranscriptBytes, slice: &[u8]) -> Result<TurnHydration> {
+    match transcript.agent_type {
+        AgentType::Codex => hydrate_codex_turn_bytes(slice).context("failed to hydrate Codex turn"),
+        AgentType::ClaudeCode => {
+            hydrate_claude_turn_bytes(slice).context("failed to hydrate Claude turn")
+        }
+    }
+}
+
+fn hydrate_turn_from_full_parse(
+    transcript: &mut TranscriptBytes,
+    turn: &TurnRecord,
+) -> Result<TurnRecord> {
+    if transcript.reparsed_turns.is_none() {
+        let transcript_path = Path::new(&transcript.session.transcript_file_path);
+        let parsed_turns = match transcript.agent_type {
+            AgentType::Codex => {
+                parse_codex_jsonl(transcript_path, &transcript.bytes, 0)
+                    .context("failed to reparse Codex transcript")?
+                    .turns
+            }
+            AgentType::ClaudeCode => {
+                parse_claude_jsonl(transcript_path, &transcript.bytes, 0)
+                    .context("failed to reparse Claude transcript")?
+                    .turns
+            }
+        };
+        transcript.reparsed_turns = Some(parsed_turns);
+    }
+    let Some(reparsed) = transcript.reparsed_turns.as_ref().and_then(|turns| {
+        turns
+            .iter()
+            .find(|candidate| candidate.ordinal == turn.ordinal)
+    }) else {
+        return Ok(turn.clone());
+    };
+    Ok(apply_hydrated_turn(turn, reparsed))
 }
 
 fn apply_hydration(turn: &TurnRecord, hydration: TurnHydration) -> TurnRecord {
@@ -88,11 +126,25 @@ fn apply_hydration(turn: &TurnRecord, hydration: TurnHydration) -> TurnRecord {
     turn
 }
 
+fn apply_hydrated_turn(turn: &TurnRecord, hydrated: &TurnRecord) -> TurnRecord {
+    let mut turn = turn.clone();
+    if turn.display_text.is_none() {
+        turn.display_text = hydrated.display_text.clone();
+    }
+    if turn.cwd.is_none() {
+        turn.cwd = hydrated.cwd.clone();
+    }
+    if turn.context.is_none() {
+        turn.context = hydrated.context.clone();
+    }
+    turn
+}
+
 fn load_transcript<'a>(
     db: &Database,
     transcripts: &'a mut HashMap<String, TranscriptBytes>,
     session_id: &str,
-) -> Result<&'a TranscriptBytes> {
+) -> Result<&'a mut TranscriptBytes> {
     if !transcripts.contains_key(session_id) {
         let session = db
             .session_by_id(session_id)
@@ -105,17 +157,19 @@ fn load_transcript<'a>(
             TranscriptBytes {
                 agent_type: session.agent_type,
                 bytes,
-                _session: session,
+                session,
+                reparsed_turns: None,
             },
         );
     }
     Ok(transcripts
-        .get(session_id)
+        .get_mut(session_id)
         .expect("transcript cache entry inserted"))
 }
 
 struct TranscriptBytes {
     agent_type: AgentType,
     bytes: Vec<u8>,
-    _session: SessionRecord,
+    session: SessionRecord,
+    reparsed_turns: Option<Vec<TurnRecord>>,
 }

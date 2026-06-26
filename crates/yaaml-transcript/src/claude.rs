@@ -255,12 +255,16 @@ fn extract_content_text(content: Option<&Value>, output: &mut Vec<String>) {
                 } else if let Some(name) = item.get("name").and_then(Value::as_str) {
                     output.push(format!("tool: {name}"));
                 } else if let Some(content) = item.get("content").and_then(Value::as_str) {
-                    output.push(format!("tool output: {content}"));
+                    output.push(format!("tool output: {}", single_line_tool_output(content)));
                 }
             }
         }
         _ => {}
     }
+}
+
+fn single_line_tool_output(text: &str) -> String {
+    text.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
 fn content_has_text(content: Option<&Value>) -> bool {
@@ -396,7 +400,7 @@ mod tests {
             "\n",
             r#"{"role":"assistant","content":[{"type":"tool_use","name":"Read","id":"tool-1"}]}"#,
             "\n",
-            r#"{"role":"user","content":[{"type":"tool_result","tool_use_id":"tool-1","content":"file contents"}]}"#,
+            r#"{"role":"user","content":[{"type":"tool_result","tool_use_id":"tool-1","content":"file\ncontents"}]}"#,
             "\n",
             r#"{"role":"assistant","content":[{"type":"text","text":"summarized"}]}"#,
             "\n",
@@ -409,6 +413,7 @@ mod tests {
         let text = parsed.turns[0].display_text.as_ref().unwrap();
         assert!(text.contains("tool: Read"));
         assert!(text.contains("tool output: file contents"));
+        assert!(!text.contains("file\ncontents"));
         assert!(text.contains("summarized"));
     }
 

@@ -640,12 +640,40 @@ fn has_path_shape(token: &str) -> bool {
     }
     let segments = token.split('/').collect::<Vec<_>>();
     let pathish_segments = ["crates", "docs", "src", "test", "tests"];
-    if segments.len() < 3 {
+    if segments.len() < 4 {
         return false;
     }
-    segments
+    let normalized_segments = segments
         .iter()
-        .any(|segment| pathish_segments.contains(&segment.to_ascii_lowercase().as_str()))
+        .map(|segment| segment.to_ascii_lowercase())
+        .collect::<Vec<_>>();
+    if normalized_segments.iter().any(|segment| segment == "src") {
+        return true;
+    }
+    if !normalized_segments
+        .iter()
+        .any(|segment| pathish_segments.contains(&segment.as_str()))
+    {
+        return false;
+    }
+    matches!(
+        normalized_segments.first().map(String::as_str),
+        Some(
+            "apps"
+                | "crates"
+                | "datastore"
+                | "docs"
+                | "feature"
+                | "lib"
+                | "libs"
+                | "packages"
+                | "riskarbiter"
+                | "src"
+                | "subapps"
+                | "test"
+                | "tests"
+        )
+    )
 }
 
 fn has_file_like_basename(segment: &str) -> bool {
@@ -827,20 +855,7 @@ fn turn_segment_keys(turn: &TurnRecord) -> HashSet<String> {
 
 pub fn segment_task_keys(text: &str) -> Vec<String> {
     let mut keys = Vec::new();
-    let mut in_tool_output = false;
     for line in text.lines() {
-        let trimmed = line.trim();
-        if trimmed.starts_with("tool call:") {
-            in_tool_output = false;
-            continue;
-        }
-        if trimmed.starts_with("tool output:") {
-            in_tool_output = true;
-            continue;
-        }
-        if in_tool_output {
-            continue;
-        }
         if segment_task_key_line_suppressed(line) {
             continue;
         }
@@ -858,6 +873,7 @@ fn segment_task_key_line_suppressed(line: &str) -> bool {
     let line = line.trim();
     let lower = line.to_ascii_lowercase();
     line.is_empty()
+        || line.starts_with("tool output:")
         || line.starts_with("Chunk ID:")
         || line.starts_with("Wall time:")
         || line.starts_with("Process exited with code")
@@ -1156,6 +1172,17 @@ mod tests {
     }
 
     #[test]
+    fn task_key_extraction_rejects_short_generic_directory_phrases() {
+        let keys = extract_task_keys(
+            "update the help/tests/body and move/registry/help/tests but keep datastore/src/main/java",
+        );
+
+        assert!(!keys.contains(&"path:help/tests/body".to_string()));
+        assert!(!keys.contains(&"path:move/registry/help/tests".to_string()));
+        assert!(keys.contains(&"path:datastore/src/main/java".to_string()));
+    }
+
+    #[test]
     fn segment_task_keys_ignore_code_fixture_literals() {
         let keys = segment_task_keys(
             r#"
@@ -1166,7 +1193,6 @@ crates/yaaml-core/src/recall.rs:1014: "PR 481245 updates riskarbiter/src/main/ja
 1. session=abc turns=1..=2 status=active keys=pr:480117, ticket:MLP-4401
 The live segment still has bogus PR/ticket keys pr:480118 and MLP-4402.
 tool output: PR #480115 appeared in a test fixture
-PR #480116 appeared on a later tool-output line
 assistant: still use yaaml recall for context.
 "#,
         );
@@ -1174,7 +1200,6 @@ assistant: still use yaaml recall for context.
         assert!(!keys.contains(&"pr:481245".to_string()));
         assert!(!keys.contains(&"ticket:MLP-4400".to_string()));
         assert!(!keys.contains(&"pr:480115".to_string()));
-        assert!(!keys.contains(&"pr:480116".to_string()));
         assert!(!keys.contains(&"pr:480117".to_string()));
         assert!(!keys.contains(&"ticket:MLP-4401".to_string()));
         assert!(!keys.contains(&"pr:480118".to_string()));

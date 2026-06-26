@@ -136,6 +136,30 @@ fn unknown_events_inside_turn_do_not_break_parsing() {
 }
 
 #[test]
+fn tool_output_is_normalized_to_one_display_line() {
+    let input = format!(
+        "{}{}{}{}",
+        session_meta(),
+        line(
+            r#"{"timestamp":"2026-06-08T00:00:01Z","type":"event_msg","payload":{"type":"turn_started","turn_id":"turn-1"}}"#
+        ),
+        line(
+            r##"{"timestamp":"2026-06-08T00:00:02Z","type":"response_item","payload":{"type":"function_call_output","output":"# YAAML Recall\nmemory_ids: 1\n\n## Old memory\nBody text"}}"##
+        ),
+        line(
+            r#"{"timestamp":"2026-06-08T00:00:03Z","type":"event_msg","payload":{"type":"turn_complete","turn_id":"turn-1"}}"#
+        ),
+    );
+
+    let parsed = parse_codex_jsonl(Path::new("/tmp/session.jsonl"), input.as_bytes(), 0).unwrap();
+
+    assert_eq!(
+        parsed.turns[0].display_text.as_deref(),
+        Some("tool output: # YAAML Recall memory_ids: 1 ## Old memory Body text")
+    );
+}
+
+#[test]
 fn malformed_json_in_complete_line_reports_byte_offset() {
     let valid_prefix = session_meta();
     let malformed = line(r#"{"timestamp":"2026-06-08T00:00:01Z","type":"event_msg""#);

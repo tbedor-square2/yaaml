@@ -403,7 +403,10 @@ fn extract_response_item_text(value: &Value, display_parts: &mut Vec<String>) {
         }
         Some("function_call_output") => {
             if let Some(output) = payload.get("output").and_then(Value::as_str) {
-                display_parts.push(format!("tool output: {}", truncate_chars(output, 500)));
+                display_parts.push(format!(
+                    "tool output: {}",
+                    truncate_chars(&single_line_tool_output(output), 500)
+                ));
             }
         }
         _ => {}
@@ -426,6 +429,10 @@ fn compact_display_text(parts: Vec<String>) -> Option<String> {
 
 fn truncate_chars(text: &str, max_chars: usize) -> String {
     text.chars().take(max_chars).collect()
+}
+
+fn single_line_tool_output(text: &str) -> String {
+    text.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
 fn complete_lines(bytes: &[u8]) -> impl Iterator<Item = &[u8]> {

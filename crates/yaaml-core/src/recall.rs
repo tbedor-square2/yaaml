@@ -208,7 +208,7 @@ fn rank_recall_candidate(
     let matched_task_keys = matched_task_keys(query_task_keys, &memory.task_keys);
     let strong_task_key_matches = matched_task_keys
         .iter()
-        .filter(|key| is_strong_task_key(key))
+        .filter(|key| is_strong_recall_task_key(key))
         .count();
     let task_identity_key_matches = matched_task_keys
         .iter()
@@ -283,7 +283,7 @@ fn recall_filter_decision(
     memory: &MemoryRecord,
     current_project_id: &str,
     query_context: &ContextMetadata,
-    _query_task_keys: &[String],
+    query_task_keys: &[String],
 ) -> RecallFilterDecision {
     let memory_context = crate::infer_context_from_memory(memory);
     let same_project = memory.project_id.as_deref() == Some(current_project_id);
@@ -295,13 +295,14 @@ fn recall_filter_decision(
         .rank
         .matched_task_keys
         .iter()
-        .any(|key| is_strong_task_key(key));
+        .any(|key| is_strong_recall_task_key(key));
     let task_state_identity_key_match = candidate
         .rank
         .matched_task_keys
         .iter()
         .any(|key| is_task_state_identity_key(key));
     let weak_task_key_match = !candidate.rank.matched_task_keys.is_empty();
+    let query_has_task_identity = has_recall_match_task_key(query_task_keys);
     let strong_context = same_work_area
         || (same_repo && candidate.rank.context_score >= 0.36)
         || candidate.rank.context_score >= 0.42;
@@ -337,6 +338,16 @@ fn recall_filter_decision(
             }
         }
         MemoryKind::ProjectFact => {
+            if query_has_task_identity
+                && candidate.rank.matched_task_keys.is_empty()
+                && candidate.rank.context_score < 0.42
+            {
+                reasons.push("drop:project_fact_task_key_mismatch".to_string());
+                return RecallFilterDecision {
+                    keep: false,
+                    reasons,
+                };
+            }
             if same_project || strong_context {
                 reasons.push("keep:project_fact_context".to_string());
                 RecallFilterDecision {
@@ -505,6 +516,25 @@ fn is_strong_task_key(key: &str) -> bool {
                 | "branch"
                 | "metric"
                 | "path"
+                | "pr"
+                | "project"
+                | "sentry"
+                | "signal"
+                | "target"
+                | "ticket"
+                | "trigger"
+        )
+    )
+}
+
+fn is_strong_recall_task_key(key: &str) -> bool {
+    let key = key.to_ascii_lowercase();
+    matches!(
+        key.split_once(':').map(|(prefix, _)| prefix),
+        Some(
+            "app"
+                | "branch"
+                | "metric"
                 | "pr"
                 | "project"
                 | "sentry"
@@ -1645,6 +1675,54 @@ assistant: still use yaaml recall for context.
     }
 
     #[test]
+    fn path_key_match_is_weak_recall_evidence_for_durable_memories() {
+        let current_project = "/Users/tbedor/Development/yaaml";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![memory(
+            1,
+            "Recall path cleanup",
+            MemoryKind::Lesson,
+            Some(current_project),
+            vec!["path:crates/yaaml-core/src/recall.rs".to_string()],
+        )];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &["path:crates/yaaml-core/src/recall.rs".to_string()],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+        assert_eq!(ranked[0].rank.matched_task_keys.len(), 1);
+        assert_eq!(ranked[0].rank.task_key_bonus, 0.06);
+
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &["path:crates/yaaml-core/src/recall.rs".to_string()],
+            5,
+        );
+
+        assert_eq!(selected.len(), 1);
+        assert!(!debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"keep:strong_task_key_match".to_string()));
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"keep:same_project_durable".to_string()));
+    }
+
+    #[test]
     fn semantic_context_alone_does_not_keep_task_state() {
         let current_project = "/Users/tbedor/Development/java";
         let hits = vec![VectorHit {
@@ -1691,6 +1769,98 @@ assistant: still use yaaml recall for context.
             .rank
             .filter_reasons
             .contains(&"drop:stale_task_state_semantic_context_only".to_string()));
+    }
+
+    #[test]
+    fn project_fact_with_task_mismatch_needs_strong_context() {
+        let current_project = "/Users/tbedor/Development/yaaml";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![memory(
+            1,
+            "Old segment design",
+            MemoryKind::ProjectFact,
+            Some(current_project),
+            Vec::new(),
+        )];
+        let query_context = ContextMetadata::default();
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &query_context,
+            &["path:crates/yaaml-core/src/recall.rs".to_string()],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &query_context,
+            &["path:crates/yaaml-core/src/recall.rs".to_string()],
+            5,
+        );
+
+        assert!(selected.is_empty());
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:project_fact_task_key_mismatch".to_string()));
+    }
+
+    #[test]
+    fn project_fact_with_task_mismatch_survives_when_context_is_strong() {
+        let current_project = "/Users/tbedor/Development/yaaml";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![MemoryRecord {
+            body: "forge-signalsmith and Sad Sack Signals use SSS context for scheduler recall."
+                .to_string(),
+            project_descriptor: Some("forge-signalsmith, Sad Sack Signals".to_string()),
+            ..memory(
+                1,
+                "SSS recall context",
+                MemoryKind::ProjectFact,
+                None,
+                Vec::new(),
+            )
+        }];
+        let query_context = infer_context_from_text("forge-signalsmith Sad Sack Signals scheduler");
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &query_context,
+            &["path:crates/yaaml-core/src/recall.rs".to_string()],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+        assert!(ranked[0].rank.context_score >= 0.42);
+
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &query_context,
+            &["path:crates/yaaml-core/src/recall.rs".to_string()],
+            5,
+        );
+
+        assert_eq!(selected.len(), 1);
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"keep:project_fact_context".to_string()));
     }
 
     #[test]

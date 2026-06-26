@@ -1330,14 +1330,7 @@ fn init() -> anyhow::Result<()> {
         "installed Claude remember skill: {}",
         report.claude_remember_skill.display()
     );
-    println!(
-        "installed Codex PreToolUse hook script: {}",
-        report.codex_pre_tool_hook_script.display()
-    );
-    println!(
-        "updated Codex config for YAAML hook: {}",
-        report.codex_config.display()
-    );
+    println!("removed legacy Codex PreToolUse hook if present");
     Ok(())
 }
 

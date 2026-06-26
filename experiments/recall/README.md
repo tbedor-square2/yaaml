@@ -3,6 +3,28 @@
 Recall experiments are stored as timestamped directories so strategy results can
 be compared over time.
 
+## 2026-06-26: Codex PreToolUse Hook Removed
+
+The broad Codex PreToolUse hook experiment was removed from default installation.
+It produced too much low-value context relative to explicit/session recall and
+added friction when installing or updating Codex hook configuration.
+
+Observed eval shape before removal:
+
+- `tool_pre_use` average score was about 2.40 across evaluated non-empty runs.
+- Bash tool recall had many low-scored memories, including repeated build/test
+  context that was plausible but often stale or not actionable for the current
+  command.
+- Empty tool recalls were usually acceptable abstentions, so forcing tool recall
+  on every high-level command was not the right optimization target.
+- Runtime friction was visible during normal YAAML development: the hook fired
+  repeatedly for service/debug commands and surfaced context that was not worth
+  the additional interruption.
+
+Decision: keep manual/session recall as the MVP behavior, keep historical
+`tool_pre_use` stats readable, and revisit tool-triggered recall only as a
+separate experiment with deterministic activation signals and separate metrics.
+
 Each experiment directory should contain:
 
 - `manifest.json`: run metadata, input paths, strategy names, and primary metrics.

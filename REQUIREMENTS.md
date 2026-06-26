@@ -86,10 +86,10 @@ YAAML is a local, file-first memory layer for coding agents. It watches native a
 
 ## Tool-Specific Recall
 
-1. `yaaml init` installs a Codex PreToolUse hook that can call `yaaml recall --origin tool-pre-use`.
-2. Tool recall is intended for high-signal tool invocations, not every shell command.
-3. Low-signal common git operations are suppressed to reduce context bloat.
-4. Tool recall evals are segmented by `recall_origin=tool_pre_use` and `tool_name`.
+1. `yaaml init` does not install a Codex PreToolUse hook.
+2. Broad tool-triggered recall is deferred because early tool-hook evals showed low relevance, frequent repeated context, and install/update friction.
+3. Historical tool recall evals remain segmented by `recall_origin=tool_pre_use` and `tool_name` for analysis.
+4. Any future tool-triggered recall should be treated as an experiment with deterministic activation signals, clear abstention behavior, and separate metrics from session recall.
 
 ## Skills
 
@@ -242,5 +242,5 @@ The main quality tradeoff metrics are:
 1. Full Claude Code parity.
 2. Agent-native memory ingestion so YAAML recall can become a superset of Codex/Claude native memories.
 3. Dynamic conversation segments that are decoupled from session id and cwd.
-4. Tool-triggered recall beyond the current Codex PreToolUse hook.
+4. Tool-triggered recall experiments using deterministic activation signals rather than a default broad Codex PreToolUse hook.
 5. Web or Obsidian UI.

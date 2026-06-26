@@ -1,8 +1,8 @@
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Output};
 
-use anyhow::Context;
+use anyhow::{bail, Context};
 
 use crate::skills::{self, InitPaths, InitReport};
 
@@ -82,26 +82,33 @@ pub fn uninstall(paths: &ServicePaths) -> anyhow::Result<()> {
 pub fn start(paths: &ServicePaths) -> anyhow::Result<()> {
     if cfg!(target_os = "macos") {
         propagate_provider_env_to_launchd()?;
-        Command::new("launchctl")
-            .arg("bootstrap")
-            .arg(launchd_domain_target()?)
-            .arg(paths.launch_agent_path())
-            .status()
-            .context("failed to run launchctl bootstrap")?;
-        Command::new("launchctl")
-            .arg("kickstart")
-            .arg("-k")
-            .arg(launchd_service_target()?)
-            .status()
-            .context("failed to run launchctl kickstart")?;
+        let service_target = launchd_service_target()?;
+        if !launchd_service_loaded(&service_target)? {
+            let domain_target = launchd_domain_target()?;
+            checked_command(
+                Command::new("launchctl")
+                    .arg("bootstrap")
+                    .arg(domain_target)
+                    .arg(paths.launch_agent_path()),
+                "launchctl bootstrap",
+            )?;
+        }
+        checked_command(
+            Command::new("launchctl")
+                .arg("kickstart")
+                .arg("-k")
+                .arg(service_target),
+            "launchctl kickstart",
+        )?;
     } else {
         import_provider_env_to_systemd()?;
-        Command::new("systemctl")
-            .arg("--user")
-            .arg("start")
-            .arg("yaaml.service")
-            .status()
-            .context("failed to run systemctl start")?;
+        checked_command(
+            Command::new("systemctl")
+                .arg("--user")
+                .arg("start")
+                .arg("yaaml.service"),
+            "systemctl start",
+        )?;
     }
     Ok(())
 }
@@ -109,12 +116,10 @@ pub fn start(paths: &ServicePaths) -> anyhow::Result<()> {
 fn propagate_provider_env_to_launchd() -> anyhow::Result<()> {
     for key in provider_env_keys() {
         if let Ok(value) = std::env::var(key) {
-            Command::new("launchctl")
-                .arg("setenv")
-                .arg(key)
-                .arg(value)
-                .status()
-                .with_context(|| format!("failed to run launchctl setenv {key}"))?;
+            checked_command(
+                Command::new("launchctl").arg("setenv").arg(key).arg(value),
+                &format!("launchctl setenv {key}"),
+            )?;
         }
     }
     Ok(())
@@ -128,12 +133,13 @@ fn import_provider_env_to_systemd() -> anyhow::Result<()> {
     if keys.is_empty() {
         return Ok(());
     }
-    Command::new("systemctl")
-        .arg("--user")
-        .arg("import-environment")
-        .args(keys)
-        .status()
-        .context("failed to import provider environment into systemd")?;
+    checked_command(
+        Command::new("systemctl")
+            .arg("--user")
+            .arg("import-environment")
+            .args(keys),
+        "systemctl import-environment",
+    )?;
     Ok(())
 }
 
@@ -164,18 +170,20 @@ fn redact_provider_env(text: &str) -> String {
 
 pub fn stop() -> anyhow::Result<()> {
     if cfg!(target_os = "macos") {
-        Command::new("launchctl")
-            .arg("bootout")
-            .arg(launchd_service_target()?)
-            .status()
-            .context("failed to run launchctl bootout")?;
+        checked_command(
+            Command::new("launchctl")
+                .arg("bootout")
+                .arg(launchd_service_target()?),
+            "launchctl bootout",
+        )?;
     } else {
-        Command::new("systemctl")
-            .arg("--user")
-            .arg("stop")
-            .arg("yaaml.service")
-            .status()
-            .context("failed to run systemctl stop")?;
+        checked_command(
+            Command::new("systemctl")
+                .arg("--user")
+                .arg("stop")
+                .arg("yaaml.service"),
+            "systemctl stop",
+        )?;
     }
     Ok(())
 }
@@ -195,6 +203,7 @@ pub fn status() -> anyhow::Result<()> {
             "{}",
             redact_provider_env(&String::from_utf8_lossy(&output.stderr))
         );
+        ensure_success(output, "launchctl print")?;
     } else {
         let output = Command::new("systemctl")
             .arg("--user")
@@ -210,8 +219,49 @@ pub fn status() -> anyhow::Result<()> {
             "{}",
             redact_provider_env(&String::from_utf8_lossy(&output.stderr))
         );
+        ensure_success(output, "systemctl status")?;
     }
     Ok(())
+}
+
+fn launchd_service_loaded(service_target: &str) -> anyhow::Result<bool> {
+    let output = Command::new("launchctl")
+        .arg("print")
+        .arg(service_target)
+        .output()
+        .context("failed to run launchctl print")?;
+    Ok(output.status.success())
+}
+
+fn checked_command(command: &mut Command, description: &str) -> anyhow::Result<()> {
+    let output = command
+        .output()
+        .with_context(|| format!("failed to run {description}"))?;
+    ensure_success(output, description)
+}
+
+fn ensure_success(output: Output, description: &str) -> anyhow::Result<()> {
+    if output.status.success() {
+        return Ok(());
+    }
+    let stdout = redact_provider_env(&String::from_utf8_lossy(&output.stdout));
+    let stderr = redact_provider_env(&String::from_utf8_lossy(&output.stderr));
+    bail!(
+        "{description} exited with status {}{}{}{}{}",
+        output.status,
+        if stdout.trim().is_empty() {
+            ""
+        } else {
+            "\nstdout:\n"
+        },
+        stdout.trim_end(),
+        if stderr.trim().is_empty() {
+            ""
+        } else {
+            "\nstderr:\n"
+        },
+        stderr.trim_end()
+    );
 }
 
 fn launchd_service_target() -> anyhow::Result<String> {
@@ -304,6 +354,11 @@ fn write_file(path: &Path, contents: &str) -> anyhow::Result<()> {
 
 #[cfg(test)]
 mod tests {
+    #[cfg(unix)]
+    use std::os::unix::process::ExitStatusExt;
+    #[cfg(unix)]
+    use std::process::ExitStatus;
+
     use tempfile::TempDir;
 
     use super::*;
@@ -361,6 +416,24 @@ mod tests {
         assert!(redacted.contains("OPENAI_API_KEY => [redacted]"));
         assert!(redacted.contains("OTHER => value"));
         assert!(!redacted.contains("sk-test"));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn ensure_success_reports_failed_commands_with_redacted_output() {
+        let output = Output {
+            status: ExitStatus::from_raw(1 << 8),
+            stdout: b"OPENAI_API_KEY => sk-test\n".to_vec(),
+            stderr: b"not loaded\n".to_vec(),
+        };
+
+        let error = ensure_success(output, "launchctl print").unwrap_err();
+        let rendered = error.to_string();
+
+        assert!(rendered.contains("launchctl print exited with status"));
+        assert!(rendered.contains("OPENAI_API_KEY => [redacted]"));
+        assert!(rendered.contains("not loaded"));
+        assert!(!rendered.contains("sk-test"));
     }
 
     #[test]

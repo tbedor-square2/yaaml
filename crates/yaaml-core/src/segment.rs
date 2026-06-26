@@ -40,9 +40,18 @@ pub fn build_conversation_segments(
         ranges.push(range);
     }
 
+    let last_index = ranges.len().saturating_sub(1);
     ranges
         .into_iter()
-        .map(|range| segment_record(session_id, turns, range, timestamp))
+        .enumerate()
+        .map(|(index, range)| {
+            let status = if index == last_index {
+                ConversationSegmentStatus::Active
+            } else {
+                ConversationSegmentStatus::Superseded
+            };
+            segment_record(session_id, turns, range, timestamp, status)
+        })
         .collect()
 }
 
@@ -51,6 +60,7 @@ fn segment_record(
     turns: &[TurnRecord],
     range: SegmentRange,
     timestamp: &str,
+    status: ConversationSegmentStatus,
 ) -> ConversationSegmentRecord {
     let segment_turns = &turns[range.start_index..=range.end_index];
     let context = segment_context(segment_turns);
@@ -68,7 +78,7 @@ fn segment_record(
         summary,
         task_keys: range.keys,
         context: Some(context),
-        status: ConversationSegmentStatus::Active,
+        status,
         created_at: timestamp.to_string(),
         updated_at: timestamp.to_string(),
     }
@@ -173,9 +183,11 @@ mod tests {
         assert_eq!(segments.len(), 2);
         assert_eq!(segments[0].start_turn_ordinal, 1);
         assert_eq!(segments[0].end_turn_ordinal, 2);
+        assert_eq!(segments[0].status, ConversationSegmentStatus::Superseded);
         assert!(segments[0].task_keys.contains(&"pr:483111".to_string()));
         assert_eq!(segments[1].start_turn_ordinal, 3);
         assert_eq!(segments[1].end_turn_ordinal, 4);
+        assert_eq!(segments[1].status, ConversationSegmentStatus::Active);
         assert!(segments[1].task_keys.contains(&"pr:483601".to_string()));
         assert!(segments[1]
             .task_keys

@@ -210,11 +210,18 @@ fn rank_recall_candidate(
         .iter()
         .filter(|key| is_strong_task_key(key))
         .count();
+    let task_identity_key_matches = matched_task_keys
+        .iter()
+        .filter(|key| is_task_state_identity_key(key))
+        .count();
     let weak_task_key_matches = matched_task_keys
         .len()
         .saturating_sub(strong_task_key_matches);
-    let task_key_bonus =
-        (strong_task_key_matches as f32 * 0.28 + weak_task_key_matches as f32 * 0.06).min(0.70);
+    let task_key_bonus = if memory.kind == MemoryKind::TaskState {
+        (task_identity_key_matches as f32 * 0.28 + weak_task_key_matches as f32 * 0.03).min(0.70)
+    } else {
+        (strong_task_key_matches as f32 * 0.28 + weak_task_key_matches as f32 * 0.06).min(0.70)
+    };
     let global_durable_bonus = if memory.scope == MemoryScope::Global
         && matches!(
             memory.kind,
@@ -233,16 +240,16 @@ fn rank_recall_candidate(
         penalty += 0.24;
         penalties.push("same_project_no_task_key_overlap".to_string());
     }
-    if memory.kind == MemoryKind::TaskState && matched_task_keys.is_empty() {
+    if memory.kind == MemoryKind::TaskState && task_identity_key_matches == 0 {
         penalty += 0.45;
-        penalties.push("task_state_without_task_key_overlap".to_string());
+        penalties.push("task_state_without_identity_key_overlap".to_string());
     }
     if memory.scope == MemoryScope::Global
         && memory.kind == MemoryKind::TaskState
-        && matched_task_keys.is_empty()
+        && task_identity_key_matches == 0
     {
         penalty += 0.35;
-        penalties.push("global_task_state_without_task_key_overlap".to_string());
+        penalties.push("global_task_state_without_identity_key_overlap".to_string());
     }
 
     let score =
@@ -289,13 +296,18 @@ fn recall_filter_decision(
         .matched_task_keys
         .iter()
         .any(|key| is_strong_task_key(key));
+    let task_state_identity_key_match = candidate
+        .rank
+        .matched_task_keys
+        .iter()
+        .any(|key| is_task_state_identity_key(key));
     let weak_task_key_match = !candidate.rank.matched_task_keys.is_empty();
     let strong_context = same_work_area
         || (same_repo && candidate.rank.context_score >= 0.36)
         || candidate.rank.context_score >= 0.42;
 
     let mut reasons = Vec::new();
-    if strong_task_key_match {
+    if memory.kind != MemoryKind::TaskState && strong_task_key_match {
         reasons.push("keep:strong_task_key_match".to_string());
         return RecallFilterDecision {
             keep: true,
@@ -305,15 +317,15 @@ fn recall_filter_decision(
 
     match memory.kind {
         MemoryKind::TaskState => {
-            if strong_task_key_match {
-                reasons.push("keep:task_state_strong_task_key_match".to_string());
+            if task_state_identity_key_match {
+                reasons.push("keep:task_state_identity_key_match".to_string());
                 return RecallFilterDecision {
                     keep: true,
                     reasons,
                 };
             }
             if weak_task_key_match {
-                reasons.push("drop:task_state_without_strong_task_key_match".to_string());
+                reasons.push("drop:task_state_without_identity_key_match".to_string());
             } else if same_project && strong_context {
                 reasons.push("drop:stale_task_state_semantic_context_only".to_string());
             } else {
@@ -487,6 +499,14 @@ fn is_strong_task_key(key: &str) -> bool {
                 | "ticket"
                 | "trigger"
         )
+    )
+}
+
+fn is_task_state_identity_key(key: &str) -> bool {
+    let key = key.to_ascii_lowercase();
+    matches!(
+        key.split_once(':').map(|(prefix, _)| prefix),
+        Some("branch" | "metric" | "pr" | "sentry" | "signal" | "ticket" | "trigger")
     )
 }
 
@@ -1177,7 +1197,49 @@ mod tests {
         assert!(debug[0]
             .rank
             .filter_reasons
-            .contains(&"drop:task_state_without_strong_task_key_match".to_string()));
+            .contains(&"drop:task_state_without_identity_key_match".to_string()));
+    }
+
+    #[test]
+    fn path_key_match_alone_does_not_keep_task_state() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![memory(
+            1,
+            "Old file-specific PR status",
+            MemoryKind::TaskState,
+            Some(current_project),
+            vec!["path:riskarbiter/src/main/java/foo.java".to_string()],
+        )];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &["path:riskarbiter/src/main/java/foo.java".to_string()],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &["path:riskarbiter/src/main/java/foo.java".to_string()],
+            5,
+        );
+
+        assert!(selected.is_empty());
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:task_state_without_identity_key_match".to_string()));
     }
 
     #[test]
@@ -1217,7 +1279,7 @@ mod tests {
         assert!(ranked[0]
             .rank
             .penalties
-            .contains(&"task_state_without_task_key_overlap".to_string()));
+            .contains(&"task_state_without_identity_key_overlap".to_string()));
 
         let (selected, debug) =
             select_recall_candidates(ranked, &memories, current_project, &query_context, &[], 5);

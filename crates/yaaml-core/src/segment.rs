@@ -5,6 +5,9 @@ use crate::{
     ConversationSegmentRecord, ConversationSegmentStatus, TurnRecord,
 };
 
+const MAX_SEGMENT_KEYS: usize = 16;
+const MAX_SEGMENT_PATH_KEYS: usize = 4;
+
 pub fn build_conversation_segments(
     session_id: &str,
     turns: &[TurnRecord],
@@ -119,7 +122,7 @@ fn segment_summary(
     if keys.is_empty() {
         format!("Turns {start_turn_ordinal}..={end_turn_ordinal} discuss {context_label}.")
     } else {
-        let rendered_keys = keys.iter().take(8).cloned().collect::<Vec<_>>().join(", ");
+        let rendered_keys = rendered_segment_keys(keys).join(", ");
         format!(
             "Turns {start_turn_ordinal}..={end_turn_ordinal} discuss {context_label} with task keys {rendered_keys}."
         )
@@ -132,11 +135,60 @@ fn overlaps(left: &[String], right: &[String]) -> bool {
 }
 
 fn push_keys(keys: &mut Vec<String>, incoming: Vec<String>) {
+    let mut incoming = incoming;
+    incoming.sort_by_key(|key| segment_key_priority(key));
     for key in incoming {
         if !keys.contains(&key) {
+            if is_path_key(&key) && path_key_count(keys) >= MAX_SEGMENT_PATH_KEYS {
+                continue;
+            }
+            if keys.len() >= MAX_SEGMENT_KEYS && !is_identity_key(&key) {
+                continue;
+            }
             keys.push(key);
         }
     }
+}
+
+fn bounded_segment_keys(keys: Vec<String>) -> Vec<String> {
+    let mut bounded = Vec::new();
+    push_keys(&mut bounded, keys);
+    bounded
+}
+
+fn rendered_segment_keys(keys: &[String]) -> Vec<String> {
+    let mut keys = keys.to_vec();
+    keys.sort_by_key(|key| segment_key_priority(key));
+    keys.into_iter().take(8).collect()
+}
+
+fn segment_key_priority(key: &str) -> u8 {
+    if is_identity_key(key) {
+        0
+    } else if key.starts_with("project:") || key.starts_with("app:") {
+        1
+    } else if key.starts_with("target:") {
+        2
+    } else if key.starts_with("path:") {
+        3
+    } else {
+        4
+    }
+}
+
+fn is_identity_key(key: &str) -> bool {
+    matches!(
+        key.split_once(':').map(|(prefix, _)| prefix),
+        Some("branch" | "metric" | "pr" | "sentry" | "signal" | "ticket" | "trigger")
+    )
+}
+
+fn is_path_key(key: &str) -> bool {
+    key.starts_with("path:")
+}
+
+fn path_key_count(keys: &[String]) -> usize {
+    keys.iter().filter(|key| is_path_key(key)).count()
 }
 
 #[derive(Debug)]
@@ -155,7 +207,7 @@ impl SegmentRange {
             end_index: index,
             start_turn_ordinal: turn_ordinal,
             end_turn_ordinal: turn_ordinal,
-            keys,
+            keys: bounded_segment_keys(keys),
         }
     }
 }
@@ -192,6 +244,47 @@ mod tests {
         assert!(segments[1]
             .task_keys
             .contains(&"path:riskarbiter/src/test/java/footest.java".to_string()));
+    }
+
+    #[test]
+    fn segment_builder_prioritizes_identity_keys_and_caps_paths() {
+        let turns = vec![
+            turn(
+                1,
+                "user: continue PR #483111 for MLP-4410 in \
+                 crates/a/src/lib.rs crates/b/src/lib.rs crates/c/src/lib.rs \
+                 crates/d/src/lib.rs crates/e/src/lib.rs crates/f/src/lib.rs",
+            ),
+            turn(
+                2,
+                "assistant: PR #483111 updated crates/g/src/lib.rs and crates/h/src/lib.rs",
+            ),
+        ];
+
+        let segments = build_conversation_segments("session-1", &turns, "unix:1");
+
+        assert_eq!(segments.len(), 1);
+        let segment = &segments[0];
+        assert_eq!(segment.status, ConversationSegmentStatus::Active);
+        assert!(segment.task_keys.contains(&"pr:483111".to_string()));
+        assert!(segment.task_keys.contains(&"ticket:MLP-4410".to_string()));
+        assert!(
+            segment
+                .task_keys
+                .iter()
+                .filter(|key| key.starts_with("path:"))
+                .count()
+                <= MAX_SEGMENT_PATH_KEYS
+        );
+        let pr_position = segment
+            .summary
+            .find("pr:483111")
+            .expect("summary includes PR key");
+        let path_position = segment
+            .summary
+            .find("path:")
+            .expect("summary includes path key");
+        assert!(pr_position < path_position);
     }
 
     fn turn(ordinal: u64, text: &str) -> TurnRecord {

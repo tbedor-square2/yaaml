@@ -517,7 +517,7 @@ fn task_key_tokens(text: &str) -> Vec<&str> {
 fn trim_task_key_punctuation(character: char) -> bool {
     matches!(
         character,
-        ',' | ';' | '"' | '\'' | '(' | ')' | '[' | ']' | '{' | '}' | '<' | '>' | '`'
+        ',' | ';' | '.' | '"' | '\'' | '(' | ')' | '[' | ']' | '{' | '}' | '<' | '>' | '`'
     )
 }
 
@@ -563,24 +563,61 @@ fn path_key(token: &str) -> Option<String> {
     {
         return None;
     }
-    if !token.contains('/') || token.len() < 6 {
-        return None;
-    }
     let token = strip_path_line_suffix(token);
-    if !has_path_shape(token) {
+    let normalized = normalize_path_token(token)?;
+    if normalized.len() < 6 {
         return None;
     }
-    if !token
+    if !has_path_shape(&normalized) {
+        return None;
+    }
+    if !normalized
         .chars()
         .any(|ch| ch.is_ascii_alphabetic() || ch.is_ascii_digit())
     {
         return None;
     }
-    let normalized = token
+    Some(format!("path:{normalized}"))
+}
+
+fn normalize_path_token(token: &str) -> Option<String> {
+    let token = token.trim();
+    let lower = token.to_ascii_lowercase();
+    if lower.contains("\\n")
+        || lower.contains('\n')
+        || lower.contains('\r')
+        || lower.contains("@@")
+        || lower.contains('|')
+        || lower.contains("/openai-docs-cache/")
+        || lower.starts_with("/tmp/")
+        || lower.starts_with("/var/")
+        || lower.starts_with("/private/var/")
+    {
+        return None;
+    }
+
+    let without_diff_prefix = lower
+        .strip_prefix("a/")
+        .or_else(|| lower.strip_prefix("b/"))
+        .unwrap_or(&lower);
+    let without_local_root = strip_development_root(without_diff_prefix)?;
+    let normalized = without_local_root
         .trim_start_matches("./")
         .trim_end_matches('/')
-        .to_ascii_lowercase();
-    Some(format!("path:{normalized}"))
+        .to_string();
+    if normalized.starts_with("/users/") || normalized.starts_with("/home/") {
+        return None;
+    }
+    Some(normalized)
+}
+
+fn strip_development_root(path: &str) -> Option<&str> {
+    let Some(index) = path.find("/development/") else {
+        return Some(path);
+    };
+    let after_development = &path[index + "/development/".len()..];
+    let (_, relative) = after_development.split_once('/')?;
+    Some(relative)
 }
 
 fn strip_path_line_suffix(token: &str) -> &str {
@@ -1011,13 +1048,38 @@ mod tests {
     }
 
     #[test]
+    fn task_key_extraction_normalizes_noisy_local_paths() {
+        let keys = extract_task_keys(
+            "/Users/tbedor/Development/yaaml/crates/yaaml/src/service.rs \
+             /Users/tbedor/.yaaml/config.toml \
+             /tmp/pr-13972-body.md \
+             /var/folders/cache/openai-docs-cache/codex-manual.md \
+             a/crates/yaaml-store/src/database.rs \
+             subapps/sqc/src/homepage.tsx|clean_abstention \
+             subapps/sqc/src/recent.ts\\n@@\\n",
+        );
+
+        assert!(keys.contains(&"path:crates/yaaml/src/service.rs".to_string()));
+        assert!(keys.contains(&"path:crates/yaaml-store/src/database.rs".to_string()));
+        assert!(!keys.iter().any(|key| key.starts_with("path:/users/")));
+        assert!(!keys.iter().any(|key| key.starts_with("path:/tmp/")));
+        assert!(!keys.iter().any(|key| key.starts_with("path:/var/")));
+        assert!(!keys.iter().any(|key| key.contains("openai-docs-cache")));
+        assert!(!keys.iter().any(|key| key.contains('|')));
+        assert!(!keys.iter().any(|key| key.contains("\\n")));
+        assert!(!keys.contains(&"path:a/crates/yaaml-store/src/database.rs".to_string()));
+    }
+
+    #[test]
     fn task_key_extraction_ignores_generic_branch_words() {
         let keys =
-            extract_task_keys("branch state is clean but branch refs/heads/rust-impl matters");
+            extract_task_keys("branch state is clean but branch refs/heads/rust-impl matters and branch tbedor/segment-oracle`.");
 
         assert!(!keys.contains(&"branch:state".to_string()));
         assert!(!keys.contains(&"branch:clean".to_string()));
         assert!(keys.contains(&"branch:refs/heads/rust-impl".to_string()));
+        assert!(keys.contains(&"branch:tbedor/segment-oracle".to_string()));
+        assert!(!keys.contains(&"branch:tbedor/segment-oracle`.".to_string()));
     }
 
     #[test]

@@ -244,6 +244,7 @@ impl Database {
             "segment_task_keys",
             "ALTER TABLE eval_runs ADD COLUMN segment_task_keys TEXT NOT NULL DEFAULT '[]'",
         )?;
+        self.drop_legacy_segment_events_table()?;
         self.ensure_conversation_segments_table()?;
         if self.needs_eval_run_metadata_backfill()? {
             self.backfill_eval_run_metadata()?;
@@ -341,6 +342,19 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
             self.conn.pragma_update(None, "foreign_keys", "ON")?;
         }
         drop_result?;
+        Ok(())
+    }
+
+    fn drop_legacy_segment_events_table(&self) -> Result<(), DatabaseError> {
+        if !self
+            .table_names()?
+            .iter()
+            .any(|table| table == "segment_events")
+        {
+            return Ok(());
+        }
+        self.conn
+            .execute_batch("DROP TABLE IF EXISTS segment_events;")?;
         Ok(())
     }
 
@@ -2542,6 +2556,92 @@ CREATE TABLE conversation_segments (
             .list_conversation_segments(Some("session-1"), 10)
             .unwrap()
             .is_empty());
+    }
+
+    #[test]
+    fn migration_drops_legacy_segment_events_before_segment_replace() {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+        db.upsert_session(&SessionRecord {
+            id: "session-1".to_string(),
+            agent_type: yaaml_core::AgentType::Codex,
+            project_id: "/tmp/project".to_string(),
+            transcript_file_path: "/tmp/session.jsonl".to_string(),
+            started_at: None,
+            last_seen_at: None,
+        })
+        .unwrap();
+        let original = ConversationSegmentRecord {
+            id: None,
+            session_id: "session-1".to_string(),
+            start_turn_ordinal: 1,
+            end_turn_ordinal: 3,
+            summary: "Turns 1..=3 discuss stale segment events.".to_string(),
+            task_keys: vec!["pr:123".to_string()],
+            context: None,
+            status: ConversationSegmentStatus::Active,
+            created_at: "unix:1".to_string(),
+            updated_at: "unix:1".to_string(),
+        };
+        db.replace_conversation_segments_for_session("session-1", &[original])
+            .unwrap();
+        db.conn
+            .execute_batch(
+                r#"
+CREATE TABLE segment_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    segment_id INTEGER NOT NULL,
+    session_id TEXT NOT NULL,
+    start_ordinal INTEGER NOT NULL,
+    end_ordinal INTEGER NOT NULL,
+    event_kind TEXT NOT NULL,
+    rationale TEXT NOT NULL,
+    payload_json TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY(segment_id) REFERENCES conversation_segments(id),
+    FOREIGN KEY(session_id) REFERENCES sessions(id)
+);
+
+INSERT INTO segment_events (
+    segment_id, session_id, start_ordinal, end_ordinal, event_kind, rationale, payload_json,
+    created_at
+)
+SELECT id, session_id, start_turn_ordinal, end_turn_ordinal, 'test', 'legacy', '{}', 'unix:1'
+FROM conversation_segments
+WHERE session_id = 'session-1';
+"#,
+            )
+            .unwrap();
+
+        db.migrate().unwrap();
+
+        assert!(!db
+            .table_names()
+            .unwrap()
+            .iter()
+            .any(|table| table == "segment_events"));
+        let replacement = ConversationSegmentRecord {
+            id: None,
+            session_id: "session-1".to_string(),
+            start_turn_ordinal: 4,
+            end_turn_ordinal: 5,
+            summary: "Turns 4..=5 discuss replacement segments.".to_string(),
+            task_keys: vec!["pr:456".to_string()],
+            context: None,
+            status: ConversationSegmentStatus::Active,
+            created_at: "unix:2".to_string(),
+            updated_at: "unix:2".to_string(),
+        };
+        assert_eq!(
+            db.replace_conversation_segments_for_session("session-1", &[replacement])
+                .unwrap(),
+            1
+        );
+        let segments = db
+            .list_conversation_segments(Some("session-1"), 10)
+            .unwrap();
+        assert_eq!(segments.len(), 1);
+        assert_eq!(segments[0].task_keys, vec!["pr:456".to_string()]);
     }
 
     #[test]

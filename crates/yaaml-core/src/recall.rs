@@ -558,6 +558,8 @@ fn path_key(token: &str) -> Option<String> {
         || token.contains("://")
         || token.contains("](")
         || token.contains('`')
+        || token.contains('(')
+        || token.contains(')')
         || token.contains('<')
         || token.contains('>')
     {
@@ -715,10 +717,37 @@ fn has_file_like_basename(segment: &str) -> bool {
 fn target_key(token: &str) -> Option<String> {
     let token =
         token.trim_matches(|ch: char| matches!(ch, ',' | ';' | '"' | '\'' | ')' | ']' | '}'));
+    let token = clean_target_token(token)?;
     if !token.starts_with("//") || !token.contains(':') || token.contains("://") {
         return None;
     }
     Some(format!("target:{}", token.to_ascii_lowercase()))
+}
+
+fn clean_target_token(token: &str) -> Option<&str> {
+    let token = token
+        .split("\\n")
+        .next()
+        .unwrap_or(token)
+        .split('\n')
+        .next()
+        .unwrap_or(token)
+        .split('\r')
+        .next()
+        .unwrap_or(token)
+        .split("```")
+        .next()
+        .unwrap_or(token)
+        .trim_matches(|ch: char| matches!(ch, ',' | ';' | '"' | '\'' | ')' | ']' | '}' | '`'));
+    if token.is_empty()
+        || token.contains('(')
+        || token.contains(')')
+        || token.contains('<')
+        || token.contains('>')
+    {
+        return None;
+    }
+    Some(token)
 }
 
 fn branch_key(token: &str) -> Option<String> {
@@ -1182,6 +1211,26 @@ mod tests {
         assert!(!keys.iter().any(|key| key.contains('|')));
         assert!(!keys.iter().any(|key| key.contains("\\n")));
         assert!(!keys.contains(&"path:a/crates/yaaml-store/src/database.rs".to_string()));
+    }
+
+    #[test]
+    fn task_key_extraction_trims_escaped_markdown_suffixes_from_targets() {
+        let keys = extract_task_keys(
+            "//riskarbiter/src/main/java:lib\\n```\\n\\nresult \
+             //riskarbiter/src/test/java/com/squareup/riskarbiter/service/slack:RiskArbiterSlackClientTest`\\n\\nfailed:- \
+             tests(//riskarbiter/src/test/java/com/squareup/riskarbiter/service/actions/rpcs",
+        );
+
+        assert!(keys.contains(&"target://riskarbiter/src/main/java:lib".to_string()));
+        assert!(keys.contains(
+            &"target://riskarbiter/src/test/java/com/squareup/riskarbiter/service/slack:riskarbiterslackclienttest"
+                .to_string()
+        ));
+        assert!(!keys.iter().any(|key| key.contains("\\n")));
+        assert!(!keys.iter().any(|key| key.contains("```")));
+        assert!(!keys.iter().any(|key| key.contains("result")));
+        assert!(!keys.iter().any(|key| key.contains("failed")));
+        assert!(!keys.iter().any(|key| key.starts_with("path:tests(")));
     }
 
     #[test]

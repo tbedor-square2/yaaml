@@ -429,6 +429,9 @@ pub fn extract_task_keys(text: &str) -> Vec<String> {
             continue;
         }
         let lower = token.to_ascii_lowercase();
+        if let Some(key) = prefixed_identity_key(&lower) {
+            push_unique(&mut keys, key);
+        }
         if let Some(pr) = pull_request_key(&lower) {
             push_unique(&mut keys, pr);
         }
@@ -631,6 +634,37 @@ fn pull_request_key(token: &str) -> Option<String> {
         return numeric_token(number).map(|number| format!("pr:{number}"));
     }
     None
+}
+
+fn prefixed_identity_key(token: &str) -> Option<String> {
+    let (prefix, value) = token.split_once(':')?;
+    if !matches!(
+        prefix,
+        "app"
+            | "branch"
+            | "flag"
+            | "generator"
+            | "metric"
+            | "pr"
+            | "project"
+            | "sentry"
+            | "signal"
+            | "task"
+            | "ticket"
+            | "trigger"
+    ) {
+        return None;
+    }
+    let value = value.trim_matches(trim_task_key_punctuation);
+    if value.len() < 2
+        || value.contains("://")
+        || !value
+            .chars()
+            .all(|ch| ch.is_ascii_alphanumeric() || matches!(ch, '_' | '-' | '.' | '/'))
+    {
+        return None;
+    }
+    Some(format!("{prefix}:{value}"))
 }
 
 fn ticket_key(token: &str) -> Option<String> {
@@ -1409,6 +1443,19 @@ mod tests {
         assert!(keys.contains(&"target://riskarbiter/src/test:unit".to_string()));
         assert!(!keys.contains(&"path://riskarbiter/src/test:unit".to_string()));
         assert!(keys.contains(&"tool:yaaml".to_string()));
+    }
+
+    #[test]
+    fn task_key_extraction_finds_prefixed_identity_keys() {
+        let keys = extract_task_keys(
+            "Check trigger:td_11 for flag:riskarbiter-should-fetch-generated-signals-from-mux and generator:payroll_run_update_connected_users.",
+        );
+
+        assert!(keys.contains(&"trigger:td_11".to_string()));
+        assert!(
+            keys.contains(&"flag:riskarbiter-should-fetch-generated-signals-from-mux".to_string())
+        );
+        assert!(keys.contains(&"generator:payroll_run_update_connected_users".to_string()));
     }
 
     #[test]

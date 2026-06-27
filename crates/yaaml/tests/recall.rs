@@ -1453,6 +1453,26 @@ recall_live_turn_window = 2
         updated_at: "2026-06-08T00:00:00Z".to_string(),
     })
     .unwrap();
+    let now_unix = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    db.enqueue_task(&TaskRecord {
+        id: None,
+        kind: TASK_KIND_RECALL_EVAL.to_string(),
+        status: TaskStatus::Queued,
+        priority: 0,
+        payload_json: format!(
+            r#"{{"session_id":"replay-session","memory_ids":[{memory_id}],"recall_at":"unix:{now_unix}"}}"#
+        ),
+        attempts: 0,
+        max_attempts: 5,
+        next_run_at: None,
+        last_error: None,
+        created_at: format!("unix:{now_unix}"),
+        updated_at: format!("unix:{now_unix}"),
+    })
+    .unwrap();
 
     let binary = env!("CARGO_BIN_EXE_yaaml");
     let output = Command::new(binary)
@@ -1487,6 +1507,11 @@ recall_live_turn_window = 2
         .as_str()
         .unwrap()
         .contains("active segment turns 1..=2"));
+    assert_eq!(
+        value["filter_telemetry"]["cooldown_since_unix"],
+        serde_json::Value::Null
+    );
+    assert_eq!(value["filter_telemetry"]["cooldown_suppressed_count"], 0);
 
     let recall_path = session_recall_file_path(&recall_dir, "replay-session");
     assert!(!recall_path.exists());

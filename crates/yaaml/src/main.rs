@@ -3261,6 +3261,7 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
             query_context: None,
             query_source,
             query_timestamp: now.clone(),
+            apply_cooldown: true,
         },
     )?;
     let RecallSearchResult {
@@ -3510,6 +3511,7 @@ fn refresh_missing_recall_file(
             query_context: Some(query_context),
             query_source,
             query_timestamp: now,
+            apply_cooldown: true,
         },
     )?;
     if result.selected_memory_ids.is_empty() {
@@ -3735,6 +3737,7 @@ fn recall_for_historical_turn(
             query_context: Some(query_context),
             query_source,
             query_timestamp: now,
+            apply_cooldown: false,
         },
     )?;
 
@@ -3771,6 +3774,7 @@ struct RecallEmbeddingRequest<'a> {
     query_context: Option<ContextMetadata>,
     query_source: String,
     query_timestamp: String,
+    apply_cooldown: bool,
 }
 
 fn recall_from_embedding(
@@ -3837,10 +3841,12 @@ fn recall_from_embedding(
         &query_context,
         &query_task_keys,
     );
-    let cooldown_since = request.session_id.zip(cooldown_since_unix(
-        &request.query_timestamp,
-        config.recall_memory_cooldown_seconds,
-    ));
+    let cooldown_since = request.apply_cooldown.then_some(()).and_then(|()| {
+        request.session_id.zip(cooldown_since_unix(
+            &request.query_timestamp,
+            config.recall_memory_cooldown_seconds,
+        ))
+    });
     filter_result.telemetry.cooldown_since_unix =
         cooldown_since.as_ref().map(|(_session_id, since)| *since);
     let recent_memory_ids = if let Some((session_id, since_unix)) = cooldown_since {

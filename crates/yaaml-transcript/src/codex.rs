@@ -443,12 +443,31 @@ fn compact_display_text(parts: Vec<String>) -> Option<String> {
 }
 
 fn prefixed_display_text(role: &str, text: &str) -> String {
+    let text = strip_codex_internal_context_blocks(text);
     text.lines()
         .map(str::trim)
         .filter(|line| !line.is_empty())
         .map(|line| format!("{role}: {line}"))
         .collect::<Vec<_>>()
         .join("\n")
+}
+
+fn strip_codex_internal_context_blocks(text: &str) -> String {
+    let mut output = Vec::new();
+    let mut skipping = false;
+    for line in text.lines() {
+        let trimmed = line.trim_start();
+        if trimmed.starts_with("<codex_internal_context") {
+            skipping = true;
+        }
+        if !skipping {
+            output.push(line);
+        }
+        if skipping && trimmed.starts_with("</codex_internal_context>") {
+            skipping = false;
+        }
+    }
+    output.join("\n")
 }
 
 fn truncate_chars(text: &str, max_chars: usize) -> String {
@@ -536,6 +555,44 @@ mod tests {
 
         assert_eq!(parsed.turns.len(), 1);
         assert_eq!(parsed.turns[0].status, TurnStatus::Aborted);
+    }
+
+    #[test]
+    fn strips_codex_internal_context_from_user_messages() {
+        let input = concat!(
+            r#"{"timestamp":"2026-06-08T00:00:00Z","type":"session_meta","payload":{"id":"session-1","cwd":"/tmp/yaaml"}}"#,
+            "\n",
+            r#"{"timestamp":"2026-06-08T00:00:01Z","type":"event_msg","payload":{"type":"task_started","turn_id":"turn-1"}}"#,
+            "\n",
+            r#"{"timestamp":"2026-06-08T00:00:02Z","type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"<codex_internal_context source=\"goal\">\nContinue working toward the active thread goal.\n<objective>old objective</objective>\n</codex_internal_context>"}]}}"#,
+            "\n",
+            r#"{"timestamp":"2026-06-08T00:00:03Z","type":"response_item","payload":{"type":"message","role":"assistant","content":[{"type":"output_text","text":"Continuing the actual work."}]}}"#,
+            "\n",
+            r#"{"timestamp":"2026-06-08T00:00:04Z","type":"event_msg","payload":{"type":"task_complete","turn_id":"turn-1"}}"#,
+            "\n",
+        );
+
+        let parsed =
+            parse_codex_jsonl(Path::new("/tmp/session.jsonl"), input.as_bytes(), 0).unwrap();
+
+        let display_text = parsed.turns[0].display_text.as_deref().unwrap();
+        assert!(!display_text.contains("codex_internal_context"));
+        assert!(!display_text.contains("Continue working toward"));
+        assert!(!display_text.contains("old objective"));
+        assert!(display_text.contains("assistant: Continuing the actual work."));
+    }
+
+    #[test]
+    fn preserves_user_text_around_codex_internal_context() {
+        let display = prefixed_display_text(
+            "user",
+            "please continue the recall experiment\n<codex_internal_context source=\"goal\">\nignore this block\n</codex_internal_context>\nthen summarize results",
+        );
+
+        assert_eq!(
+            display,
+            "user: please continue the recall experiment\nuser: then summarize results"
+        );
     }
 
     #[test]

@@ -19,9 +19,9 @@ use yaaml_core::{
     build_recall_query, derive_project_descriptor, embedded_text_hash, embedding_text,
     extract_task_keys, find_consolidation_clusters, merge_task_keys, parse_eval_judge_response,
     parse_formulation_response, rank_recall_candidates, recall_file_path, render_recall_markdown,
-    session_recall_file_path, write_recall_file, ClusterMemory, Config, EmbeddingRecord,
-    MemoryKind, MemoryRecord, MemoryScope, MemoryValidity, RecallMemory, RecallRankingOptions,
-    SourceTurnRef, TaskRecord, TaskStatus, TurnRecord, VectorIndex,
+    session_recall_file_path, write_recall_file, ClusterMemory, Config, ConversationSegmentStatus,
+    EmbeddingRecord, MemoryKind, MemoryRecord, MemoryScope, MemoryValidity, RecallMemory,
+    RecallRankingOptions, SourceTurnRef, TaskRecord, TaskStatus, TurnRecord, VectorIndex,
 };
 use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
@@ -151,6 +151,14 @@ impl DaemonShutdown {
 }
 
 pub fn ingest_codex_file(db: &Database, transcript_path: &Path) -> anyhow::Result<IngestReport> {
+    ingest_codex_file_with_config(db, &Config::default(), transcript_path)
+}
+
+pub fn ingest_codex_file_with_config(
+    db: &Database,
+    config: &Config,
+    transcript_path: &Path,
+) -> anyhow::Result<IngestReport> {
     let transcript_path_string = transcript_path.display().to_string();
     let offset = db
         .get_cursor(&transcript_path_string)
@@ -202,7 +210,7 @@ pub fn ingest_codex_file(db: &Database, transcript_path: &Path) -> anyhow::Resul
     )
     .context("failed to update transcript cursor")?;
     if inserted_turns > 0 {
-        refresh_conversation_segments_for_session(db, &parsed.session.id)
+        refresh_conversation_segments_for_session(db, config, &parsed.session.id)
             .context("failed to refresh conversation segments")?;
     }
 
@@ -216,13 +224,23 @@ pub fn ingest_codex_file(db: &Database, transcript_path: &Path) -> anyhow::Resul
 
 pub fn refresh_conversation_segments_for_session(
     db: &Database,
+    config: &Config,
     session_id: &str,
 ) -> anyhow::Result<u64> {
+    let session = db
+        .session_by_id(session_id)
+        .context("failed to load session for segment refresh")?
+        .with_context(|| format!("session {session_id} not found"))?;
     let turns = db
         .completed_turns_for_session_range(session_id, 0, u64::MAX)
         .context("failed to load session turns for segment refresh")?;
     let turns = hydrate_turns(db, &turns).context("failed to hydrate segment turns")?;
-    let segments = build_conversation_segments(session_id, &turns, &unix_timestamp());
+    let mut segments = build_conversation_segments(session_id, &turns, &unix_timestamp());
+    if session_is_idle(&session, config) {
+        if let Some(segment) = segments.last_mut() {
+            segment.status = ConversationSegmentStatus::Abandoned;
+        }
+    }
     let written = db
         .replace_conversation_segments_for_session(session_id, &segments)
         .context("failed to persist conversation segments")?;
@@ -256,7 +274,7 @@ pub fn process_codex_backlog(
     }
 
     for file in files {
-        match ingest_codex_file(db, &file.path) {
+        match ingest_codex_file_with_config(db, config, &file.path) {
             Ok(ingested) => {
                 report.processed_files += 1;
                 report.processed_turns += ingested.inserted_turns;
@@ -285,6 +303,7 @@ pub fn process_codex_backlog(
         db.add_backlog_progress(0, 0, 0, queued_memory_jobs, 0, Some(&unix_timestamp()))
             .context("failed to record queued backlog memory tasks")?;
     }
+    expire_idle_conversation_segments(db, config).context("failed to expire idle segments")?;
 
     Ok(report)
 }
@@ -308,7 +327,7 @@ pub fn process_codex_changes(
         let previous_offset = db
             .get_cursor(&file.path.display().to_string())
             .context("failed to read transcript cursor")?;
-        match ingest_codex_file(db, &file.path) {
+        match ingest_codex_file_with_config(db, config, &file.path) {
             Ok(ingested) => {
                 if ingested.next_offset > previous_offset || ingested.inserted_turns > 0 {
                     report.changed_files += 1;
@@ -338,6 +357,7 @@ pub fn process_codex_changes(
     let queued_memory_jobs =
         queue_missing_memory_formulation_tasks(db, config, 10, PartialBatchPolicy::IfSessionIdle)
             .context("failed to queue Codex change memory formulation tasks")?;
+    expire_idle_conversation_segments(db, config).context("failed to expire idle segments")?;
     if queued_memory_jobs > 0 {
         report.queued_memory_jobs += queued_memory_jobs;
         db.add_backlog_progress(0, 0, 0, queued_memory_jobs, 0, Some(&unix_timestamp()))
@@ -1743,6 +1763,22 @@ fn session_is_idle(session: &yaaml_core::SessionRecord, config: &Config) -> bool
     };
     unix_timestamp_seconds().saturating_sub(last_seen_seconds) as u64
         >= config.session_idle_memory_seconds
+}
+
+pub fn expire_idle_conversation_segments(db: &Database, config: &Config) -> anyhow::Result<u64> {
+    let now = unix_timestamp();
+    let mut expired = 0_u64;
+    for (session, _completed_turns) in db
+        .sessions_with_completed_turn_counts()
+        .context("failed to load sessions for segment expiry")?
+    {
+        if session_is_idle(&session, config) {
+            expired += db
+                .abandon_active_conversation_segments_for_session(&session.id, &now)
+                .context("failed to abandon idle session segments")?;
+        }
+    }
+    Ok(expired)
 }
 
 fn timestamp_seconds(timestamp: &str) -> Option<i64> {

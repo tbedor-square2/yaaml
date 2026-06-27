@@ -652,7 +652,7 @@ struct SegmentsBackfillFailure {
 }
 
 fn segments_backfill(args: SegmentsBackfillArgs) -> anyhow::Result<()> {
-    let (_config, db) = open_database_for_cwd()?;
+    let (config, db) = open_database_for_cwd()?;
     let explicit_session = args.session.is_some();
     let sessions = if let Some(session_id) = args.session.as_deref() {
         vec![db
@@ -675,7 +675,7 @@ fn segments_backfill(args: SegmentsBackfillArgs) -> anyhow::Result<()> {
     let mut segments_written = 0_u64;
     let mut failure_details = Vec::new();
     for session in sessions.into_iter().take(limit) {
-        match yaaml::daemon::refresh_conversation_segments_for_session(&db, &session.id) {
+        match yaaml::daemon::refresh_conversation_segments_for_session(&db, &config, &session.id) {
             Ok(written) => {
                 segments_written += written;
                 sessions_processed += 1;

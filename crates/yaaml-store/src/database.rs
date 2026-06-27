@@ -1301,6 +1301,22 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
         Ok(inserted)
     }
 
+    pub fn abandon_active_conversation_segments_for_session(
+        &self,
+        session_id: &str,
+        updated_at: &str,
+    ) -> Result<u64, DatabaseError> {
+        let updated = self.conn.execute(
+            "UPDATE conversation_segments
+             SET status = 'abandoned',
+                 updated_at = ?1
+             WHERE session_id = ?2
+               AND status = 'active'",
+            params![updated_at, session_id],
+        )?;
+        Ok(updated as u64)
+    }
+
     pub fn list_conversation_segments(
         &self,
         session_id: Option<&str>,

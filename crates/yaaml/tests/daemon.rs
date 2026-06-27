@@ -8,7 +8,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use tempfile::TempDir;
 use yaaml::daemon::{
-    dedupe_active_memories, ingest_codex_file, process_codex_backlog, process_codex_changes,
+    dedupe_active_memories, expire_idle_conversation_segments, ingest_codex_file,
+    ingest_codex_file_with_config, process_codex_backlog, process_codex_changes,
     queue_memory_consolidation_if_due, queue_memory_formulation_if_due,
     queue_missing_memory_formulation_tasks, queue_stale_recall_eval_tasks, recover_running_tasks,
     refresh_recall_with_embedding, run_queued_tasks, start_signal_socket, DaemonShutdown,
@@ -61,6 +62,77 @@ fn ingest_recovers_missing_session_row_for_existing_cursor() {
         .session_by_transcript_path(&transcript.display().to_string())
         .unwrap()
         .is_some());
+}
+
+#[test]
+fn ingest_marks_idle_session_final_segment_abandoned() {
+    let tmp = TempDir::new().unwrap();
+    let transcript = tmp.path().join("session.jsonl");
+    fs::write(&transcript, session_meta()).unwrap();
+    append(&transcript, &completed_turn(1));
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+
+    let report = ingest_codex_file_with_config(&db, &Config::default(), &transcript).unwrap();
+
+    assert_eq!(report.inserted_turns, 1);
+    let segments = db
+        .list_conversation_segments(Some("session-1"), 10)
+        .unwrap();
+    assert_eq!(segments.len(), 1);
+    assert_eq!(segments[0].status, ConversationSegmentStatus::Abandoned);
+}
+
+#[test]
+fn idle_segment_expiry_abandons_existing_active_segments() {
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+    db.upsert_session(&SessionRecord {
+        id: "session-1".to_string(),
+        agent_type: AgentType::Codex,
+        project_id: "/tmp/project".to_string(),
+        transcript_file_path: "/tmp/session.jsonl".to_string(),
+        started_at: Some("unix:1".to_string()),
+        last_seen_at: Some("unix:1".to_string()),
+    })
+    .unwrap();
+    db.insert_turn(&TurnRecord {
+        session_id: "session-1".to_string(),
+        turn_id: Some("turn-1".to_string()),
+        ordinal: 0,
+        byte_start: 0,
+        byte_end: 1,
+        observed_at: Some("unix:1".to_string()),
+        status: yaaml_core::TurnStatus::Completed,
+        display_text: None,
+        cwd: None,
+        context: None,
+    })
+    .unwrap();
+    db.replace_conversation_segments_for_session(
+        "session-1",
+        &[ConversationSegmentRecord {
+            id: None,
+            session_id: "session-1".to_string(),
+            start_turn_ordinal: 0,
+            end_turn_ordinal: 0,
+            summary: "Turn 0 discusses stale work.".to_string(),
+            task_keys: Vec::new(),
+            context: None,
+            status: ConversationSegmentStatus::Active,
+            created_at: "unix:1".to_string(),
+            updated_at: "unix:1".to_string(),
+        }],
+    )
+    .unwrap();
+
+    let expired = expire_idle_conversation_segments(&db, &Config::default()).unwrap();
+
+    assert_eq!(expired, 1);
+    let segments = db
+        .list_conversation_segments(Some("session-1"), 10)
+        .unwrap();
+    assert_eq!(segments[0].status, ConversationSegmentStatus::Abandoned);
 }
 
 #[test]

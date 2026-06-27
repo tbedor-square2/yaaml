@@ -32,8 +32,8 @@ pub use recall::{
     active_segment_recall_turns, apply_project_bonus, build_active_segment_recall_query,
     build_recall_query, cosine_similarity, extract_task_keys, infer_memory_kind, merge_task_keys,
     normalize_memory_kind, parse_memory_ids, rank_recall_candidates, recall_file_path,
-    render_recall_markdown, segment_task_keys, select_recall_candidates, session_recall_file_path,
-    write_recall_file, RecallCandidate, RecallMemory, RecallRankDetails, RecallRankingOptions,
-    RecallWrite, VectorHit, VectorIndex,
+    render_recall_markdown, segment_context_markers, segment_task_keys, select_recall_candidates,
+    session_recall_file_path, write_recall_file, RecallCandidate, RecallMemory, RecallRankDetails,
+    RecallRankingOptions, RecallWrite, VectorHit, VectorIndex,
 };
 pub use segment::build_conversation_segments;

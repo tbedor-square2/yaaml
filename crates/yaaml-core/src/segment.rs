@@ -1,8 +1,8 @@
 use std::collections::HashSet;
 
 use crate::{
-    infer_context_from_text, merge_contexts, segment_task_keys, ContextMetadata,
-    ConversationSegmentRecord, ConversationSegmentStatus, TurnRecord,
+    infer_context_from_text, merge_contexts, segment_context_markers, segment_task_keys,
+    ContextMetadata, ConversationSegmentRecord, ConversationSegmentStatus, TurnRecord,
 };
 
 const MAX_SEGMENT_KEYS: usize = 16;
@@ -22,20 +22,30 @@ pub fn build_conversation_segments(
             .as_deref()
             .map(segment_task_keys)
             .unwrap_or_default();
+        let context_markers = segment_context_markers(turn);
         match &mut current {
             None => {
-                current = Some(SegmentRange::new(index, turn.ordinal, keys));
+                current = Some(SegmentRange::new(
+                    index,
+                    turn.ordinal,
+                    keys,
+                    context_markers,
+                ));
             }
-            Some(range)
-                if keys.is_empty() || range.keys.is_empty() || overlaps(&range.keys, &keys) =>
-            {
+            Some(range) if range.matches(&keys, &context_markers) => {
                 range.end_index = index;
                 range.end_turn_ordinal = turn.ordinal;
                 push_keys(&mut range.keys, keys);
+                push_markers(&mut range.context_markers, context_markers);
             }
             Some(_) => {
                 ranges.push(current.take().expect("current segment exists"));
-                current = Some(SegmentRange::new(index, turn.ordinal, keys));
+                current = Some(SegmentRange::new(
+                    index,
+                    turn.ordinal,
+                    keys,
+                    context_markers,
+                ));
             }
         }
     }
@@ -134,6 +144,10 @@ fn overlaps(left: &[String], right: &[String]) -> bool {
     right.iter().any(|key| left.contains(key))
 }
 
+fn context_conflicts(left: &[String], right: &[String]) -> bool {
+    !left.is_empty() && !right.is_empty() && !overlaps(left, right)
+}
+
 fn push_keys(keys: &mut Vec<String>, incoming: Vec<String>) {
     let mut incoming = incoming;
     incoming.sort_by_key(|key| segment_key_priority(key));
@@ -146,6 +160,14 @@ fn push_keys(keys: &mut Vec<String>, incoming: Vec<String>) {
                 continue;
             }
             keys.push(key);
+        }
+    }
+}
+
+fn push_markers(markers: &mut Vec<String>, incoming: Vec<String>) {
+    for marker in incoming {
+        if !markers.contains(&marker) {
+            markers.push(marker);
         }
     }
 }
@@ -209,17 +231,31 @@ struct SegmentRange {
     start_turn_ordinal: u64,
     end_turn_ordinal: u64,
     keys: Vec<String>,
+    context_markers: Vec<String>,
 }
 
 impl SegmentRange {
-    fn new(index: usize, turn_ordinal: u64, keys: Vec<String>) -> Self {
+    fn new(
+        index: usize,
+        turn_ordinal: u64,
+        keys: Vec<String>,
+        context_markers: Vec<String>,
+    ) -> Self {
         Self {
             start_index: index,
             end_index: index,
             start_turn_ordinal: turn_ordinal,
             end_turn_ordinal: turn_ordinal,
             keys: bounded_segment_keys(keys),
+            context_markers,
         }
+    }
+
+    fn matches(&self, keys: &[String], context_markers: &[String]) -> bool {
+        if !self.keys.is_empty() && !keys.is_empty() {
+            return overlaps(&self.keys, keys);
+        }
+        !context_conflicts(&self.context_markers, context_markers)
     }
 }
 
@@ -296,6 +332,28 @@ mod tests {
             .find("path:")
             .expect("summary includes path key");
         assert!(pr_position < path_position);
+    }
+
+    #[test]
+    fn segment_builder_splits_on_keyless_context_shift() {
+        let turns = vec![
+            turn(1, "user: keep improving YAAML recall eval quality"),
+            turn(2, "assistant: adjusted recall metrics"),
+            turn(3, "user: now investigate Risk Arbiter rollout behavior"),
+            turn(4, "assistant: checked Risk Arbiter staging evidence"),
+        ];
+
+        let segments = build_conversation_segments("session-1", &turns, "unix:1");
+
+        assert_eq!(segments.len(), 2);
+        assert_eq!(segments[0].start_turn_ordinal, 1);
+        assert_eq!(segments[0].end_turn_ordinal, 2);
+        assert_eq!(segments[0].status, ConversationSegmentStatus::Superseded);
+        assert_eq!(segments[1].start_turn_ordinal, 3);
+        assert_eq!(segments[1].end_turn_ordinal, 4);
+        assert_eq!(segments[1].status, ConversationSegmentStatus::Active);
+        assert!(segments[0].summary.contains("yaaml"));
+        assert!(segments[1].summary.contains("riskarbiter"));
     }
 
     fn turn(ordinal: u64, text: &str) -> TurnRecord {

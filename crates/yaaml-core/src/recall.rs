@@ -7,8 +7,8 @@ use serde::Serialize;
 
 use crate::paths::project_hash;
 use crate::{
-    context_score, ContextMetadata, ConversationSegmentStatus, MemoryKind, MemoryRecord,
-    MemoryScope, MemoryValidity, TurnRecord,
+    context_score, infer_context_from_text, ContextMetadata, ConversationSegmentStatus, MemoryKind,
+    MemoryRecord, MemoryScope, MemoryValidity, TurnRecord,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -994,22 +994,25 @@ pub fn active_segment_recall_turns(turns: &[TurnRecord]) -> &[TurnRecord] {
         return turns;
     }
 
-    let Some(seed_index) = (0..turns.len())
-        .rev()
-        .find(|index| !turn_segment_keys(&turns[*index]).is_empty())
-    else {
+    let Some(seed_index) = (0..turns.len()).rev().find(|index| {
+        !turn_segment_keys(&turns[*index]).is_empty()
+            || !turn_segment_context_markers(&turns[*index]).is_empty()
+    }) else {
         return &turns[turns.len().saturating_sub(FALLBACK_SUFFIX_TURNS)..];
     };
 
     let mut active_keys = turn_segment_keys(&turns[seed_index]);
+    let mut active_markers = turn_segment_context_markers(&turns[seed_index]);
     let mut start = seed_index;
     for index in (0..seed_index).rev() {
         let keys = turn_segment_keys(&turns[index]);
-        if keys.is_empty() {
+        let markers = turn_segment_context_markers(&turns[index]);
+        if keys.is_empty() && markers.is_empty() {
             continue;
         }
-        if keys.iter().any(|key| active_keys.contains(key)) {
-            active_keys.extend(keys);
+        if segment_evidence_matches(&active_keys, &active_markers, &keys, &markers) {
+            extend_unique_set(&mut active_keys, keys);
+            extend_unique_set(&mut active_markers, markers);
             start = index;
         } else {
             break;
@@ -1027,6 +1030,32 @@ fn turn_segment_keys(turn: &TurnRecord) -> HashSet<String> {
         .collect()
 }
 
+fn turn_segment_context_markers(turn: &TurnRecord) -> HashSet<String> {
+    segment_context_markers(turn).into_iter().collect()
+}
+
+fn segment_evidence_matches(
+    active_keys: &HashSet<String>,
+    active_markers: &HashSet<String>,
+    incoming_keys: &HashSet<String>,
+    incoming_markers: &HashSet<String>,
+) -> bool {
+    if !active_keys.is_empty() && !incoming_keys.is_empty() {
+        return incoming_keys.iter().any(|key| active_keys.contains(key));
+    }
+    !segment_context_conflicts(active_markers, incoming_markers)
+}
+
+fn segment_context_conflicts(left: &HashSet<String>, right: &HashSet<String>) -> bool {
+    !left.is_empty() && !right.is_empty() && !right.iter().any(|marker| left.contains(marker))
+}
+
+fn extend_unique_set(values: &mut HashSet<String>, incoming: HashSet<String>) {
+    for value in incoming {
+        values.insert(value);
+    }
+}
+
 pub fn segment_task_keys(text: &str) -> Vec<String> {
     let user_keys = segment_task_keys_from_lines(
         text.lines()
@@ -1039,6 +1068,57 @@ pub fn segment_task_keys(text: &str) -> Vec<String> {
         let trimmed = line.trim_start();
         !trimmed.starts_with("assistant:") && !trimmed.starts_with("message:")
     }))
+}
+
+pub fn segment_context_markers(turn: &TurnRecord) -> Vec<String> {
+    let mut markers = Vec::new();
+    if let Some(display_text) = &turn.display_text {
+        let text_context = infer_context_from_text(display_text);
+        push_segment_context_markers(&mut markers, &text_context);
+    }
+    if markers.is_empty() {
+        if let Some(context) = &turn.context {
+            push_segment_context_markers(&mut markers, context);
+        }
+    }
+    markers
+}
+
+fn push_segment_context_markers(markers: &mut Vec<String>, context: &ContextMetadata) {
+    if let Some(repo_id) = &context.repo_id {
+        push_unique(markers, format!("repo:{repo_id}"));
+    }
+    if let Some(work_area) = &context.work_area {
+        push_unique(markers, format!("work_area:{work_area}"));
+    }
+    if let Some(activity_domain) = &context.activity_domain {
+        if activity_domain != "code" {
+            push_unique(markers, format!("domain:{activity_domain}"));
+        }
+    }
+    for tag in context
+        .subject_tags
+        .iter()
+        .filter(|tag| high_signal_segment_marker_tag(tag))
+    {
+        push_unique(markers, format!("tag:{tag}"));
+    }
+}
+
+fn high_signal_segment_marker_tag(tag: &str) -> bool {
+    !matches!(
+        tag,
+        "linear"
+            | "work-tracking"
+            | "github"
+            | "pr"
+            | "ci"
+            | "docs"
+            | "slack"
+            | "java"
+            | "codex"
+            | "claude-code"
+    )
 }
 
 fn segment_task_keys_from_lines<'a>(lines: impl Iterator<Item = &'a str>) -> Vec<String> {
@@ -2329,6 +2409,27 @@ assistant: still use yaaml recall for context.
         assert!(!query.contains("PR #483111"));
         assert!(query.contains("PR #483601"));
         assert!(query.contains("FooTest.java"));
+    }
+
+    #[test]
+    fn active_segment_query_stops_at_keyless_context_shift() {
+        let turns = vec![
+            turn(1, "user: keep improving YAAML recall eval quality"),
+            turn(2, "assistant: adjusted YAAML eval metrics"),
+            turn(3, "user: now investigate Risk Arbiter rollout behavior"),
+            turn(4, "assistant: checked Risk Arbiter staging evidence"),
+            turn(5, "user: keep going"),
+        ];
+
+        let active = active_segment_recall_turns(&turns);
+        let query = build_active_segment_recall_query(&turns, 4_000, 80);
+
+        assert_eq!(
+            active.iter().map(|turn| turn.ordinal).collect::<Vec<_>>(),
+            vec![3, 4, 5]
+        );
+        assert!(!query.contains("YAAML recall eval"));
+        assert!(query.contains("Risk Arbiter rollout"));
     }
 
     fn empty_rank() -> RecallRankDetails {

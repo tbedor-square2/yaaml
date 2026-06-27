@@ -1919,6 +1919,14 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
     }
 
     pub fn list_eval_runs(&self, limit: usize) -> Result<Vec<EvalRunRecord>, DatabaseError> {
+        self.list_eval_runs_filtered(limit, None)
+    }
+
+    pub fn list_eval_runs_filtered(
+        &self,
+        limit: usize,
+        since_run_id: Option<i64>,
+    ) -> Result<Vec<EvalRunRecord>, DatabaseError> {
         let mut stmt = self.conn.prepare(
             "SELECT r.id, r.strategy, r.started_at, r.completed_at, r.config_json,
                     r.session_id, r.turn_ordinal, r.agent_turn_id, r.recall_origin,
@@ -1933,11 +1941,15 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
                     END AS score
              FROM eval_runs r
              LEFT JOIN eval_results er ON er.eval_run_id = r.id
+             WHERE (?1 IS NULL OR r.id >= ?1)
              GROUP BY r.id, r.strategy, r.started_at, r.completed_at, r.config_json
              ORDER BY r.id DESC
-             LIMIT ?1",
+             LIMIT ?2",
         )?;
-        let rows = stmt.query_map(params![u64_to_i64(limit as u64)], read_eval_run_record)?;
+        let rows = stmt.query_map(
+            params![since_run_id, u64_to_i64(limit as u64)],
+            read_eval_run_record,
+        )?;
         let mut runs = Vec::new();
         for row in rows {
             runs.push(row?);

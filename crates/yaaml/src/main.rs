@@ -145,6 +145,9 @@ struct EvalListArgs {
     /// Maximum runs to show.
     #[arg(long, default_value_t = 10)]
     limit: usize,
+    /// Only include eval runs with this id or newer.
+    #[arg(long)]
+    since_run: Option<i64>,
     /// Emit machine-readable JSON.
     #[arg(long)]
     json: bool,
@@ -164,6 +167,9 @@ struct EvalSummaryArgs {
     /// Maximum recent runs to summarize.
     #[arg(long, default_value_t = 50)]
     limit: usize,
+    /// Only include eval runs with this id or newer.
+    #[arg(long)]
+    since_run: Option<i64>,
     /// Emit machine-readable JSON.
     #[arg(long)]
     json: bool,
@@ -174,6 +180,9 @@ struct EvalMemoriesArgs {
     /// Maximum recent eval runs to inspect.
     #[arg(long, default_value_t = 200)]
     eval_limit: usize,
+    /// Only include eval runs with this id or newer.
+    #[arg(long)]
+    since_run: Option<i64>,
     /// Maximum memories to show.
     #[arg(long, default_value_t = 25)]
     limit: usize,
@@ -1668,7 +1677,7 @@ fn eval_list(args: EvalListArgs) -> anyhow::Result<()> {
         .with_context(|| format!("failed to open {}", display(&db_path)))?;
     db.migrate().context("failed to migrate database")?;
     let runs = db
-        .list_eval_runs(args.limit)
+        .list_eval_runs_filtered(args.limit, args.since_run)
         .context("failed to list eval runs")?;
     let runs = runs.into_iter().map(EvalListRun::from).collect::<Vec<_>>();
     if args.json {
@@ -1872,7 +1881,7 @@ fn eval_summary(args: EvalSummaryArgs) -> anyhow::Result<()> {
         .with_context(|| format!("failed to open {}", display(&db_path)))?;
     db.migrate().context("failed to migrate database")?;
     let runs = db
-        .list_eval_runs(args.limit)
+        .list_eval_runs_filtered(args.limit, args.since_run)
         .context("failed to list eval runs")?;
     let summary = build_eval_summary(&db, runs)?;
 
@@ -1892,7 +1901,7 @@ fn eval_memories(args: EvalMemoriesArgs) -> anyhow::Result<()> {
         .with_context(|| format!("failed to open {}", display(&db_path)))?;
     db.migrate().context("failed to migrate database")?;
     let runs = db
-        .list_eval_runs(args.eval_limit)
+        .list_eval_runs_filtered(args.eval_limit, args.since_run)
         .context("failed to list eval runs")?;
     let diagnostics = build_eval_memory_diagnostics(&db, runs, args.sort, args.limit)?;
 

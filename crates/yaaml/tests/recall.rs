@@ -1058,7 +1058,7 @@ recall_llm_filter_enabled = false
                 .to_string(),
             scope: MemoryScope::Project,
             kind: MemoryKind::Workflow,
-            task_keys: vec!["bazel".to_string()],
+            task_keys: vec!["target://foo:bar".to_string()],
             source_turn_refs: Vec::new(),
             created_at: "2026-06-08T00:00:00Z".to_string(),
             updated_at: "2026-06-08T00:00:00Z".to_string(),

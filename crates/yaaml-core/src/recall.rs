@@ -306,6 +306,10 @@ fn recall_filter_decision(
         .any(|key| is_task_state_identity_key(key));
     let weak_task_key_match = !candidate.rank.matched_task_keys.is_empty();
     let query_has_task_identity = has_recall_match_task_key(query_task_keys);
+    let episodic_durable_task_key_mismatch = is_episodic_durable(memory)
+        && query_has_task_identity
+        && has_recall_match_task_key(&memory.task_keys)
+        && candidate.rank.matched_task_keys.is_empty();
     let strong_context = same_work_area
         || (same_repo && candidate.rank.context_score >= 0.36)
         || candidate.rank.context_score >= 0.42;
@@ -351,6 +355,13 @@ fn recall_filter_decision(
             }
         }
         MemoryKind::ProjectFact => {
+            if episodic_durable_task_key_mismatch {
+                reasons.push("drop:episodic_durable_task_key_mismatch".to_string());
+                return RecallFilterDecision {
+                    keep: false,
+                    reasons,
+                };
+            }
             if query_has_task_identity
                 && candidate.rank.matched_task_keys.is_empty()
                 && candidate.rank.context_score < 0.42
@@ -376,6 +387,13 @@ fn recall_filter_decision(
             }
         }
         MemoryKind::Preference | MemoryKind::Lesson | MemoryKind::Workflow => {
+            if episodic_durable_task_key_mismatch {
+                reasons.push("drop:episodic_durable_task_key_mismatch".to_string());
+                return RecallFilterDecision {
+                    keep: false,
+                    reasons,
+                };
+            }
             if memory.scope == MemoryScope::Global {
                 if candidate.rank.context_score < 0.0 && !weak_task_key_match {
                     reasons.push("drop:global_durable_wrong_context".to_string());
@@ -514,6 +532,10 @@ fn has_recall_match_task_key(task_keys: &[String]) -> bool {
     task_keys.iter().any(|key| is_recall_match_task_key(key))
 }
 
+fn is_episodic_durable(memory: &MemoryRecord) -> bool {
+    matches!(memory.kind, MemoryKind::ProjectFact | MemoryKind::Workflow)
+}
+
 fn is_recall_match_task_key(key: &str) -> bool {
     key.split_once(':')
         .map(|(prefix, _)| prefix != "tool")
@@ -527,12 +549,15 @@ fn is_strong_task_key(key: &str) -> bool {
         Some(
             "app"
                 | "branch"
+                | "flag"
+                | "generator"
                 | "metric"
                 | "path"
                 | "pr"
                 | "project"
                 | "sentry"
                 | "signal"
+                | "task"
                 | "target"
                 | "ticket"
                 | "trigger"
@@ -547,11 +572,14 @@ fn is_strong_recall_task_key(key: &str) -> bool {
         Some(
             "app"
                 | "branch"
+                | "flag"
+                | "generator"
                 | "metric"
                 | "pr"
                 | "project"
                 | "sentry"
                 | "signal"
+                | "task"
                 | "target"
                 | "ticket"
                 | "trigger"
@@ -563,7 +591,18 @@ fn is_task_state_identity_key(key: &str) -> bool {
     let key = key.to_ascii_lowercase();
     matches!(
         key.split_once(':').map(|(prefix, _)| prefix),
-        Some("branch" | "metric" | "pr" | "sentry" | "signal" | "ticket" | "trigger")
+        Some(
+            "branch"
+                | "flag"
+                | "generator"
+                | "metric"
+                | "pr"
+                | "sentry"
+                | "signal"
+                | "task"
+                | "ticket"
+                | "trigger"
+        )
     )
 }
 
@@ -1984,6 +2023,152 @@ assistant: still use yaaml recall for context.
             .rank
             .filter_reasons
             .contains(&"keep:project_fact_context".to_string()));
+    }
+
+    #[test]
+    fn project_fact_with_identity_mismatch_does_not_survive_strong_context() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![MemoryRecord {
+            body: "RiskArbiter flag riskarbiter-should-fetch-generated-signals-from-mux was audited for TD_11."
+                .to_string(),
+            project_descriptor: Some("github.com/squareup/java riskarbiter TD_11".to_string()),
+            ..memory(
+                1,
+                "Old RiskArbiter flag fact",
+                MemoryKind::ProjectFact,
+                None,
+                vec!["flag:old-riskarbiter-flag".to_string()],
+            )
+        }];
+        let query_context = ContextMetadata {
+            repo_id: Some("squareup/java".to_string()),
+            work_area: Some("riskarbiter".to_string()),
+            activity_domain: Some("code".to_string()),
+            subject_tags: vec![
+                "java".to_string(),
+                "riskarbiter".to_string(),
+                "td_11".to_string(),
+            ],
+            ..ContextMetadata::default()
+        };
+        let query_keys = vec!["flag:riskarbiter-compute-ra-mux-generator-parity".to_string()];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &query_context,
+            &query_keys,
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+        assert!(ranked[0].rank.context_score >= 0.42);
+
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &query_context,
+            &query_keys,
+            5,
+        );
+
+        assert!(selected.is_empty());
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:episodic_durable_task_key_mismatch".to_string()));
+    }
+
+    #[test]
+    fn workflow_with_identity_mismatch_does_not_survive_same_project() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![memory(
+            1,
+            "Old PR workflow",
+            MemoryKind::Workflow,
+            Some(current_project),
+            vec!["pr:483111".to_string()],
+        )];
+        let query_keys = vec!["pr:481860".to_string()];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &query_keys,
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &query_keys,
+            5,
+        );
+
+        assert!(selected.is_empty());
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:episodic_durable_task_key_mismatch".to_string()));
+    }
+
+    #[test]
+    fn workflow_with_matching_generated_identity_keeps() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![memory(
+            1,
+            "TD_11 payroll workflow",
+            MemoryKind::Workflow,
+            Some(current_project),
+            vec!["generator:payroll_run_update_connected_users".to_string()],
+        )];
+        let query_keys = vec!["generator:payroll_run_update_connected_users".to_string()];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &query_keys,
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &query_keys,
+            5,
+        );
+
+        assert_eq!(selected.len(), 1);
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"keep:strong_task_key_match".to_string()));
     }
 
     #[test]

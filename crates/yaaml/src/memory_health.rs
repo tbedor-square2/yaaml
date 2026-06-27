@@ -142,11 +142,11 @@ fn diagnose_memory_failure(
         .to_ascii_lowercase();
 
     if judged_count >= 5 && accumulator.useful_count == 0 && low_rate >= 0.70 {
-        if rationale_mentions_wrong_context(&latest_low) {
-            return "wrong_context".to_string();
-        }
         if looks_stale_or_episodic(memory, &latest_low) {
             return "stale_episodic".to_string();
+        }
+        if rationale_mentions_wrong_context(&latest_low) {
+            return "wrong_context".to_string();
         }
         if body_len < 300 {
             return "vague_under_contextualized".to_string();

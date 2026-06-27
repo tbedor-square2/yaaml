@@ -310,6 +310,8 @@ fn recall_filter_decision(
         && query_has_task_identity
         && has_recall_match_task_key(&memory.task_keys)
         && candidate.rank.matched_task_keys.is_empty();
+    let transient_plan_without_identity =
+        is_transient_plan_memory(memory) && !task_state_identity_key_match;
     let strong_context = same_work_area
         || (same_repo && candidate.rank.context_score >= 0.36)
         || candidate.rank.context_score >= 0.42;
@@ -355,6 +357,13 @@ fn recall_filter_decision(
             }
         }
         MemoryKind::ProjectFact => {
+            if transient_plan_without_identity {
+                reasons.push("drop:transient_plan_without_identity_key".to_string());
+                return RecallFilterDecision {
+                    keep: false,
+                    reasons,
+                };
+            }
             if episodic_durable_task_key_mismatch {
                 reasons.push("drop:episodic_durable_task_key_mismatch".to_string());
                 return RecallFilterDecision {
@@ -387,6 +396,13 @@ fn recall_filter_decision(
             }
         }
         MemoryKind::Preference | MemoryKind::Lesson | MemoryKind::Workflow => {
+            if transient_plan_without_identity {
+                reasons.push("drop:transient_plan_without_identity_key".to_string());
+                return RecallFilterDecision {
+                    keep: false,
+                    reasons,
+                };
+            }
             if episodic_durable_task_key_mismatch {
                 reasons.push("drop:episodic_durable_task_key_mismatch".to_string());
                 return RecallFilterDecision {
@@ -476,6 +492,15 @@ pub fn infer_memory_kind(title: &str, body: &str, scope: MemoryScope) -> MemoryK
         || text.contains("repeatedly prefers")
     {
         MemoryKind::Preference
+    } else if looks_like_transient_task_state(title, body)
+        || text.contains("pr ")
+        || text.contains("pr #")
+        || text.contains("pull/")
+        || text.contains("branch")
+        || text.contains("status")
+        || text.contains("blocked")
+    {
+        MemoryKind::TaskState
     } else if text.contains("workflow")
         || text.contains("command")
         || text.contains("run ")
@@ -483,13 +508,6 @@ pub fn infer_memory_kind(title: &str, body: &str, scope: MemoryScope) -> MemoryK
         || text.contains("skill")
     {
         MemoryKind::Workflow
-    } else if text.contains("pr ")
-        || text.contains("pull/")
-        || text.contains("branch")
-        || text.contains("status")
-        || text.contains("blocked")
-    {
-        MemoryKind::TaskState
     } else if scope == MemoryScope::Project {
         MemoryKind::ProjectFact
     } else {
@@ -505,12 +523,43 @@ pub fn normalize_memory_kind(
 ) -> MemoryKind {
     match kind.map(str::trim) {
         Some("preference") => MemoryKind::Preference,
+        Some("workflow") if looks_like_transient_task_state(title, body) => MemoryKind::TaskState,
         Some("workflow") => MemoryKind::Workflow,
+        Some("project_fact") | Some("project-fact")
+            if looks_like_transient_task_state(title, body) =>
+        {
+            MemoryKind::TaskState
+        }
         Some("project_fact") | Some("project-fact") => MemoryKind::ProjectFact,
         Some("task_state") | Some("task-state") => MemoryKind::TaskState,
+        Some("lesson") if looks_like_transient_task_state(title, body) => MemoryKind::TaskState,
         Some("lesson") => MemoryKind::Lesson,
         _ => infer_memory_kind(title, body, scope),
     }
+}
+
+fn looks_like_transient_task_state(title: &str, body: &str) -> bool {
+    let text = format!("{title}\n{body}").to_ascii_lowercase();
+    [
+        "current pr",
+        "current branch",
+        "current progress",
+        "current status",
+        "implementation order",
+        "implementation plan",
+        "next actionable",
+        "next fix",
+        "next step",
+        "open question",
+        "proposed fix",
+        "proposed multi-step fix",
+        "recommended fix",
+        "remaining work",
+        "follow-up",
+        "todo",
+    ]
+    .iter()
+    .any(|needle| text.contains(needle))
 }
 
 fn matched_task_keys(query_task_keys: &[String], memory_task_keys: &[String]) -> Vec<String> {
@@ -540,6 +589,11 @@ fn is_episodic_durable(memory: &MemoryRecord) -> bool {
         memory.kind,
         MemoryKind::Lesson | MemoryKind::ProjectFact | MemoryKind::Workflow
     )
+}
+
+pub fn is_transient_plan_memory(memory: &MemoryRecord) -> bool {
+    memory.kind != MemoryKind::Preference
+        && looks_like_transient_task_state(&memory.title, &memory.body)
 }
 
 fn is_recall_match_task_key(key: &str) -> bool {
@@ -2256,6 +2310,79 @@ assistant: still use yaaml recall for context.
             .rank
             .filter_reasons
             .contains(&"drop:episodic_durable_task_key_mismatch".to_string()));
+    }
+
+    #[test]
+    fn transient_plan_workflow_without_identity_does_not_survive_same_project() {
+        let current_project = "/Users/tbedor/Development/yaaml";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![memory(
+            1,
+            "Segment implementation order",
+            MemoryKind::Workflow,
+            Some(current_project),
+            Vec::new(),
+        )];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &[],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &[],
+            5,
+        );
+
+        assert!(selected.is_empty());
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:transient_plan_without_identity_key".to_string()));
+    }
+
+    #[test]
+    fn transient_plan_kind_normalization_prefers_task_state() {
+        assert_eq!(
+            normalize_memory_kind(
+                Some("workflow"),
+                "Segment-based recall architecture",
+                "Proposed multi-step fix with implementation order and backfill before ranking.",
+                MemoryScope::Project,
+            ),
+            MemoryKind::TaskState
+        );
+        assert_eq!(
+            normalize_memory_kind(
+                Some("workflow"),
+                "Use tmux for long-running jobs",
+                "When a long-running process must survive, start it in tmux.",
+                MemoryScope::Project,
+            ),
+            MemoryKind::Workflow
+        );
+        assert_eq!(
+            normalize_memory_kind(
+                Some("lesson"),
+                "YAAML recall quality: task drift is the main failure mode",
+                "Stale task-state memories, like a PR being ready for review, can be recalled after the task completed. The durable lesson is to use segment identity and task-state expiry.",
+                MemoryScope::Project,
+            ),
+            MemoryKind::Lesson
+        );
     }
 
     #[test]

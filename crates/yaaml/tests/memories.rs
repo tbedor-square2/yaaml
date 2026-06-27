@@ -172,6 +172,134 @@ fn memories_health_hides_inactive_memories_by_default() {
     );
 }
 
+#[test]
+fn memories_apply_health_deactivates_only_high_confidence_actions() {
+    let fixture = MemoryFixture::new();
+    fixture.insert_session_with_turns(1);
+    let stale_memory_id = fixture.insert_memory_with(
+        "Current PR is ready for review",
+        "The current PR is ready for review and only needs a final push before the task is done.",
+        true,
+        yaaml_core::MemoryKind::TaskState,
+        vec!["pr:123".to_string()],
+    );
+    let low_value_memory_id = fixture.insert_memory_with(
+        "Verbose recall quality note",
+        "This memory has repeatedly failed to provide value in recall evaluations. It contains enough detail to avoid being classified as vague, but the content is generic and has not helped the agent choose a better action across many judged recall attempts. The extra sentences make this a substantive but consistently low-value memory rather than a short under-contextualized note.",
+        true,
+        yaaml_core::MemoryKind::Lesson,
+        Vec::new(),
+    );
+    let wrong_context_memory_id = fixture.insert_memory_with(
+        "Snowflake flag telemetry",
+        "The APP_POS_PLAT.DEV_TOOLS.CLI_EXECUTIONS table stores CLI flags for a narrow sq-riskarbiter telemetry analysis.",
+        true,
+        yaaml_core::MemoryKind::ProjectFact,
+        vec![
+            "table:cli_executions".to_string(),
+            "field:command_line".to_string(),
+            "field:args".to_string(),
+            "field:new_args".to_string(),
+            "pattern:--json".to_string(),
+            "tool:sq".to_string(),
+        ],
+    );
+    let useful_memory_id = fixture.insert_memory_with(
+        "Use tmux for long-running jobs",
+        "When a long-running process must survive beyond the current interaction, start it in tmux and inspect it with capture-pane.",
+        true,
+        yaaml_core::MemoryKind::Workflow,
+        vec!["tool:tmux".to_string()],
+    );
+    fixture.insert_eval_scores(
+        stale_memory_id,
+        &[
+            ("1", "The stale task state is unrelated."),
+            ("1", "This old PR status is obsolete."),
+            ("2", "The task-state memory is stale."),
+            ("1", "This current PR note no longer applies."),
+            ("1", "The remembered status is irrelevant."),
+        ],
+    );
+    fixture.insert_eval_scores(
+        low_value_memory_id,
+        &[
+            ("1", "Not useful."),
+            ("2", "Not actionable."),
+            ("1", "Too generic."),
+            ("2", "Did not help."),
+            ("1", "No useful signal."),
+        ],
+    );
+    fixture.insert_eval_scores(
+        wrong_context_memory_id,
+        &[
+            (
+                "1",
+                "The recalled context is unrelated to the active objective.",
+            ),
+            ("1", "This is the wrong context for the current project."),
+            ("2", "The memory is from a different domain."),
+            ("1", "The recalled telemetry details are irrelevant."),
+            ("1", "There is a mismatch with this coding task."),
+        ],
+    );
+    fixture.insert_eval_scores(
+        useful_memory_id,
+        &[
+            ("5", "Directly actionable and relevant."),
+            ("4", "Relevant and concise."),
+            ("5", "The tmux guidance helped preserve the running job."),
+            ("5", "Actionable and exactly matched the task."),
+            ("4", "Relevant durable workflow guidance."),
+        ],
+    );
+
+    let output = fixture.command([
+        "memories",
+        "apply-health",
+        "--yes",
+        "--json",
+        "--limit",
+        "10",
+    ]);
+
+    assert_success(&output);
+    let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(value["applied_memories"], 2);
+    let applied_ids = value["memories"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|memory| memory["memory_id"].as_i64().unwrap())
+        .collect::<Vec<_>>();
+    assert!(applied_ids.contains(&stale_memory_id));
+    assert!(applied_ids.contains(&low_value_memory_id));
+    assert!(!applied_ids.contains(&wrong_context_memory_id));
+    assert!(!applied_ids.contains(&useful_memory_id));
+
+    let memories = Database::open(&fixture.db_path)
+        .unwrap()
+        .list_memories_by_ids(&[
+            stale_memory_id,
+            low_value_memory_id,
+            wrong_context_memory_id,
+            useful_memory_id,
+        ])
+        .unwrap();
+    let active = |memory_id| {
+        memories
+            .iter()
+            .find(|memory| memory.id == Some(memory_id))
+            .unwrap()
+            .is_active
+    };
+    assert!(!active(stale_memory_id));
+    assert!(!active(low_value_memory_id));
+    assert!(active(wrong_context_memory_id));
+    assert!(active(useful_memory_id));
+}
+
 struct MemoryFixture {
     _tmp: TempDir,
     home: std::path::PathBuf,

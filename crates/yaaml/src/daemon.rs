@@ -1330,7 +1330,9 @@ fn formulation_system_prompt() -> &'static str {
         "Focus memories on insights gained while solving the problem and on redirection provided by the user. ",
         "Always capture repeated user corrections, preferences, and process guidance as their own concise memories, including coding style preferences such as functional vs imperative style. ",
         "Use project scope when the preference is tied to the current project or language; use global scope only for durable cross-project user preferences or agent workflow patterns. ",
-        "Use task_state only for short-lived PR, branch, ticket, or status facts with concrete task_keys; avoid task_state when a reusable lesson or preference is available."
+        "Use task_state for segment-specific or short-lived state: PR, branch, ticket, status facts, unresolved next steps, proposed or recommended fixes, implementation order, open questions, blockers, and follow-up work. ",
+        "Do not encode completed implementation plans as durable workflow or lesson memories; return no memory unless there is a reusable lesson. ",
+        "Use workflow only for reusable procedures that should remain useful after the current task is complete."
     )
 }
 
@@ -1339,6 +1341,7 @@ fn consolidation_system_prompt() -> &'static str {
         "Merge overlapping coding-agent memories into one concise durable memory. ",
         "Return only JSON shaped as {\"memories\":[{\"title\":\"...\",\"body\":\"...\",\"scope\":\"project\"|\"global\",\"kind\":\"preference\"|\"lesson\"|\"workflow\"|\"project_fact\"|\"task_state\",\"task_keys\":[\"type:value\"],\"project_descriptor\":\"...\"}]}. ",
         "Preserve concrete facts, durable user preferences, commands, file paths, project state, and unresolved follow-up context. ",
+        "Keep task-specific plans, implementation order, blockers, next steps, and PR/ticket status as task_state rather than durable workflow. ",
         "Remove repetition and transient narration. ",
         "Do not invent facts not present in the source memories. ",
         "Return exactly one memory."
@@ -2252,6 +2255,10 @@ mod tests {
         assert!(prompt.contains("repeated user corrections"));
         assert!(prompt.contains("coding style preferences"));
         assert!(prompt.contains("functional vs imperative"));
+        assert!(prompt.contains("unresolved next steps"));
+        assert!(prompt.contains("implementation order"));
+        assert!(prompt.contains("Use workflow only for reusable procedures"));
+        assert!(prompt.contains("completed implementation plans"));
     }
 
     #[test]

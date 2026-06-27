@@ -21,11 +21,12 @@ use yaaml_core::{
     active_segment_recall_turns, context_score, counterfactual_citation_score,
     derive_project_descriptor, embedded_text_hash, embedding_text, extract_task_keys,
     infer_context_from_memory, infer_context_from_path, infer_context_from_text, infer_memory_kind,
-    merge_contexts, merge_task_keys, parse_eval_judge_response, parse_memory_ids,
-    rank_recall_candidates, recall_file_path, render_recall_markdown, session_recall_file_path,
-    write_recall_file, Config, ConfigPaths, ContextMetadata, ConversationSegmentRecord,
-    EmbeddingRecord, MemoryKind, MemoryRecord, MemoryScope, MemoryValidity, RecallMemory,
-    RecallRankDetails, RecallRankingOptions, RecallWrite, SessionRecord, TurnRecord, VectorIndex,
+    is_transient_plan_memory, merge_contexts, merge_task_keys, parse_eval_judge_response,
+    parse_memory_ids, rank_recall_candidates, recall_file_path, render_recall_markdown,
+    session_recall_file_path, write_recall_file, Config, ConfigPaths, ContextMetadata,
+    ConversationSegmentRecord, EmbeddingRecord, MemoryKind, MemoryRecord, MemoryScope,
+    MemoryValidity, RecallMemory, RecallRankDetails, RecallRankingOptions, RecallWrite,
+    SessionRecord, TurnRecord, VectorIndex,
 };
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
 use yaaml_llm::ReqwestTransport;
@@ -287,6 +288,8 @@ enum MemoriesCommand {
     Stats(MemoriesStatsArgs),
     /// Diagnose recall performance failure modes by memory.
     Health(MemoriesHealthArgs),
+    /// Soft-deactivate memories with high-confidence bad health recommendations.
+    ApplyHealth(MemoriesApplyHealthArgs),
     /// Soft-deactivate active memories and requeue transcript-backed formulation.
     Rebuild(MemoriesRebuildArgs),
 }
@@ -309,6 +312,22 @@ struct MemoriesHealthArgs {
     /// Include inactive memories in the ranked output.
     #[arg(long)]
     include_inactive: bool,
+    /// Emit machine-readable JSON.
+    #[arg(long)]
+    json: bool,
+}
+
+#[derive(Debug, Parser)]
+struct MemoriesApplyHealthArgs {
+    /// Maximum recent eval runs to inspect.
+    #[arg(long, default_value_t = 1000)]
+    eval_limit: usize,
+    /// Maximum diagnosed memories to consider for application.
+    #[arg(long, default_value_t = 50)]
+    limit: usize,
+    /// Required confirmation before changing active memories.
+    #[arg(long)]
+    yes: bool,
     /// Emit machine-readable JSON.
     #[arg(long)]
     json: bool,
@@ -586,6 +605,29 @@ struct MemoryHealthOutput {
 }
 
 #[derive(Debug, Serialize)]
+struct MemoryHealthApplyOutput {
+    eval_runs_considered: usize,
+    result_rows_considered: usize,
+    memories_considered: usize,
+    active_memories_considered: usize,
+    eligible_memories: usize,
+    applied_memories: usize,
+    memories: Vec<MemoryHealthAppliedMemory>,
+}
+
+#[derive(Debug, Serialize)]
+struct MemoryHealthAppliedMemory {
+    memory_id: i64,
+    title: String,
+    failure_mode: String,
+    recommended_action: String,
+    judged_count: u64,
+    useful_count: u64,
+    low_count: u64,
+    selected_count: u64,
+}
+
+#[derive(Debug, Serialize)]
 struct MemoryFailureModeCount {
     failure_mode: String,
     count: usize,
@@ -625,6 +667,7 @@ fn memories(args: MemoriesArgs) -> anyhow::Result<()> {
     match args.command {
         MemoriesCommand::Stats(args) => memories_stats(args),
         MemoriesCommand::Health(args) => memories_health(args),
+        MemoriesCommand::ApplyHealth(args) => memories_apply_health(args),
         MemoriesCommand::Rebuild(args) => memories_rebuild(args),
     }
 }
@@ -788,6 +831,53 @@ fn memories_health(args: MemoriesHealthArgs) -> anyhow::Result<()> {
         println!("{}", serde_json::to_string_pretty(&health)?);
     } else {
         print_human_memory_health(&health);
+    }
+    Ok(())
+}
+
+fn memories_apply_health(args: MemoriesApplyHealthArgs) -> anyhow::Result<()> {
+    if !args.yes {
+        bail!("memory health application requires --yes");
+    }
+    let (_config, db) = open_database_for_cwd()?;
+    let runs = db
+        .list_eval_runs(args.eval_limit)
+        .context("failed to list eval runs")?;
+    let health = build_memory_health(&db, runs, false, args.limit)?;
+    let actionable = health
+        .memories
+        .iter()
+        .filter(|memory| should_apply_memory_health_action(memory))
+        .collect::<Vec<_>>();
+    let now = unix_timestamp();
+    let mut applied_memories = Vec::new();
+    for memory in actionable {
+        db.deactivate_memory(memory.memory_id, &now)
+            .with_context(|| format!("failed to deactivate memory {}", memory.memory_id))?;
+        applied_memories.push(MemoryHealthAppliedMemory {
+            memory_id: memory.memory_id,
+            title: memory.title.clone(),
+            failure_mode: memory.failure_mode.clone(),
+            recommended_action: memory.recommended_action.clone(),
+            judged_count: memory.judged_count,
+            useful_count: memory.useful_count,
+            low_count: memory.low_count,
+            selected_count: memory.selected_count,
+        });
+    }
+    let output = MemoryHealthApplyOutput {
+        eval_runs_considered: health.eval_runs_considered,
+        result_rows_considered: health.result_rows_considered,
+        memories_considered: health.memories_considered,
+        active_memories_considered: health.active_memories_considered,
+        eligible_memories: applied_memories.len(),
+        applied_memories: applied_memories.len(),
+        memories: applied_memories,
+    };
+    if args.json {
+        println!("{}", serde_json::to_string_pretty(&output)?);
+    } else {
+        print_human_memory_health_apply(&output);
     }
     Ok(())
 }
@@ -1070,11 +1160,11 @@ fn diagnose_memory_failure(
         .to_ascii_lowercase();
 
     if judged_count >= 5 && accumulator.useful_count == 0 && low_rate >= 0.70 {
-        if rationale_mentions_wrong_context(&latest_low) {
-            return "wrong_context".to_string();
-        }
         if looks_stale_or_episodic(memory, &latest_low) {
             return "stale_episodic".to_string();
+        }
+        if rationale_mentions_wrong_context(&latest_low) {
+            return "wrong_context".to_string();
         }
         if body_len < 300 {
             return "vague_under_contextualized".to_string();
@@ -1175,6 +1265,19 @@ fn recommended_memory_action(failure_mode: &str) -> String {
         _ => "keep_observing",
     }
     .to_string()
+}
+
+fn should_apply_memory_health_action(memory: &MemoryHealthDiagnostic) -> bool {
+    if !memory.is_active || memory.judged_count < 5 || memory.useful_count != 0 {
+        return false;
+    }
+    if memory.low_rate < 0.70 {
+        return false;
+    }
+    matches!(
+        memory.recommended_action.as_str(),
+        "move_to_dormant" | "suppress_or_tombstone"
+    )
 }
 
 fn ratio(numerator: u64, denominator: u64) -> f64 {
@@ -1326,6 +1429,30 @@ fn print_human_memory_health(health: &MemoryHealthOutput) {
         if let Some(rationale) = &memory.latest_low_rationale {
             println!("    latest low rationale: {rationale}");
         }
+    }
+}
+
+fn print_human_memory_health_apply(output: &MemoryHealthApplyOutput) {
+    println!("Memory health application");
+    println!("  eval runs: {}", output.eval_runs_considered);
+    println!("  result rows: {}", output.result_rows_considered);
+    println!(
+        "  memories: {} considered ({} active)",
+        output.memories_considered, output.active_memories_considered
+    );
+    println!("  eligible memories: {}", output.eligible_memories);
+    println!("  applied memories: {}", output.applied_memories);
+    for memory in &output.memories {
+        println!(
+            "  memory={} action={} mode={} selected={} useful={} low={} title={}",
+            memory.memory_id,
+            memory.recommended_action,
+            memory.failure_mode,
+            memory.selected_count,
+            memory.useful_count,
+            memory.low_count,
+            memory.title
+        );
     }
 }
 
@@ -3555,9 +3682,16 @@ fn read_active_recall_file(
         .list_active_memories_by_ids(&memory_ids)
         .context("failed to validate recall memory ids")?;
     let active_ids = active_memories
-        .into_iter()
+        .iter()
         .filter_map(|memory| memory.id)
         .collect::<HashSet<_>>();
+    if active_memories
+        .iter()
+        .any(cached_memory_requires_recall_refresh)
+    {
+        invalidate_recall_file(recall_path)?;
+        return Ok(None);
+    }
     if memory_ids
         .iter()
         .all(|memory_id| active_ids.contains(memory_id))
@@ -3567,6 +3701,15 @@ fn read_active_recall_file(
         invalidate_recall_file(recall_path)?;
         Ok(None)
     }
+}
+
+fn cached_memory_requires_recall_refresh(memory: &MemoryRecord) -> bool {
+    is_transient_plan_memory(memory)
+        && !memory.task_keys.iter().any(|key| {
+            key.split_once(':')
+                .map(|(prefix, _)| prefix != "tool")
+                .unwrap_or(true)
+        })
 }
 
 fn invalidate_recall_file(recall_path: &std::path::Path) -> anyhow::Result<()> {
@@ -4246,5 +4389,90 @@ mod tests {
             human_timestamp("2026-06-11T00:00:00Z"),
             "2026-06-11T00:00:00Z"
         );
+    }
+
+    #[test]
+    fn health_apply_policy_accepts_only_high_confidence_inactive_actions() {
+        assert!(should_apply_memory_health_action(&health_diagnostic(
+            "stale_episodic",
+            "move_to_dormant",
+            true,
+            5,
+            0,
+            4
+        )));
+        assert!(should_apply_memory_health_action(&health_diagnostic(
+            "consistently_low_value",
+            "suppress_or_tombstone",
+            true,
+            6,
+            0,
+            5
+        )));
+
+        assert!(!should_apply_memory_health_action(&health_diagnostic(
+            "wrong_context",
+            "regenerate_metadata_or_tighten_gates",
+            true,
+            8,
+            0,
+            8
+        )));
+        assert!(!should_apply_memory_health_action(&health_diagnostic(
+            "likely_low_value",
+            "suppress_pending_more_evals",
+            true,
+            4,
+            0,
+            4
+        )));
+        assert!(!should_apply_memory_health_action(&health_diagnostic(
+            "stale_episodic",
+            "move_to_dormant",
+            true,
+            6,
+            1,
+            5
+        )));
+        assert!(!should_apply_memory_health_action(&health_diagnostic(
+            "stale_episodic",
+            "move_to_dormant",
+            false,
+            6,
+            0,
+            5
+        )));
+    }
+
+    fn health_diagnostic(
+        failure_mode: &str,
+        recommended_action: &str,
+        is_active: bool,
+        judged_count: u64,
+        useful_count: u64,
+        low_count: u64,
+    ) -> MemoryHealthDiagnostic {
+        MemoryHealthDiagnostic {
+            memory_id: 1,
+            title: "memory".to_string(),
+            kind: "lesson".to_string(),
+            scope: "project".to_string(),
+            is_active,
+            project_id: Some("/tmp/project".to_string()),
+            selected_count: judged_count,
+            judged_count,
+            useful_count,
+            low_count,
+            neutral_count: judged_count.saturating_sub(useful_count + low_count),
+            insufficient_context_count: 0,
+            low_rate: ratio(low_count, judged_count),
+            useful_rate: ratio(useful_count, judged_count),
+            average_score: None,
+            failure_mode: failure_mode.to_string(),
+            recommended_action: recommended_action.to_string(),
+            evidence: Vec::new(),
+            latest_low_rationale: None,
+            latest_useful_rationale: None,
+        }
     }
 }

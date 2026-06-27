@@ -179,7 +179,18 @@ fn segment_key_priority(key: &str) -> u8 {
 fn is_identity_key(key: &str) -> bool {
     matches!(
         key.split_once(':').map(|(prefix, _)| prefix),
-        Some("branch" | "metric" | "pr" | "sentry" | "signal" | "ticket" | "trigger")
+        Some(
+            "branch"
+                | "flag"
+                | "generator"
+                | "metric"
+                | "pr"
+                | "sentry"
+                | "signal"
+                | "task"
+                | "ticket"
+                | "trigger"
+        )
     )
 }
 

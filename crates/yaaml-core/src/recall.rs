@@ -533,7 +533,10 @@ fn has_recall_match_task_key(task_keys: &[String]) -> bool {
 }
 
 fn is_episodic_durable(memory: &MemoryRecord) -> bool {
-    matches!(memory.kind, MemoryKind::ProjectFact | MemoryKind::Workflow)
+    matches!(
+        memory.kind,
+        MemoryKind::Lesson | MemoryKind::ProjectFact | MemoryKind::Workflow
+    )
 }
 
 fn is_recall_match_task_key(key: &str) -> bool {
@@ -2126,6 +2129,92 @@ assistant: still use yaaml recall for context.
             .rank
             .filter_reasons
             .contains(&"drop:episodic_durable_task_key_mismatch".to_string()));
+    }
+
+    #[test]
+    fn lesson_with_identity_mismatch_does_not_survive_same_project() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![memory(
+            1,
+            "Old TD_11 rollout lesson",
+            MemoryKind::Lesson,
+            Some(current_project),
+            vec!["trigger:td_11".to_string()],
+        )];
+        let query_keys = vec!["path:src/test/java/build".to_string()];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &query_keys,
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &query_keys,
+            5,
+        );
+
+        assert!(selected.is_empty());
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:episodic_durable_task_key_mismatch".to_string()));
+    }
+
+    #[test]
+    fn general_lesson_without_identity_keys_still_recalls_same_project() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![memory(
+            1,
+            "General Java test lesson",
+            MemoryKind::Lesson,
+            Some(current_project),
+            Vec::new(),
+        )];
+        let query_keys = vec!["path:src/test/java/build".to_string()];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &query_keys,
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &query_keys,
+            5,
+        );
+
+        assert_eq!(selected.len(), 1);
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"keep:same_project_durable".to_string()));
     }
 
     #[test]

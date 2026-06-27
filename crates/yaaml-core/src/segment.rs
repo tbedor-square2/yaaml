@@ -33,10 +33,7 @@ pub fn build_conversation_segments(
                 ));
             }
             Some(range) if range.matches(&keys, &context_markers) => {
-                range.end_index = index;
-                range.end_turn_ordinal = turn.ordinal;
-                push_keys(&mut range.keys, keys);
-                push_markers(&mut range.context_markers, context_markers);
+                range.extend(index, turn.ordinal, keys, context_markers);
             }
             Some(_) => {
                 ranges.push(current.take().expect("current segment exists"));
@@ -144,8 +141,35 @@ fn overlaps(left: &[String], right: &[String]) -> bool {
     right.iter().any(|key| left.contains(key))
 }
 
+fn overlapping_keys(left: &[String], right: &[String]) -> Vec<String> {
+    let left = left.iter().collect::<HashSet<_>>();
+    right
+        .iter()
+        .filter(|key| left.contains(key))
+        .cloned()
+        .collect()
+}
+
 fn context_conflicts(left: &[String], right: &[String]) -> bool {
     !left.is_empty() && !right.is_empty() && !overlaps(left, right)
+}
+
+fn path_overlap_context_conflicts(left: &[String], right: &[String]) -> bool {
+    let left = specific_path_overlap_markers(left);
+    let right = specific_path_overlap_markers(right);
+    context_conflicts(&left, &right)
+}
+
+fn specific_path_overlap_markers(markers: &[String]) -> Vec<String> {
+    markers
+        .iter()
+        .filter(|marker| !is_broad_segment_marker(marker))
+        .cloned()
+        .collect()
+}
+
+fn is_broad_segment_marker(marker: &str) -> bool {
+    marker.starts_with("repo:") || marker == "tag:yaaml"
 }
 
 fn push_keys(keys: &mut Vec<String>, incoming: Vec<String>) {
@@ -232,6 +256,7 @@ struct SegmentRange {
     end_turn_ordinal: u64,
     keys: Vec<String>,
     context_markers: Vec<String>,
+    latest_context_markers: Vec<String>,
 }
 
 impl SegmentRange {
@@ -247,15 +272,36 @@ impl SegmentRange {
             start_turn_ordinal: turn_ordinal,
             end_turn_ordinal: turn_ordinal,
             keys: bounded_segment_keys(keys),
-            context_markers,
+            context_markers: context_markers.clone(),
+            latest_context_markers: context_markers,
         }
     }
 
     fn matches(&self, keys: &[String], context_markers: &[String]) -> bool {
         if !self.keys.is_empty() && !keys.is_empty() {
-            return overlaps(&self.keys, keys);
+            let overlapping = overlapping_keys(&self.keys, keys);
+            if overlapping.is_empty() {
+                return false;
+            }
+            if overlapping.iter().all(|key| is_path_key(key)) {
+                return !path_overlap_context_conflicts(
+                    &self.latest_context_markers,
+                    context_markers,
+                );
+            }
+            return true;
         }
-        !context_conflicts(&self.context_markers, context_markers)
+        !context_conflicts(&self.latest_context_markers, context_markers)
+    }
+
+    fn extend(&mut self, index: usize, turn_ordinal: u64, keys: Vec<String>, markers: Vec<String>) {
+        self.end_index = index;
+        self.end_turn_ordinal = turn_ordinal;
+        push_keys(&mut self.keys, keys);
+        if !specific_path_overlap_markers(&markers).is_empty() {
+            self.latest_context_markers = markers.clone();
+        }
+        push_markers(&mut self.context_markers, markers);
     }
 }
 
@@ -354,6 +400,84 @@ mod tests {
         assert_eq!(segments[1].status, ConversationSegmentStatus::Active);
         assert!(segments[0].summary.contains("yaaml"));
         assert!(segments[1].summary.contains("riskarbiter"));
+    }
+
+    #[test]
+    fn segment_builder_splits_same_repo_memory_system_topic_shift() {
+        let turns = vec![
+            turn(1, "user: inspect YAAML recall eval failures"),
+            turn(2, "assistant: found low recall evaluation scores"),
+            turn(3, "user: now focus on stale task-state segment lifecycle"),
+            turn(4, "assistant: tightened task state expiry"),
+            turn(5, "user: next look at transcript ingestion backlog"),
+            turn(6, "assistant: checked ingestion progress"),
+        ];
+
+        let segments = build_conversation_segments("session-1", &turns, "unix:1");
+
+        assert_eq!(segments.len(), 3);
+        assert_eq!(segments[0].start_turn_ordinal, 1);
+        assert_eq!(segments[0].end_turn_ordinal, 2);
+        assert_eq!(segments[0].status, ConversationSegmentStatus::Superseded);
+        assert_eq!(segments[1].start_turn_ordinal, 3);
+        assert_eq!(segments[1].end_turn_ordinal, 4);
+        assert_eq!(segments[1].status, ConversationSegmentStatus::Superseded);
+        assert_eq!(segments[2].start_turn_ordinal, 5);
+        assert_eq!(segments[2].end_turn_ordinal, 6);
+        assert_eq!(segments[2].status, ConversationSegmentStatus::Active);
+        let first_tags = &segments[0].context.as_ref().unwrap().subject_tags;
+        let second_tags = &segments[1].context.as_ref().unwrap().subject_tags;
+        let third_tags = &segments[2].context.as_ref().unwrap().subject_tags;
+        assert!(first_tags.contains(&"recall-eval".to_string()));
+        assert!(second_tags.contains(&"task-state".to_string()));
+        assert!(third_tags.contains(&"ingestion".to_string()));
+    }
+
+    #[test]
+    fn segment_builder_keeps_same_repo_overlapping_recall_topic() {
+        let turns = vec![
+            turn(1, "user: inspect YAAML recall eval failures"),
+            turn(2, "assistant: found low recall evaluation scores"),
+            turn(3, "user: continue recall quality experiments"),
+            turn(4, "assistant: compared recall ranking variants"),
+        ];
+
+        let segments = build_conversation_segments("session-1", &turns, "unix:1");
+
+        assert_eq!(segments.len(), 1);
+        assert_eq!(segments[0].start_turn_ordinal, 1);
+        assert_eq!(segments[0].end_turn_ordinal, 4);
+        assert_eq!(segments[0].status, ConversationSegmentStatus::Active);
+    }
+
+    #[test]
+    fn segment_builder_splits_path_only_overlap_on_topic_shift() {
+        let turns = vec![
+            turn(
+                1,
+                "user: inspect recall eval failures in crates/yaaml-core/src/recall.rs",
+            ),
+            turn(2, "assistant: updated crates/yaaml-core/src/recall.rs"),
+            turn(
+                3,
+                "user: now fix task-state segment lifecycle in crates/yaaml-core/src/recall.rs",
+            ),
+            turn(4, "assistant: changed crates/yaaml-core/src/recall.rs"),
+        ];
+
+        let segments = build_conversation_segments("session-1", &turns, "unix:1");
+
+        assert_eq!(segments.len(), 2);
+        assert_eq!(segments[0].start_turn_ordinal, 1);
+        assert_eq!(segments[0].end_turn_ordinal, 2);
+        assert_eq!(segments[1].start_turn_ordinal, 3);
+        assert_eq!(segments[1].end_turn_ordinal, 4);
+        assert!(segments[0]
+            .task_keys
+            .contains(&"path:crates/yaaml-core/src/recall.rs".to_string()));
+        assert!(segments[1]
+            .task_keys
+            .contains(&"path:crates/yaaml-core/src/recall.rs".to_string()));
     }
 
     fn turn(ordinal: u64, text: &str) -> TurnRecord {

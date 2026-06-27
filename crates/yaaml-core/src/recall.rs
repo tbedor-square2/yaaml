@@ -1091,15 +1091,22 @@ pub fn active_segment_recall_turns(turns: &[TurnRecord]) -> &[TurnRecord] {
 
     let mut active_keys = turn_segment_keys(&turns[seed_index]);
     let mut active_markers = turn_segment_context_markers(&turns[seed_index]);
+    let mut comparison_markers = active_markers.clone();
     let mut start = seed_index;
     for index in (0..seed_index).rev() {
         let keys = turn_segment_keys(&turns[index]);
         let markers = turn_segment_context_markers(&turns[index]);
         if keys.is_empty() && markers.is_empty() {
+            if !specific_path_overlap_markers(&comparison_markers).is_empty() {
+                break;
+            }
             continue;
         }
-        if segment_evidence_matches(&active_keys, &active_markers, &keys, &markers) {
+        if segment_evidence_matches(&active_keys, &comparison_markers, &keys, &markers) {
             extend_unique_set(&mut active_keys, keys);
+            if !specific_path_overlap_markers(&markers).is_empty() {
+                comparison_markers = markers.clone();
+            }
             extend_unique_set(&mut active_markers, markers);
             start = index;
         } else {
@@ -1129,13 +1136,50 @@ fn segment_evidence_matches(
     incoming_markers: &HashSet<String>,
 ) -> bool {
     if !active_keys.is_empty() && !incoming_keys.is_empty() {
-        return incoming_keys.iter().any(|key| active_keys.contains(key));
+        let overlapping = incoming_keys
+            .iter()
+            .filter(|key| active_keys.contains(*key))
+            .collect::<Vec<_>>();
+        if overlapping.is_empty() {
+            return false;
+        }
+        if overlapping.iter().all(|key| key.starts_with("path:")) {
+            return path_overlap_context_matches(active_markers, incoming_markers);
+        }
+        return true;
+    }
+    if incoming_keys.is_empty()
+        && specific_path_overlap_markers(incoming_markers).is_empty()
+        && !specific_path_overlap_markers(active_markers).is_empty()
+    {
+        return false;
     }
     !segment_context_conflicts(active_markers, incoming_markers)
 }
 
 fn segment_context_conflicts(left: &HashSet<String>, right: &HashSet<String>) -> bool {
     !left.is_empty() && !right.is_empty() && !right.iter().any(|marker| left.contains(marker))
+}
+
+fn path_overlap_context_matches(active: &HashSet<String>, incoming: &HashSet<String>) -> bool {
+    let active = specific_path_overlap_markers(active);
+    let incoming = specific_path_overlap_markers(incoming);
+    if !active.is_empty() && incoming.is_empty() {
+        return false;
+    }
+    !segment_context_conflicts(&active, &incoming)
+}
+
+fn specific_path_overlap_markers(markers: &HashSet<String>) -> HashSet<String> {
+    markers
+        .iter()
+        .filter(|marker| !is_broad_segment_marker(marker))
+        .cloned()
+        .collect()
+}
+
+fn is_broad_segment_marker(marker: &str) -> bool {
+    marker.starts_with("repo:") || marker == "tag:yaaml"
 }
 
 fn extend_unique_set(values: &mut HashSet<String>, incoming: HashSet<String>) {
@@ -2604,6 +2648,32 @@ assistant: still use yaaml recall for context.
         );
         assert!(!query.contains("YAAML recall eval"));
         assert!(query.contains("Risk Arbiter rollout"));
+    }
+
+    #[test]
+    fn active_segment_query_stops_at_path_only_topic_shift() {
+        let turns = vec![
+            turn(
+                1,
+                "user: inspect recall eval failures in crates/yaaml-core/src/recall.rs",
+            ),
+            turn(2, "assistant: updated crates/yaaml-core/src/recall.rs"),
+            turn(
+                3,
+                "user: now fix task-state segment lifecycle in crates/yaaml-core/src/recall.rs",
+            ),
+            turn(4, "assistant: changed crates/yaaml-core/src/recall.rs"),
+        ];
+
+        let active = active_segment_recall_turns(&turns);
+        let query = build_active_segment_recall_query(&turns, 4_000, 80);
+
+        assert_eq!(
+            active.iter().map(|turn| turn.ordinal).collect::<Vec<_>>(),
+            vec![3, 4]
+        );
+        assert!(!query.contains("recall eval failures"));
+        assert!(query.contains("task-state segment lifecycle"));
     }
 
     fn empty_rank() -> RecallRankDetails {

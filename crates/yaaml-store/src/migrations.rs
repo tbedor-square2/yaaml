@@ -1,4 +1,4 @@
-pub const EXPECTED_SCHEMA_VERSION: i64 = 5;
+pub const EXPECTED_SCHEMA_VERSION: i64 = 6;
 
 pub const MIGRATIONS: &[&str] = &[
     r#"
@@ -166,5 +166,11 @@ ALTER TABLE eval_runs ADD COLUMN segment_summary TEXT;
 ALTER TABLE eval_runs ADD COLUMN segment_task_keys TEXT NOT NULL DEFAULT '[]';
 
 UPDATE schema_version SET version = 5;
+"#,
+    r#"
+ALTER TABLE memories ADD COLUMN origin_segment_id INTEGER;
+ALTER TABLE memories ADD COLUMN validity TEXT NOT NULL DEFAULT 'durable';
+
+UPDATE schema_version SET version = 6;
 "#,
 ];

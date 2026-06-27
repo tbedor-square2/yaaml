@@ -9,7 +9,7 @@ fn migration_creates_expected_tables_and_is_idempotent() {
     db.migrate().unwrap();
     db.migrate().unwrap();
 
-    assert_eq!(db.schema_version().unwrap(), 5);
+    assert_eq!(db.schema_version().unwrap(), 6);
     let tables = db
         .table_names()
         .unwrap()
@@ -49,6 +49,13 @@ fn migration_creates_expected_tables_and_is_idempotent() {
         assert!(
             eval_run_columns.contains(&expected.to_string()),
             "missing eval_runs column {expected}"
+        );
+    }
+    let memory_columns = db.column_names("memories").unwrap();
+    for expected in ["origin_segment_id", "validity"] {
+        assert!(
+            memory_columns.contains(&expected.to_string()),
+            "missing memories column {expected}"
         );
     }
 }

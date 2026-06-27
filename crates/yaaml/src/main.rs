@@ -24,8 +24,8 @@ use yaaml_core::{
     merge_contexts, merge_task_keys, parse_eval_judge_response, parse_memory_ids,
     rank_recall_candidates, recall_file_path, render_recall_markdown, session_recall_file_path,
     write_recall_file, Config, ConfigPaths, ContextMetadata, ConversationSegmentRecord,
-    EmbeddingRecord, MemoryKind, MemoryRecord, MemoryScope, RecallMemory, RecallRankDetails,
-    RecallRankingOptions, RecallWrite, SessionRecord, TurnRecord, VectorIndex,
+    EmbeddingRecord, MemoryKind, MemoryRecord, MemoryScope, MemoryValidity, RecallMemory,
+    RecallRankDetails, RecallRankingOptions, RecallWrite, SessionRecord, TurnRecord, VectorIndex,
 };
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
 use yaaml_llm::ReqwestTransport;
@@ -3983,6 +3983,9 @@ fn remember(args: RememberArgs) -> anyhow::Result<()> {
         project_id: Some(project_id),
         project_descriptor: Some(project_descriptor),
         lineage_refs: Vec::new(),
+        origin_segment_id: None,
+        origin_segment_status: None,
+        validity: MemoryValidity::Durable,
     };
     let text = embedding_text(&memory);
     let embedding_client = OpenAiEmbeddingClient::new(

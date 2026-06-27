@@ -6,7 +6,10 @@ use std::path::{Path, PathBuf};
 use serde::Serialize;
 
 use crate::paths::project_hash;
-use crate::{context_score, ContextMetadata, MemoryKind, MemoryRecord, MemoryScope, TurnRecord};
+use crate::{
+    context_score, ContextMetadata, ConversationSegmentStatus, MemoryKind, MemoryRecord,
+    MemoryScope, MemoryValidity, TurnRecord,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct VectorHit {
@@ -318,6 +321,16 @@ fn recall_filter_decision(
 
     match memory.kind {
         MemoryKind::TaskState => {
+            if memory.validity == MemoryValidity::ValidWhileSegmentActive
+                && memory.origin_segment_id.is_some()
+                && memory.origin_segment_status != Some(ConversationSegmentStatus::Active)
+            {
+                reasons.push("drop:task_state_origin_segment_inactive".to_string());
+                return RecallFilterDecision {
+                    keep: false,
+                    reasons,
+                };
+            }
             if task_state_identity_key_match {
                 reasons.push("keep:task_state_identity_key_match".to_string());
                 return RecallFilterDecision {
@@ -1738,6 +1751,53 @@ assistant: still use yaaml recall for context.
     }
 
     #[test]
+    fn inactive_origin_segment_suppresses_task_state_even_with_identity_match() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let mut stale = memory(
+            1,
+            "PR 483111 is ready for review",
+            MemoryKind::TaskState,
+            Some(current_project),
+            vec!["pr:483111".to_string()],
+        );
+        stale.origin_segment_id = Some(42);
+        stale.origin_segment_status = Some(ConversationSegmentStatus::Superseded);
+        stale.validity = MemoryValidity::ValidWhileSegmentActive;
+        let memories = vec![stale];
+        let query_keys = vec!["pr:483111".to_string()];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &query_keys,
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &query_keys,
+            5,
+        );
+
+        assert!(selected.is_empty());
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:task_state_origin_segment_inactive".to_string()));
+    }
+
+    #[test]
     fn path_key_match_is_weak_recall_evidence_for_durable_memories() {
         let current_project = "/Users/tbedor/Development/yaaml";
         let hits = vec![VectorHit {
@@ -2032,6 +2092,9 @@ assistant: still use yaaml recall for context.
             project_id: project_id.map(str::to_string),
             project_descriptor: project_id.map(str::to_string),
             lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: MemoryValidity::Durable,
         }
     }
 

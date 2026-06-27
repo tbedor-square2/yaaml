@@ -131,6 +131,9 @@ mod tests {
             project_id: project_id.map(str::to_string),
             project_descriptor: project_descriptor.map(str::to_string),
             lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: crate::MemoryValidity::Durable,
         }
     }
 }

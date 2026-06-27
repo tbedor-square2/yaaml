@@ -10,7 +10,8 @@ use yaaml_core::status::{BacklogStatus, Status, TaskFailure, WorkerStatus};
 use yaaml_core::{
     extract_task_keys, infer_context_from_memory, infer_context_from_path, ContextMetadata,
     ConversationSegmentRecord, ConversationSegmentStatus, EmbeddingRecord, MemoryKind,
-    MemoryRecord, MemoryScope, SessionRecord, SourceTurnRef, TaskRecord, TaskStatus, TurnRecord,
+    MemoryRecord, MemoryScope, MemoryValidity, SessionRecord, SourceTurnRef, TaskRecord,
+    TaskStatus, TurnRecord,
 };
 
 use crate::migrations::{EXPECTED_SCHEMA_VERSION, MIGRATIONS};
@@ -183,6 +184,16 @@ impl Database {
             "memories",
             "task_keys",
             "ALTER TABLE memories ADD COLUMN task_keys TEXT NOT NULL DEFAULT '[]'",
+        )?;
+        self.ensure_column(
+            "memories",
+            "origin_segment_id",
+            "ALTER TABLE memories ADD COLUMN origin_segment_id INTEGER",
+        )?;
+        self.ensure_column(
+            "memories",
+            "validity",
+            "ALTER TABLE memories ADD COLUMN validity TEXT NOT NULL DEFAULT 'durable'",
         )?;
         self.ensure_column(
             "eval_runs",
@@ -953,8 +964,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
         self.conn.execute(
             "INSERT INTO memories (
                 title, body, scope, memory_kind, task_keys, source_turn_refs, created_at,
-                updated_at, is_active, session_id, project_id, project_descriptor, lineage_refs
-             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+                updated_at, is_active, session_id, project_id, project_descriptor, lineage_refs,
+                origin_segment_id, validity
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)",
             params![
                 memory.title,
                 memory.body,
@@ -968,7 +980,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
                 memory.session_id,
                 memory.project_id,
                 memory.project_descriptor,
-                lineage_refs
+                lineage_refs,
+                memory.origin_segment_id,
+                memory.validity.as_str(),
             ],
         )?;
         let memory_id = self.conn.last_insert_rowid();
@@ -1038,6 +1052,69 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
         Ok(consolidated_id)
     }
 
+    pub fn refresh_memory_segment_metadata_for_session(
+        &self,
+        session_id: &str,
+        updated_at: &str,
+    ) -> Result<u64, DatabaseError> {
+        let memories = self.list_memories()?;
+        let mut updated = 0_u64;
+        for memory in memories.into_iter().filter(|memory| {
+            memory.is_active
+                && (memory.session_id.as_deref() == Some(session_id)
+                    || memory
+                        .source_turn_refs
+                        .iter()
+                        .any(|source_ref| source_ref.session_id == session_id))
+        }) {
+            let Some(memory_id) = memory.id else {
+                continue;
+            };
+            let origin_ordinal = memory
+                .source_turn_refs
+                .iter()
+                .filter(|source_ref| source_ref.session_id == session_id)
+                .map(|source_ref| source_ref.ordinal)
+                .max();
+            let origin_segment_id = match origin_ordinal {
+                Some(ordinal) => self
+                    .conversation_segment_for_turn(session_id, ordinal)?
+                    .and_then(|segment| segment.id),
+                None => None,
+            };
+            let validity = if memory.kind == MemoryKind::TaskState {
+                MemoryValidity::ValidWhileSegmentActive
+            } else {
+                memory.validity
+            };
+            let should_backfill_session_id =
+                memory.session_id.is_none() && origin_ordinal.is_some();
+            if memory.origin_segment_id == origin_segment_id
+                && memory.validity == validity
+                && !should_backfill_session_id
+            {
+                continue;
+            }
+            self.conn.execute(
+                "UPDATE memories
+                 SET origin_segment_id = ?1,
+                     validity = ?2,
+                     updated_at = ?3,
+                     session_id = COALESCE(session_id, ?4)
+                 WHERE id = ?5",
+                params![
+                    origin_segment_id,
+                    validity.as_str(),
+                    updated_at,
+                    session_id,
+                    memory_id
+                ],
+            )?;
+            updated += 1;
+        }
+        Ok(updated)
+    }
+
     pub fn deactivate_memory(&self, memory_id: i64, updated_at: &str) -> Result<(), DatabaseError> {
         self.conn.execute(
             "UPDATE memories
@@ -1064,7 +1141,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
         let mut stmt = self.conn.prepare(
             "SELECT id, title, body, scope, memory_kind, task_keys, source_turn_refs,
                     created_at, updated_at, is_active, session_id, project_id,
-                    project_descriptor, lineage_refs
+                    project_descriptor, lineage_refs, origin_segment_id, validity,
+                    (SELECT status FROM conversation_segments WHERE id = memories.origin_segment_id)
              FROM memories
              ORDER BY id",
         )?;
@@ -1087,7 +1165,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
                 .query_row(
                     "SELECT id, title, body, scope, memory_kind, task_keys, source_turn_refs,
                             created_at, updated_at, is_active, session_id, project_id,
-                            project_descriptor, lineage_refs
+                            project_descriptor, lineage_refs, origin_segment_id, validity,
+                            (SELECT status FROM conversation_segments WHERE id = memories.origin_segment_id)
                      FROM memories
                      WHERE id = ?1 AND is_active = 1",
                     params![memory_id],
@@ -1112,7 +1191,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
                 .query_row(
                     "SELECT id, title, body, scope, memory_kind, task_keys, source_turn_refs,
                             created_at, updated_at, is_active, session_id, project_id,
-                            project_descriptor, lineage_refs
+                            project_descriptor, lineage_refs, origin_segment_id, validity,
+                            (SELECT status FROM conversation_segments WHERE id = memories.origin_segment_id)
                      FROM memories
                      WHERE id = ?1",
                     params![memory_id],
@@ -1133,7 +1213,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
         let mut stmt = self.conn.prepare(
             "SELECT id, title, body, scope, memory_kind, task_keys, source_turn_refs,
                     created_at, updated_at, is_active, session_id, project_id,
-                    project_descriptor, lineage_refs
+                    project_descriptor, lineage_refs, origin_segment_id, validity,
+                    (SELECT status FROM conversation_segments WHERE id = memories.origin_segment_id)
              FROM memories
              WHERE is_active = 1 AND created_at < ?1
              ORDER BY created_at, id",
@@ -2225,12 +2306,7 @@ fn read_conversation_segment(
         summary: row.get(4)?,
         task_keys,
         context,
-        status: match status.as_str() {
-            "superseded" => ConversationSegmentStatus::Superseded,
-            "completed" => ConversationSegmentStatus::Completed,
-            "abandoned" => ConversationSegmentStatus::Abandoned,
-            _ => ConversationSegmentStatus::Active,
-        },
+        status: parse_conversation_segment_status(&status),
         created_at: row.get(8)?,
         updated_at: row.get(9)?,
     })
@@ -2242,6 +2318,7 @@ fn read_memory_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<MemoryRecord>
     let task_keys_json: String = row.get(5)?;
     let source_turn_refs_json: String = row.get(6)?;
     let lineage_refs_json: String = row.get(13)?;
+    let origin_segment_status: Option<String> = row.get(16)?;
     let title: String = row.get(1)?;
     let body: String = row.get(2)?;
     let scope = match scope.as_str() {
@@ -2279,7 +2356,24 @@ fn read_memory_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<MemoryRecord>
         project_id: row.get(11)?,
         project_descriptor: row.get(12)?,
         lineage_refs,
+        origin_segment_id: row.get(14)?,
+        origin_segment_status: origin_segment_status
+            .as_deref()
+            .map(parse_conversation_segment_status),
+        validity: match row.get::<_, String>(15)?.as_str() {
+            "valid_while_segment_active" => MemoryValidity::ValidWhileSegmentActive,
+            _ => MemoryValidity::Durable,
+        },
     })
+}
+
+fn parse_conversation_segment_status(status: &str) -> ConversationSegmentStatus {
+    match status {
+        "superseded" => ConversationSegmentStatus::Superseded,
+        "completed" => ConversationSegmentStatus::Completed,
+        "abandoned" => ConversationSegmentStatus::Abandoned,
+        _ => ConversationSegmentStatus::Active,
+    }
 }
 
 fn json_decode_error(error: serde_json::Error) -> rusqlite::Error {
@@ -2556,6 +2650,83 @@ CREATE TABLE conversation_segments (
             .list_conversation_segments(Some("session-1"), 10)
             .unwrap()
             .is_empty());
+    }
+
+    #[test]
+    fn refresh_memory_segment_metadata_links_task_state_to_source_segment() {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+        db.upsert_session(&SessionRecord {
+            id: "session-1".to_string(),
+            agent_type: yaaml_core::AgentType::Codex,
+            project_id: "/tmp/project".to_string(),
+            transcript_file_path: "/tmp/session.jsonl".to_string(),
+            started_at: None,
+            last_seen_at: None,
+        })
+        .unwrap();
+        db.replace_conversation_segments_for_session(
+            "session-1",
+            &[ConversationSegmentRecord {
+                id: None,
+                session_id: "session-1".to_string(),
+                start_turn_ordinal: 1,
+                end_turn_ordinal: 3,
+                summary: "Turns 1..=3 discuss PR work.".to_string(),
+                task_keys: vec!["pr:123".to_string()],
+                context: None,
+                status: ConversationSegmentStatus::Active,
+                created_at: "unix:1".to_string(),
+                updated_at: "unix:1".to_string(),
+            }],
+        )
+        .unwrap();
+        let segment_id = db
+            .conversation_segment_for_turn("session-1", 2)
+            .unwrap()
+            .unwrap()
+            .id;
+        let memory_id = db
+            .insert_memory(&MemoryRecord {
+                id: None,
+                title: "PR status".to_string(),
+                body: "PR 123 is ready for review.".to_string(),
+                scope: MemoryScope::Project,
+                kind: MemoryKind::TaskState,
+                task_keys: vec!["pr:123".to_string()],
+                source_turn_refs: vec![SourceTurnRef {
+                    session_id: "session-1".to_string(),
+                    ordinal: 2,
+                    byte_start: 10,
+                    byte_end: 20,
+                }],
+                created_at: "unix:2".to_string(),
+                updated_at: "unix:2".to_string(),
+                is_active: true,
+                session_id: None,
+                project_id: Some("/tmp/project".to_string()),
+                project_descriptor: Some("project".to_string()),
+                lineage_refs: Vec::new(),
+                origin_segment_id: None,
+                origin_segment_status: None,
+                validity: MemoryValidity::Durable,
+            })
+            .unwrap();
+
+        assert_eq!(
+            db.refresh_memory_segment_metadata_for_session("session-1", "unix:3")
+                .unwrap(),
+            1
+        );
+        let memory = db.list_memories_by_ids(&[memory_id]).unwrap().remove(0);
+
+        assert_eq!(memory.origin_segment_id, segment_id);
+        assert_eq!(memory.session_id.as_deref(), Some("session-1"));
+        assert_eq!(
+            memory.origin_segment_status,
+            Some(ConversationSegmentStatus::Active)
+        );
+        assert_eq!(memory.validity, MemoryValidity::ValidWhileSegmentActive);
     }
 
     #[test]
@@ -2856,6 +3027,9 @@ WHERE session_id = 'session-1';
             project_id: Some("/tmp/yaaml".to_string()),
             project_descriptor: Some("yaaml, Rust".to_string()),
             lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: MemoryValidity::Durable,
         };
 
         db.insert_memory(&memory).unwrap();
@@ -2887,6 +3061,9 @@ WHERE session_id = 'session-1';
             project_id: Some("/tmp/yaaml".to_string()),
             project_descriptor: Some("yaaml, Rust".to_string()),
             lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: MemoryValidity::Durable,
         };
 
         db.insert_memory(&memory).unwrap();
@@ -2914,6 +3091,9 @@ WHERE session_id = 'session-1';
             project_id: Some("/Users/tbedor".to_string()),
             project_descriptor: Some("tbedor, Node".to_string()),
             lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: MemoryValidity::Durable,
         };
 
         let memory_id = db.insert_memory(&memory).unwrap();
@@ -2947,6 +3127,9 @@ WHERE session_id = 'session-1';
             project_id: Some("/tmp/yaaml".to_string()),
             project_descriptor: Some("yaaml, Rust".to_string()),
             lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: MemoryValidity::Durable,
         };
         let memory_id = db.insert_memory(&memory).unwrap();
         let embedded_text = yaaml_core::embedding_text(&memory);
@@ -2989,6 +3172,9 @@ WHERE session_id = 'session-1';
             project_id: Some("/tmp/yaaml".to_string()),
             project_descriptor: Some("yaaml, Rust".to_string()),
             lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: MemoryValidity::Durable,
         };
         let first = db.insert_memory(&source("first")).unwrap();
         let second = db.insert_memory(&source("second")).unwrap();
@@ -3007,6 +3193,9 @@ WHERE session_id = 'session-1';
             project_id: Some("/tmp/yaaml".to_string()),
             project_descriptor: Some("yaaml, Rust".to_string()),
             lineage_refs: vec![first, second],
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: MemoryValidity::Durable,
         };
 
         let merged_id = db

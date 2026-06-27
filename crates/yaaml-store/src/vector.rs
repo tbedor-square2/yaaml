@@ -104,7 +104,7 @@ pub fn has_embedding(db: &Database, memory_id: i64) -> Result<bool, DatabaseErro
 
 #[cfg(test)]
 mod tests {
-    use yaaml_core::{embedded_text_hash, MemoryKind, MemoryRecord, MemoryScope};
+    use yaaml_core::{embedded_text_hash, MemoryKind, MemoryRecord, MemoryScope, MemoryValidity};
 
     use super::*;
 
@@ -127,6 +127,9 @@ mod tests {
             project_id: Some("/tmp/yaaml".to_string()),
             project_descriptor: Some("yaaml, Rust".to_string()),
             lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: MemoryValidity::Durable,
         };
         let first = db.insert_memory(&memory("first")).unwrap();
         let second = db.insert_memory(&memory("second")).unwrap();

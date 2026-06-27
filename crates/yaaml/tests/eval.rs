@@ -50,6 +50,9 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
         project_id: Some(project.display().to_string()),
         project_descriptor: Some("yaaml".to_string()),
         lineage_refs: Vec::new(),
+        origin_segment_id: None,
+        origin_segment_status: None,
+        validity: yaaml_core::MemoryValidity::Durable,
     })
     .unwrap();
 
@@ -316,6 +319,9 @@ eval_judge_api_key_env = "YAAML_TEST_ANTHROPIC_KEY"
         project_id: Some(project.display().to_string()),
         project_descriptor: Some("yaaml".to_string()),
         lineage_refs: Vec::new(),
+        origin_segment_id: None,
+        origin_segment_status: None,
+        validity: yaaml_core::MemoryValidity::Durable,
     })
     .unwrap();
 
@@ -435,6 +441,9 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
             project_id: Some(project.display().to_string()),
             project_descriptor: Some("yaaml".to_string()),
             lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: yaaml_core::MemoryValidity::Durable,
         })
         .unwrap();
     let high_memory_id = db
@@ -453,6 +462,9 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
             project_id: Some(project.display().to_string()),
             project_descriptor: Some("yaaml".to_string()),
             lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: yaaml_core::MemoryValidity::Durable,
         })
         .unwrap();
     let run_id = db
@@ -738,6 +750,9 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
             project_id: Some(project.display().to_string()),
             project_descriptor: Some("yaaml".to_string()),
             lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: yaaml_core::MemoryValidity::Durable,
         })
         .unwrap();
     let low_memory_id = db
@@ -756,6 +771,9 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
             project_id: Some(project.display().to_string()),
             project_descriptor: Some("yaaml".to_string()),
             lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: yaaml_core::MemoryValidity::Durable,
         })
         .unwrap();
     let first_run_id = db

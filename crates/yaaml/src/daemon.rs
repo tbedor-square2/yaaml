@@ -20,8 +20,8 @@ use yaaml_core::{
     extract_task_keys, find_consolidation_clusters, merge_task_keys, parse_eval_judge_response,
     parse_formulation_response, rank_recall_candidates, recall_file_path, render_recall_markdown,
     session_recall_file_path, write_recall_file, ClusterMemory, Config, EmbeddingRecord,
-    MemoryRecord, MemoryScope, RecallMemory, RecallRankingOptions, SourceTurnRef, TaskRecord,
-    TaskStatus, TurnRecord, VectorIndex,
+    MemoryKind, MemoryRecord, MemoryScope, MemoryValidity, RecallMemory, RecallRankingOptions,
+    SourceTurnRef, TaskRecord, TaskStatus, TurnRecord, VectorIndex,
 };
 use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
@@ -223,8 +223,12 @@ pub fn refresh_conversation_segments_for_session(
         .context("failed to load session turns for segment refresh")?;
     let turns = hydrate_turns(db, &turns).context("failed to hydrate segment turns")?;
     let segments = build_conversation_segments(session_id, &turns, &unix_timestamp());
-    db.replace_conversation_segments_for_session(session_id, &segments)
-        .context("failed to persist conversation segments")
+    let written = db
+        .replace_conversation_segments_for_session(session_id, &segments)
+        .context("failed to persist conversation segments")?;
+    db.refresh_memory_segment_metadata_for_session(session_id, &unix_timestamp())
+        .context("failed to refresh memory segment metadata")?;
+    Ok(written)
 }
 
 pub fn process_codex_backlog(
@@ -480,6 +484,7 @@ fn run_memory_formulation_task(
             Some(session.id.clone()),
             Some(session.project_id.clone()),
         );
+        attach_origin_segment_metadata(db, &mut memory, session_id)?;
         if memory.scope == MemoryScope::Global {
             memory.project_id = None;
         }
@@ -513,6 +518,34 @@ fn run_memory_formulation_task(
         })
         .context("failed to persist embedding")?;
     }
+    Ok(())
+}
+
+fn attach_origin_segment_metadata(
+    db: &Database,
+    memory: &mut MemoryRecord,
+    session_id: &str,
+) -> anyhow::Result<()> {
+    if memory.kind == MemoryKind::TaskState {
+        memory.validity = MemoryValidity::ValidWhileSegmentActive;
+    }
+    let origin_ordinal = memory
+        .source_turn_refs
+        .iter()
+        .filter(|source_ref| source_ref.session_id == session_id)
+        .map(|source_ref| source_ref.ordinal)
+        .max();
+    let Some(origin_ordinal) = origin_ordinal else {
+        return Ok(());
+    };
+    let Some(segment) = db
+        .conversation_segment_for_turn(session_id, origin_ordinal)
+        .context("failed to load memory origin segment")?
+    else {
+        return Ok(());
+    };
+    memory.origin_segment_id = segment.id;
+    memory.origin_segment_status = Some(segment.status);
     Ok(())
 }
 
@@ -581,6 +614,17 @@ fn run_memory_consolidation_task(
         consolidated.project_id = None;
     }
     consolidated.lineage_refs = cluster.memory_ids.clone();
+    if let Some(origin_session_id) = consolidated
+        .source_turn_refs
+        .iter()
+        .max_by_key(|source_ref| source_ref.ordinal)
+        .map(|source_ref| source_ref.session_id.clone())
+    {
+        if consolidated.session_id.is_none() {
+            consolidated.session_id = Some(origin_session_id.clone());
+        }
+        attach_origin_segment_metadata(db, &mut consolidated, &origin_session_id)?;
+    }
 
     let text = embedding_text(&consolidated);
     let embedding_client = OpenAiEmbeddingClient::new(
@@ -2149,6 +2193,9 @@ mod tests {
             project_id: Some("/tmp/java".to_string()),
             project_descriptor: Some("java, riskarbiter".to_string()),
             lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: MemoryValidity::Durable,
         }];
 
         let prompt = formulation_prompt(&config, "java", &[], &candidates);

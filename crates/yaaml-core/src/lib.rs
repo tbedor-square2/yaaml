@@ -25,8 +25,8 @@ pub use memory::{
 };
 pub use model::{
     AgentType, ConversationSegmentRecord, ConversationSegmentStatus, EmbeddingRecord, MemoryKind,
-    MemoryRecord, MemoryScope, SessionRecord, SourceTurnRef, TaskRecord, TaskStatus, TurnRecord,
-    TurnStatus,
+    MemoryRecord, MemoryScope, MemoryValidity, SessionRecord, SourceTurnRef, TaskRecord,
+    TaskStatus, TurnRecord, TurnStatus,
 };
 pub use recall::{
     active_segment_recall_turns, apply_project_bonus, build_active_segment_recall_query,

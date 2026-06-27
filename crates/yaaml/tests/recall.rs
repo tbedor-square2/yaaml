@@ -61,6 +61,9 @@ recall_memory_cooldown_seconds = 1200
         project_id: Some(project_id.clone()),
         project_descriptor: Some("yaaml, Rust CLI memory daemon".to_string()),
         lineage_refs: Vec::new(),
+        origin_segment_id: None,
+        origin_segment_status: None,
+        validity: yaaml_core::MemoryValidity::Durable,
     };
     let memory_id = db.insert_memory(&memory).unwrap();
     db.upsert_embedding(&EmbeddingRecord {
@@ -176,6 +179,9 @@ recall_llm_filter_enabled = false
         project_id: Some(project_id),
         project_descriptor: Some("yaaml, Rust CLI memory daemon".to_string()),
         lineage_refs: Vec::new(),
+        origin_segment_id: None,
+        origin_segment_status: None,
+        validity: yaaml_core::MemoryValidity::Durable,
     };
     let memory_id = db.insert_memory(&memory).unwrap();
     db.upsert_embedding(&EmbeddingRecord {
@@ -283,6 +289,9 @@ recall_llm_filter_enabled = false
                     project_id: Some(project_id.clone()),
                     project_descriptor: Some("yaaml, Rust CLI memory daemon".to_string()),
                     lineage_refs: Vec::new(),
+                    origin_segment_id: None,
+                    origin_segment_status: None,
+                    validity: yaaml_core::MemoryValidity::Durable,
                 },
             )
         })
@@ -379,6 +388,9 @@ recall_llm_filter_enabled = false
             project_id: Some(project_id),
             project_descriptor: Some("yaaml".to_string()),
             lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: yaaml_core::MemoryValidity::Durable,
         },
     );
     let now_unix = SystemTime::now()
@@ -513,6 +525,9 @@ recall_llm_filter_enabled = false
             project_id: Some(project_id.clone()),
             project_descriptor: Some("yaaml, Rust CLI memory daemon".to_string()),
             lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: yaaml_core::MemoryValidity::Durable,
         },
     );
     let target_id = insert_memory_with_embedding(
@@ -532,6 +547,9 @@ recall_llm_filter_enabled = false
             project_id: Some(project_id),
             project_descriptor: Some("yaaml, Rust CLI memory daemon".to_string()),
             lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: yaaml_core::MemoryValidity::Durable,
         },
     );
 
@@ -637,6 +655,9 @@ recall_result_limit = 1
             project_id: Some(project_id.clone()),
             project_descriptor: Some("yaaml".to_string()),
             lineage_refs: Vec::new(),
+        origin_segment_id: None,
+        origin_segment_status: None,
+        validity: yaaml_core::MemoryValidity::Durable,
         },
     );
     let useful_memory_id = insert_memory_with_embedding(
@@ -656,6 +677,9 @@ recall_result_limit = 1
             project_id: Some(project_id),
             project_descriptor: Some("yaaml".to_string()),
             lineage_refs: Vec::new(),
+        origin_segment_id: None,
+        origin_segment_status: None,
+        validity: yaaml_core::MemoryValidity::Durable,
         },
     );
     let run_id = db.insert_eval_run("recall", "unix:3", "{}").unwrap();
@@ -757,6 +781,9 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
             project_id: Some(project_id.display().to_string()),
             project_descriptor: Some("yaaml, Rust CLI memory daemon".to_string()),
             lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: yaaml_core::MemoryValidity::Durable,
         })
         .unwrap();
     db.deactivate_memory(memory_id, "2026-06-08T00:00:01Z")
@@ -837,6 +864,9 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
                 project_id: Some(project_id.display().to_string()),
                 project_descriptor: Some("yaaml, Rust CLI memory daemon".to_string()),
                 lineage_refs: Vec::new(),
+                origin_segment_id: None,
+                origin_segment_status: None,
+                validity: yaaml_core::MemoryValidity::Durable,
             })
             .unwrap()
         })
@@ -915,6 +945,9 @@ recall_llm_filter_enabled = false
         project_id: Some(project_id),
         project_descriptor: Some("yaaml, Rust CLI memory daemon".to_string()),
         lineage_refs: Vec::new(),
+        origin_segment_id: None,
+        origin_segment_status: None,
+        validity: yaaml_core::MemoryValidity::Durable,
     };
     let memory_id = db.insert_memory(&memory).unwrap();
     db.upsert_embedding(&EmbeddingRecord {
@@ -1034,6 +1067,9 @@ recall_llm_filter_enabled = false
             project_id: Some(project_id),
             project_descriptor: Some("yaaml, Rust CLI memory daemon".to_string()),
             lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: yaaml_core::MemoryValidity::Durable,
         },
     );
 
@@ -1163,6 +1199,9 @@ recall_llm_filter_enabled = false
         project_id: Some(project_id),
         project_descriptor: Some("yaaml, Rust CLI memory daemon".to_string()),
         lineage_refs: Vec::new(),
+        origin_segment_id: None,
+        origin_segment_status: None,
+        validity: yaaml_core::MemoryValidity::Durable,
     };
     let memory_id = db.insert_memory(&memory).unwrap();
     db.upsert_embedding(&EmbeddingRecord {
@@ -1272,6 +1311,9 @@ recall_llm_filter_enabled = false
         project_id: Some(project_id),
         project_descriptor: Some("yaaml, Rust CLI memory daemon".to_string()),
         lineage_refs: Vec::new(),
+        origin_segment_id: None,
+        origin_segment_status: None,
+        validity: yaaml_core::MemoryValidity::Durable,
     };
     let memory_id = db.insert_memory(&memory).unwrap();
     db.upsert_embedding(&EmbeddingRecord {
@@ -1397,6 +1439,9 @@ recall_live_turn_window = 2
         project_id: Some(project_id),
         project_descriptor: Some("yaaml, Rust CLI memory daemon".to_string()),
         lineage_refs: Vec::new(),
+        origin_segment_id: None,
+        origin_segment_status: None,
+        validity: yaaml_core::MemoryValidity::Durable,
     };
     let memory_id = db.insert_memory(&memory).unwrap();
     db.upsert_embedding(&EmbeddingRecord {
@@ -1548,6 +1593,9 @@ recall_live_turn_window = 2
             project_id: Some(project_id),
             project_descriptor: Some("yaaml, Rust CLI memory daemon".to_string()),
             lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: yaaml_core::MemoryValidity::Durable,
         },
     );
 

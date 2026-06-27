@@ -284,6 +284,9 @@ backlog_formulation_turn_window = 10
             project_id: Some("/tmp/project".to_string()),
             project_descriptor: Some("project".to_string()),
             lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: yaaml_core::MemoryValidity::Durable,
         })
         .unwrap()
     }

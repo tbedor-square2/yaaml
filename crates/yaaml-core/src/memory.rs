@@ -7,7 +7,7 @@ use thiserror::Error;
 
 use crate::{
     extract_task_keys, infer_context_from_memory, normalize_memory_kind, MemoryKind, MemoryRecord,
-    MemoryScope, SourceTurnRef,
+    MemoryScope, MemoryValidity, SourceTurnRef,
 };
 
 #[derive(Debug, Error)]
@@ -50,6 +50,9 @@ impl MemoryDraft {
             project_id,
             project_descriptor: Some(self.project_descriptor),
             lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: MemoryValidity::Durable,
         }
     }
 }
@@ -354,6 +357,9 @@ version = "0.1.0"
             project_id: Some("/tmp/yaaml".to_string()),
             project_descriptor: Some("yaaml, Rust CLI memory daemon".to_string()),
             lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: crate::MemoryValidity::Durable,
         };
 
         let text = embedding_text(&memory);

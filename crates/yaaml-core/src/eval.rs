@@ -109,6 +109,9 @@ mod tests {
             project_id: Some("/tmp/yaaml".to_string()),
             project_descriptor: None,
             lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: crate::MemoryValidity::Durable,
         }
     }
 

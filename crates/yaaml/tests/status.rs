@@ -55,6 +55,9 @@ fn status_human_output_reflects_database_state() {
         project_id: Some("/tmp/yaaml".to_string()),
         project_descriptor: Some("yaaml".to_string()),
         lineage_refs: Vec::new(),
+        origin_segment_id: None,
+        origin_segment_status: None,
+        validity: yaaml_core::MemoryValidity::Durable,
     })
     .unwrap();
 

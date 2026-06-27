@@ -123,6 +123,21 @@ impl MemoryKind {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum MemoryValidity {
+    Durable,
+    ValidWhileSegmentActive,
+}
+
+impl MemoryValidity {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Durable => "durable",
+            Self::ValidWhileSegmentActive => "valid_while_segment_active",
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SourceTurnRef {
     pub session_id: String,
@@ -147,6 +162,9 @@ pub struct MemoryRecord {
     pub project_id: Option<String>,
     pub project_descriptor: Option<String>,
     pub lineage_refs: Vec<i64>,
+    pub origin_segment_id: Option<i64>,
+    pub origin_segment_status: Option<ConversationSegmentStatus>,
+    pub validity: MemoryValidity,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

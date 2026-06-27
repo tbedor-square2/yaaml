@@ -368,6 +368,9 @@ fn formulation_can_refine_existing_candidate_memory() {
             project_id: Some(project_id),
             project_descriptor: Some("java, riskarbiter".to_string()),
             lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: yaaml_core::MemoryValidity::Durable,
         })
         .unwrap();
     assert_eq!(existing_id, 1);
@@ -500,6 +503,9 @@ fn memory_queue_skips_already_covered_source_refs() {
         project_id: Some("/tmp/yaaml".to_string()),
         project_descriptor: Some("yaaml, Rust".to_string()),
         lineage_refs: Vec::new(),
+        origin_segment_id: None,
+        origin_segment_status: None,
+        validity: yaaml_core::MemoryValidity::Durable,
     })
     .unwrap();
     let config = Config {
@@ -548,6 +554,9 @@ fn inactive_memories_do_not_cover_source_refs_for_rebuild() {
         project_id: Some("/tmp/yaaml".to_string()),
         project_descriptor: Some("yaaml, Rust".to_string()),
         lineage_refs: Vec::new(),
+        origin_segment_id: None,
+        origin_segment_status: None,
+        validity: yaaml_core::MemoryValidity::Durable,
     })
     .unwrap();
     let config = Config {
@@ -1296,6 +1305,9 @@ fn recall_file_is_written_after_memory_exists_and_new_turn_completes() {
         project_id: Some(project_id),
         project_descriptor: Some("yaaml, Rust".to_string()),
         lineage_refs: Vec::new(),
+        origin_segment_id: None,
+        origin_segment_status: None,
+        validity: yaaml_core::MemoryValidity::Durable,
     };
     let memory_id = db.insert_memory(&memory).unwrap();
     db.upsert_embedding(&EmbeddingRecord {
@@ -1393,6 +1405,9 @@ fn background_recall_uses_stored_segment_keys_for_task_state() {
             project_id: Some(project_id.clone()),
             project_descriptor: Some("yaaml, Rust".to_string()),
             lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: yaaml_core::MemoryValidity::Durable,
         })
         .unwrap();
     db.upsert_embedding(&EmbeddingRecord {
@@ -1815,5 +1830,8 @@ fn memory(title: &str, body: &str, project_id: Option<&str>) -> MemoryRecord {
         project_id: project_id.map(str::to_string),
         project_descriptor: project_id.map(str::to_string),
         lineage_refs: Vec::new(),
+        origin_segment_id: None,
+        origin_segment_status: None,
+        validity: yaaml_core::MemoryValidity::Durable,
     }
 }

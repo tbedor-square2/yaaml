@@ -2,7 +2,7 @@ use std::sync::{Arc, Barrier};
 use std::thread;
 
 use tempfile::TempDir;
-use yaaml_core::{MemoryKind, MemoryRecord, MemoryScope};
+use yaaml_core::{MemoryKind, MemoryRecord, MemoryScope, MemoryValidity};
 use yaaml_store::Database;
 
 fn memory(title: &str) -> MemoryRecord {
@@ -21,6 +21,9 @@ fn memory(title: &str) -> MemoryRecord {
         project_id: Some("/tmp/yaaml".to_string()),
         project_descriptor: Some("yaaml".to_string()),
         lineage_refs: Vec::new(),
+        origin_segment_id: None,
+        origin_segment_status: None,
+        validity: MemoryValidity::Durable,
     }
 }
 

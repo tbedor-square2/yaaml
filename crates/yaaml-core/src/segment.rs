@@ -104,14 +104,28 @@ fn segment_context(turns: &[TurnRecord]) -> ContextMetadata {
             merge_contexts(&mut context, turn_context.clone());
         }
     }
-    let text = turns
-        .iter()
-        .filter_map(|turn| turn.display_text.as_deref())
-        .take(4)
-        .collect::<Vec<_>>()
-        .join("\n");
+    let text = segment_context_text(turns);
     merge_contexts(&mut context, infer_context_from_text(&text));
     context
+}
+
+fn segment_context_text(turns: &[TurnRecord]) -> String {
+    const HEAD_TURNS: usize = 2;
+    const TAIL_TURNS: usize = 4;
+    if turns.len() <= HEAD_TURNS + TAIL_TURNS {
+        return turns
+            .iter()
+            .filter_map(|turn| turn.display_text.as_deref())
+            .collect::<Vec<_>>()
+            .join("\n");
+    }
+    turns
+        .iter()
+        .take(HEAD_TURNS)
+        .chain(turns.iter().skip(turns.len().saturating_sub(TAIL_TURNS)))
+        .filter_map(|turn| turn.display_text.as_deref())
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 fn segment_summary(
@@ -120,12 +134,17 @@ fn segment_summary(
     start_turn_ordinal: u64,
     end_turn_ordinal: u64,
 ) -> String {
-    let context_label = context
+    let location_label = context
         .repo_id
         .as_deref()
         .or(context.work_area.as_deref())
         .or(context.activity_domain.as_deref())
         .unwrap_or("unclassified context");
+    let topic_label = segment_topic_label(context);
+    let context_label = topic_label
+        .as_ref()
+        .map(|topic| format!("{topic} in {location_label}"))
+        .unwrap_or_else(|| location_label.to_string());
     if keys.is_empty() {
         format!("Turns {start_turn_ordinal}..={end_turn_ordinal} discuss {context_label}.")
     } else {
@@ -133,6 +152,55 @@ fn segment_summary(
         format!(
             "Turns {start_turn_ordinal}..={end_turn_ordinal} discuss {context_label} with task keys {rendered_keys}."
         )
+    }
+}
+
+fn segment_topic_label(context: &ContextMetadata) -> Option<String> {
+    let mut tags = context
+        .subject_tags
+        .iter()
+        .filter(|tag| segment_summary_tag(tag))
+        .cloned()
+        .collect::<Vec<_>>();
+    tags.sort_by(|left, right| {
+        segment_summary_tag_priority(left)
+            .cmp(&segment_summary_tag_priority(right))
+            .then_with(|| left.cmp(right))
+    });
+    tags.dedup();
+    if tags.is_empty() {
+        None
+    } else {
+        Some(tags.into_iter().take(3).collect::<Vec<_>>().join(", "))
+    }
+}
+
+fn segment_summary_tag(tag: &str) -> bool {
+    !matches!(
+        tag,
+        "ci" | "claude-code"
+            | "codex"
+            | "docs"
+            | "github"
+            | "java"
+            | "linear"
+            | "pr"
+            | "slack"
+            | "work-tracking"
+    )
+}
+
+fn segment_summary_tag_priority(tag: &str) -> u8 {
+    match tag {
+        "task-state" => 0,
+        "conversation-segment" | "segment" => 1,
+        "recall-quality" | "recall-eval" | "tool-recall" | "background-recall" => 2,
+        "memory-consolidation" | "memory-formation" => 3,
+        "llm-filter" | "vector-search" | "embedding" => 4,
+        "transcript" | "ingestion" | "backlog" => 5,
+        "daemon" | "tool-hook" => 6,
+        "eval" | "recall" => 7,
+        _ => 8,
     }
 }
 
@@ -431,6 +499,9 @@ mod tests {
         assert!(first_tags.contains(&"recall-eval".to_string()));
         assert!(second_tags.contains(&"task-state".to_string()));
         assert!(third_tags.contains(&"ingestion".to_string()));
+        assert!(segments[0].summary.contains("recall-eval"));
+        assert!(segments[1].summary.contains("segment"));
+        assert!(segments[2].summary.contains("ingestion"));
     }
 
     #[test]
@@ -478,6 +549,24 @@ mod tests {
         assert!(segments[1]
             .task_keys
             .contains(&"path:crates/yaaml-core/src/recall.rs".to_string()));
+    }
+
+    #[test]
+    fn segment_summary_uses_tail_turns_for_long_segments() {
+        let turns = vec![
+            turn(1, "user: inspect YAAML recall eval behavior"),
+            turn(2, "assistant: adjusted recall eval diagnostics"),
+            turn(3, "assistant: unchanged recall progress"),
+            turn(4, "assistant: unchanged recall progress"),
+            turn(5, "assistant: unchanged recall progress"),
+            turn(6, "user: continue recall quality for task-state segments"),
+            turn(7, "assistant: tightened task-state recall expiry"),
+        ];
+
+        let segments = build_conversation_segments("session-1", &turns, "unix:1");
+
+        assert_eq!(segments.len(), 1);
+        assert!(segments[0].summary.contains("task-state"));
     }
 
     fn turn(ordinal: u64, text: &str) -> TurnRecord {

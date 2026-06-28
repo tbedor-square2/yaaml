@@ -202,12 +202,14 @@ fn rank_recall_candidate(
 ) -> RecallCandidate {
     let memory_context = crate::infer_context_from_memory(memory);
     let context_component = context_score(query_context, &memory_context);
-    let project_bonus =
-        if options.project_tiebreaker && memory.project_id.as_deref() == Some(current_project_id) {
-            options.project_score_bonus
-        } else {
-            0.0
-        };
+    let project_bonus = if options.project_tiebreaker
+        && memory.project_id.as_deref() == Some(current_project_id)
+        && !is_broad_project_id(memory.project_id.as_deref())
+    {
+        options.project_score_bonus
+    } else {
+        0.0
+    };
     let matched_task_keys = matched_task_keys(query_task_keys, &memory.task_keys);
     let strong_task_key_matches = matched_task_keys
         .iter()
@@ -290,6 +292,7 @@ fn recall_filter_decision(
 ) -> RecallFilterDecision {
     let memory_context = crate::infer_context_from_memory(memory);
     let same_project = memory.project_id.as_deref() == Some(current_project_id);
+    let broad_project_id = is_broad_project_id(memory.project_id.as_deref());
     let same_repo =
         query_context.repo_id.is_some() && query_context.repo_id == memory_context.repo_id;
     let same_work_area =
@@ -381,6 +384,13 @@ fn recall_filter_decision(
                     reasons,
                 };
             }
+            if broad_project_id && !strong_context && !weak_task_key_match {
+                reasons.push("drop:broad_project_fact_weak_context".to_string());
+                return RecallFilterDecision {
+                    keep: false,
+                    reasons,
+                };
+            }
             if same_project || strong_context {
                 reasons.push("keep:project_fact_context".to_string());
                 RecallFilterDecision {
@@ -410,6 +420,18 @@ fn recall_filter_decision(
                     reasons,
                 };
             }
+            if memory.scope == MemoryScope::Project
+                && broad_project_id
+                && matches!(memory.kind, MemoryKind::Lesson | MemoryKind::Workflow)
+                && !strong_context
+                && !weak_task_key_match
+            {
+                reasons.push("drop:broad_project_weak_context".to_string());
+                return RecallFilterDecision {
+                    keep: false,
+                    reasons,
+                };
+            }
             if memory.scope == MemoryScope::Global {
                 if candidate.rank.context_score < 0.0 && !weak_task_key_match {
                     reasons.push("drop:global_durable_wrong_context".to_string());
@@ -434,6 +456,21 @@ fn recall_filter_decision(
             }
         }
     }
+}
+
+fn is_broad_project_id(project_id: Option<&str>) -> bool {
+    let Some(project_id) = project_id else {
+        return false;
+    };
+    let project_id = project_id.trim_end_matches('/');
+    let parts = project_id
+        .split('/')
+        .filter(|part| !part.is_empty())
+        .collect::<Vec<_>>();
+    matches!(
+        parts.as_slice(),
+        ["Users", _] | ["home", _] | ["Users", _, "Development"] | ["home", _, "Development"]
+    )
 }
 
 pub fn extract_task_keys(text: &str) -> Vec<String> {
@@ -2513,6 +2550,177 @@ assistant: still use yaaml recall for context.
             .rank
             .filter_reasons
             .contains(&"keep:same_project_durable".to_string()));
+    }
+
+    #[test]
+    fn broad_project_lesson_without_context_does_not_recall() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![memory(
+            1,
+            "Old incident routing lesson",
+            MemoryKind::Lesson,
+            Some("/Users/tbedor"),
+            Vec::new(),
+        )];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &[],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+        assert_eq!(ranked[0].rank.project_bonus, 0.0);
+
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &[],
+            5,
+        );
+
+        assert!(selected.is_empty());
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:broad_project_weak_context".to_string()));
+    }
+
+    #[test]
+    fn broad_project_lesson_with_strong_context_still_recalls() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![MemoryRecord {
+            body: "Sad Sack Signals forge-signalsmith monitoring uses scheduled signal metrics."
+                .to_string(),
+            project_descriptor: Some("forge-signalsmith Sad Sack Signals".to_string()),
+            ..memory(
+                1,
+                "SSS monitoring lesson",
+                MemoryKind::Lesson,
+                Some("/Users/tbedor"),
+                Vec::new(),
+            )
+        }];
+        let query_context = infer_context_from_text("forge-signalsmith Sad Sack Signals metrics");
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &query_context,
+            &[],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+        assert!(ranked[0].rank.context_score >= 0.42);
+
+        let (selected, debug) =
+            select_recall_candidates(ranked, &memories, current_project, &query_context, &[], 5);
+
+        assert_eq!(selected.len(), 1);
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"keep:cross_project_strong_context".to_string()));
+    }
+
+    #[test]
+    fn broad_same_project_fact_without_context_does_not_recall() {
+        let current_project = "/Users/tbedor";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![memory(
+            1,
+            "Old home-root project status",
+            MemoryKind::ProjectFact,
+            Some("/Users/tbedor"),
+            Vec::new(),
+        )];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &[],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+        assert_eq!(ranked[0].rank.project_bonus, 0.0);
+
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &[],
+            5,
+        );
+
+        assert!(selected.is_empty());
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:broad_project_fact_weak_context".to_string()));
+    }
+
+    #[test]
+    fn broad_project_preference_without_context_can_recall() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![memory(
+            1,
+            "Prefer functional Java style",
+            MemoryKind::Preference,
+            Some("/Users/tbedor"),
+            Vec::new(),
+        )];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &[],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &[],
+            5,
+        );
+
+        assert_eq!(selected.len(), 1);
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"keep:semantic_durable".to_string()));
     }
 
     #[test]

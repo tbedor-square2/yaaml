@@ -36,7 +36,7 @@ use crate::llm_judge::JudgeClient;
 use crate::memory_health::{apply_health_action_rerank, build_memory_health_summaries};
 use crate::recall_filter::{
     select_recall_candidates_with_llm_filter, suppress_recently_recalled_candidates,
-    RecallFilterRequest, RecallFilterTelemetry,
+    suppress_source_overlapping_candidates, RecallFilterRequest, RecallFilterTelemetry,
 };
 use crate::turn_hydration::{context_from_turns, hydrate_turns};
 
@@ -2046,6 +2046,12 @@ pub fn refresh_recall_with_embedding(
             query_task_keys: &query_task_keys,
             current_segment_id,
         },
+    );
+    filter_result.selected = suppress_source_overlapping_candidates(
+        filter_result.selected,
+        &mut filter_result.debug_candidates,
+        &memories,
+        recall_turns,
     );
     let recent_memory_ids = recent_turns
         .last()

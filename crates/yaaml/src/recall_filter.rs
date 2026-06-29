@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use yaaml_core::{
     select_recall_candidates_for_segment, Config, ContextMetadata, MemoryRecord, RecallCandidate,
+    TurnRecord,
 };
 
 use crate::llm_judge::JudgeClient;
@@ -160,6 +161,45 @@ pub fn suppress_recently_recalled_candidates(
         }
     }
     kept
+}
+
+pub fn suppress_source_overlapping_candidates(
+    selected: Vec<RecallCandidate>,
+    debug_candidates: &mut [RecallCandidate],
+    memories: &[MemoryRecord],
+    query_turns: &[TurnRecord],
+) -> Vec<RecallCandidate> {
+    let query_turn_keys = query_turns
+        .iter()
+        .map(|turn| (turn.session_id.clone(), turn.ordinal))
+        .collect::<HashSet<_>>();
+    if query_turn_keys.is_empty() {
+        return selected;
+    }
+    let suppressed = memories
+        .iter()
+        .filter(|memory| {
+            memory.source_turn_refs.iter().any(|source_ref| {
+                query_turn_keys.contains(&(source_ref.session_id.clone(), source_ref.ordinal))
+            })
+        })
+        .filter_map(|memory| memory.id)
+        .collect::<HashSet<_>>();
+    if suppressed.is_empty() {
+        return selected;
+    }
+    for candidate in debug_candidates {
+        if suppressed.contains(&candidate.memory_id) {
+            candidate
+                .rank
+                .filter_reasons
+                .push("drop:source_turn_already_in_query".to_string());
+        }
+    }
+    selected
+        .into_iter()
+        .filter(|candidate| !suppressed.contains(&candidate.memory_id))
+        .collect()
 }
 
 fn strict_kind_diverse_top_fallback_selection(
@@ -843,6 +883,53 @@ mod tests {
             .rank
             .filter_reasons
             .contains(&"drop:recent_recall_cooldown".to_string()));
+    }
+
+    #[test]
+    fn source_overlap_suppresses_selected_memories() {
+        let selected = vec![candidate_with_score(1, 1.20), candidate_with_score(2, 1.10)];
+        let mut debug_candidates = selected.clone();
+        let mut memories = vec![memory(1, "overlap"), memory(2, "older")];
+        memories[0].source_turn_refs = vec![yaaml_core::SourceTurnRef {
+            session_id: "session-1".to_string(),
+            ordinal: 7,
+            byte_start: 0,
+            byte_end: 1,
+        }];
+        memories[1].source_turn_refs = vec![yaaml_core::SourceTurnRef {
+            session_id: "session-1".to_string(),
+            ordinal: 3,
+            byte_start: 0,
+            byte_end: 1,
+        }];
+        let query_turns = vec![TurnRecord {
+            session_id: "session-1".to_string(),
+            turn_id: Some("turn-7".to_string()),
+            ordinal: 7,
+            byte_start: 0,
+            byte_end: 1,
+            observed_at: Some("unix:7".to_string()),
+            status: yaaml_core::TurnStatus::Completed,
+            display_text: Some("turn text".to_string()),
+            cwd: None,
+            context: None,
+        }];
+
+        let kept = suppress_source_overlapping_candidates(
+            selected,
+            &mut debug_candidates,
+            &memories,
+            &query_turns,
+        )
+        .into_iter()
+        .map(|candidate| candidate.memory_id)
+        .collect::<Vec<_>>();
+
+        assert_eq!(kept, vec![2]);
+        assert!(debug_candidates[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:source_turn_already_in_query".to_string()));
     }
 
     #[test]

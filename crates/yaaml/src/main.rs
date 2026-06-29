@@ -14,7 +14,8 @@ use yaaml::llm_judge::JudgeClient;
 use yaaml::memory_health::{apply_health_action_rerank, build_memory_health_summaries};
 use yaaml::recall_filter::{
     effective_recall_selection_limit, select_recall_candidates_with_llm_filter,
-    suppress_recently_recalled_candidates, RecallFilterRequest, RecallFilterTelemetry,
+    suppress_recently_recalled_candidates, suppress_source_overlapping_candidates,
+    RecallFilterRequest, RecallFilterTelemetry,
 };
 use yaaml::turn_hydration::{context_from_turns, hydrate_turns};
 use yaaml_core::{
@@ -2394,6 +2395,7 @@ fn production_recall_eval_candidates(
             project_id: &session.project_id,
             session_id: Some(turn.session_id.as_str()),
             turn_ordinal: Some(turn.ordinal),
+            query_turns: recall_turns,
             query_text: &query,
             query_context: Some(query_context),
             query_source: "replay".to_string(),
@@ -4220,6 +4222,7 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
             project_id: &project_id,
             session_id: anchor.as_ref().map(|anchor| anchor.session_id.as_str()),
             turn_ordinal: anchor.as_ref().and_then(|anchor| anchor.turn_ordinal),
+            query_turns: &[],
             query_text: &query,
             query_context: None,
             query_source,
@@ -4473,6 +4476,7 @@ fn refresh_missing_recall_file(
             project_id: &session.project_id,
             session_id: Some(&session.id),
             turn_ordinal: Some(turn_ordinal),
+            query_turns: recall_turns,
             query_text: &query,
             query_context: Some(query_context),
             query_source,
@@ -4717,6 +4721,7 @@ fn recall_for_historical_turn(
             project_id: &session.project_id,
             session_id: Some(session_id),
             turn_ordinal: Some(turn_ordinal),
+            query_turns: recall_turns,
             query_text: &query,
             query_context: Some(query_context),
             query_source,
@@ -4755,6 +4760,7 @@ struct RecallEmbeddingRequest<'a> {
     project_id: &'a str,
     session_id: Option<&'a str>,
     turn_ordinal: Option<u64>,
+    query_turns: &'a [TurnRecord],
     query_text: &'a str,
     query_context: Option<ContextMetadata>,
     query_source: String,
@@ -4828,6 +4834,12 @@ fn recall_from_embedding(
             query_task_keys: &query_task_keys,
             current_segment_id,
         },
+    );
+    filter_result.selected = suppress_source_overlapping_candidates(
+        filter_result.selected,
+        &mut filter_result.debug_candidates,
+        &memories,
+        request.query_turns,
     );
     let cooldown_since = request.apply_cooldown.then_some(()).and_then(|()| {
         request.session_id.zip(cooldown_since_unix(

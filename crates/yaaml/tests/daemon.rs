@@ -974,6 +974,220 @@ fn stale_insufficient_context_eval_is_queued_for_rerun() {
 }
 
 #[test]
+fn completed_insufficient_context_rerun_can_be_requeued() {
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+    db.upsert_session(&SessionRecord {
+        id: "session-1".to_string(),
+        agent_type: AgentType::Codex,
+        project_id: "/tmp/yaaml".to_string(),
+        transcript_file_path: "/tmp/session.jsonl".to_string(),
+        started_at: Some("2026-06-08T00:00:00Z".to_string()),
+        last_seen_at: Some("2026-06-08T00:00:01Z".to_string()),
+    })
+    .unwrap();
+    for ordinal in 0..=1 {
+        db.insert_turn(&TurnRecord {
+            session_id: "session-1".to_string(),
+            turn_id: Some(format!("turn-{ordinal}")),
+            ordinal,
+            byte_start: ordinal * 10,
+            byte_end: ordinal * 10 + 10,
+            observed_at: Some("2026-06-08T00:10:02Z".to_string()),
+            status: yaaml_core::TurnStatus::Completed,
+            display_text: Some(format!("turn {ordinal}")),
+            cwd: None,
+            context: None,
+        })
+        .unwrap();
+    }
+    let memory_id = db
+        .insert_memory(&memory(
+            "Recall eval memory",
+            "This memory can be reconstructed for a stale eval rerun.",
+            Some("/tmp/yaaml"),
+        ))
+        .unwrap();
+    let turn_row_id = db
+        .turn_row_id_for_session_ordinal("session-1", 0)
+        .unwrap()
+        .unwrap();
+    let source_run_id = db
+        .insert_eval_run_with_metadata(
+            "recall_1_to_5",
+            "2026-06-08T00:00:03Z",
+            &serde_json::json!({
+                "session_id": "session-1",
+                "turn_ordinal": 0,
+                "memory_ids": [memory_id],
+            })
+            .to_string(),
+            EvalRunMetadata {
+                session_id: Some("session-1".to_string()),
+                turn_ordinal: Some(0),
+                recall_origin: "session_background".to_string(),
+                ..EvalRunMetadata::default()
+            },
+        )
+        .unwrap();
+    db.insert_eval_result(
+        source_run_id,
+        turn_row_id,
+        Some(memory_id),
+        "insufficient_context",
+        "not enough later turns",
+        "2026-06-08T00:00:04Z",
+    )
+    .unwrap();
+    db.complete_eval_run(source_run_id, "2026-06-08T00:00:05Z")
+        .unwrap();
+    let rerun_id = db
+        .insert_eval_run_with_metadata(
+            "recall_1_to_5",
+            "2026-06-08T00:10:03Z",
+            &serde_json::json!({
+                "session_id": "session-1",
+                "turn_ordinal": 0,
+                "memory_ids": [memory_id],
+                "rerun_for_eval_run_id": source_run_id,
+            })
+            .to_string(),
+            EvalRunMetadata {
+                session_id: Some("session-1".to_string()),
+                turn_ordinal: Some(0),
+                recall_origin: "session_background".to_string(),
+                ..EvalRunMetadata::default()
+            },
+        )
+        .unwrap();
+    db.insert_eval_result(
+        rerun_id,
+        turn_row_id,
+        Some(memory_id),
+        "insufficient_context",
+        "still not enough context",
+        "2026-06-08T00:10:04Z",
+    )
+    .unwrap();
+    db.complete_eval_run(rerun_id, "2026-06-08T00:10:05Z")
+        .unwrap();
+
+    assert_eq!(queue_stale_recall_eval_tasks(&db, 10).unwrap(), 1);
+    assert_eq!(
+        db.count_tasks_by_status(TASK_KIND_RECALL_EVAL, TaskStatus::Queued)
+            .unwrap(),
+        1
+    );
+}
+
+#[test]
+fn scored_recall_eval_rerun_prevents_requeue() {
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+    db.upsert_session(&SessionRecord {
+        id: "session-1".to_string(),
+        agent_type: AgentType::Codex,
+        project_id: "/tmp/yaaml".to_string(),
+        transcript_file_path: "/tmp/session.jsonl".to_string(),
+        started_at: Some("2026-06-08T00:00:00Z".to_string()),
+        last_seen_at: Some("2026-06-08T00:00:01Z".to_string()),
+    })
+    .unwrap();
+    for ordinal in 0..=1 {
+        db.insert_turn(&TurnRecord {
+            session_id: "session-1".to_string(),
+            turn_id: Some(format!("turn-{ordinal}")),
+            ordinal,
+            byte_start: ordinal * 10,
+            byte_end: ordinal * 10 + 10,
+            observed_at: Some("2026-06-08T00:10:02Z".to_string()),
+            status: yaaml_core::TurnStatus::Completed,
+            display_text: Some(format!("turn {ordinal}")),
+            cwd: None,
+            context: None,
+        })
+        .unwrap();
+    }
+    let memory_id = db
+        .insert_memory(&memory(
+            "Recall eval memory",
+            "This memory can be reconstructed for a stale eval rerun.",
+            Some("/tmp/yaaml"),
+        ))
+        .unwrap();
+    let turn_row_id = db
+        .turn_row_id_for_session_ordinal("session-1", 0)
+        .unwrap()
+        .unwrap();
+    let source_run_id = db
+        .insert_eval_run_with_metadata(
+            "recall_1_to_5",
+            "2026-06-08T00:00:03Z",
+            &serde_json::json!({
+                "session_id": "session-1",
+                "turn_ordinal": 0,
+                "memory_ids": [memory_id],
+            })
+            .to_string(),
+            EvalRunMetadata {
+                session_id: Some("session-1".to_string()),
+                turn_ordinal: Some(0),
+                recall_origin: "session_background".to_string(),
+                ..EvalRunMetadata::default()
+            },
+        )
+        .unwrap();
+    db.insert_eval_result(
+        source_run_id,
+        turn_row_id,
+        Some(memory_id),
+        "insufficient_context",
+        "not enough later turns",
+        "2026-06-08T00:00:04Z",
+    )
+    .unwrap();
+    db.complete_eval_run(source_run_id, "2026-06-08T00:00:05Z")
+        .unwrap();
+    let rerun_id = db
+        .insert_eval_run_with_metadata(
+            "recall_1_to_5",
+            "2026-06-08T00:10:03Z",
+            &serde_json::json!({
+                "session_id": "session-1",
+                "turn_ordinal": 0,
+                "memory_ids": [memory_id],
+                "rerun_for_eval_run_id": source_run_id,
+            })
+            .to_string(),
+            EvalRunMetadata {
+                session_id: Some("session-1".to_string()),
+                turn_ordinal: Some(0),
+                recall_origin: "session_background".to_string(),
+                ..EvalRunMetadata::default()
+            },
+        )
+        .unwrap();
+    db.insert_eval_result(
+        rerun_id,
+        turn_row_id,
+        Some(memory_id),
+        "5",
+        "enough context",
+        "2026-06-08T00:10:04Z",
+    )
+    .unwrap();
+    db.complete_eval_run(rerun_id, "2026-06-08T00:10:05Z")
+        .unwrap();
+
+    assert_eq!(queue_stale_recall_eval_tasks(&db, 10).unwrap(), 0);
+    assert_eq!(
+        db.count_tasks_by_status(TASK_KIND_RECALL_EVAL, TaskStatus::Queued)
+            .unwrap(),
+        0
+    );
+}
+
+#[test]
 fn recall_eval_scores_each_recalled_memory() {
     std::env::set_var("YAAML_TEST_EVAL_KEY", "test-key");
     let judge =

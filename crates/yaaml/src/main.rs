@@ -2425,12 +2425,24 @@ fn build_eval_summary(db: &Database, runs: Vec<EvalRunRecord>) -> anyhow::Result
     let mut conversation_segment_accumulators =
         BTreeMap::<String, EvalConversationSegmentAccumulator>::new();
     let mut results_considered = 0_usize;
+    let mut runs_considered = 0_usize;
 
     for run in &runs {
         let results = db
             .eval_results_for_run(run.id)
             .with_context(|| format!("failed to load eval results for run {}", run.id))?;
         let run_context = eval_run_context(run);
+        let has_insufficient_context = results
+            .iter()
+            .any(|result| result.judge_score.as_deref() == Some("insufficient_context"));
+        if has_insufficient_context
+            && db
+                .recall_eval_scored_rerun_exists(run.id)
+                .with_context(|| format!("failed to check scored rerun for eval run {}", run.id))?
+        {
+            continue;
+        }
+        runs_considered += 1;
         let origin_key = run_context.recall_origin.clone();
         let origin_accumulator = origin_accumulators.entry(origin_key).or_default();
         origin_accumulator.runs += 1;
@@ -2488,9 +2500,6 @@ fn build_eval_summary(db: &Database, runs: Vec<EvalRunRecord>) -> anyhow::Result
             accumulator.latest_turn_ordinal = run_context.turn_ordinal;
         }
 
-        let has_insufficient_context = results
-            .iter()
-            .any(|result| result.judge_score.as_deref() == Some("insufficient_context"));
         if has_insufficient_context && stale_insufficient_context.len() < 10 {
             if let (Some(session_id), Some(turn_ordinal)) =
                 (run_context.session_id.as_deref(), run_context.turn_ordinal)
@@ -2604,7 +2613,7 @@ fn build_eval_summary(db: &Database, runs: Vec<EvalRunRecord>) -> anyhow::Result
         .collect::<Vec<_>>();
 
     Ok(EvalSummary {
-        runs_considered: runs.len(),
+        runs_considered,
         results_considered,
         judged_results,
         average_score,

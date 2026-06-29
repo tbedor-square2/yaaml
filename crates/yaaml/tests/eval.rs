@@ -298,6 +298,150 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
 }
 
 #[test]
+fn eval_summary_omits_insufficient_context_run_after_scored_rerun() {
+    let tmp = TempDir::new().unwrap();
+    let home = tmp.path().join("home");
+    let project = tmp.path().join("project");
+    fs::create_dir_all(home.join(".yaaml")).unwrap();
+    fs::create_dir_all(&project).unwrap();
+    let db_path = home.join(".yaaml").join("yaaml.db");
+    fs::write(
+        home.join(".yaaml").join("config.toml"),
+        format!(
+            r#"
+db_path = "{}"
+embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
+"#,
+            db_path.display()
+        ),
+    )
+    .unwrap();
+    let mut db = Database::open(&db_path).unwrap();
+    db.migrate().unwrap();
+    db.upsert_session(&SessionRecord {
+        id: "session-1".to_string(),
+        agent_type: AgentType::Codex,
+        project_id: project.display().to_string(),
+        transcript_file_path: "/tmp/session.jsonl".to_string(),
+        started_at: Some("2026-06-08T00:00:00Z".to_string()),
+        last_seen_at: Some("2026-06-08T00:00:01Z".to_string()),
+    })
+    .unwrap();
+    for ordinal in 0..=1 {
+        db.insert_turn(&TurnRecord {
+            session_id: "session-1".to_string(),
+            turn_id: Some(format!("turn-{ordinal}")),
+            ordinal,
+            byte_start: ordinal * 10,
+            byte_end: ordinal * 10 + 10,
+            observed_at: Some("2026-06-08T00:10:02Z".to_string()),
+            status: TurnStatus::Completed,
+            display_text: Some(format!("turn {ordinal}")),
+            cwd: Some(project.display().to_string()),
+            context: None,
+        })
+        .unwrap();
+    }
+    let turn_row_id = db
+        .turn_row_id_for_session_ordinal("session-1", 0)
+        .unwrap()
+        .unwrap();
+    let memory_id = db
+        .insert_memory(&MemoryRecord {
+            id: None,
+            title: "Useful rerun memory".to_string(),
+            body: "This memory is useful once enough later context exists.".to_string(),
+            scope: MemoryScope::Project,
+            kind: MemoryKind::Lesson,
+            task_keys: Vec::new(),
+            source_turn_refs: Vec::new(),
+            created_at: "unix:1781205300".to_string(),
+            updated_at: "unix:1781205300".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some(project.display().to_string()),
+            project_descriptor: Some("yaaml".to_string()),
+            lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: yaaml_core::MemoryValidity::Durable,
+        })
+        .unwrap();
+    let source_run_id = db
+        .insert_eval_run_with_metadata(
+            "recall_1_to_5",
+            "unix:1781205400",
+            &serde_json::json!({
+                "session_id": "session-1",
+                "turn_ordinal": 0,
+                "memory_ids": [memory_id],
+            })
+            .to_string(),
+            eval_metadata(0, "session_background"),
+        )
+        .unwrap();
+    db.insert_eval_result(
+        source_run_id,
+        turn_row_id,
+        Some(memory_id),
+        "insufficient_context",
+        "not enough later turns",
+        "unix:1781205401",
+    )
+    .unwrap();
+    db.complete_eval_run(source_run_id, "unix:1781205402")
+        .unwrap();
+    let rerun_id = db
+        .insert_eval_run_with_metadata(
+            "recall_1_to_5",
+            "unix:1781206000",
+            &serde_json::json!({
+                "session_id": "session-1",
+                "turn_ordinal": 0,
+                "memory_ids": [memory_id],
+                "rerun_for_eval_run_id": source_run_id,
+            })
+            .to_string(),
+            eval_metadata(0, "session_background"),
+        )
+        .unwrap();
+    db.insert_eval_result(
+        rerun_id,
+        turn_row_id,
+        Some(memory_id),
+        "5",
+        "relevant",
+        "unix:1781206001",
+    )
+    .unwrap();
+    db.complete_eval_run(rerun_id, "unix:1781206002").unwrap();
+
+    let binary = env!("CARGO_BIN_EXE_yaaml");
+    let output = Command::new(binary)
+        .arg("eval")
+        .arg("summary")
+        .arg("--json")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(value["runs_considered"], 1);
+    assert_eq!(value["results_considered"], 1);
+    assert_eq!(value["score_counts"]["5"], 1);
+    assert_eq!(value["score_counts"]["n/a"], serde_json::Value::Null);
+    assert!(value["stale_insufficient_context"]
+        .as_array()
+        .unwrap()
+        .is_empty());
+}
+
+#[test]
 fn eval_recall_uses_mocked_anthropic_judge() {
     let tmp = TempDir::new().unwrap();
     let home = tmp.path().join("home");

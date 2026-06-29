@@ -931,25 +931,37 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
         Ok(eval_exists != 0)
     }
 
-    pub fn recall_eval_rerun_exists(&self, source_eval_run_id: i64) -> Result<bool, DatabaseError> {
+    pub fn recall_eval_pending_rerun_exists(
+        &self,
+        source_eval_run_id: i64,
+    ) -> Result<bool, DatabaseError> {
         let task_exists: i64 = self.conn.query_row(
             "SELECT EXISTS(
                 SELECT 1 FROM tasks
                 WHERE kind = 'recall_eval'
                   AND CAST(json_extract(payload_json, '$.rerun_for_eval_run_id') AS INTEGER) = ?1
-                  AND status IN ('queued', 'running', 'completed')
+                  AND status IN ('queued', 'running')
              )",
             params![source_eval_run_id],
             |row| row.get(0),
         )?;
-        if task_exists != 0 {
-            return Ok(true);
-        }
+        Ok(task_exists != 0)
+    }
+
+    pub fn recall_eval_scored_rerun_exists(
+        &self,
+        source_eval_run_id: i64,
+    ) -> Result<bool, DatabaseError> {
         let eval_exists: i64 = self.conn.query_row(
             "SELECT EXISTS(
-                SELECT 1 FROM eval_runs
-                WHERE strategy = 'recall_1_to_5'
-                  AND CAST(json_extract(config_json, '$.rerun_for_eval_run_id') AS INTEGER) = ?1
+                SELECT 1
+                FROM eval_runs
+                JOIN eval_results ON eval_results.eval_run_id = eval_runs.id
+                WHERE eval_runs.strategy = 'recall_1_to_5'
+                  AND CAST(json_extract(eval_runs.config_json, '$.rerun_for_eval_run_id') AS INTEGER) = ?1
+                  AND eval_results.judge_score IS NOT NULL
+                  AND eval_results.judge_score != ''
+                  AND eval_results.judge_score != 'insufficient_context'
              )",
             params![source_eval_run_id],
             |row| row.get(0),

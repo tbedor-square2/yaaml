@@ -1024,8 +1024,14 @@ pub fn queue_stale_recall_eval_tasks(db: &Database, limit: usize) -> anyhow::Res
             continue;
         }
         if db
-            .recall_eval_rerun_exists(run.id)
-            .context("failed to check recall eval rerun state")?
+            .recall_eval_scored_rerun_exists(run.id)
+            .context("failed to check scored recall eval rerun state")?
+        {
+            continue;
+        }
+        if db
+            .recall_eval_pending_rerun_exists(run.id)
+            .context("failed to check pending recall eval rerun state")?
         {
             continue;
         }
@@ -1081,12 +1087,6 @@ pub fn queue_stale_recall_eval_tasks(db: &Database, limit: usize) -> anyhow::Res
             injected: run.injected,
         })
         .context("failed to serialize stale recall eval task payload")?;
-        if db
-            .task_payload_exists(TASK_KIND_RECALL_EVAL, &payload_json)
-            .context("failed to check stale recall eval task")?
-        {
-            continue;
-        }
         let now = unix_timestamp();
         db.enqueue_task(&TaskRecord {
             id: None,

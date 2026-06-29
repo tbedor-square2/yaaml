@@ -541,6 +541,102 @@ fn formulation_can_refine_existing_candidate_memory() {
 }
 
 #[test]
+fn formulation_task_state_is_segment_scoped_and_expires_with_segment() {
+    std::env::set_var("YAAML_TEST_FORMULATION_KEY", "test-key");
+    std::env::set_var("YAAML_TEST_FORMULATION_OPENAI_KEY", "test-key");
+    let tmp = TempDir::new().unwrap();
+    let project = tmp.path().join("project");
+    fs::create_dir_all(&project).unwrap();
+    let transcript = tmp.path().join("session.jsonl");
+    let mut contents = session_meta_with("session-1", project.to_str().unwrap());
+    contents.push_str(&completed_turn(0));
+    fs::write(&transcript, contents).unwrap();
+    let anthropic = fake_anthropic_server(
+        r#"{"memories":[{"title":"Current cleanup task state","body":"The current segment is cleaning stale task-state handling and still needs a regression test.","scope":"project","kind":"task_state","task_keys":["task:stale-task-state"],"project_descriptor":"yaaml"}]}"#,
+    );
+    let embedding = fake_embedding_server();
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+    let config = Config {
+        summary_api_key_env: "YAAML_TEST_FORMULATION_KEY".to_string(),
+        summary_base_url: Some(anthropic.base_url.clone()),
+        embedding_api_key_env: "YAAML_TEST_FORMULATION_OPENAI_KEY".to_string(),
+        embedding_base_url: Some(embedding.base_url.clone()),
+        session_idle_memory_seconds: u64::MAX,
+        ..Config::default()
+    };
+    ingest_codex_file_with_config(&db, &config, &transcript).unwrap();
+    db.enqueue_task(&TaskRecord {
+        id: None,
+        kind: TASK_KIND_MEMORY_FORMULATION.to_string(),
+        status: TaskStatus::Queued,
+        priority: 0,
+        payload_json: serde_json::json!({
+            "session_id":"session-1",
+            "source_turn_refs":[{"session_id":"session-1","ordinal":0,"byte_start":0,"byte_end":1}]
+        })
+        .to_string(),
+        attempts: 0,
+        max_attempts: 5,
+        next_run_at: None,
+        last_error: None,
+        created_at: "unix:1".to_string(),
+        updated_at: "unix:1".to_string(),
+    })
+    .unwrap();
+
+    assert_eq!(run_queued_tasks(&db, &config, 1).unwrap(), 1);
+    anthropic.join();
+    embedding.join();
+
+    let memory = db
+        .list_memories()
+        .unwrap()
+        .into_iter()
+        .find(|memory| memory.kind == MemoryKind::TaskState)
+        .unwrap();
+    assert!(memory.is_active);
+    assert_eq!(
+        memory.validity,
+        yaaml_core::MemoryValidity::ValidWhileSegmentActive
+    );
+    let origin_segment_id = memory.origin_segment_id.unwrap();
+    assert_eq!(
+        memory.origin_segment_status,
+        Some(ConversationSegmentStatus::Active)
+    );
+    assert_eq!(memory.task_keys, vec!["task:stale-task-state".to_string()]);
+
+    db.replace_conversation_segments_for_session(
+        "session-1",
+        &[ConversationSegmentRecord {
+            id: Some(origin_segment_id),
+            session_id: "session-1".to_string(),
+            start_turn_ordinal: 0,
+            end_turn_ordinal: 0,
+            summary: "The stale task-state work is no longer active.".to_string(),
+            task_keys: vec!["task:stale-task-state".to_string()],
+            context: None,
+            status: ConversationSegmentStatus::Abandoned,
+            created_at: "unix:1".to_string(),
+            updated_at: "unix:2".to_string(),
+        }],
+    )
+    .unwrap();
+    assert_eq!(
+        db.deactivate_stale_task_state_memories("unix:3").unwrap(),
+        1
+    );
+    let expired = db
+        .list_memories_by_ids(&[memory.id.unwrap()])
+        .unwrap()
+        .into_iter()
+        .next()
+        .unwrap();
+    assert!(!expired.is_active);
+}
+
+#[test]
 fn historical_memory_queue_batches_all_completed_turns() {
     let tmp = TempDir::new().unwrap();
     let transcript = tmp.path().join("session.jsonl");

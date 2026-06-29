@@ -230,8 +230,12 @@ fn health_mode_adjustment(
         "likely_low_value" => (-0.25, false),
         "noisy_metadata" => (-(candidate.rank.task_key_bonus + 0.18).min(0.42), true),
         "context_sensitive" | "mixed_performance" => {
-            if strong_specific_task(candidate) || candidate.rank.context_score >= 0.50 {
+            if strong_specific_task(candidate) {
                 (0.04, false)
+            } else if memory_health.low_count > memory_health.useful_count {
+                (-0.65, false)
+            } else if candidate.rank.context_score >= 0.62 {
+                (0.0, false)
             } else {
                 (-0.24, false)
             }
@@ -492,6 +496,41 @@ mod tests {
             .penalties
             .iter()
             .any(|penalty| penalty.contains("project_fact:context_sensitive")));
+    }
+
+    #[test]
+    fn health_action_rerank_penalizes_low_heavy_mixed_memory_without_task_match() {
+        let memory = memory(
+            1,
+            "Mixed signal-generator migration checklist",
+            MemoryKind::Workflow,
+        );
+        let memories = vec![memory];
+        let history = [
+            score_with_rationale(1, "5", "Useful for the exact generator removal task."),
+            score_with_rationale(
+                1,
+                "2",
+                "The recalled context is stale and tangential to this inheritance question.",
+            ),
+            score_with_rationale(
+                1,
+                "2",
+                "The memory is about migration status, not the current class dependency.",
+            ),
+        ];
+        let health = build_memory_health_summaries(&memories, &history);
+        let mut candidate = candidate(1, 1.20);
+        candidate.rank.context_score = 0.75;
+
+        let reranked = apply_health_action_rerank(vec![candidate], &memories, &health);
+
+        assert!(reranked[0].score < 0.75);
+        assert!(reranked[0]
+            .rank
+            .penalties
+            .iter()
+            .any(|penalty| penalty.contains("workflow:mixed_performance")));
     }
 
     #[test]

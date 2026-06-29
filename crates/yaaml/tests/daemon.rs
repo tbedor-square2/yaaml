@@ -253,13 +253,13 @@ fn codex_change_processing_queues_and_runs_background_recall() {
     config.recall_candidate_pool = 5;
     config.turns_between_memory = 100;
     std::env::set_var("YAAML_TEST_DAEMON_RECALL_KEY", "test-key");
-    let memory_id = db
-        .insert_memory(&memory(
-            "Background recall",
-            "Completed transcript turns should refresh the session recall file.",
-            Some("/tmp/yaaml"),
-        ))
-        .unwrap();
+    let mut background_recall_memory = memory(
+        "Background recall",
+        "Completed transcript turns should refresh the session recall file.",
+        Some("/tmp/yaaml"),
+    );
+    background_recall_memory.kind = MemoryKind::ProjectFact;
+    let memory_id = db.insert_memory(&background_recall_memory).unwrap();
     db.upsert_embedding(&EmbeddingRecord {
         memory_id,
         embedding_model: config.embedding_model.clone(),
@@ -686,8 +686,8 @@ fn memory_queue_skips_already_covered_source_refs() {
         title: "covered".to_string(),
         body: "covered".to_string(),
         scope: MemoryScope::Project,
-        kind: MemoryKind::Lesson,
-        task_keys: Vec::new(),
+        kind: MemoryKind::ProjectFact,
+        task_keys: vec!["path:crates/yaaml/src/skills.rs".to_string()],
         source_turn_refs: (0..10)
             .map(|ordinal| SourceTurnRef {
                 session_id: "session-1".to_string(),
@@ -1742,7 +1742,7 @@ fn recall_file_is_written_after_memory_exists_and_new_turn_completes() {
         byte_end: 10,
         observed_at: None,
         status: yaaml_core::TurnStatus::Completed,
-        display_text: Some("where is recall written?".to_string()),
+        display_text: Some("where is recall written for crates/yaaml/src/skills.rs?".to_string()),
         cwd: None,
         context: None,
     };

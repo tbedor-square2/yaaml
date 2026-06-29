@@ -51,7 +51,7 @@ recall_memory_cooldown_seconds = 1200
         title: "Recall files".to_string(),
         body: "Agents should read the daemon-owned recall file through the skill.".to_string(),
         scope: MemoryScope::Project,
-        kind: MemoryKind::Lesson,
+        kind: MemoryKind::ProjectFact,
         task_keys: Vec::new(),
         source_turn_refs: Vec::new(),
         created_at: "2026-06-08T00:00:00Z".to_string(),
@@ -358,7 +358,7 @@ recall_llm_filter_enabled = false
 }
 
 #[test]
-fn recall_query_defaults_to_two_selected_memories() {
+fn recall_query_caps_default_selected_memories_without_filling() {
     let tmp = TempDir::new().unwrap();
     let home = tmp.path().join("home");
     let project = tmp.path().join("project");
@@ -385,9 +385,9 @@ recall_llm_filter_enabled = false
     db.migrate().unwrap();
     let memory_specs = [
         (
-            "Default limit lesson",
-            "Recall default limits should keep the strongest durable lesson without returning too much context.",
-            MemoryKind::Lesson,
+            "Default limit fact",
+            "Recall default limits should keep the strongest project fact without returning too much context.",
+            MemoryKind::ProjectFact,
         ),
         (
             "Default limit workflow",
@@ -447,7 +447,8 @@ recall_llm_filter_enabled = false
     server.join();
     let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
     let selected = value["selected_memory_ids"].as_array().unwrap();
-    assert_eq!(selected.len(), 2);
+    assert!(!selected.is_empty());
+    assert!(selected.len() <= 2);
     assert!(selected
         .iter()
         .all(|id| memory_ids.contains(&id.as_i64().unwrap())));
@@ -509,7 +510,7 @@ recall_llm_filter_enabled = false
             body: "This memory should be suppressed when it was just recalled in this session."
                 .to_string(),
             scope: MemoryScope::Project,
-            kind: MemoryKind::Lesson,
+            kind: MemoryKind::ProjectFact,
             task_keys: Vec::new(),
             source_turn_refs: Vec::new(),
             created_at: "unix:1".to_string(),
@@ -1144,7 +1145,7 @@ recall_llm_filter_enabled = false
         title: "Session recall".to_string(),
         body: "Recall should be triggered from the current user request.".to_string(),
         scope: MemoryScope::Project,
-        kind: MemoryKind::Lesson,
+        kind: MemoryKind::ProjectFact,
         task_keys: Vec::new(),
         source_turn_refs: Vec::new(),
         created_at: "2026-06-08T00:00:00Z".to_string(),
@@ -1398,7 +1399,7 @@ recall_llm_filter_enabled = false
         body: "Bare recall should generate a missing session recall file from recent turns."
             .to_string(),
         scope: MemoryScope::Project,
-        kind: MemoryKind::Lesson,
+        kind: MemoryKind::ProjectFact,
         task_keys: Vec::new(),
         source_turn_refs: Vec::new(),
         created_at: "2026-06-08T00:00:00Z".to_string(),
@@ -1510,7 +1511,7 @@ recall_llm_filter_enabled = false
         body: "Recall should use the newest known project session without a Codex thread id."
             .to_string(),
         scope: MemoryScope::Project,
-        kind: MemoryKind::Lesson,
+        kind: MemoryKind::ProjectFact,
         task_keys: Vec::new(),
         source_turn_refs: Vec::new(),
         created_at: "2026-06-08T00:00:00Z".to_string(),
@@ -1638,7 +1639,7 @@ recall_live_turn_window = 2
         title: "Historical recall".to_string(),
         body: "Backtests can replay recall for a specific session turn.".to_string(),
         scope: MemoryScope::Project,
-        kind: MemoryKind::Lesson,
+        kind: MemoryKind::ProjectFact,
         task_keys: Vec::new(),
         source_turn_refs: Vec::new(),
         created_at: "2026-06-08T00:00:00Z".to_string(),

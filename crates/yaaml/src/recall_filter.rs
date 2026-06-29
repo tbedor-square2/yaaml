@@ -199,7 +199,9 @@ fn strict_kind_diverse_top_fallback_selection(
             continue;
         }
         let kind = memory_kind(candidate, memories);
-        let keep = (index == 0 || has_task_match(candidate) || !seen_kinds.contains(&kind))
+        let keep = (top_candidate_allowed(index, candidate, &kind)
+            || has_task_match(candidate)
+            || (!seen_kinds.contains(&kind) && has_positive_health_signal(candidate)))
             && candidate.score >= 0.90;
         if keep {
             selected.push(candidate.clone());
@@ -210,9 +212,6 @@ fn strict_kind_diverse_top_fallback_selection(
         }
     }
 
-    if selected.is_empty() {
-        selected.push(top_candidate.clone());
-    }
     selected
 }
 
@@ -231,6 +230,25 @@ fn has_task_match(candidate: &RecallCandidate) -> bool {
         .iter()
         .any(|reason| reason == "keep:strong_task_key_match")
         || !candidate.rank.matched_task_keys.is_empty()
+}
+
+fn has_positive_health_signal(candidate: &RecallCandidate) -> bool {
+    candidate
+        .rank
+        .penalties
+        .iter()
+        .any(|penalty| penalty.contains(":proven_useful:"))
+}
+
+fn top_candidate_allowed(index: usize, candidate: &RecallCandidate, kind: &str) -> bool {
+    index == 0 && !risky_unproven_procedural_candidate(candidate, kind)
+}
+
+fn risky_unproven_procedural_candidate(candidate: &RecallCandidate, kind: &str) -> bool {
+    matches!(kind, "lesson" | "workflow")
+        && !has_task_match(candidate)
+        && !has_positive_health_signal(candidate)
+        && candidate.score < 1.50
 }
 
 fn memory_kind(candidate: &RecallCandidate, memories: &[MemoryRecord]) -> String {
@@ -651,16 +669,32 @@ mod tests {
     }
 
     #[test]
-    fn strict_kind_diverse_selection_uses_top_fallback() {
+    fn strict_kind_diverse_selection_abstains_below_threshold() {
         let candidates = vec![candidate_with_score(1, 0.89), candidate_with_score(2, 0.88)];
-        let memories = vec![memory(1, "body"), memory(2, "body")];
+        let mut memories = vec![memory(1, "body"), memory(2, "body")];
+        memories[0].kind = MemoryKind::ProjectFact;
 
         let selected = strict_kind_diverse_top_fallback_selection(&candidates, &memories, 3)
             .into_iter()
             .map(|candidate| candidate.memory_id)
             .collect::<Vec<_>>();
 
-        assert_eq!(selected, vec![1]);
+        assert!(selected.is_empty());
+    }
+
+    #[test]
+    fn strict_kind_diverse_selection_abstains_on_unproven_workflow_without_task_match() {
+        let candidates = vec![candidate_with_score(1, 1.20), candidate_with_score(2, 1.10)];
+        let mut memories = vec![memory(1, "body"), memory(2, "body")];
+        memories[0].kind = MemoryKind::Workflow;
+        memories[1].kind = MemoryKind::ProjectFact;
+
+        let selected = strict_kind_diverse_top_fallback_selection(&candidates, &memories, 3)
+            .into_iter()
+            .map(|candidate| candidate.memory_id)
+            .collect::<Vec<_>>();
+
+        assert!(selected.is_empty());
     }
 
     #[test]
@@ -668,10 +702,12 @@ mod tests {
         let candidates = vec![
             candidate_with_score(1, 1.20),
             candidate_with_score(2, 1.10),
-            candidate_with_score(3, 1.00),
+            proven_useful_candidate(3, 1.00),
         ];
         let mut memories = vec![memory(1, "body"), memory(2, "body"), memory(3, "body")];
-        memories[2].kind = MemoryKind::ProjectFact;
+        memories[0].kind = MemoryKind::ProjectFact;
+        memories[1].kind = MemoryKind::ProjectFact;
+        memories[2].kind = MemoryKind::Workflow;
 
         let selected = strict_kind_diverse_top_fallback_selection(&candidates, &memories, 3)
             .into_iter()
@@ -679,6 +715,26 @@ mod tests {
             .collect::<Vec<_>>();
 
         assert_eq!(selected, vec![1, 3]);
+    }
+
+    #[test]
+    fn strict_kind_diverse_selection_does_not_fill_with_unproven_no_task_memory() {
+        let candidates = vec![
+            candidate_with_score(1, 1.20),
+            candidate_with_score(2, 1.15),
+            candidate_with_score(3, 1.10),
+        ];
+        let mut memories = vec![memory(1, "body"), memory(2, "body"), memory(3, "body")];
+        memories[0].kind = MemoryKind::ProjectFact;
+        memories[1].kind = MemoryKind::Workflow;
+        memories[2].kind = MemoryKind::ProjectFact;
+
+        let selected = strict_kind_diverse_top_fallback_selection(&candidates, &memories, 3)
+            .into_iter()
+            .map(|candidate| candidate.memory_id)
+            .collect::<Vec<_>>();
+
+        assert_eq!(selected, vec![1]);
     }
 
     #[test]
@@ -692,7 +748,8 @@ mod tests {
             .rank
             .matched_task_keys
             .push("path:src/lib.rs".to_string());
-        let memories = vec![memory(1, "body"), memory(2, "body"), memory(3, "body")];
+        let mut memories = vec![memory(1, "body"), memory(2, "body"), memory(3, "body")];
+        memories[0].kind = MemoryKind::ProjectFact;
 
         let selected = strict_kind_diverse_top_fallback_selection(&candidates, &memories, 3)
             .into_iter()
@@ -734,10 +791,11 @@ mod tests {
         };
         let candidates = vec![
             candidate_with_score(1, 1.20),
-            candidate_with_score(2, 1.10),
+            proven_useful_candidate(2, 1.10),
             candidate_with_score(3, 1.00),
         ];
         let mut memories = vec![memory(1, "body"), memory(2, "body"), memory(3, "body")];
+        memories[0].kind = MemoryKind::ProjectFact;
         memories[1].kind = MemoryKind::Workflow;
         memories[2].kind = MemoryKind::Preference;
         let query_context = ContextMetadata {
@@ -830,6 +888,15 @@ mod tests {
                 matched_task_keys: Vec::new(),
             },
         }
+    }
+
+    fn proven_useful_candidate(memory_id: i64, score: f32) -> RecallCandidate {
+        let mut candidate = candidate_with_score(memory_id, score);
+        candidate
+            .rank
+            .penalties
+            .push("health_action_rerank:project_fact:proven_useful:0.14".to_string());
+        candidate
     }
 
     fn memory(memory_id: i64, body: &str) -> MemoryRecord {

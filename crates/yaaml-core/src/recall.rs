@@ -498,6 +498,19 @@ fn recall_filter_decision(
                     reasons,
                 };
             }
+            if same_project
+                && inactive_origin_segment(memory)
+                && candidate.rank.matched_task_keys.is_empty()
+                && context_has_branch_management(query_context)
+            {
+                reasons.push(
+                    "drop:inactive_project_fact_branch_context_without_task_match".to_string(),
+                );
+                return RecallFilterDecision {
+                    keep: false,
+                    reasons,
+                };
+            }
             if broad_project_id && !strong_context && !weak_task_key_match {
                 reasons.push("drop:broad_project_fact_weak_context".to_string());
                 return RecallFilterDecision {
@@ -3363,6 +3376,143 @@ Datadog is blocked by a Cloudflare Access redirect.
             .rank
             .filter_reasons
             .contains(&"keep:project_fact_context".to_string()));
+    }
+
+    #[test]
+    fn branch_management_query_drops_inactive_project_fact_with_only_broad_keys() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let mut stale_fact = memory(
+            1,
+            "MLP-4411 notification job implementation complete",
+            MemoryKind::ProjectFact,
+            Some(current_project),
+            vec!["pr:482948".to_string(), "ticket:MLP-4411".to_string()],
+        );
+        stale_fact.origin_segment_id = Some(42);
+        stale_fact.origin_segment_status = Some(ConversationSegmentStatus::Abandoned);
+        let memories = vec![stale_fact];
+        let query_context = infer_context_from_text(
+            "create a worktree, rebase the branch, and leave a blocking TODO",
+        );
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &query_context,
+            &[],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) =
+            select_recall_candidates(ranked, &memories, current_project, &query_context, &[], 5);
+
+        assert!(selected.is_empty());
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:inactive_project_fact_branch_context_without_task_match".to_string()));
+    }
+
+    #[test]
+    fn branch_management_query_drops_inactive_project_fact_with_unmatched_specific_key() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let mut branch_fact = memory(
+            1,
+            "MLP-4410 implementation belongs on the archival review branch",
+            MemoryKind::ProjectFact,
+            Some(current_project),
+            vec![
+                "branch:tbedor/mlp-4410-archival-review-rpc".to_string(),
+                "path:preview/notification/archival".to_string(),
+            ],
+        );
+        branch_fact.origin_segment_id = Some(42);
+        branch_fact.origin_segment_status = Some(ConversationSegmentStatus::Superseded);
+        let memories = vec![branch_fact];
+        let query_context = infer_context_from_text(
+            "create a worktree, rebase the branch, and leave a blocking TODO",
+        );
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &query_context,
+            &[],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) =
+            select_recall_candidates(ranked, &memories, current_project, &query_context, &[], 5);
+
+        assert!(selected.is_empty());
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:inactive_project_fact_branch_context_without_task_match".to_string()));
+    }
+
+    #[test]
+    fn branch_management_query_keeps_inactive_project_fact_with_specific_key_match() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let mut branch_fact = memory(
+            1,
+            "Mixtape precursor work belongs on the mixtape-predecessor branch",
+            MemoryKind::ProjectFact,
+            Some(current_project),
+            vec!["branch:mixtape-predecessor".to_string()],
+        );
+        branch_fact.origin_segment_id = Some(42);
+        branch_fact.origin_segment_status = Some(ConversationSegmentStatus::Superseded);
+        let memories = vec![branch_fact];
+        let query_context = infer_context_from_text(
+            "create a worktree for branch mixtape-predecessor, rebase it, and leave a blocking TODO",
+        );
+        let query_keys = vec!["branch:mixtape-predecessor".to_string()];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &query_context,
+            &query_keys,
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &query_context,
+            &query_keys,
+            5,
+        );
+
+        assert_eq!(selected.len(), 1);
+        assert_eq!(selected[0].memory_id, 1);
+        assert!(debug[0]
+            .rank
+            .matched_task_keys
+            .contains(&"branch:mixtape-predecessor".to_string()));
     }
 
     #[test]

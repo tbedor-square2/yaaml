@@ -101,9 +101,9 @@ pub struct StatsOutput {
     turns_with_recall: usize,
     turn_recall_rate: f64,
     recall_runs: usize,
-    recall_rate: f64,
+    recall_runs_per_eligible_turn: f64,
     non_empty_recall_runs: usize,
-    non_empty_recall_rate: f64,
+    non_empty_recall_runs_per_eligible_turn: f64,
     non_empty_per_recall_rate: f64,
     abstention: StatsAbstention,
     volume: StatsVolume,
@@ -372,9 +372,9 @@ pub fn build_stats_with_filters(
         turns_with_recall: turns_with_recall_count,
         turn_recall_rate: rate(turns_with_recall_count, eligible_count),
         recall_runs: recall_count,
-        recall_rate: rate(recall_count, eligible_count),
+        recall_runs_per_eligible_turn: rate(recall_count, eligible_count),
         non_empty_recall_runs: non_empty_count,
-        non_empty_recall_rate: rate(non_empty_count, eligible_count),
+        non_empty_recall_runs_per_eligible_turn: rate(non_empty_count, eligible_count),
         non_empty_per_recall_rate: rate(non_empty_count, recall_count),
         abstention,
         volume,
@@ -698,14 +698,13 @@ pub fn print_human_stats(stats: &StatsOutput) {
         percent(stats.turn_recall_rate)
     );
     println!(
-        "  recall runs: {} ({})",
-        stats.recall_runs,
-        percent(stats.recall_rate)
+        "  recall runs: {} ({:.2} per eligible turn)",
+        stats.recall_runs, stats.recall_runs_per_eligible_turn
     );
     println!(
-        "  non-empty recall: {} ({} of eligible, {} of recall runs)",
+        "  non-empty recall: {} ({:.2} per eligible turn, {} of recall runs)",
         stats.non_empty_recall_runs,
-        percent(stats.non_empty_recall_rate),
+        stats.non_empty_recall_runs_per_eligible_turn,
         percent(stats.non_empty_per_recall_rate)
     );
     println!(

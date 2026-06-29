@@ -194,7 +194,11 @@ fn stats_json_reports_recall_rates_volume_and_usefulness() {
     assert_eq!(stats["eligible_turns"], 3);
     assert_eq!(stats["turns_with_recall"], 3);
     assert_eq!(stats["recall_runs"], 3);
+    assert_eq!(stats["recall_runs_per_eligible_turn"], 1.0);
     assert_eq!(stats["non_empty_recall_runs"], 1);
+    assert_eq!(stats["non_empty_recall_runs_per_eligible_turn"], 1.0 / 3.0);
+    assert!(stats.get("recall_rate").is_none());
+    assert!(stats.get("non_empty_recall_rate").is_none());
     assert_eq!(stats["volume"]["average_memories_per_non_empty_run"], 2.0);
     assert_eq!(stats["abstention"]["empty_recall_runs"], 2);
     assert_eq!(stats["abstention"]["evaluated_empty_recall_runs"], 2);

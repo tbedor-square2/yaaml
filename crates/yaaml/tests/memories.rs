@@ -131,6 +131,13 @@ fn memories_health_classifies_failure_modes_and_actions() {
         yaaml_core::MemoryKind::Workflow,
         vec!["tool:tmux".to_string()],
     );
+    let mixed_wrong_context_memory_id = fixture.insert_memory_with(
+        "Safe cutover validation",
+        "When enabling a new generator, validate staging, use a percentage rollout, and monitor production metrics before a full cutover.",
+        true,
+        yaaml_core::MemoryKind::Workflow,
+        Vec::new(),
+    );
     fixture.insert_eval_scores(
         wrong_context_memory_id,
         &[
@@ -166,6 +173,16 @@ fn memories_health_classifies_failure_modes_and_actions() {
             ("4", "Relevant durable workflow guidance."),
         ],
     );
+    fixture.insert_eval_scores(
+        mixed_wrong_context_memory_id,
+        &[
+            ("5", "Useful for the original cutover task."),
+            (
+                "2",
+                "The recalled context is tangential and not directly actionable for the cleanup task.",
+            ),
+        ],
+    );
 
     let output = fixture.command(["memories", "health", "--json", "--limit", "10"]);
 
@@ -187,6 +204,18 @@ fn memories_health_classifies_failure_modes_and_actions() {
         .unwrap();
     assert_eq!(useful["failure_mode"], "proven_useful");
     assert_eq!(useful["recommended_action"], "boost_or_keep_active");
+    let mixed_wrong_context = memories
+        .iter()
+        .find(|memory| memory["memory_id"] == mixed_wrong_context_memory_id)
+        .unwrap();
+    assert_eq!(
+        mixed_wrong_context["failure_mode"],
+        "context_sensitive_wrong_context"
+    );
+    assert_eq!(
+        mixed_wrong_context["recommended_action"],
+        "require_strong_task_match"
+    );
 }
 
 #[test]

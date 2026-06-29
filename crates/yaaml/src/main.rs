@@ -1364,6 +1364,11 @@ fn diagnose_memory_failure(
 
     if accumulator.useful_count > 0 && accumulator.low_count > 0 {
         if rationale_mentions_wrong_context(&latest_low)
+            && matches!(memory.kind, MemoryKind::Lesson | MemoryKind::Workflow)
+        {
+            return "context_sensitive_wrong_context".to_string();
+        }
+        if rationale_mentions_wrong_context(&latest_low)
             || memory.kind == MemoryKind::TaskState
             || memory.kind == MemoryKind::TaskCheckpoint
             || memory.kind == MemoryKind::ProjectFact
@@ -1444,6 +1449,7 @@ fn recommended_memory_action(failure_mode: &str) -> String {
         "vague_under_contextualized" => "refine_or_suppress",
         "noisy_metadata" => "regenerate_task_keys",
         "consistently_low_value" => "suppress_or_tombstone",
+        "context_sensitive_wrong_context" => "require_strong_task_match",
         "context_sensitive" => "require_stronger_context_match",
         "mixed_performance" => "context_sensitive_rerank",
         "likely_low_value" => "suppress_pending_more_evals",
@@ -1485,6 +1491,9 @@ fn rationale_mentions_wrong_context(rationale: &str) -> bool {
         "no bearing",
         "irrelevant",
         "mismatch",
+        "not directly actionable",
+        "requires substantial reframing",
+        "tangential",
     ]
     .iter()
     .any(|needle| rationale.contains(needle))

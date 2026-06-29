@@ -163,6 +163,11 @@ fn diagnose_memory_failure(
 
     if accumulator.useful_count > 0 && accumulator.low_count > 0 {
         if rationale_mentions_wrong_context(&latest_low)
+            && matches!(memory.kind, MemoryKind::Lesson | MemoryKind::Workflow)
+        {
+            return "context_sensitive_wrong_context".to_string();
+        }
+        if rationale_mentions_wrong_context(&latest_low)
             || memory.kind == MemoryKind::TaskState
             || memory.kind == MemoryKind::TaskCheckpoint
             || memory.kind == MemoryKind::ProjectFact
@@ -210,6 +215,13 @@ fn health_mode_adjustment(
                 -0.08
             };
             (penalty, false)
+        }
+        "context_sensitive_wrong_context" => {
+            if strong_task(candidate) {
+                (0.02, false)
+            } else {
+                (-0.45, false)
+            }
         }
         "stale_episodic" | "consistently_low_value" => (-0.65, false),
         "likely_low_value" => (-0.25, false),
@@ -291,6 +303,9 @@ fn rationale_mentions_wrong_context(rationale: &str) -> bool {
         "no bearing",
         "irrelevant",
         "mismatch",
+        "not directly actionable",
+        "requires substantial reframing",
+        "tangential",
     ]
     .iter()
     .any(|needle| rationale.contains(needle))
@@ -382,6 +397,30 @@ mod tests {
         assert!(reranked[0].rank.matched_task_keys.is_empty());
     }
 
+    #[test]
+    fn health_action_rerank_penalizes_mixed_wrong_context_without_strong_task_match() {
+        let memory = memory(1, "Context-sensitive workflow", MemoryKind::Workflow);
+        let memories = vec![memory];
+        let history = [
+            score_with_rationale(1, "5", "Useful for the original cutover task."),
+            score_with_rationale(
+                1,
+                "2",
+                "The recalled context is tangential and not directly actionable for the cleanup task.",
+            ),
+        ];
+        let health = build_memory_health_summaries(&memories, &history);
+        let mut candidate = candidate(1, 1.20);
+        candidate.rank.context_score = 0.84;
+
+        let reranked = apply_health_action_rerank(vec![candidate], &memories, &health);
+
+        assert!(reranked[0].score < 0.90);
+        assert!(reranked[0].rank.penalties.iter().any(|penalty| {
+            penalty.contains("health_action_rerank:workflow:context_sensitive_wrong_context")
+        }));
+    }
+
     fn memory(id: i64, title: &str, kind: MemoryKind) -> MemoryRecord {
         MemoryRecord {
             id: Some(id),
@@ -434,5 +473,18 @@ mod tests {
                 rationale: Some("Useful or not useful in prior recall.".to_string()),
             })
             .collect()
+    }
+
+    fn score_with_rationale(
+        memory_id: i64,
+        score: &str,
+        rationale: &str,
+    ) -> MemoryEvalHistoryRecord {
+        MemoryEvalHistoryRecord {
+            id: 1,
+            memory_id,
+            judge_score: score.to_string(),
+            rationale: Some(rationale.to_string()),
+        }
     }
 }

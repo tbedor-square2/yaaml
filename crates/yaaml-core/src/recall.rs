@@ -523,6 +523,17 @@ fn recall_filter_decision(
                     reasons,
                 };
             }
+            if same_project
+                && candidate.rank.matched_task_keys.is_empty()
+                && candidate.similarity < 0.86
+                && has_unmatched_topical_query_context(query_context, &memory_context)
+            {
+                reasons.push("drop:project_fact_missing_topic_overlap".to_string());
+                return RecallFilterDecision {
+                    keep: false,
+                    reasons,
+                };
+            }
             if broad_project_id && !strong_context && !weak_task_key_match {
                 reasons.push("drop:broad_project_fact_weak_context".to_string());
                 return RecallFilterDecision {
@@ -719,6 +730,32 @@ fn high_signal_recall_context_tags(context: &ContextMetadata) -> HashSet<String>
         .subject_tags
         .iter()
         .filter(|tag| is_high_signal_recall_context_tag(tag))
+        .cloned()
+        .collect()
+}
+
+fn has_unmatched_topical_query_context(
+    query_context: &ContextMetadata,
+    memory_context: &ContextMetadata,
+) -> bool {
+    let query_tags = topical_high_signal_recall_context_tags(query_context);
+    let memory_tags = topical_high_signal_recall_context_tags(memory_context);
+    let same_known_work_area =
+        query_context.work_area.is_some() && query_context.work_area == memory_context.work_area;
+    !query_tags.is_empty() && !same_known_work_area && query_tags.is_disjoint(&memory_tags)
+}
+
+fn topical_high_signal_recall_context_tags(context: &ContextMetadata) -> HashSet<String> {
+    let repo_name = context
+        .repo_id
+        .as_deref()
+        .and_then(|repo| repo.rsplit('/').next())
+        .map(str::to_string);
+    context
+        .subject_tags
+        .iter()
+        .filter(|tag| is_high_signal_recall_context_tag(tag))
+        .filter(|tag| repo_name.as_ref() != Some(*tag))
         .cloned()
         .collect()
 }
@@ -3647,6 +3684,94 @@ Datadog is blocked by a Cloudflare Access redirect.
             },
         );
         assert!(ranked[0].similarity >= 0.86);
+
+        let (selected, debug) =
+            select_recall_candidates(ranked, &memories, current_project, &query_context, &[], 5);
+
+        assert_eq!(selected.len(), 1, "{:?}", debug[0].rank.filter_reasons);
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"keep:project_fact_context".to_string()));
+    }
+
+    #[test]
+    fn same_project_fact_without_topic_overlap_drops_for_specific_query() {
+        let current_project = "/tmp/bot-manager";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.60,
+        }];
+        let mut project_overview = memory(
+            1,
+            "bot-manager: Rust CLI/TUI for ticket and PR organization",
+            MemoryKind::ProjectFact,
+            Some(current_project),
+            Vec::new(),
+        );
+        project_overview.body =
+            "bot-manager manages Linear tickets, GitHub PRs, and tmux-backed Codex sessions."
+                .to_string();
+        let memories = vec![project_overview];
+        let mut query_context = infer_context_from_text(
+            "bot-manager debug why an active session from the transcript is hidden after a failing test",
+        );
+        query_context.repo_id = Some("bot-manager".to_string());
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &query_context,
+            &[],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) =
+            select_recall_candidates(ranked, &memories, current_project, &query_context, &[], 5);
+
+        assert!(selected.is_empty());
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:project_fact_missing_topic_overlap".to_string()));
+    }
+
+    #[test]
+    fn same_project_fact_with_topic_overlap_survives_specific_query() {
+        let current_project = "/tmp/bot-manager";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.60,
+        }];
+        let mut transcript_fact = memory(
+            1,
+            "bot-manager transcript session visibility",
+            MemoryKind::ProjectFact,
+            Some(current_project),
+            Vec::new(),
+        );
+        transcript_fact.body =
+            "bot-manager transcript ingestion controls whether active sessions are visible in the TUI."
+                .to_string();
+        let memories = vec![transcript_fact];
+        let mut query_context = infer_context_from_text(
+            "bot-manager debug why an active session from the transcript is hidden after a failing test",
+        );
+        query_context.repo_id = Some("bot-manager".to_string());
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &query_context,
+            &[],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
 
         let (selected, debug) =
             select_recall_candidates(ranked, &memories, current_project, &query_context, &[], 5);

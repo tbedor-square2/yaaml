@@ -9,6 +9,7 @@ pub struct MemoryHealthSummary {
     pub useful_count: u64,
     pub low_count: u64,
     pub average_score: Option<f64>,
+    pub latest_score: Option<u8>,
     pub failure_mode: String,
 }
 
@@ -17,6 +18,8 @@ struct MemoryHealthAccumulator {
     judged_scores: Vec<u8>,
     useful_count: u64,
     low_count: u64,
+    latest_eval_id: i64,
+    latest_score: Option<u8>,
     latest_low_rationale: Option<String>,
 }
 
@@ -31,6 +34,10 @@ pub fn build_memory_health_summaries(
         };
         let accumulator = accumulators.entry(record.memory_id).or_default();
         accumulator.judged_scores.push(score);
+        if accumulator.latest_score.is_none() || record.id >= accumulator.latest_eval_id {
+            accumulator.latest_eval_id = record.id;
+            accumulator.latest_score = Some(score);
+        }
         if score >= 4 {
             accumulator.useful_count += 1;
         } else if score <= 2 {
@@ -122,6 +129,7 @@ fn memory_health_summary(
         useful_count: accumulator.useful_count,
         low_count: accumulator.low_count,
         average_score,
+        latest_score: accumulator.latest_score,
         failure_mode,
     }
 }
@@ -209,6 +217,9 @@ fn health_mode_adjustment(
     candidate: &RecallCandidate,
     memory_health: &MemoryHealthSummary,
 ) -> (f32, bool) {
+    if memory_health.low_count > 0 && !strong_specific_task(candidate) {
+        return (-0.75, false);
+    }
     match memory_health.failure_mode.as_str() {
         "proven_useful" => (0.14, false),
         "wrong_context" => {
@@ -471,6 +482,104 @@ mod tests {
     }
 
     #[test]
+    fn health_action_rerank_penalizes_latest_low_without_specific_task_match() {
+        let memory = memory(
+            1,
+            "Previously useful recall strategy",
+            MemoryKind::ProjectFact,
+        );
+        let memories = vec![memory];
+        let history = vec![
+            eval_score(1, 1, "5", "Useful for a prior recall tuning task."),
+            eval_score(2, 1, "5", "Useful for a direct backtest comparison."),
+            eval_score(
+                3,
+                1,
+                "2",
+                "Related but stale and not directly actionable for the current diagnostic turn.",
+            ),
+        ];
+        let health = build_memory_health_summaries(&memories, &history);
+        let mut candidate = candidate(1, 1.20);
+        candidate.rank.context_score = 0.75;
+
+        let reranked = apply_health_action_rerank(vec![candidate], &memories, &health);
+
+        assert_eq!(health[&1].latest_score, Some(2));
+        assert!(reranked[0].score < 0.60);
+        assert!(reranked[0]
+            .rank
+            .penalties
+            .iter()
+            .any(|penalty| penalty.contains("project_fact:context_sensitive:-")));
+    }
+
+    #[test]
+    fn health_action_rerank_allows_latest_low_with_specific_task_match() {
+        let memory = memory(
+            1,
+            "Previously useful target strategy",
+            MemoryKind::ProjectFact,
+        );
+        let memories = vec![memory];
+        let history = vec![
+            eval_score(1, 1, "5", "Useful for a prior target split task."),
+            eval_score(
+                2,
+                1,
+                "2",
+                "Wrong context for an unrelated branch-management task.",
+            ),
+        ];
+        let health = build_memory_health_summaries(&memories, &history);
+        let mut candidate = candidate(1, 1.20);
+        candidate.rank.task_key_bonus = 0.28;
+        candidate.rank.matched_task_keys = vec!["target://riskarbiter:lib".to_string()];
+
+        let reranked = apply_health_action_rerank(vec![candidate], &memories, &health);
+
+        assert_eq!(health[&1].latest_score, Some(2));
+        assert!(reranked[0].score > 1.0);
+    }
+
+    #[test]
+    fn health_action_rerank_penalizes_proven_useful_with_any_low_without_specific_task_match() {
+        let memory = memory(
+            1,
+            "Mostly useful recall backtest result",
+            MemoryKind::ProjectFact,
+        );
+        let memories = vec![memory];
+        let history = vec![
+            eval_score(1, 1, "5", "Useful for a direct backtest comparison."),
+            eval_score(2, 1, "5", "Useful for recall tuning."),
+            eval_score(3, 1, "4", "Relevant to recall metrics."),
+            eval_score(4, 1, "5", "Actionable for filter design."),
+            eval_score(
+                5,
+                1,
+                "2",
+                "Stale task state for a different diagnostic turn.",
+            ),
+            eval_score(6, 1, "5", "Useful again for a direct filter question."),
+        ];
+        let health = build_memory_health_summaries(&memories, &history);
+        let mut candidate = candidate(1, 1.20);
+        candidate.rank.context_score = 0.75;
+
+        let reranked = apply_health_action_rerank(vec![candidate], &memories, &health);
+
+        assert_eq!(health[&1].failure_mode, "proven_useful");
+        assert_eq!(health[&1].latest_score, Some(5));
+        assert!(reranked[0].score < 0.70);
+        assert!(reranked[0]
+            .rank
+            .penalties
+            .iter()
+            .any(|penalty| penalty.contains("project_fact:proven_useful:-")));
+    }
+
+    #[test]
     fn health_action_rerank_penalizes_context_sensitive_memory_with_only_broad_task_match() {
         let memory = memory(1, "Context-sensitive PR status", MemoryKind::ProjectFact);
         let memories = vec![memory];
@@ -649,8 +758,17 @@ mod tests {
         score: &str,
         rationale: &str,
     ) -> MemoryEvalHistoryRecord {
+        eval_score(1, memory_id, score, rationale)
+    }
+
+    fn eval_score(
+        id: i64,
+        memory_id: i64,
+        score: &str,
+        rationale: &str,
+    ) -> MemoryEvalHistoryRecord {
         MemoryEvalHistoryRecord {
-            id: 1,
+            id,
             memory_id,
             judge_score: score.to_string(),
             rationale: Some(rationale.to_string()),

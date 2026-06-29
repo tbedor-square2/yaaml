@@ -511,6 +511,18 @@ fn recall_filter_decision(
                     reasons,
                 };
             }
+            if same_project
+                && inactive_origin_segment(memory)
+                && candidate.rank.matched_task_keys.is_empty()
+                && candidate.rank.context_score < 0.60
+                && candidate.similarity < 0.86
+            {
+                reasons.push("drop:inactive_project_fact_without_task_match".to_string());
+                return RecallFilterDecision {
+                    keep: false,
+                    reasons,
+                };
+            }
             if broad_project_id && !strong_context && !weak_task_key_match {
                 reasons.push("drop:broad_project_fact_weak_context".to_string());
                 return RecallFilterDecision {
@@ -3551,6 +3563,99 @@ Datadog is blocked by a Cloudflare Access redirect.
             .rank
             .filter_reasons
             .contains(&"drop:inactive_project_fact_branch_context_without_task_match".to_string()));
+    }
+
+    #[test]
+    fn inactive_project_fact_without_task_match_needs_very_strong_context() {
+        let current_project = "/Users/tbedor/Development/yaaml";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.65,
+        }];
+        let mut stale_fact = memory(
+            1,
+            "Health-aware recall reranking implementation completed",
+            MemoryKind::ProjectFact,
+            Some(current_project),
+            Vec::new(),
+        );
+        stale_fact.body =
+            "Implemented health_action_rerank in production recall after eval experiments."
+                .to_string();
+        stale_fact.origin_segment_id = Some(42);
+        stale_fact.origin_segment_status = Some(ConversationSegmentStatus::Superseded);
+        let memories = vec![stale_fact];
+        let query_context = infer_context_from_text("inspect daemon status and queued workers");
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &query_context,
+            &[],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) =
+            select_recall_candidates(ranked, &memories, current_project, &query_context, &[], 5);
+
+        assert!(selected.is_empty(), "{:?}", debug[0].rank.filter_reasons);
+        assert!(
+            debug[0]
+                .rank
+                .filter_reasons
+                .contains(&"drop:inactive_project_fact_without_task_match".to_string()),
+            "{:?}",
+            debug[0].rank.filter_reasons
+        );
+    }
+
+    #[test]
+    fn inactive_project_fact_with_high_vector_match_can_recall_without_task_match() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let mut stale_fact = memory(
+            1,
+            "RiskArbiter recall fact",
+            MemoryKind::ProjectFact,
+            Some(current_project),
+            Vec::new(),
+        );
+        stale_fact.body =
+            "RiskArbiter rule archival work uses the existing rules table in squareup/java."
+                .to_string();
+        stale_fact.project_descriptor = Some("squareup/java riskarbiter".to_string());
+        stale_fact.origin_segment_id = Some(42);
+        stale_fact.origin_segment_status = Some(ConversationSegmentStatus::Superseded);
+        let memories = vec![stale_fact];
+        let query_context =
+            infer_context_from_text("RiskArbiter rule archival work in squareup/java");
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &query_context,
+            &[],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+        assert!(ranked[0].similarity >= 0.86);
+
+        let (selected, debug) =
+            select_recall_candidates(ranked, &memories, current_project, &query_context, &[], 5);
+
+        assert_eq!(selected.len(), 1, "{:?}", debug[0].rank.filter_reasons);
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"keep:project_fact_context".to_string()));
     }
 
     #[test]

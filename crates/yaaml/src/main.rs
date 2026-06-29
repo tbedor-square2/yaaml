@@ -376,6 +376,9 @@ struct MemoriesApplyHealthArgs {
     /// Required confirmation before changing active memories.
     #[arg(long)]
     yes: bool,
+    /// Show eligible memories without deactivating them.
+    #[arg(long)]
+    dry_run: bool,
     /// Emit machine-readable JSON.
     #[arg(long)]
     json: bool,
@@ -678,6 +681,7 @@ struct MemoryHealthApplyOutput {
     result_rows_considered: usize,
     memories_considered: usize,
     active_memories_considered: usize,
+    dry_run: bool,
     eligible_memories: usize,
     applied_memories: usize,
     memories: Vec<MemoryHealthAppliedMemory>,
@@ -1019,8 +1023,11 @@ fn memories_health(args: MemoriesHealthArgs) -> anyhow::Result<()> {
 }
 
 fn memories_apply_health(args: MemoriesApplyHealthArgs) -> anyhow::Result<()> {
-    if !args.yes {
-        bail!("memory health application requires --yes");
+    if args.yes && args.dry_run {
+        bail!("use either --yes or --dry-run, not both");
+    }
+    if !args.yes && !args.dry_run {
+        bail!("memory health application requires --yes or --dry-run");
     }
     let (_config, db) = open_database_for_cwd()?;
     let runs = db
@@ -1035,8 +1042,10 @@ fn memories_apply_health(args: MemoriesApplyHealthArgs) -> anyhow::Result<()> {
     let now = unix_timestamp();
     let mut applied_memories = Vec::new();
     for memory in actionable {
-        db.deactivate_memory(memory.memory_id, &now)
-            .with_context(|| format!("failed to deactivate memory {}", memory.memory_id))?;
+        if args.yes {
+            db.deactivate_memory(memory.memory_id, &now)
+                .with_context(|| format!("failed to deactivate memory {}", memory.memory_id))?;
+        }
         applied_memories.push(MemoryHealthAppliedMemory {
             memory_id: memory.memory_id,
             title: memory.title.clone(),
@@ -1053,8 +1062,9 @@ fn memories_apply_health(args: MemoriesApplyHealthArgs) -> anyhow::Result<()> {
         result_rows_considered: health.result_rows_considered,
         memories_considered: health.memories_considered,
         active_memories_considered: health.active_memories_considered,
+        dry_run: args.dry_run,
         eligible_memories: applied_memories.len(),
-        applied_memories: applied_memories.len(),
+        applied_memories: if args.yes { applied_memories.len() } else { 0 },
         memories: applied_memories,
     };
     if args.json {
@@ -1675,7 +1685,11 @@ fn print_human_memory_health(health: &MemoryHealthOutput) {
 }
 
 fn print_human_memory_health_apply(output: &MemoryHealthApplyOutput) {
-    println!("Memory health application");
+    if output.dry_run {
+        println!("Memory health application dry run");
+    } else {
+        println!("Memory health application");
+    }
     println!("  eval runs: {}", output.eval_runs_considered);
     println!("  result rows: {}", output.result_rows_considered);
     println!(

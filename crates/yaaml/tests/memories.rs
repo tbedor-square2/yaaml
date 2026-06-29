@@ -424,6 +424,53 @@ fn memories_apply_health_deactivates_only_high_confidence_actions() {
     assert!(active(useful_memory_id));
 }
 
+#[test]
+fn memories_apply_health_dry_run_lists_without_deactivating() {
+    let fixture = MemoryFixture::new();
+    fixture.insert_session_with_turns(1);
+    let stale_memory_id = fixture.insert_memory_with(
+        "Current PR is ready for review",
+        "The current PR is ready for review and only needs a final push before the task is done.",
+        true,
+        yaaml_core::MemoryKind::TaskState,
+        vec!["pr:123".to_string()],
+    );
+    fixture.insert_eval_scores(
+        stale_memory_id,
+        &[
+            ("1", "The stale task state is unrelated."),
+            ("1", "This old PR status is obsolete."),
+            ("2", "The task-state memory is stale."),
+            ("1", "This current PR note no longer applies."),
+            ("1", "The remembered status is irrelevant."),
+        ],
+    );
+
+    let output = fixture.command([
+        "memories",
+        "apply-health",
+        "--dry-run",
+        "--json",
+        "--limit",
+        "10",
+    ]);
+
+    assert_success(&output);
+    let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(value["dry_run"], true);
+    assert_eq!(value["eligible_memories"], 1);
+    assert_eq!(value["applied_memories"], 0);
+    assert_eq!(value["memories"][0]["memory_id"], stale_memory_id);
+
+    let memory = Database::open(&fixture.db_path)
+        .unwrap()
+        .list_memories_by_ids(&[stale_memory_id])
+        .unwrap()
+        .pop()
+        .unwrap();
+    assert!(memory.is_active);
+}
+
 struct MemoryFixture {
     _tmp: TempDir,
     home: std::path::PathBuf,

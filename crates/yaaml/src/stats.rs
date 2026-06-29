@@ -39,8 +39,65 @@ struct StatsRecallVolumeRun {
     tool_name: Option<String>,
 }
 
+#[derive(Debug, Clone, Default, Serialize)]
+pub struct StatsFilters {
+    origins: Vec<String>,
+    excluded_origins: Vec<String>,
+}
+
+impl StatsFilters {
+    pub fn new(origins: Vec<String>, excluded_origins: Vec<String>) -> Self {
+        Self {
+            origins: normalized_filters(origins),
+            excluded_origins: normalized_filters(excluded_origins),
+        }
+    }
+
+    fn is_active(&self) -> bool {
+        !self.origins.is_empty() || !self.excluded_origins.is_empty()
+    }
+
+    fn includes_origin(&self, origin: &str) -> bool {
+        (self.origins.is_empty() || self.origins.iter().any(|allowed| allowed == origin))
+            && !self
+                .excluded_origins
+                .iter()
+                .any(|excluded| excluded == origin)
+    }
+
+    fn label(&self) -> Option<String> {
+        if !self.is_active() {
+            return None;
+        }
+        let mut parts = Vec::new();
+        if !self.origins.is_empty() {
+            parts.push(format!("origin={}", self.origins.join(",")));
+        }
+        if !self.excluded_origins.is_empty() {
+            parts.push(format!(
+                "exclude_origin={}",
+                self.excluded_origins.join(",")
+            ));
+        }
+        Some(parts.join(" "))
+    }
+}
+
+fn normalized_filters(filters: Vec<String>) -> Vec<String> {
+    let mut seen = HashSet::new();
+    let mut normalized = Vec::new();
+    for filter in filters {
+        let filter = filter.trim().to_string();
+        if !filter.is_empty() && seen.insert(filter.clone()) {
+            normalized.push(filter);
+        }
+    }
+    normalized
+}
+
 #[derive(Debug, Serialize)]
 pub struct StatsOutput {
+    filters: StatsFilters,
     eligible_turns: usize,
     recall_runs: usize,
     recall_rate: f64,
@@ -125,6 +182,14 @@ struct StatsLlmFilter {
 }
 
 pub fn build_stats(db: &Database, eval_limit: usize) -> Result<StatsOutput> {
+    build_stats_with_filters(db, eval_limit, StatsFilters::default())
+}
+
+pub fn build_stats_with_filters(
+    db: &Database,
+    eval_limit: usize,
+    filters: StatsFilters,
+) -> Result<StatsOutput> {
     let eligible = db
         .completed_turn_anchors()
         .context("failed to load completed turn anchors")?
@@ -135,14 +200,17 @@ pub fn build_stats(db: &Database, eval_limit: usize) -> Result<StatsOutput> {
         })
         .collect::<HashSet<_>>();
 
-    let mut recall_runs = db
-        .list_tasks_by_kind(crate::daemon::TASK_KIND_RECALL)
-        .context("failed to list recall tasks")?
-        .into_iter()
-        .filter(|task| task.status == "completed")
-        .filter_map(|task| recall_task_anchor(&task.payload_json))
-        .filter(|anchor| eligible.contains(anchor))
-        .collect::<HashSet<_>>();
+    let mut recall_runs = if filters.is_active() {
+        HashSet::new()
+    } else {
+        db.list_tasks_by_kind(crate::daemon::TASK_KIND_RECALL)
+            .context("failed to list recall tasks")?
+            .into_iter()
+            .filter(|task| task.status == "completed")
+            .filter_map(|task| recall_task_anchor(&task.payload_json))
+            .filter(|anchor| eligible.contains(anchor))
+            .collect::<HashSet<_>>()
+    };
 
     let mut recall_eval_by_anchor = BTreeMap::<StatsAnchor, StatsRecallVolumeRun>::new();
     let mut volume_runs = Vec::<StatsRecallVolumeRun>::new();
@@ -153,6 +221,9 @@ pub fn build_stats(db: &Database, eval_limit: usize) -> Result<StatsOutput> {
         let Some((anchor, volume)) = recall_eval_task_volume(&task.payload_json) else {
             continue;
         };
+        if !filters.includes_origin(&volume.recall_origin) {
+            continue;
+        }
         volume_runs.push(volume.clone());
         if let Some(anchor) = anchor {
             if !eligible.contains(&anchor) {
@@ -165,7 +236,10 @@ pub fn build_stats(db: &Database, eval_limit: usize) -> Result<StatsOutput> {
 
     let eval_runs = db
         .list_eval_runs(eval_limit)
-        .context("failed to list eval runs")?;
+        .context("failed to list eval runs")?
+        .into_iter()
+        .filter(|run| filters.includes_origin(&run.recall_origin))
+        .collect::<Vec<_>>();
     let mut latest_eval_run_by_anchor = BTreeMap::<StatsAnchor, EvalRunRecord>::new();
     for run in &eval_runs {
         let Some(anchor) = eval_run_anchor(run) else {
@@ -293,6 +367,7 @@ pub fn build_stats(db: &Database, eval_limit: usize) -> Result<StatsOutput> {
     };
 
     Ok(StatsOutput {
+        filters,
         eligible_turns: eligible_count,
         recall_runs: recall_count,
         recall_rate: rate(recall_count, eligible_count),
@@ -620,6 +695,9 @@ fn percentile(values: &[usize], percentile: f64) -> usize {
 
 pub fn print_human_stats(stats: &StatsOutput) {
     println!("YAAML recall stats");
+    if let Some(label) = stats.filters.label() {
+        println!("  filters: {label}");
+    }
     println!("  eligible turns: {}", stats.eligible_turns);
     println!(
         "  recall runs: {} ({})",

@@ -236,6 +236,12 @@ struct StatsArgs {
     /// Maximum recent eval runs to consider for usefulness metrics.
     #[arg(long, default_value_t = 1000)]
     eval_limit: usize,
+    /// Include only recall/eval records from this origin. Repeatable.
+    #[arg(long)]
+    origin: Vec<String>,
+    /// Exclude recall/eval records from this origin. Repeatable.
+    #[arg(long)]
+    exclude_origin: Vec<String>,
 }
 
 #[derive(Debug, Parser)]
@@ -588,7 +594,8 @@ fn status(args: StatusArgs) -> anyhow::Result<()> {
 
 fn stats(args: StatsArgs) -> anyhow::Result<()> {
     let (_config, db) = open_database_for_cwd()?;
-    let stats = yaaml::stats::build_stats(&db, args.eval_limit)?;
+    let filters = yaaml::stats::StatsFilters::new(args.origin, args.exclude_origin);
+    let stats = yaaml::stats::build_stats_with_filters(&db, args.eval_limit, filters)?;
     if args.json {
         println!("{}", serde_json::to_string_pretty(&stats)?);
     } else {

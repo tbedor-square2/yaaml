@@ -208,11 +208,172 @@ fn stats_json_reports_recall_rates_volume_and_usefulness() {
     );
 }
 
+#[test]
+fn stats_json_filters_by_recall_origin() {
+    let tmp = TempDir::new().unwrap();
+    let home = tmp.path().join("home");
+    let project = tmp.path().join("project");
+    fs::create_dir_all(home.join(".yaaml")).unwrap();
+    fs::create_dir_all(&project).unwrap();
+    let db_path = home.join(".yaaml").join("yaaml.db");
+    fs::write(
+        home.join(".yaaml").join("config.toml"),
+        format!(r#"db_path = "{}""#, db_path.display()),
+    )
+    .unwrap();
+
+    let mut db = Database::open(&db_path).unwrap();
+    db.migrate().unwrap();
+    db.upsert_session(&SessionRecord {
+        id: "session-1".to_string(),
+        agent_type: AgentType::Codex,
+        project_id: project.display().to_string(),
+        transcript_file_path: "/tmp/session.jsonl".to_string(),
+        started_at: Some("2026-06-08T00:00:00Z".to_string()),
+        last_seen_at: Some("2026-06-08T00:01:00Z".to_string()),
+    })
+    .unwrap();
+    for ordinal in 0..2 {
+        db.insert_turn(&TurnRecord {
+            session_id: "session-1".to_string(),
+            turn_id: Some(format!("turn-{ordinal}")),
+            ordinal,
+            byte_start: ordinal * 10,
+            byte_end: ordinal * 10 + 5,
+            observed_at: Some(format!("2026-06-08T00:00:0{ordinal}Z")),
+            status: TurnStatus::Completed,
+            display_text: Some("turn text".to_string()),
+            cwd: None,
+            context: None,
+        })
+        .unwrap();
+    }
+
+    enqueue_task(
+        &db,
+        "recall_eval",
+        json!({
+            "session_id": "session-1",
+            "turn_ordinal": 0,
+            "recall_text": "background recall",
+            "memory_ids": [11],
+            "recall_origin": "session_background"
+        })
+        .to_string(),
+    );
+    enqueue_task(
+        &db,
+        "recall_eval",
+        json!({
+            "session_id": "session-1",
+            "turn_ordinal": 1,
+            "recall_text": "tool recall",
+            "memory_ids": [21],
+            "recall_origin": "tool_pre_use",
+            "tool_name": "Bash"
+        })
+        .to_string(),
+    );
+
+    let background_run_id = db
+        .insert_eval_run_with_metadata(
+            "recall_1_to_5",
+            "unix:100",
+            &json!({"session_id": "session-1", "turn_ordinal": 0}).to_string(),
+            recall_metadata_with_origin(0, "session_background"),
+        )
+        .unwrap();
+    let background_turn_row_id = db
+        .turn_row_id_for_session_ordinal("session-1", 0)
+        .unwrap()
+        .unwrap();
+    db.insert_eval_result(
+        background_run_id,
+        background_turn_row_id,
+        Some(11),
+        "5",
+        "useful",
+        "unix:101",
+    )
+    .unwrap();
+    db.complete_eval_run(background_run_id, "unix:102").unwrap();
+
+    let tool_run_id = db
+        .insert_eval_run_with_metadata(
+            "recall_1_to_5",
+            "unix:110",
+            &json!({"session_id": "session-1", "turn_ordinal": 1}).to_string(),
+            recall_metadata_with_origin(1, "tool_pre_use"),
+        )
+        .unwrap();
+    let tool_turn_row_id = db
+        .turn_row_id_for_session_ordinal("session-1", 1)
+        .unwrap()
+        .unwrap();
+    db.insert_eval_result(
+        tool_run_id,
+        tool_turn_row_id,
+        Some(21),
+        "1",
+        "wrong context",
+        "unix:111",
+    )
+    .unwrap();
+    db.complete_eval_run(tool_run_id, "unix:112").unwrap();
+
+    let included = stats_json(&home, &project, ["--origin", "session_background"]);
+    assert_eq!(
+        included["filters"]["origins"],
+        json!(["session_background"])
+    );
+    assert_eq!(included["recall_runs"], 1);
+    assert_eq!(included["non_empty_recall_runs"], 1);
+    assert_eq!(included["useful"]["evaluated_recall_runs"], 1);
+    assert_eq!(included["useful"]["useful_recall_runs"], 1);
+    assert_eq!(included["by_origin"].as_array().unwrap().len(), 1);
+    assert_eq!(included["by_origin"][0]["name"], "session_background");
+
+    let excluded = stats_json(&home, &project, ["--exclude-origin", "tool_pre_use"]);
+    assert_eq!(
+        excluded["filters"]["excluded_origins"],
+        json!(["tool_pre_use"])
+    );
+    assert_eq!(excluded["recall_runs"], 1);
+    assert_eq!(excluded["useful"]["low_memory_results"], 0);
+    assert_eq!(excluded["by_tool"].as_array().unwrap().len(), 0);
+}
+
+fn stats_json<const N: usize>(
+    home: &std::path::Path,
+    project: &std::path::Path,
+    args: [&str; N],
+) -> serde_json::Value {
+    let output = Command::new(env!("CARGO_BIN_EXE_yaaml"))
+        .arg("stats")
+        .arg("--json")
+        .args(args)
+        .current_dir(project)
+        .env("HOME", home)
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    serde_json::from_slice(&output.stdout).unwrap()
+}
+
 fn recall_metadata(turn_ordinal: u64) -> EvalRunMetadata {
+    recall_metadata_with_origin(turn_ordinal, "session_background")
+}
+
+fn recall_metadata_with_origin(turn_ordinal: u64, origin: &str) -> EvalRunMetadata {
     EvalRunMetadata {
         session_id: Some("session-1".to_string()),
         turn_ordinal: Some(turn_ordinal),
-        recall_origin: "session_background".to_string(),
+        recall_origin: origin.to_string(),
         ..EvalRunMetadata::default()
     }
 }

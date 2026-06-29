@@ -1392,7 +1392,8 @@ fn recall_eval_system_prompt() -> &'static str {
         "4: recalled context was relevant and concise, but not directly actionable. ",
         "3: recalled context was partially relevant, but also partially irrelevant or overly long. ",
         "2: recalled context had only weak relevance, was stale/misleading, or required substantial filtering before use. ",
-        "1: recalled context was not relevant."
+        "1: recalled context was not relevant. ",
+        "For scores 1 or 2, name the main failure mode in the rationale when possible: stale task state, wrong context, noisy metadata, too generic, or too long."
     )
 }
 
@@ -2316,6 +2317,7 @@ mod tests {
         assert!(prompt.contains("\"1\" to \"5\""));
         assert!(prompt.contains("relevant, concise, and actionable"));
         assert!(prompt.contains("weak relevance"));
+        assert!(prompt.contains("stale task state"));
         assert!(prompt.contains("not relevant"));
     }
 }

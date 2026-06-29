@@ -1343,6 +1343,9 @@ fn diagnose_memory_failure(
         .to_ascii_lowercase();
 
     if judged_count >= 5 && accumulator.useful_count == 0 && low_rate >= 0.70 {
+        if looks_like_stale_task_state(memory, &latest_low) {
+            return "stale_task_state".to_string();
+        }
         if looks_stale_or_episodic(memory, &latest_low) {
             return "stale_episodic".to_string();
         }
@@ -1445,6 +1448,7 @@ fn memory_health_evidence(
 fn recommended_memory_action(failure_mode: &str) -> String {
     match failure_mode {
         "wrong_context" => "regenerate_metadata_or_tighten_gates",
+        "stale_task_state" => "move_to_dormant",
         "stale_episodic" => "move_to_dormant",
         "vague_under_contextualized" => "refine_or_suppress",
         "noisy_metadata" => "regenerate_task_keys",
@@ -1512,8 +1516,7 @@ fn looks_stale_or_episodic(memory: &MemoryRecord, rationale: &str) -> bool {
         memory.body.to_ascii_lowercase(),
         rationale
     );
-    memory.kind == MemoryKind::TaskState
-        || memory.kind == MemoryKind::TaskCheckpoint
+    looks_like_stale_task_state(memory, rationale)
         || [
             "stale",
             "obsolete",
@@ -1532,6 +1535,41 @@ fn looks_stale_or_episodic(memory: &MemoryRecord, rationale: &str) -> bool {
         .any(|needle| text.contains(needle))
 }
 
+fn looks_like_stale_task_state(memory: &MemoryRecord, rationale: &str) -> bool {
+    matches!(
+        memory.kind,
+        MemoryKind::TaskState | MemoryKind::TaskCheckpoint
+    ) && stale_task_state_signal(memory, rationale)
+}
+
+fn stale_task_state_signal(memory: &MemoryRecord, rationale: &str) -> bool {
+    let text = format!(
+        "{}\n{}\n{}",
+        memory.title.to_ascii_lowercase(),
+        memory.body.to_ascii_lowercase(),
+        rationale
+    );
+    [
+        "stale",
+        "obsolete",
+        "old task",
+        "past task",
+        "previous task",
+        "already resolved",
+        "no longer",
+        "current pr",
+        "this pr",
+        "branch",
+        "queued",
+        "parked",
+        "status",
+        "unrelated",
+        "irrelevant",
+    ]
+    .iter()
+    .any(|needle| text.contains(needle))
+}
+
 fn home_dir_string() -> String {
     env::var("HOME").unwrap_or_default()
 }
@@ -1539,6 +1577,7 @@ fn home_dir_string() -> String {
 fn health_severity(memory: &MemoryHealthDiagnostic) -> (u8, u64, u64) {
     let mode_rank = match memory.failure_mode.as_str() {
         "wrong_context" => 10,
+        "stale_task_state" => 9,
         "stale_episodic" => 9,
         "noisy_metadata" => 8,
         "consistently_low_value" => 7,
@@ -3677,7 +3716,8 @@ fn eval_judge_system_prompt() -> &'static str {
         "4: recalled context was relevant and concise, but not directly actionable. ",
         "3: recalled context was partially relevant, but also partially irrelevant or overly long. ",
         "2: recalled context had only weak relevance, was stale/misleading, or required substantial filtering before use. ",
-        "1: recalled context was not relevant."
+        "1: recalled context was not relevant. ",
+        "For scores 1 or 2, name the main failure mode in the rationale when possible: stale task state, wrong context, noisy metadata, too generic, or too long."
     )
 }
 
@@ -4838,6 +4878,14 @@ mod tests {
             5,
             0,
             4
+        )));
+        assert!(should_apply_memory_health_action(&health_diagnostic(
+            "stale_task_state",
+            "move_to_dormant",
+            true,
+            6,
+            0,
+            5
         )));
         assert!(should_apply_memory_health_action(&health_diagnostic(
             "consistently_low_value",

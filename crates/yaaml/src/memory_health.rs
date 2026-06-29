@@ -142,6 +142,9 @@ fn diagnose_memory_failure(
         .to_ascii_lowercase();
 
     if judged_count >= 5 && accumulator.useful_count == 0 && low_rate >= 0.70 {
+        if looks_like_stale_task_state(memory, &latest_low) {
+            return "stale_task_state".to_string();
+        }
         if looks_stale_or_episodic(memory, &latest_low) {
             return "stale_episodic".to_string();
         }
@@ -223,7 +226,7 @@ fn health_mode_adjustment(
                 (-0.45, false)
             }
         }
-        "stale_episodic" | "consistently_low_value" => (-0.65, false),
+        "stale_task_state" | "stale_episodic" | "consistently_low_value" => (-0.65, false),
         "likely_low_value" => (-0.25, false),
         "noisy_metadata" => (-(candidate.rank.task_key_bonus + 0.18).min(0.42), true),
         "context_sensitive" | "mixed_performance" => {
@@ -313,8 +316,7 @@ fn rationale_mentions_wrong_context(rationale: &str) -> bool {
 
 fn looks_stale_or_episodic(memory: &MemoryRecord, rationale: &str) -> bool {
     let text = format!("{} {} {}", memory.title, memory.body, rationale).to_ascii_lowercase();
-    memory.kind == MemoryKind::TaskState
-        || memory.kind == MemoryKind::TaskCheckpoint
+    looks_like_stale_task_state(memory, rationale)
         || [
             "stale",
             "already resolved",
@@ -331,6 +333,36 @@ fn looks_stale_or_episodic(memory: &MemoryRecord, rationale: &str) -> bool {
         ]
         .iter()
         .any(|needle| text.contains(needle))
+}
+
+fn looks_like_stale_task_state(memory: &MemoryRecord, rationale: &str) -> bool {
+    matches!(
+        memory.kind,
+        MemoryKind::TaskState | MemoryKind::TaskCheckpoint
+    ) && stale_task_state_signal(memory, rationale)
+}
+
+fn stale_task_state_signal(memory: &MemoryRecord, rationale: &str) -> bool {
+    let text = format!("{} {} {}", memory.title, memory.body, rationale).to_ascii_lowercase();
+    [
+        "stale",
+        "obsolete",
+        "old task",
+        "past task",
+        "previous task",
+        "already resolved",
+        "no longer",
+        "current pr",
+        "this pr",
+        "branch",
+        "queued",
+        "parked",
+        "status",
+        "unrelated",
+        "irrelevant",
+    ]
+    .iter()
+    .any(|needle| text.contains(needle))
 }
 
 fn eval_summary_snippet(text: &str) -> String {
@@ -419,6 +451,31 @@ mod tests {
         assert!(reranked[0].rank.penalties.iter().any(|penalty| {
             penalty.contains("health_action_rerank:workflow:context_sensitive_wrong_context")
         }));
+    }
+
+    #[test]
+    fn health_action_rerank_classifies_stale_task_state_separately() {
+        let memory = memory(1, "Current PR status", MemoryKind::TaskState);
+        let memories = vec![memory];
+        let history = vec![
+            score_with_rationale(1, "1", "The task-state memory is stale."),
+            score_with_rationale(1, "1", "The current PR status is obsolete."),
+            score_with_rationale(1, "2", "This stale task state is unrelated."),
+            score_with_rationale(1, "1", "The remembered status no longer applies."),
+            score_with_rationale(1, "1", "The old task state is irrelevant."),
+        ];
+        let health = build_memory_health_summaries(&memories, &history);
+
+        assert_eq!(health[&1].failure_mode, "stale_task_state");
+
+        let reranked = apply_health_action_rerank(vec![candidate(1, 1.20)], &memories, &health);
+
+        assert!(reranked[0].score < 0.40);
+        assert!(reranked[0]
+            .rank
+            .penalties
+            .iter()
+            .any(|penalty| penalty.contains("task_state:stale_task_state")));
     }
 
     fn memory(id: i64, title: &str, kind: MemoryKind) -> MemoryRecord {

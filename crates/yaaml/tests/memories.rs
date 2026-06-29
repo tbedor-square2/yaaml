@@ -138,6 +138,13 @@ fn memories_health_classifies_failure_modes_and_actions() {
         yaaml_core::MemoryKind::Workflow,
         Vec::new(),
     );
+    let stale_task_state_memory_id = fixture.insert_memory_with(
+        "Current PR status",
+        "The current PR is ready for review after the final local checks finish.",
+        true,
+        yaaml_core::MemoryKind::TaskState,
+        vec!["pr:123".to_string()],
+    );
     fixture.insert_eval_scores(
         wrong_context_memory_id,
         &[
@@ -183,6 +190,16 @@ fn memories_health_classifies_failure_modes_and_actions() {
             ),
         ],
     );
+    fixture.insert_eval_scores(
+        stale_task_state_memory_id,
+        &[
+            ("1", "The task-state memory is stale."),
+            ("1", "The current PR status is obsolete."),
+            ("2", "This stale task state is unrelated."),
+            ("1", "The remembered status no longer applies."),
+            ("1", "The old task state is irrelevant."),
+        ],
+    );
 
     let output = fixture.command(["memories", "health", "--json", "--limit", "10"]);
 
@@ -216,6 +233,12 @@ fn memories_health_classifies_failure_modes_and_actions() {
         mixed_wrong_context["recommended_action"],
         "require_strong_task_match"
     );
+    let stale_task_state = memories
+        .iter()
+        .find(|memory| memory["memory_id"] == stale_task_state_memory_id)
+        .unwrap();
+    assert_eq!(stale_task_state["failure_mode"], "stale_task_state");
+    assert_eq!(stale_task_state["recommended_action"], "move_to_dormant");
 }
 
 #[test]

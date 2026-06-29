@@ -1057,6 +1057,10 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
         value["stale_insufficient_context"][0]["later_completed_turns"],
         1
     );
+    assert_eq!(
+        value["stale_insufficient_context"][0]["requeue_status"],
+        "actionable"
+    );
     assert_eq!(value["queued_recall_evals"][0]["session_id"], "session-1");
     assert_eq!(value["queued_recall_evals"][0]["turn_ordinal"], 9);
     assert_eq!(
@@ -1113,7 +1117,8 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     assert!(human_stdout.contains("summary: Turns 7..=8 evaluate whether recalled context helped."));
     assert!(human_stdout.contains("keys: pr:123"));
     assert!(human_stdout.contains("Session breakdown"));
-    assert!(human_stdout.contains("N/a evals with later turns"));
+    assert!(human_stdout.contains("N/a evals needing attention"));
+    assert!(human_stdout.contains("status=actionable"));
     assert!(human_stdout.contains("Queued recall evals"));
     assert!(human_stdout.contains("origin=tool_pre_use"));
     assert!(human_stdout.contains("tool=Bash"));
@@ -1145,6 +1150,10 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     assert_eq!(
         filtered_value["stale_insufficient_context"][0]["run_id"],
         stale_run_id
+    );
+    assert_eq!(
+        filtered_value["stale_insufficient_context"][0]["requeue_status"],
+        "actionable"
     );
 }
 

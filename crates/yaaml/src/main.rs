@@ -2597,6 +2597,7 @@ struct EvalStaleInsufficientContext {
     turn_ordinal: u64,
     score: String,
     later_completed_turns: u64,
+    requeue_status: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -2759,12 +2760,14 @@ fn build_eval_summary(db: &Database, runs: Vec<EvalRunRecord>) -> anyhow::Result
             {
                 let later_turn_count = later_completed_turn_count(db, &run_context)?.unwrap_or(0);
                 if later_turn_count > 0 {
+                    let requeue_status = stale_eval_requeue_status(db, &run_context)?.to_string();
                     stale_insufficient_context.push(EvalStaleInsufficientContext {
                         run_id: run.id,
                         session_id: session_id.to_string(),
                         turn_ordinal,
                         score: "n/a".to_string(),
                         later_completed_turns: later_turn_count,
+                        requeue_status,
                     });
                 }
             }
@@ -2974,6 +2977,7 @@ struct EvalRunContext {
     segment_summary: Option<String>,
     segment_task_keys: Vec<String>,
     memory_ids: Vec<i64>,
+    rerun_for_eval_run_id: Option<i64>,
     recall_origin: String,
     tool_name: Option<String>,
 }
@@ -2999,9 +3003,51 @@ fn eval_run_context(run: &EvalRunRecord) -> EvalRunContext {
                     .collect()
             })
             .unwrap_or_default(),
+        rerun_for_eval_run_id: config
+            .as_ref()
+            .and_then(|value| value.get("rerun_for_eval_run_id"))
+            .and_then(serde_json::Value::as_i64),
         recall_origin: run.recall_origin.clone(),
         tool_name: run.tool_name.clone(),
     }
+}
+
+fn stale_eval_requeue_status(
+    db: &Database,
+    run_context: &EvalRunContext,
+) -> anyhow::Result<&'static str> {
+    if db
+        .recall_eval_scored_rerun_exists(run_context.run_id)
+        .with_context(|| {
+            format!(
+                "failed to check scored rerun for eval run {}",
+                run_context.run_id
+            )
+        })?
+    {
+        return Ok("already_scored");
+    }
+    if db
+        .recall_eval_pending_rerun_exists(run_context.run_id)
+        .with_context(|| {
+            format!(
+                "failed to check pending rerun for eval run {}",
+                run_context.run_id
+            )
+        })?
+    {
+        return Ok("already_pending");
+    }
+    if run_context.rerun_for_eval_run_id.is_some() {
+        return Ok("rerun_record");
+    }
+    if run_context.session_id.is_none() || run_context.turn_ordinal.is_none() {
+        return Ok("missing_anchor");
+    }
+    if run_context.memory_ids.is_empty() {
+        return Ok("empty_recall_text");
+    }
+    Ok("actionable")
 }
 
 fn recalled_memories_for_run(
@@ -3265,11 +3311,15 @@ fn print_stale_insufficient_context(stale: &[EvalStaleInsufficientContext]) {
     if stale.is_empty() {
         return;
     }
-    println!("N/a evals with later turns");
+    println!("N/a evals needing attention");
     for eval in stale {
         println!(
-            "  run={} session={} turn={} later_turns={}",
-            eval.run_id, eval.session_id, eval.turn_ordinal, eval.later_completed_turns
+            "  run={} status={} session={} turn={} later_turns={}",
+            eval.run_id,
+            eval.requeue_status,
+            eval.session_id,
+            eval.turn_ordinal,
+            eval.later_completed_turns
         );
     }
 }

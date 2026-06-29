@@ -291,7 +291,9 @@ pub fn build_stats_with_filters(
         if volume_keys.contains(&key) {
             continue;
         }
-        let Some(volume) = eval_run_fallback_volume(run) else {
+        let Some(volume) = eval_run_fallback_volume(db, run)
+            .with_context(|| format!("failed to build fallback volume for run {}", run.id))?
+        else {
             continue;
         };
         volume_keys.insert(key);
@@ -357,6 +359,12 @@ pub fn build_stats_with_filters(
         if let Some(anchor) = eval_run_anchor(run) {
             eval_outcome_by_anchor
                 .entry(anchor)
+                .and_modify(|outcome| {
+                    outcome.has_numeric_score |= has_numeric_score;
+                    outcome.has_useful_score |= has_useful_score;
+                    outcome.has_clean_abstention |= has_clean_abstention;
+                    outcome.has_missed_useful_abstention |= has_missed_useful_abstention;
+                })
                 .or_insert_with(|| StatsEvalOutcome {
                     has_numeric_score,
                     has_useful_score,
@@ -366,10 +374,10 @@ pub fn build_stats_with_filters(
         }
     }
 
-    let empty_recall_anchors = recall_eval_by_anchor
+    let empty_recall_anchors = volume_runs
         .iter()
-        .filter(|(_, volume)| volume.memory_count == 0)
-        .map(|(anchor, _)| anchor.clone())
+        .filter(|volume| volume.memory_count == 0)
+        .filter_map(StatsRecallVolumeRun::anchor)
         .collect::<Vec<_>>();
     let mut abstention = build_abstention_stats(&empty_recall_anchors, &eval_outcome_by_anchor);
     let empty_recall_runs = volume_runs
@@ -506,7 +514,7 @@ fn stats_segments(accumulators: BTreeMap<String, StatsSegmentAccumulator>) -> Ve
             };
             StatsSegment {
                 name,
-                recall_runs: accumulator.recall_runs.max(accumulator.eval_runs),
+                recall_runs: accumulator.recall_runs,
                 non_empty_recall_runs: accumulator.non_empty_runs,
                 evaluated_recall_runs: accumulator.evaluated_runs,
                 useful_recall_runs: accumulator.useful_runs,
@@ -604,18 +612,33 @@ fn recall_eval_task_volume(
     ))
 }
 
-fn eval_run_fallback_volume(run: &EvalRunRecord) -> Option<StatsRecallVolumeRun> {
-    let config = serde_json::from_str::<StatsEvalRunConfigPayload>(&run.config_json).ok()?;
-    Some(StatsRecallVolumeRun {
+fn eval_run_fallback_volume(
+    db: &Database,
+    run: &EvalRunRecord,
+) -> Result<Option<StatsRecallVolumeRun>> {
+    let Ok(config) = serde_json::from_str::<StatsEvalRunConfigPayload>(&run.config_json) else {
+        return Ok(None);
+    };
+    let memory_count = match config.memory_ids {
+        Some(memory_ids) => memory_ids.len(),
+        None => db
+            .eval_results_for_run(run.id)
+            .with_context(|| format!("failed to load eval results for run {}", run.id))?
+            .into_iter()
+            .filter_map(|result| result.memory_id)
+            .collect::<HashSet<_>>()
+            .len(),
+    };
+    Ok(Some(StatsRecallVolumeRun {
         session_id: run.session_id.clone(),
         turn_ordinal: run.turn_ordinal,
-        memory_count: config.memory_ids?.len(),
+        memory_count,
         recall_chars: None,
         recall_at: Some(run.started_at.clone()),
         filter_telemetry: None,
         recall_origin: run.recall_origin.clone(),
         tool_name: run.tool_name.clone(),
-    })
+    }))
 }
 
 impl StatsRecallVolumeRun {

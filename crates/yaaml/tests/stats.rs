@@ -252,7 +252,7 @@ fn stats_json_filters_by_recall_origin() {
         last_seen_at: Some("2026-06-08T00:01:00Z".to_string()),
     })
     .unwrap();
-    for ordinal in 0..2 {
+    for ordinal in 0..3 {
         db.insert_turn(&TurnRecord {
             session_id: "session-1".to_string(),
             turn_id: Some(format!("turn-{ordinal}")),
@@ -324,7 +324,7 @@ fn stats_json_filters_by_recall_origin() {
             "recall_1_to_5",
             "unix:110",
             &json!({"session_id": "session-1", "turn_ordinal": 1}).to_string(),
-            recall_metadata_with_origin(1, "tool_pre_use"),
+            recall_metadata_with_origin_and_tool(1, "tool_pre_use", "Bash"),
         )
         .unwrap();
     let tool_turn_row_id = db
@@ -359,6 +359,29 @@ fn stats_json_filters_by_recall_origin() {
     )
     .unwrap();
     db.complete_eval_run(replay_run_id, "unix:122").unwrap();
+    let replay_empty_run_id = db
+        .insert_eval_run_with_metadata(
+            "default",
+            "unix:125",
+            &json!({"session_id": "session-1", "turn_ordinal": 2}).to_string(),
+            recall_metadata_with_origin(2, "replay"),
+        )
+        .unwrap();
+    let replay_empty_turn_row_id = db
+        .turn_row_id_for_session_ordinal("session-1", 2)
+        .unwrap()
+        .unwrap();
+    db.insert_eval_result(
+        replay_empty_run_id,
+        replay_empty_turn_row_id,
+        None,
+        "clean_abstention",
+        "empty replay recall was correct",
+        "unix:126",
+    )
+    .unwrap();
+    db.complete_eval_run(replay_empty_run_id, "unix:127")
+        .unwrap();
 
     let delayed_manual_run_id = db
         .insert_eval_run_with_metadata(
@@ -439,12 +462,93 @@ fn stats_json_filters_by_recall_origin() {
 
     let replay = stats_json(&home, &project, ["--origin", "replay"]);
     assert_eq!(replay["filters"]["origins"], json!(["replay"]));
-    assert_eq!(replay["recall_runs"], 1);
-    assert_eq!(replay["non_empty_recall_runs"], 0);
+    assert_eq!(replay["recall_runs"], 2);
+    assert_eq!(replay["non_empty_recall_runs"], 1);
+    assert_eq!(replay["volume"]["memory_count_buckets"]["zero"], 1);
+    assert_eq!(replay["volume"]["memory_count_buckets"]["one_to_two"], 1);
+    assert_eq!(replay["abstention"]["empty_recall_runs"], 1);
+    assert_eq!(replay["abstention"]["evaluated_empty_recall_runs"], 1);
+    assert_eq!(replay["abstention"]["clean_abstention_runs"], 1);
     assert_eq!(replay["useful"]["low_memory_results"], 1);
     assert_eq!(replay["by_origin"][0]["name"], "replay");
-    assert_eq!(replay["by_origin"][0]["recall_runs"], 1);
+    assert_eq!(replay["by_origin"][0]["recall_runs"], 2);
     assert_eq!(replay["by_origin"][0]["low_memory_results"], 1);
+}
+
+#[test]
+fn stats_json_scores_historical_empty_replay_abstention_after_since_filter() {
+    let tmp = TempDir::new().unwrap();
+    let home = tmp.path().join("home");
+    let project = tmp.path().join("project");
+    fs::create_dir_all(home.join(".yaaml")).unwrap();
+    fs::create_dir_all(&project).unwrap();
+    let db_path = home.join(".yaaml").join("yaaml.db");
+    fs::write(
+        home.join(".yaaml").join("config.toml"),
+        format!(r#"db_path = "{}""#, db_path.display()),
+    )
+    .unwrap();
+
+    let mut db = Database::open(&db_path).unwrap();
+    db.migrate().unwrap();
+    db.upsert_session(&SessionRecord {
+        id: "session-1".to_string(),
+        agent_type: AgentType::Codex,
+        project_id: project.display().to_string(),
+        transcript_file_path: "/tmp/session.jsonl".to_string(),
+        started_at: Some("unix:0".to_string()),
+        last_seen_at: Some("unix:10".to_string()),
+    })
+    .unwrap();
+    db.insert_turn(&TurnRecord {
+        session_id: "session-1".to_string(),
+        turn_id: Some("turn-0".to_string()),
+        ordinal: 0,
+        byte_start: 0,
+        byte_end: 5,
+        observed_at: Some("unix:10".to_string()),
+        status: TurnStatus::Completed,
+        display_text: Some("turn text".to_string()),
+        cwd: None,
+        context: None,
+    })
+    .unwrap();
+    let turn_row_id = db
+        .turn_row_id_for_session_ordinal("session-1", 0)
+        .unwrap()
+        .unwrap();
+    let replay_empty_run_id = db
+        .insert_eval_run_with_metadata(
+            "default",
+            "unix:125",
+            &json!({"session_id": "session-1", "turn_ordinal": 0}).to_string(),
+            recall_metadata_with_origin(0, "replay"),
+        )
+        .unwrap();
+    db.insert_eval_result(
+        replay_empty_run_id,
+        turn_row_id,
+        None,
+        "clean_abstention",
+        "empty replay recall was correct",
+        "unix:126",
+    )
+    .unwrap();
+    db.complete_eval_run(replay_empty_run_id, "unix:127")
+        .unwrap();
+
+    let replay = stats_json(
+        &home,
+        &project,
+        ["--origin", "replay", "--since", "unix:124"],
+    );
+    assert_eq!(replay["eligible_turns"], 0);
+    assert_eq!(replay["recall_runs"], 1);
+    assert_eq!(replay["volume"]["memory_count_buckets"]["zero"], 1);
+    assert_eq!(replay["abstention"]["empty_recall_runs"], 1);
+    assert_eq!(replay["abstention"]["evaluated_empty_recall_runs"], 1);
+    assert_eq!(replay["abstention"]["clean_abstention_runs"], 1);
+    assert_eq!(replay["abstention"]["unjudged_empty_recall_runs"], 0);
 }
 
 fn stats_json<const N: usize>(
@@ -479,6 +583,17 @@ fn recall_metadata_with_origin(turn_ordinal: u64, origin: &str) -> EvalRunMetada
         turn_ordinal: Some(turn_ordinal),
         recall_origin: origin.to_string(),
         ..EvalRunMetadata::default()
+    }
+}
+
+fn recall_metadata_with_origin_and_tool(
+    turn_ordinal: u64,
+    origin: &str,
+    tool_name: &str,
+) -> EvalRunMetadata {
+    EvalRunMetadata {
+        tool_name: Some(tool_name.to_string()),
+        ..recall_metadata_with_origin(turn_ordinal, origin)
     }
 }
 

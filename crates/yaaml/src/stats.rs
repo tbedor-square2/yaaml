@@ -389,13 +389,8 @@ pub fn build_stats_with_filters(
             abstention.empty_recall_runs,
         );
     }
-    let volumes = volume_runs
-        .iter()
-        .filter(|volume| volume.memory_count > 0)
-        .cloned()
-        .collect::<Vec<_>>();
-    let volume = build_volume_stats(&volumes);
-    let llm_filter = build_llm_filter_stats(&volumes);
+    let volume = build_volume_stats(&volume_runs);
+    let llm_filter = build_llm_filter_stats(&volume_runs);
     let (mut segment_accumulators, mut tool_accumulators) =
         build_stats_segment_accumulators(db, &eval_runs)?;
     for volume_run in &volume_runs {
@@ -700,15 +695,17 @@ fn eval_run_anchor(run: &EvalRunRecord) -> Option<StatsAnchor> {
 fn build_volume_stats(volumes: &[StatsRecallVolumeRun]) -> StatsVolume {
     let memory_counts = volumes
         .iter()
+        .filter(|volume| volume.memory_count > 0)
         .map(|volume| volume.memory_count)
         .collect::<Vec<_>>();
     let recall_chars = volumes
         .iter()
+        .filter(|volume| volume.memory_count > 0)
         .filter_map(|volume| volume.recall_chars)
         .collect::<Vec<_>>();
     let mut buckets = StatsMemoryCountBuckets::default();
-    for count in &memory_counts {
-        match *count {
+    for volume in volumes {
+        match volume.memory_count {
             0 => buckets.zero += 1,
             1..=2 => buckets.one_to_two += 1,
             3..=5 => buckets.three_to_five += 1,

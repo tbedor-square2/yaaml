@@ -200,6 +200,8 @@ fn stats_json_reports_recall_rates_volume_and_usefulness() {
     assert!(stats.get("recall_rate").is_none());
     assert!(stats.get("non_empty_recall_rate").is_none());
     assert_eq!(stats["volume"]["average_memories_per_non_empty_run"], 2.0);
+    assert_eq!(stats["volume"]["memory_count_buckets"]["zero"], 2);
+    assert_eq!(stats["volume"]["memory_count_buckets"]["one_to_two"], 1);
     assert_eq!(stats["abstention"]["empty_recall_runs"], 2);
     assert_eq!(stats["abstention"]["evaluated_empty_recall_runs"], 2);
     assert_eq!(stats["abstention"]["clean_abstention_runs"], 1);
@@ -418,6 +420,8 @@ fn stats_json_filters_by_recall_origin() {
     assert_eq!(recent["filters"]["since_unix"], 105);
     assert_eq!(recent["recall_runs"], 2);
     assert_eq!(recent["non_empty_recall_runs"], 2);
+    assert_eq!(recent["volume"]["memory_count_buckets"]["zero"], 0);
+    assert_eq!(recent["volume"]["memory_count_buckets"]["one_to_two"], 2);
     assert!(recent["by_origin"]
         .as_array()
         .unwrap()

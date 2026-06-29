@@ -1149,6 +1149,29 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
         Ok(updated as u64)
     }
 
+    pub fn deactivate_task_state_memories_with_inactive_origin(
+        &self,
+        updated_at: &str,
+    ) -> Result<u64, DatabaseError> {
+        let updated = self.conn.execute(
+            "UPDATE memories
+             SET is_active = 0,
+                 updated_at = ?1
+             WHERE is_active = 1
+               AND memory_kind = 'task_state'
+               AND validity = 'valid_while_segment_active'
+               AND origin_segment_id IS NOT NULL
+               AND NOT EXISTS (
+                   SELECT 1
+                   FROM conversation_segments s
+                   WHERE s.id = memories.origin_segment_id
+                     AND s.status = 'active'
+               )",
+            params![updated_at],
+        )?;
+        Ok(updated as u64)
+    }
+
     pub fn list_memories(&self) -> Result<Vec<MemoryRecord>, DatabaseError> {
         let mut stmt = self.conn.prepare(
             "SELECT id, title, body, scope, memory_kind, task_keys, source_turn_refs,
@@ -2767,6 +2790,151 @@ CREATE TABLE conversation_segments (
             Some(ConversationSegmentStatus::Active)
         );
         assert_eq!(memory.validity, MemoryValidity::ValidWhileSegmentActive);
+    }
+
+    #[test]
+    fn inactive_origin_segment_deactivates_task_state_memories() {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+        db.upsert_session(&SessionRecord {
+            id: "session-1".to_string(),
+            agent_type: yaaml_core::AgentType::Codex,
+            project_id: "/tmp/project".to_string(),
+            transcript_file_path: "/tmp/session.jsonl".to_string(),
+            started_at: None,
+            last_seen_at: None,
+        })
+        .unwrap();
+        db.replace_conversation_segments_for_session(
+            "session-1",
+            &[
+                ConversationSegmentRecord {
+                    id: None,
+                    session_id: "session-1".to_string(),
+                    start_turn_ordinal: 1,
+                    end_turn_ordinal: 2,
+                    summary: "Turns 1..=2 discuss stale PR work.".to_string(),
+                    task_keys: vec!["pr:123".to_string()],
+                    context: None,
+                    status: ConversationSegmentStatus::Superseded,
+                    created_at: "unix:1".to_string(),
+                    updated_at: "unix:2".to_string(),
+                },
+                ConversationSegmentRecord {
+                    id: None,
+                    session_id: "session-1".to_string(),
+                    start_turn_ordinal: 3,
+                    end_turn_ordinal: 4,
+                    summary: "Turns 3..=4 discuss active PR work.".to_string(),
+                    task_keys: vec!["pr:456".to_string()],
+                    context: None,
+                    status: ConversationSegmentStatus::Active,
+                    created_at: "unix:1".to_string(),
+                    updated_at: "unix:2".to_string(),
+                },
+            ],
+        )
+        .unwrap();
+        let stale_segment_id = db
+            .conversation_segment_for_turn("session-1", 1)
+            .unwrap()
+            .unwrap()
+            .id;
+        let active_segment_id = db
+            .conversation_segment_for_turn("session-1", 3)
+            .unwrap()
+            .unwrap()
+            .id;
+        let stale_task_state = db
+            .insert_memory(&MemoryRecord {
+                id: None,
+                title: "Stale PR state".to_string(),
+                body: "PR 123 is waiting on a now-stale review.".to_string(),
+                scope: MemoryScope::Project,
+                kind: MemoryKind::TaskState,
+                task_keys: vec!["pr:123".to_string()],
+                source_turn_refs: Vec::new(),
+                created_at: "unix:1".to_string(),
+                updated_at: "unix:1".to_string(),
+                is_active: true,
+                session_id: Some("session-1".to_string()),
+                project_id: Some("/tmp/project".to_string()),
+                project_descriptor: Some("project".to_string()),
+                lineage_refs: Vec::new(),
+                origin_segment_id: stale_segment_id,
+                origin_segment_status: None,
+                validity: MemoryValidity::ValidWhileSegmentActive,
+            })
+            .unwrap();
+        let active_task_state = db
+            .insert_memory(&MemoryRecord {
+                id: None,
+                title: "Active PR state".to_string(),
+                body: "PR 456 still needs the current test fix.".to_string(),
+                scope: MemoryScope::Project,
+                kind: MemoryKind::TaskState,
+                task_keys: vec!["pr:456".to_string()],
+                source_turn_refs: Vec::new(),
+                created_at: "unix:1".to_string(),
+                updated_at: "unix:1".to_string(),
+                is_active: true,
+                session_id: Some("session-1".to_string()),
+                project_id: Some("/tmp/project".to_string()),
+                project_descriptor: Some("project".to_string()),
+                lineage_refs: Vec::new(),
+                origin_segment_id: active_segment_id,
+                origin_segment_status: None,
+                validity: MemoryValidity::ValidWhileSegmentActive,
+            })
+            .unwrap();
+        let durable_lesson = db
+            .insert_memory(&MemoryRecord {
+                id: None,
+                title: "Durable lesson".to_string(),
+                body: "Preserve durable lessons even when their origin segment is stale."
+                    .to_string(),
+                scope: MemoryScope::Project,
+                kind: MemoryKind::Lesson,
+                task_keys: Vec::new(),
+                source_turn_refs: Vec::new(),
+                created_at: "unix:1".to_string(),
+                updated_at: "unix:1".to_string(),
+                is_active: true,
+                session_id: Some("session-1".to_string()),
+                project_id: Some("/tmp/project".to_string()),
+                project_descriptor: Some("project".to_string()),
+                lineage_refs: Vec::new(),
+                origin_segment_id: stale_segment_id,
+                origin_segment_status: None,
+                validity: MemoryValidity::Durable,
+            })
+            .unwrap();
+
+        assert_eq!(
+            db.deactivate_task_state_memories_with_inactive_origin("unix:3")
+                .unwrap(),
+            1
+        );
+
+        let memories = db
+            .list_memories_by_ids(&[stale_task_state, active_task_state, durable_lesson])
+            .unwrap();
+        let stale = memories
+            .iter()
+            .find(|memory| memory.id == Some(stale_task_state))
+            .unwrap();
+        let active = memories
+            .iter()
+            .find(|memory| memory.id == Some(active_task_state))
+            .unwrap();
+        let durable = memories
+            .iter()
+            .find(|memory| memory.id == Some(durable_lesson))
+            .unwrap();
+        assert!(!stale.is_active);
+        assert_eq!(stale.updated_at, "unix:3");
+        assert!(active.is_active);
+        assert!(durable.is_active);
     }
 
     #[test]

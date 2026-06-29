@@ -246,6 +246,8 @@ pub fn refresh_conversation_segments_for_session(
         .context("failed to persist conversation segments")?;
     db.refresh_memory_segment_metadata_for_session(session_id, &unix_timestamp())
         .context("failed to refresh memory segment metadata")?;
+    db.deactivate_task_state_memories_with_inactive_origin(&unix_timestamp())
+        .context("failed to deactivate stale task-state memories")?;
     Ok(written)
 }
 
@@ -1780,6 +1782,10 @@ pub fn expire_idle_conversation_segments(db: &Database, config: &Config) -> anyh
                 .abandon_active_conversation_segments_for_session(&session.id, &now)
                 .context("failed to abandon idle session segments")?;
         }
+    }
+    if expired > 0 {
+        db.deactivate_task_state_memories_with_inactive_origin(&now)
+            .context("failed to deactivate stale task-state memories")?;
     }
     Ok(expired)
 }

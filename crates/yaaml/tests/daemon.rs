@@ -125,6 +125,33 @@ fn idle_segment_expiry_abandons_existing_active_segments() {
         }],
     )
     .unwrap();
+    let segment_id = db
+        .conversation_segment_for_turn("session-1", 0)
+        .unwrap()
+        .unwrap()
+        .id;
+    let task_state_memory_id = db
+        .insert_memory(&MemoryRecord {
+            id: None,
+            title: "Idle task state".to_string(),
+            body: "The idle session's current task state should expire with the segment."
+                .to_string(),
+            scope: MemoryScope::Project,
+            kind: MemoryKind::TaskState,
+            task_keys: Vec::new(),
+            source_turn_refs: Vec::new(),
+            created_at: "unix:1".to_string(),
+            updated_at: "unix:1".to_string(),
+            is_active: true,
+            session_id: Some("session-1".to_string()),
+            project_id: Some("/tmp/project".to_string()),
+            project_descriptor: Some("project".to_string()),
+            lineage_refs: Vec::new(),
+            origin_segment_id: segment_id,
+            origin_segment_status: None,
+            validity: yaaml_core::MemoryValidity::ValidWhileSegmentActive,
+        })
+        .unwrap();
 
     let expired = expire_idle_conversation_segments(&db, &Config::default()).unwrap();
 
@@ -133,6 +160,11 @@ fn idle_segment_expiry_abandons_existing_active_segments() {
         .list_conversation_segments(Some("session-1"), 10)
         .unwrap();
     assert_eq!(segments[0].status, ConversationSegmentStatus::Abandoned);
+    let memory = db
+        .list_memories_by_ids(&[task_state_memory_id])
+        .unwrap()
+        .remove(0);
+    assert!(!memory.is_active);
 }
 
 #[test]

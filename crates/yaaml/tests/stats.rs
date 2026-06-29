@@ -192,6 +192,7 @@ fn stats_json_reports_recall_rates_volume_and_usefulness() {
     );
     let stats: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
     assert_eq!(stats["eligible_turns"], 3);
+    assert_eq!(stats["turns_with_recall"], 3);
     assert_eq!(stats["recall_runs"], 3);
     assert_eq!(stats["non_empty_recall_runs"], 1);
     assert_eq!(stats["volume"]["average_memories_per_non_empty_run"], 2.0);
@@ -383,8 +384,11 @@ fn stats_json_filters_by_recall_origin() {
 
     let replay = stats_json(&home, &project, ["--origin", "replay"]);
     assert_eq!(replay["filters"]["origins"], json!(["replay"]));
+    assert_eq!(replay["recall_runs"], 1);
+    assert_eq!(replay["non_empty_recall_runs"], 0);
     assert_eq!(replay["useful"]["low_memory_results"], 1);
     assert_eq!(replay["by_origin"][0]["name"], "replay");
+    assert_eq!(replay["by_origin"][0]["recall_runs"], 1);
     assert_eq!(replay["by_origin"][0]["low_memory_results"], 1);
 }
 

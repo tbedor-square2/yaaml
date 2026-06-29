@@ -14,12 +14,6 @@ struct StatsAnchor {
 }
 
 #[derive(Debug, Deserialize)]
-struct StatsRecallTaskPayload {
-    session_id: String,
-    turn_ordinal: u64,
-}
-
-#[derive(Debug, Deserialize)]
 struct StatsRecallEvalTaskPayload {
     session_id: String,
     turn_ordinal: Option<u64>,
@@ -104,6 +98,8 @@ fn normalized_filters(filters: Vec<String>) -> Vec<String> {
 pub struct StatsOutput {
     filters: StatsFilters,
     eligible_turns: usize,
+    turns_with_recall: usize,
+    turn_recall_rate: f64,
     recall_runs: usize,
     recall_rate: f64,
     non_empty_recall_runs: usize,
@@ -205,20 +201,9 @@ pub fn build_stats_with_filters(
         })
         .collect::<HashSet<_>>();
 
-    let mut recall_runs = if filters.is_active() {
-        HashSet::new()
-    } else {
-        db.list_tasks_by_kind(crate::daemon::TASK_KIND_RECALL)
-            .context("failed to list recall tasks")?
-            .into_iter()
-            .filter(|task| task.status == "completed")
-            .filter_map(|task| recall_task_anchor(&task.payload_json))
-            .filter(|anchor| eligible.contains(anchor))
-            .collect::<HashSet<_>>()
-    };
-
     let mut recall_eval_by_anchor = BTreeMap::<StatsAnchor, StatsRecallVolumeRun>::new();
     let mut volume_runs = Vec::<StatsRecallVolumeRun>::new();
+    let mut turns_with_recall = HashSet::<StatsAnchor>::new();
     for task in db
         .list_tasks_by_kind(crate::daemon::TASK_KIND_RECALL_EVAL)
         .context("failed to list recall eval tasks")?
@@ -234,7 +219,7 @@ pub fn build_stats_with_filters(
             if !eligible.contains(&anchor) {
                 continue;
             }
-            recall_runs.insert(anchor.clone());
+            turns_with_recall.insert(anchor.clone());
             recall_eval_by_anchor.entry(anchor).or_insert(volume);
         }
     }
@@ -245,17 +230,6 @@ pub fn build_stats_with_filters(
         .into_iter()
         .filter(|run| filters.includes_origin(&run.recall_origin))
         .collect::<Vec<_>>();
-    let mut latest_eval_run_by_anchor = BTreeMap::<StatsAnchor, EvalRunRecord>::new();
-    for run in &eval_runs {
-        let Some(anchor) = eval_run_anchor(run) else {
-            continue;
-        };
-        if eligible.contains(&anchor) {
-            latest_eval_run_by_anchor
-                .entry(anchor)
-                .or_insert_with(|| run.clone());
-        }
-    }
 
     let mut evaluated_recall_runs = 0_usize;
     let mut useful_recall_runs = 0_usize;
@@ -264,7 +238,7 @@ pub fn build_stats_with_filters(
     let mut low_memory_results = 0_usize;
     let mut insufficient_context_results = 0_usize;
     let mut eval_outcome_by_anchor = BTreeMap::<StatsAnchor, StatsEvalOutcome>::new();
-    for run in latest_eval_run_by_anchor.values() {
+    for run in &eval_runs {
         let results = db
             .eval_results_for_run(run.id)
             .with_context(|| format!("failed to load eval results for run {}", run.id))?;
@@ -272,9 +246,6 @@ pub fn build_stats_with_filters(
         let mut has_useful_score = false;
         let mut has_clean_abstention = false;
         let mut has_missed_useful_abstention = false;
-        let Some(anchor) = eval_run_anchor(run) else {
-            continue;
-        };
         for result in results {
             match result.judge_score.as_deref() {
                 Some("clean_abstention") => {
@@ -308,29 +279,46 @@ pub fn build_stats_with_filters(
         if has_useful_score {
             useful_recall_runs += 1;
         }
-        eval_outcome_by_anchor.insert(
-            anchor,
-            StatsEvalOutcome {
-                has_numeric_score,
-                has_useful_score,
-                has_clean_abstention,
-                has_missed_useful_abstention,
-            },
-        );
+        if let Some(anchor) = eval_run_anchor(run) {
+            eval_outcome_by_anchor
+                .entry(anchor)
+                .or_insert_with(|| StatsEvalOutcome {
+                    has_numeric_score,
+                    has_useful_score,
+                    has_clean_abstention,
+                    has_missed_useful_abstention,
+                });
+        }
     }
 
-    let non_empty_by_anchor = recall_eval_by_anchor
-        .iter()
-        .filter(|(_, volume)| volume.memory_count > 0)
-        .map(|(anchor, volume)| (anchor.clone(), volume.clone()))
-        .collect::<BTreeMap<_, _>>();
     let empty_recall_anchors = recall_eval_by_anchor
         .iter()
         .filter(|(_, volume)| volume.memory_count == 0)
         .map(|(anchor, _)| anchor.clone())
         .collect::<Vec<_>>();
-    let abstention = build_abstention_stats(&empty_recall_anchors, &eval_outcome_by_anchor);
-    let volumes = non_empty_by_anchor.values().cloned().collect::<Vec<_>>();
+    let mut abstention = build_abstention_stats(&empty_recall_anchors, &eval_outcome_by_anchor);
+    let empty_recall_runs = volume_runs
+        .iter()
+        .filter(|volume| volume.memory_count == 0)
+        .count();
+    if empty_recall_runs > abstention.empty_recall_runs {
+        let unjudged_empty_runs = empty_recall_runs - abstention.empty_recall_runs;
+        abstention.empty_recall_runs += unjudged_empty_runs;
+        abstention.unjudged_empty_recall_runs += unjudged_empty_runs;
+        abstention.clean_abstention_rate_per_empty_recall = rate(
+            abstention.clean_abstention_runs,
+            abstention.empty_recall_runs,
+        );
+        abstention.missed_useful_abstention_rate_per_empty_recall = rate(
+            abstention.missed_useful_abstention_runs,
+            abstention.empty_recall_runs,
+        );
+    }
+    let volumes = volume_runs
+        .iter()
+        .filter(|volume| volume.memory_count > 0)
+        .cloned()
+        .collect::<Vec<_>>();
     let volume = build_volume_stats(&volumes);
     let llm_filter = build_llm_filter_stats(&volumes);
     let (mut segment_accumulators, mut tool_accumulators) =
@@ -356,8 +344,15 @@ pub fn build_stats_with_filters(
     let by_origin = stats_segments(segment_accumulators);
     let by_tool = stats_segments(tool_accumulators);
     let eligible_count = eligible.len();
-    let recall_count = recall_runs.len();
-    let non_empty_count = non_empty_by_anchor.len();
+    let turns_with_recall_count = turns_with_recall.len();
+    let recall_count = by_origin
+        .iter()
+        .map(|segment| segment.recall_runs)
+        .sum::<usize>();
+    let non_empty_count = by_origin
+        .iter()
+        .map(|segment| segment.non_empty_recall_runs)
+        .sum::<usize>();
     let useful = StatsUseful {
         evaluated_recall_runs,
         useful_recall_runs,
@@ -374,6 +369,8 @@ pub fn build_stats_with_filters(
     Ok(StatsOutput {
         filters,
         eligible_turns: eligible_count,
+        turns_with_recall: turns_with_recall_count,
+        turn_recall_rate: rate(turns_with_recall_count, eligible_count),
         recall_runs: recall_count,
         recall_rate: rate(recall_count, eligible_count),
         non_empty_recall_runs: non_empty_count,
@@ -503,15 +500,6 @@ fn build_stats_segment_accumulators(
         }
     }
     Ok((origin_accumulators, tool_accumulators))
-}
-
-fn recall_task_anchor(payload_json: &str) -> Option<StatsAnchor> {
-    serde_json::from_str::<StatsRecallTaskPayload>(payload_json)
-        .ok()
-        .map(|payload| StatsAnchor {
-            session_id: payload.session_id,
-            turn_ordinal: payload.turn_ordinal,
-        })
 }
 
 fn recall_eval_task_volume(
@@ -704,6 +692,11 @@ pub fn print_human_stats(stats: &StatsOutput) {
         println!("  filters: {label}");
     }
     println!("  eligible turns: {}", stats.eligible_turns);
+    println!(
+        "  turns with recall: {} ({})",
+        stats.turns_with_recall,
+        percent(stats.turn_recall_rate)
+    );
     println!(
         "  recall runs: {} ({})",
         stats.recall_runs,

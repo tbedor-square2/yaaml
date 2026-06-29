@@ -492,6 +492,9 @@ struct RecallArgs {
     /// Agent turn id to use as a deferred eval anchor.
     #[arg(long)]
     turn_id: Option<String>,
+    /// Do not queue a recall eval for this query.
+    #[arg(long)]
+    no_eval: bool,
     /// Emit machine-readable JSON.
     #[arg(long)]
     json: bool,
@@ -3888,21 +3891,23 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
         markdown: rendered,
     } = recall_result;
     let selected_ids = selected_memory_ids.clone();
-    queue_query_recall_eval(
-        &db,
-        &anchor,
-        &rendered,
-        &selected_ids,
-        Some(&filter_telemetry),
-        yaaml::daemon::RecallEvalMetadata {
-            recall_origin: recall_origin.to_string(),
-            turn_id: args.turn_id.clone(),
-            tool_name: args.tool_name.clone(),
-            tool_use_id: args.tool_use_id.clone(),
-            tool_input_summary: tool_input_summary.clone(),
-            injected: (recall_origin == "tool_pre_use").then_some(!selected_ids.is_empty()),
-        },
-    )?;
+    if !args.no_eval && !args.debug_ranking {
+        queue_query_recall_eval(
+            &db,
+            &anchor,
+            &rendered,
+            &selected_ids,
+            Some(&filter_telemetry),
+            yaaml::daemon::RecallEvalMetadata {
+                recall_origin: recall_origin.to_string(),
+                turn_id: args.turn_id.clone(),
+                tool_name: args.tool_name.clone(),
+                tool_use_id: args.tool_use_id.clone(),
+                tool_input_summary: tool_input_summary.clone(),
+                injected: (recall_origin == "tool_pre_use").then_some(!selected_ids.is_empty()),
+            },
+        )?;
+    }
     if args.codex_hook_output {
         println!(
             "{}",

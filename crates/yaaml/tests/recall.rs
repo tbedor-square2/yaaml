@@ -164,6 +164,28 @@ recall_llm_filter_enabled = false
     let project_id = project.canonicalize().unwrap().display().to_string();
     let mut db = Database::open(&db_path).unwrap();
     db.migrate().unwrap();
+    db.upsert_session(&SessionRecord {
+        id: "debug-session".to_string(),
+        agent_type: AgentType::Codex,
+        project_id: project_id.clone(),
+        transcript_file_path: "/tmp/debug-session.jsonl".to_string(),
+        started_at: Some("unix:1".to_string()),
+        last_seen_at: Some("unix:2".to_string()),
+    })
+    .unwrap();
+    db.insert_turn(&TurnRecord {
+        session_id: "debug-session".to_string(),
+        turn_id: Some("turn-0".to_string()),
+        ordinal: 0,
+        byte_start: 0,
+        byte_end: 1,
+        observed_at: Some("unix:2".to_string()),
+        status: TurnStatus::Completed,
+        display_text: Some("debug recall for PR 481245".to_string()),
+        cwd: None,
+        context: None,
+    })
+    .unwrap();
     let memory = MemoryRecord {
         id: None,
         title: "Task-key recall".to_string(),
@@ -203,6 +225,7 @@ recall_llm_filter_enabled = false
         .current_dir(&project)
         .env("HOME", &home)
         .env("OPENAI_API_KEY", "test-key")
+        .env("CODEX_THREAD_ID", "debug-session")
         .output()
         .unwrap();
 
@@ -223,6 +246,114 @@ recall_llm_filter_enabled = false
             .as_f64()
             .unwrap()
             > 0.0
+    );
+    let db = Database::open(&db_path).unwrap();
+    assert_eq!(
+        db.count_tasks_by_status(TASK_KIND_RECALL_EVAL, TaskStatus::Queued)
+            .unwrap(),
+        0
+    );
+}
+
+#[test]
+fn recall_query_no_eval_skips_eval_queue() {
+    let tmp = TempDir::new().unwrap();
+    let home = tmp.path().join("home");
+    let project = tmp.path().join("project");
+    fs::create_dir_all(home.join(".yaaml")).unwrap();
+    fs::create_dir_all(&project).unwrap();
+    let db_path = home.join(".yaaml").join("yaaml.db");
+    let server = fake_embedding_server();
+    fs::write(
+        home.join(".yaaml").join("config.toml"),
+        format!(
+            r#"
+db_path = "{}"
+embedding_base_url = "{}"
+recall_llm_filter_enabled = false
+"#,
+            db_path.display(),
+            server.base_url
+        ),
+    )
+    .unwrap();
+
+    let project_id = project.canonicalize().unwrap().display().to_string();
+    let mut db = Database::open(&db_path).unwrap();
+    db.migrate().unwrap();
+    db.upsert_session(&SessionRecord {
+        id: "no-eval-session".to_string(),
+        agent_type: AgentType::Codex,
+        project_id: project_id.clone(),
+        transcript_file_path: "/tmp/no-eval-session.jsonl".to_string(),
+        started_at: Some("unix:1".to_string()),
+        last_seen_at: Some("unix:2".to_string()),
+    })
+    .unwrap();
+    db.insert_turn(&TurnRecord {
+        session_id: "no-eval-session".to_string(),
+        turn_id: Some("turn-0".to_string()),
+        ordinal: 0,
+        byte_start: 0,
+        byte_end: 1,
+        observed_at: Some("unix:2".to_string()),
+        status: TurnStatus::Completed,
+        display_text: Some("diagnostic recall query".to_string()),
+        cwd: None,
+        context: None,
+    })
+    .unwrap();
+    let memory_id = insert_memory_with_embedding(
+        &mut db,
+        MemoryRecord {
+            id: None,
+            title: "Diagnostic recall".to_string(),
+            body: "Task task:diagnostic-recall should not queue evals when --no-eval is used."
+                .to_string(),
+            scope: MemoryScope::Project,
+            kind: MemoryKind::Lesson,
+            task_keys: vec!["task:diagnostic-recall".to_string()],
+            source_turn_refs: Vec::new(),
+            created_at: "unix:1".to_string(),
+            updated_at: "unix:1".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some(project_id),
+            project_descriptor: Some("yaaml".to_string()),
+            lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: yaaml_core::MemoryValidity::Durable,
+        },
+    );
+    drop(db);
+
+    let output = Command::new(env!("CARGO_BIN_EXE_yaaml"))
+        .arg("recall")
+        .arg("--query")
+        .arg("task:diagnostic-recall")
+        .arg("--json")
+        .arg("--no-eval")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .env("OPENAI_API_KEY", "test-key")
+        .env("CODEX_THREAD_ID", "no-eval-session")
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    server.join();
+    let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(value["selected_memory_ids"][0], memory_id);
+    let db = Database::open(&db_path).unwrap();
+    assert_eq!(
+        db.count_tasks_by_status(TASK_KIND_RECALL_EVAL, TaskStatus::Queued)
+            .unwrap(),
+        0
     );
 }
 

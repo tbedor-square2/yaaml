@@ -141,6 +141,9 @@ struct EvalRecallArgs {
     /// Restrict replay to one completed turn ordinal. Requires --session.
     #[arg(long)]
     turn: Option<u64>,
+    /// Mark this replay as a rerun that supersedes an earlier eval run.
+    #[arg(long, value_name = "RUN_ID")]
+    rerun_for: Option<i64>,
     /// Disable remote LLM judging and record retrieval metadata only.
     #[arg(long)]
     no_judge: bool,
@@ -2003,8 +2006,8 @@ fn eval(args: EvalArgs) -> anyhow::Result<()> {
     }
 }
 
-fn eval_recall(args: EvalRecallArgs) -> anyhow::Result<()> {
-    if args.turn.is_some() && args.session.is_none() {
+fn eval_recall(mut args: EvalRecallArgs) -> anyhow::Result<()> {
+    if args.turn.is_some() && args.session.is_none() && args.rerun_for.is_none() {
         bail!("--turn requires --session");
     }
     let cwd = env::current_dir().context("failed to determine current directory")?;
@@ -2013,6 +2016,37 @@ fn eval_recall(args: EvalRecallArgs) -> anyhow::Result<()> {
     let mut db = Database::open(&db_path)
         .with_context(|| format!("failed to open {}", display(&db_path)))?;
     db.migrate().context("failed to migrate database")?;
+    if let Some(source_run_id) = args.rerun_for {
+        let source_run = db
+            .eval_run_by_id(source_run_id)
+            .context("failed to load source eval run")?
+            .with_context(|| format!("eval run {source_run_id} not found"))?;
+        if let (Some(requested), Some(source)) = (&args.session, &source_run.session_id) {
+            if requested != source {
+                bail!(
+                    "--session {} does not match source eval run {} session {}",
+                    requested,
+                    source_run_id,
+                    source
+                );
+            }
+        }
+        if let (Some(requested), Some(source)) = (args.turn, source_run.turn_ordinal) {
+            if requested != source {
+                bail!(
+                    "--turn {} does not match source eval run {} turn {}",
+                    requested,
+                    source_run_id,
+                    source
+                );
+            }
+        }
+        args.session = args.session.or(source_run.session_id);
+        args.turn = args.turn.or(source_run.turn_ordinal);
+    }
+    if args.turn.is_some() && args.session.is_none() {
+        bail!("--turn requires --session");
+    }
     let now = unix_timestamp();
     let run_id = db
         .insert_eval_run_with_metadata(
@@ -2026,6 +2060,7 @@ fn eval_recall(args: EvalRecallArgs) -> anyhow::Result<()> {
                 "judge_model": config.eval_judge_model,
                 "judge_enabled": !args.no_judge,
                 "retrieval": "current_active_memories_vector_or_lexical_fallback",
+                "rerun_for_eval_run_id": args.rerun_for,
             })
             .to_string(),
             EvalRunMetadata {
@@ -2994,16 +3029,15 @@ fn build_eval_summary(db: &Database, runs: Vec<EvalRunRecord>) -> anyhow::Result
             .eval_results_for_run(run.id)
             .with_context(|| format!("failed to load eval results for run {}", run.id))?;
         let run_context = eval_run_context(run);
-        let has_insufficient_context = results
-            .iter()
-            .any(|result| result.judge_score.as_deref() == Some("insufficient_context"));
-        if has_insufficient_context
-            && db
-                .recall_eval_scored_rerun_exists(run.id)
-                .with_context(|| format!("failed to check scored rerun for eval run {}", run.id))?
+        if db
+            .recall_eval_scored_rerun_exists(run.id)
+            .with_context(|| format!("failed to check scored rerun for eval run {}", run.id))?
         {
             continue;
         }
+        let has_insufficient_context = results
+            .iter()
+            .any(|result| result.judge_score.as_deref() == Some("insufficient_context"));
         runs_considered += 1;
         let origin_key = run_context.recall_origin.clone();
         let origin_accumulator = origin_accumulators.entry(origin_key).or_default();

@@ -551,6 +551,112 @@ fn stats_json_scores_historical_empty_replay_abstention_after_since_filter() {
     assert_eq!(replay["abstention"]["unjudged_empty_recall_runs"], 0);
 }
 
+#[test]
+fn stats_json_excludes_superseded_eval_runs() {
+    let tmp = TempDir::new().unwrap();
+    let home = tmp.path().join("home");
+    let project = tmp.path().join("project");
+    fs::create_dir_all(home.join(".yaaml")).unwrap();
+    fs::create_dir_all(&project).unwrap();
+    let db_path = home.join(".yaaml").join("yaaml.db");
+    fs::write(
+        home.join(".yaaml").join("config.toml"),
+        format!(r#"db_path = "{}""#, db_path.display()),
+    )
+    .unwrap();
+
+    let mut db = Database::open(&db_path).unwrap();
+    db.migrate().unwrap();
+    db.upsert_session(&SessionRecord {
+        id: "session-1".to_string(),
+        agent_type: AgentType::Codex,
+        project_id: project.display().to_string(),
+        transcript_file_path: "/tmp/session.jsonl".to_string(),
+        started_at: Some("unix:0".to_string()),
+        last_seen_at: Some("unix:10".to_string()),
+    })
+    .unwrap();
+    db.insert_turn(&TurnRecord {
+        session_id: "session-1".to_string(),
+        turn_id: Some("turn-0".to_string()),
+        ordinal: 0,
+        byte_start: 0,
+        byte_end: 5,
+        observed_at: Some("unix:10".to_string()),
+        status: TurnStatus::Completed,
+        display_text: Some("turn text".to_string()),
+        cwd: None,
+        context: None,
+    })
+    .unwrap();
+    let turn_row_id = db
+        .turn_row_id_for_session_ordinal("session-1", 0)
+        .unwrap()
+        .unwrap();
+
+    let source_run_id = db
+        .insert_eval_run_with_metadata(
+            "recall_1_to_5",
+            "unix:100",
+            &json!({
+                "session_id": "session-1",
+                "turn_ordinal": 0,
+                "memory_ids": [11]
+            })
+            .to_string(),
+            recall_metadata_with_origin(0, "session_background"),
+        )
+        .unwrap();
+    db.insert_eval_result(
+        source_run_id,
+        turn_row_id,
+        Some(11),
+        "1",
+        "stale low score",
+        "unix:101",
+    )
+    .unwrap();
+    db.complete_eval_run(source_run_id, "unix:102").unwrap();
+
+    let rerun_id = db
+        .insert_eval_run_with_metadata(
+            "default",
+            "unix:110",
+            &json!({
+                "session_id": "session-1",
+                "turn_ordinal": 0,
+                "memory_ids": [11],
+                "rerun_for_eval_run_id": source_run_id
+            })
+            .to_string(),
+            recall_metadata_with_origin(0, "session_background"),
+        )
+        .unwrap();
+    db.insert_eval_result(
+        rerun_id,
+        turn_row_id,
+        Some(11),
+        "5",
+        "current good score",
+        "unix:111",
+    )
+    .unwrap();
+    db.complete_eval_run(rerun_id, "unix:112").unwrap();
+
+    let stats = stats_json(&home, &project, []);
+    assert_eq!(stats["recall_runs"], 1);
+    assert_eq!(stats["volume"]["memory_count_buckets"]["one_to_two"], 1);
+    assert_eq!(stats["useful"]["evaluated_recall_runs"], 1);
+    assert_eq!(stats["useful"]["useful_recall_runs"], 1);
+    assert_eq!(stats["useful"]["good_memory_results"], 1);
+    assert_eq!(stats["useful"]["low_memory_results"], 0);
+    assert_eq!(stats["by_origin"][0]["name"], "session_background");
+    assert_eq!(stats["by_origin"][0]["recall_runs"], 1);
+    assert_eq!(stats["by_origin"][0]["good_memory_results"], 1);
+    assert_eq!(stats["by_origin"][0]["low_memory_results"], 0);
+    assert_eq!(stats["by_origin"][0]["average_score"], 5.0);
+}
+
 fn stats_json<const N: usize>(
     home: &std::path::Path,
     project: &std::path::Path,

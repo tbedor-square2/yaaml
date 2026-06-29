@@ -920,6 +920,151 @@ eval_judge_api_key_env = "YAAML_TEST_ANTHROPIC_KEY"
 }
 
 #[test]
+fn eval_recall_rerun_for_supersedes_source_run_in_summary() {
+    let tmp = TempDir::new().unwrap();
+    let home = tmp.path().join("home");
+    let project = tmp.path().join("project");
+    fs::create_dir_all(home.join(".yaaml")).unwrap();
+    fs::create_dir_all(&project).unwrap();
+    let db_path = home.join(".yaaml").join("yaaml.db");
+    let server = fake_anthropic_server();
+    fs::write(
+        home.join(".yaaml").join("config.toml"),
+        format!(
+            r#"
+db_path = "{}"
+embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
+eval_judge_base_url = "{}"
+eval_judge_api_key_env = "YAAML_TEST_ANTHROPIC_KEY"
+"#,
+            db_path.display(),
+            server.base_url
+        ),
+    )
+    .unwrap();
+    let mut db = Database::open(&db_path).unwrap();
+    db.migrate().unwrap();
+    insert_transcript_backed_turn(&db, tmp.path(), &project, "Useful context");
+    let memory_id = db
+        .insert_memory(&MemoryRecord {
+            id: None,
+            title: "Earlier memory".to_string(),
+            body: "Useful context".to_string(),
+            scope: MemoryScope::Project,
+            kind: MemoryKind::Lesson,
+            task_keys: Vec::new(),
+            source_turn_refs: Vec::new(),
+            created_at: "2026-06-08T00:00:01Z".to_string(),
+            updated_at: "2026-06-08T00:00:01Z".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some(project.display().to_string()),
+            project_descriptor: Some("yaaml".to_string()),
+            lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: yaaml_core::MemoryValidity::Durable,
+        })
+        .unwrap();
+    let turn_row_id = db
+        .turn_row_id_for_session_ordinal("session-1", 0)
+        .unwrap()
+        .unwrap();
+    let source_run_id = db
+        .insert_eval_run_with_metadata(
+            "recall_1_to_5",
+            "unix:1781205400",
+            &serde_json::json!({
+                "session_id": "session-1",
+                "turn_ordinal": 0,
+                "memory_ids": [memory_id],
+            })
+            .to_string(),
+            eval_metadata(0, "session_background"),
+        )
+        .unwrap();
+    db.insert_eval_result(
+        source_run_id,
+        turn_row_id,
+        Some(memory_id),
+        "1",
+        "stale bad score",
+        "unix:1781205401",
+    )
+    .unwrap();
+    db.complete_eval_run(source_run_id, "unix:1781205402")
+        .unwrap();
+
+    let binary = env!("CARGO_BIN_EXE_yaaml");
+    let output = Command::new(binary)
+        .arg("eval")
+        .arg("recall")
+        .arg("--rerun-for")
+        .arg(source_run_id.to_string())
+        .arg("--limit")
+        .arg("1")
+        .arg("--json")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .env("YAAML_TEST_ANTHROPIC_KEY", "test-key")
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    server.join();
+    let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(value["evaluated_turns"], 1);
+    assert_eq!(value["evaluated_memories"], 1);
+    assert_eq!(value["score_counts"]["5"], 1);
+    let rerun_id = value["run_id"].as_i64().unwrap();
+
+    let show = Command::new(binary)
+        .arg("eval")
+        .arg("show")
+        .arg(rerun_id.to_string())
+        .arg("--json")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .output()
+        .unwrap();
+    assert!(
+        show.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&show.stderr)
+    );
+    let shown: serde_json::Value = serde_json::from_slice(&show.stdout).unwrap();
+    assert_eq!(shown["run"]["session_id"], "session-1");
+    assert_eq!(shown["run"]["turn_ordinal"], 0);
+    assert_eq!(shown["run"]["recall_origin"], "replay");
+    let shown_config: serde_json::Value =
+        serde_json::from_str(shown["run"]["config_json"].as_str().unwrap()).unwrap();
+    assert_eq!(shown_config["rerun_for_eval_run_id"], source_run_id);
+
+    let summary = Command::new(binary)
+        .arg("eval")
+        .arg("summary")
+        .arg("--json")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .output()
+        .unwrap();
+    assert!(
+        summary.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&summary.stderr)
+    );
+    let summary_value: serde_json::Value = serde_json::from_slice(&summary.stdout).unwrap();
+    assert_eq!(summary_value["runs_considered"], 1);
+    assert_eq!(summary_value["results_considered"], 1);
+    assert_eq!(summary_value["score_counts"]["5"], 1);
+    assert_eq!(summary_value["score_counts"]["1"], serde_json::Value::Null);
+}
+
+#[test]
 fn eval_summary_reports_distribution_and_examples() {
     let tmp = TempDir::new().unwrap();
     let home = tmp.path().join("home");

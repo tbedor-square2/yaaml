@@ -269,18 +269,27 @@ pub fn build_stats_with_filters(
         }
     }
 
-    let eval_runs = db
+    let mut eval_runs = Vec::new();
+    for run in db
         .list_eval_runs(eval_limit)
         .context("failed to list eval runs")?
-        .into_iter()
-        .filter(|run| filters.includes_origin(&run.recall_origin))
-        .filter(|run| {
-            filters.since_unix.is_none_or(|since_unix| {
-                timestamp_seconds(&run.started_at)
-                    .is_some_and(|started_at| started_at >= since_unix)
-            })
-        })
-        .collect::<Vec<_>>();
+    {
+        if !filters.includes_origin(&run.recall_origin) {
+            continue;
+        }
+        if filters.since_unix.is_some_and(|since_unix| {
+            timestamp_seconds(&run.started_at).is_none_or(|started_at| started_at < since_unix)
+        }) {
+            continue;
+        }
+        if db
+            .recall_eval_scored_rerun_exists(run.id)
+            .with_context(|| format!("failed to check scored rerun for eval run {}", run.id))?
+        {
+            continue;
+        }
+        eval_runs.push(run);
+    }
 
     let mut volume_keys = volume_runs
         .iter()

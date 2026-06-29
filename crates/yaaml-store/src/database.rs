@@ -957,11 +957,11 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
                 SELECT 1
                 FROM eval_runs
                 JOIN eval_results ON eval_results.eval_run_id = eval_runs.id
-                WHERE eval_runs.strategy = 'recall_1_to_5'
-                  AND CAST(json_extract(eval_runs.config_json, '$.rerun_for_eval_run_id') AS INTEGER) = ?1
+                WHERE CAST(json_extract(eval_runs.config_json, '$.rerun_for_eval_run_id') AS INTEGER) = ?1
                   AND eval_results.judge_score IS NOT NULL
                   AND eval_results.judge_score != ''
                   AND eval_results.judge_score != 'insufficient_context'
+                  AND eval_results.judge_score != 'unjudged'
              )",
             params![source_eval_run_id],
             |row| row.get(0),

@@ -418,6 +418,18 @@ fn recall_filter_decision(
             }
         }
         MemoryKind::TaskCheckpoint => {
+            if task_state_identity_key_match
+                && inactive_origin_segment(memory)
+                && phase_bridge_only_broad_tracking_match(candidate)
+                && context_has_branch_management(query_context)
+                && !context_has_branch_management(&memory_context)
+            {
+                reasons.push("drop:task_checkpoint_phase_mismatch".to_string());
+                return RecallFilterDecision {
+                    keep: false,
+                    reasons,
+                };
+            }
             if task_state_identity_key_match {
                 reasons.push("keep:task_checkpoint_identity_key_match".to_string());
                 return RecallFilterDecision {
@@ -674,6 +686,35 @@ fn is_high_signal_recall_context_tag(tag: &str) -> bool {
             | "claude-code"
             | "tool-hook"
     )
+}
+
+fn inactive_origin_segment(memory: &MemoryRecord) -> bool {
+    memory.origin_segment_id.is_some()
+        && memory.origin_segment_status != Some(ConversationSegmentStatus::Active)
+}
+
+fn context_has_branch_management(context: &ContextMetadata) -> bool {
+    context
+        .subject_tags
+        .iter()
+        .any(|tag| tag == "branch-management" || tag == "pr-management")
+}
+
+fn phase_bridge_only_broad_tracking_match(candidate: &RecallCandidate) -> bool {
+    let matched_recall_keys = candidate
+        .rank
+        .matched_task_keys
+        .iter()
+        .filter(|key| is_recall_match_task_key(key))
+        .collect::<Vec<_>>();
+    !matched_recall_keys.is_empty()
+        && matched_recall_keys
+            .iter()
+            .all(|key| is_broad_tracking_identity_key(key))
+}
+
+fn is_broad_tracking_identity_key(key: &str) -> bool {
+    key.starts_with("pr:") || key.starts_with("ticket:") || key.starts_with("task:")
 }
 
 fn is_broad_project_id(project_id: Option<&str>) -> bool {
@@ -2707,6 +2748,152 @@ Datadog is blocked by a Cloudflare Access redirect.
             &memories,
             current_project,
             &ContextMetadata::default(),
+            &query_keys,
+            5,
+        );
+
+        assert_eq!(selected.len(), 1);
+        assert_eq!(selected[0].memory_id, 1);
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"keep:task_checkpoint_identity_key_match".to_string()));
+    }
+
+    #[test]
+    fn branch_management_query_drops_inactive_implementation_checkpoint_with_only_pr_match() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let mut checkpoint = memory(
+            1,
+            "PR 483111 removed stale generator code and fixed failing tests",
+            MemoryKind::TaskCheckpoint,
+            Some(current_project),
+            vec!["pr:483111".to_string()],
+        );
+        checkpoint.origin_segment_id = Some(42);
+        checkpoint.origin_segment_status = Some(ConversationSegmentStatus::Superseded);
+        let memories = vec![checkpoint];
+        let query_context = infer_context_from_text(
+            "retarget PR 483111 to master and update the pull request body",
+        );
+        let query_keys = vec!["pr:483111".to_string()];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &query_context,
+            &query_keys,
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &query_context,
+            &query_keys,
+            5,
+        );
+
+        assert!(selected.is_empty());
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:task_checkpoint_phase_mismatch".to_string()));
+    }
+
+    #[test]
+    fn branch_management_query_keeps_branch_management_checkpoint_with_pr_match() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let mut checkpoint = memory(
+            1,
+            "PR 483111 was retargeted to master and the pull request body was updated",
+            MemoryKind::TaskCheckpoint,
+            Some(current_project),
+            vec!["pr:483111".to_string()],
+        );
+        checkpoint.origin_segment_id = Some(42);
+        checkpoint.origin_segment_status = Some(ConversationSegmentStatus::Superseded);
+        let memories = vec![checkpoint];
+        let query_context = infer_context_from_text("retarget PR 483111 to master");
+        let query_keys = vec!["pr:483111".to_string()];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &query_context,
+            &query_keys,
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &query_context,
+            &query_keys,
+            5,
+        );
+
+        assert_eq!(selected.len(), 1);
+        assert_eq!(selected[0].memory_id, 1);
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"keep:task_checkpoint_identity_key_match".to_string()));
+    }
+
+    #[test]
+    fn implementation_query_keeps_inactive_implementation_checkpoint_with_pr_match() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let mut checkpoint = memory(
+            1,
+            "PR 483111 removed stale generator code and fixed failing tests",
+            MemoryKind::TaskCheckpoint,
+            Some(current_project),
+            vec!["pr:483111".to_string()],
+        );
+        checkpoint.origin_segment_id = Some(42);
+        checkpoint.origin_segment_status = Some(ConversationSegmentStatus::Superseded);
+        let memories = vec![checkpoint];
+        let query_context =
+            infer_context_from_text("fix the failed test on PR 483111 after removing stale code");
+        let query_keys = vec!["pr:483111".to_string()];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &query_context,
+            &query_keys,
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &query_context,
             &query_keys,
             5,
         );

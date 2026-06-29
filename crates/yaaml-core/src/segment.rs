@@ -314,6 +314,10 @@ fn is_path_key(key: &str) -> bool {
     key.starts_with("path:")
 }
 
+fn is_broad_tracking_key(key: &str) -> bool {
+    key.starts_with("pr:") || key.starts_with("ticket:") || key.starts_with("task:")
+}
+
 fn path_key_count(keys: &[String]) -> usize {
     keys.iter().filter(|key| is_path_key(key)).count()
 }
@@ -360,6 +364,12 @@ impl SegmentRange {
                 return !path_overlap_context_conflicts(
                     &self.latest_context_markers,
                     context_markers,
+                );
+            }
+            if overlapping.iter().all(|key| is_broad_tracking_key(key)) {
+                return !context_conflicts(
+                    &specific_path_overlap_markers(&self.latest_context_markers),
+                    &specific_path_overlap_markers(context_markers),
                 );
             }
             return true;
@@ -583,6 +593,33 @@ mod tests {
         assert!(segments[0]
             .task_keys
             .contains(&"ticket:MLP-4410".to_string()));
+    }
+
+    #[test]
+    fn segment_builder_splits_broad_pr_when_context_shifts() {
+        let turns = vec![
+            turn(
+                1,
+                "user: https://github.com/squareup/java/pull/484042 has a failed test, fix",
+            ),
+            turn(
+                2,
+                "user: include the Mixtape change in https://github.com/squareup/java/pull/484042 and make that a PR into master",
+            ),
+        ];
+
+        let segments = build_conversation_segments("session-1", &turns, "unix:1");
+
+        assert_eq!(segments.len(), 2);
+        assert_eq!(segments[0].start_turn_ordinal, 1);
+        assert_eq!(segments[0].end_turn_ordinal, 1);
+        assert_eq!(segments[0].status, ConversationSegmentStatus::Superseded);
+        assert_eq!(segments[1].start_turn_ordinal, 2);
+        assert_eq!(segments[1].end_turn_ordinal, 2);
+        assert_eq!(segments[1].status, ConversationSegmentStatus::Active);
+        assert!(segments
+            .iter()
+            .all(|segment| segment.task_keys.contains(&"pr:484042".to_string())));
     }
 
     #[test]

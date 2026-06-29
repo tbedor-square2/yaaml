@@ -92,6 +92,17 @@ mod tests {
     }
 
     #[test]
+    fn text_context_marks_pr_into_master_as_branch_management() {
+        let context = infer_context_from_text("make that a PR into master");
+
+        assert!(context.subject_tags.contains(&"github".to_string()));
+        assert!(context.subject_tags.contains(&"pr".to_string()));
+        assert!(context
+            .subject_tags
+            .contains(&"branch-management".to_string()));
+    }
+
+    #[test]
     fn sss_context_scores_above_unrelated_aida_docs() {
         let query = infer_context_from_text("moving dumbo to aws for Sad Sack Signals");
         let sss = infer_context_from_memory(&memory(

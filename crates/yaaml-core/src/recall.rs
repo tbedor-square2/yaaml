@@ -428,8 +428,7 @@ fn recall_filter_decision(
             if task_state_identity_key_match
                 && inactive_origin_segment(memory)
                 && phase_bridge_only_broad_tracking_match(candidate)
-                && context_has_branch_management(query_context)
-                && !context_has_branch_management(&memory_context)
+                && broad_tracking_phase_mismatch(query_context, &memory_context)
             {
                 reasons.push("drop:task_checkpoint_phase_mismatch".to_string());
                 return RecallFilterDecision {
@@ -620,6 +619,17 @@ fn recall_filter_decision(
                     keep: false,
                     reasons,
                 };
+            } else if same_project
+                && inactive_origin_segment(memory)
+                && candidate.rank.matched_task_keys.is_empty()
+                && candidate.rank.context_score < 0.42
+                && context_gated_durable
+            {
+                reasons.push("drop:inactive_origin_durable_weak_context".to_string());
+                return RecallFilterDecision {
+                    keep: false,
+                    reasons,
+                };
             } else if same_project {
                 reasons.push("keep:same_project_durable".to_string());
             } else if strong_context {
@@ -705,6 +715,15 @@ fn context_has_branch_management(context: &ContextMetadata) -> bool {
         .subject_tags
         .iter()
         .any(|tag| tag == "branch-management" || tag == "pr-management")
+}
+
+fn context_has_test_fix(context: &ContextMetadata) -> bool {
+    context.subject_tags.iter().any(|tag| tag == "test-fix")
+}
+
+fn broad_tracking_phase_mismatch(query: &ContextMetadata, memory: &ContextMetadata) -> bool {
+    (context_has_branch_management(query) && !context_has_branch_management(memory))
+        || (context_has_test_fix(query) && !context_has_test_fix(memory))
 }
 
 fn phase_bridge_only_broad_tracking_match(candidate: &RecallCandidate) -> bool {
@@ -1549,6 +1568,12 @@ fn segment_evidence_matches(
         if overlapping.iter().all(|key| key.starts_with("path:")) {
             return path_overlap_context_matches(active_markers, incoming_markers);
         }
+        if overlapping
+            .iter()
+            .all(|key| is_broad_tracking_identity_key(key))
+        {
+            return broad_tracking_overlap_context_matches(active_markers, incoming_markers);
+        }
         return true;
     }
     if incoming_keys.is_empty()
@@ -1570,6 +1595,15 @@ fn path_overlap_context_matches(active: &HashSet<String>, incoming: &HashSet<Str
     if !active.is_empty() && incoming.is_empty() {
         return false;
     }
+    !segment_context_conflicts(&active, &incoming)
+}
+
+fn broad_tracking_overlap_context_matches(
+    active: &HashSet<String>,
+    incoming: &HashSet<String>,
+) -> bool {
+    let active = specific_path_overlap_markers(active);
+    let incoming = specific_path_overlap_markers(incoming);
     !segment_context_conflicts(&active, &incoming)
 }
 
@@ -1609,7 +1643,7 @@ pub fn segment_task_keys(text: &str) -> Vec<String> {
 pub fn segment_context_markers(turn: &TurnRecord) -> Vec<String> {
     let mut markers = Vec::new();
     if let Some(display_text) = &turn.display_text {
-        let display_text = strip_segment_context_suppressed_lines(display_text);
+        let display_text = segment_context_marker_text(display_text);
         let text_context = infer_context_from_text(&display_text);
         push_segment_context_markers(&mut markers, &text_context);
     }
@@ -1619,6 +1653,27 @@ pub fn segment_context_markers(turn: &TurnRecord) -> Vec<String> {
         }
     }
     markers
+}
+
+fn segment_context_marker_text(display_text: &str) -> String {
+    let display_text = strip_segment_context_suppressed_lines(display_text);
+    let user_lines = display_text
+        .lines()
+        .filter(|line| line.trim_start().starts_with("user:"))
+        .collect::<Vec<_>>();
+    if !user_lines.is_empty() {
+        return user_lines.join("\n");
+    }
+    display_text
+        .lines()
+        .filter(|line| {
+            let trimmed = line.trim_start();
+            !trimmed.starts_with("assistant:")
+                && !trimmed.starts_with("tool output:")
+                && !trimmed.starts_with("message:")
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 fn push_segment_context_markers(markers: &mut Vec<String>, context: &ContextMetadata) {
@@ -2836,6 +2891,55 @@ Datadog is blocked by a Cloudflare Access redirect.
     }
 
     #[test]
+    fn failed_test_query_drops_inactive_checkpoint_with_only_pr_match() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let mut checkpoint = memory(
+            1,
+            "PR 483111 removed stale generator code",
+            MemoryKind::TaskCheckpoint,
+            Some(current_project),
+            vec!["pr:483111".to_string()],
+        );
+        checkpoint.origin_segment_id = Some(42);
+        checkpoint.origin_segment_status = Some(ConversationSegmentStatus::Superseded);
+        let memories = vec![checkpoint];
+        let query_context = infer_context_from_text(
+            "https://github.com/squareup/java/pull/483111 has a failed test, fix",
+        );
+        let query_keys = vec!["pr:483111".to_string()];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &query_context,
+            &query_keys,
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &query_context,
+            &query_keys,
+            5,
+        );
+
+        assert!(selected.is_empty());
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:task_checkpoint_phase_mismatch".to_string()));
+    }
+
+    #[test]
     fn branch_management_query_keeps_branch_management_checkpoint_with_pr_match() {
         let current_project = "/Users/tbedor/Development/java";
         let hits = vec![VectorHit {
@@ -3362,6 +3466,49 @@ Datadog is blocked by a Cloudflare Access redirect.
             .rank
             .filter_reasons
             .contains(&"drop:episodic_durable_task_key_mismatch".to_string()));
+    }
+
+    #[test]
+    fn inactive_origin_durable_without_task_match_needs_strong_context() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let mut stale_lesson = memory(
+            1,
+            "Remove payroll generator in one PR",
+            MemoryKind::Lesson,
+            Some(current_project),
+            Vec::new(),
+        );
+        stale_lesson.body =
+            "Cleanup strategy for deleting a stale payroll signal generator.".to_string();
+        stale_lesson.origin_segment_id = Some(42);
+        stale_lesson.origin_segment_status = Some(ConversationSegmentStatus::Superseded);
+        let memories = vec![stale_lesson];
+        let query_context =
+            infer_context_from_text("riskarbiter RPC request parameter compatibility");
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &query_context,
+            &[],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) =
+            select_recall_candidates(ranked, &memories, current_project, &query_context, &[], 5);
+
+        assert!(selected.is_empty());
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:inactive_origin_durable_weak_context".to_string()));
     }
 
     #[test]
@@ -4258,6 +4405,58 @@ Datadog is blocked by a Cloudflare Access redirect.
         );
         assert!(!query.contains("recall eval failures"));
         assert!(query.contains("task-state segment lifecycle"));
+    }
+
+    #[test]
+    fn active_segment_query_stops_at_broad_pr_context_shift() {
+        let turns = vec![
+            turn(
+                1,
+                "user: https://github.com/squareup/java/pull/484042 has a failed test, fix",
+            ),
+            turn(
+                2,
+                "assistant: checked the failed test output for PR #484042",
+            ),
+            turn(
+                3,
+                "user: include the Mixtape change in https://github.com/squareup/java/pull/484042 and make that a PR into master",
+            ),
+        ];
+
+        let active = active_segment_recall_turns(&turns);
+        let query = build_active_segment_recall_query(&turns, 4_000, 80);
+
+        assert_eq!(
+            active.iter().map(|turn| turn.ordinal).collect::<Vec<_>>(),
+            vec![3]
+        );
+        assert!(!query.contains("failed test"));
+        assert!(query.contains("PR into master"));
+    }
+
+    #[test]
+    fn active_segment_markers_prefer_user_text_over_assistant_text() {
+        let turns = vec![
+            turn(
+                1,
+                "user: https://github.com/squareup/java/pull/484042 has a failed test, fix",
+            ),
+            turn(
+                2,
+                "user: make that a PR into master for https://github.com/squareup/java/pull/484042\nassistant: while editing the PR I also looked at the failed test logs",
+            ),
+        ];
+
+        let active = active_segment_recall_turns(&turns);
+        let query = build_active_segment_recall_query(&turns, 4_000, 80);
+
+        assert_eq!(
+            active.iter().map(|turn| turn.ordinal).collect::<Vec<_>>(),
+            vec![2]
+        );
+        assert!(!query.contains("has a failed test, fix"));
+        assert!(query.contains("PR into master"));
     }
 
     #[test]

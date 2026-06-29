@@ -60,6 +60,8 @@ pub(super) const KNOWN_PHRASES: &[(&str, &[&str])] = &[
     ("gh pr view", &["github", "pr", "pr-management"]),
     ("base branch", &["github", "pr", "branch-management"]),
     ("target branch", &["github", "pr", "branch-management"]),
+    ("into master", &["github", "pr", "branch-management"]),
+    ("into main", &["github", "pr", "branch-management"]),
     ("retarget", &["github", "pr", "branch-management"]),
     ("retargeting", &["github", "pr", "branch-management"]),
     ("rebase", &["github", "pr", "branch-management"]),

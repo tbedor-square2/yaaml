@@ -35,7 +35,7 @@ use crate::llm_judge::JudgeClient;
 use crate::memory_health::{apply_health_action_rerank, build_memory_health_summaries};
 use crate::recall_filter::{
     select_recall_candidates_with_llm_filter, suppress_recently_recalled_candidates,
-    RecallFilterTelemetry,
+    RecallFilterRequest, RecallFilterTelemetry,
 };
 use crate::turn_hydration::{context_from_turns, hydrate_turns};
 
@@ -2010,7 +2010,8 @@ pub fn refresh_recall_with_embedding(
         config.tool_call_truncation_chars,
     );
     let query_context = context_from_turns(recall_turns, project_id, &query_text);
-    let query_task_keys = active_segment_task_keys(db, &query_text, recent_turns)?;
+    let (query_task_keys, current_segment_id) =
+        active_segment_recall_metadata(db, &query_text, recent_turns)?;
     let candidates = rank_recall_candidates(
         &hits,
         &memories,
@@ -2035,10 +2036,13 @@ pub fn refresh_recall_with_embedding(
         config,
         candidates,
         &memories,
-        &project_id_string,
-        &query_text,
-        &query_context,
-        &query_task_keys,
+        RecallFilterRequest {
+            current_project_id: &project_id_string,
+            query_text: &query_text,
+            query_context: &query_context,
+            query_task_keys: &query_task_keys,
+            current_segment_id,
+        },
     );
     let recent_memory_ids = recent_turns
         .last()
@@ -2118,22 +2122,25 @@ pub fn refresh_recall_with_embedding(
     Ok(write)
 }
 
-fn active_segment_task_keys(
+fn active_segment_recall_metadata(
     db: &Database,
     query_text: &str,
     recent_turns: &[TurnRecord],
-) -> anyhow::Result<Vec<String>> {
+) -> anyhow::Result<(Vec<String>, Option<i64>)> {
     let query_task_keys = extract_task_keys(query_text);
     let Some(latest_turn) = recent_turns.last() else {
-        return Ok(query_task_keys);
+        return Ok((query_task_keys, None));
     };
     let Some(segment) = db
         .conversation_segment_for_turn(&latest_turn.session_id, latest_turn.ordinal)
         .context("failed to load active conversation segment for recall")?
     else {
-        return Ok(query_task_keys);
+        return Ok((query_task_keys, None));
     };
-    Ok(merge_task_keys(&query_task_keys, &segment.task_keys))
+    Ok((
+        merge_task_keys(&query_task_keys, &segment.task_keys),
+        segment.id,
+    ))
 }
 
 fn cooldown_since_unix(query_timestamp: &str, cooldown_seconds: u64) -> Option<i64> {

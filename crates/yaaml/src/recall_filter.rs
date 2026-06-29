@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use yaaml_core::{
-    select_recall_candidates, Config, ContextMetadata, MemoryRecord, RecallCandidate,
+    select_recall_candidates_for_segment, Config, ContextMetadata, MemoryRecord, RecallCandidate,
 };
 
 use crate::llm_judge::JudgeClient;
@@ -35,25 +35,32 @@ pub struct RecallFilterResult {
     pub telemetry: RecallFilterTelemetry,
 }
 
+#[derive(Debug, Clone, Copy)]
+pub struct RecallFilterRequest<'a> {
+    pub current_project_id: &'a str,
+    pub query_text: &'a str,
+    pub query_context: &'a ContextMetadata,
+    pub query_task_keys: &'a [String],
+    pub current_segment_id: Option<i64>,
+}
+
 pub fn select_recall_candidates_with_llm_filter(
     config: &Config,
     candidates: Vec<RecallCandidate>,
     memories: &[MemoryRecord],
-    current_project_id: &str,
-    query_text: &str,
-    query_context: &ContextMetadata,
-    query_task_keys: &[String],
+    request: RecallFilterRequest<'_>,
 ) -> RecallFilterResult {
     let selection_limit = effective_recall_selection_limit(config);
     let filter_limit = config
         .recall_llm_filter_candidate_limit
         .max(selection_limit);
-    let (filter_pool, mut debug_candidates) = select_recall_candidates(
+    let (filter_pool, mut debug_candidates) = select_recall_candidates_for_segment(
         candidates,
         memories,
-        current_project_id,
-        query_context,
-        query_task_keys,
+        request.current_project_id,
+        request.query_context,
+        request.query_task_keys,
+        request.current_segment_id,
         filter_limit,
     );
     let deterministic_selected =
@@ -84,9 +91,9 @@ pub fn select_recall_candidates_with_llm_filter(
     match run_llm_filter(
         &client,
         config,
-        query_text,
-        query_context,
-        current_project_id,
+        request.query_text,
+        request.query_context,
+        request.current_project_id,
         memories,
         &filter_pool,
     ) {
@@ -689,10 +696,13 @@ mod tests {
             &config,
             candidates,
             &memories,
-            "/tmp/yaaml",
-            "query",
-            &query_context,
-            &[],
+            RecallFilterRequest {
+                current_project_id: "/tmp/yaaml",
+                query_text: "query",
+                query_context: &query_context,
+                query_task_keys: &[],
+                current_segment_id: None,
+            },
         )
         .selected
         .into_iter()

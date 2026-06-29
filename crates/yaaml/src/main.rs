@@ -14,7 +14,7 @@ use yaaml::llm_judge::JudgeClient;
 use yaaml::memory_health::{apply_health_action_rerank, build_memory_health_summaries};
 use yaaml::recall_filter::{
     effective_recall_selection_limit, select_recall_candidates_with_llm_filter,
-    suppress_recently_recalled_candidates, RecallFilterTelemetry,
+    suppress_recently_recalled_candidates, RecallFilterRequest, RecallFilterTelemetry,
 };
 use yaaml::turn_hydration::{context_from_turns, hydrate_turns};
 use yaaml_core::{
@@ -4268,7 +4268,7 @@ fn recall_from_embedding(
         );
         query_context
     });
-    let query_task_keys = recall_query_task_keys(
+    let (query_task_keys, current_segment_id) = recall_query_metadata(
         db,
         request.query_text,
         request.session_id,
@@ -4298,10 +4298,13 @@ fn recall_from_embedding(
         config,
         candidates,
         &memories,
-        request.project_id,
-        request.query_text,
-        &query_context,
-        &query_task_keys,
+        RecallFilterRequest {
+            current_project_id: request.project_id,
+            query_text: request.query_text,
+            query_context: &query_context,
+            query_task_keys: &query_task_keys,
+            current_segment_id,
+        },
     );
     let cooldown_since = request.apply_cooldown.then_some(()).and_then(|()| {
         request.session_id.zip(cooldown_since_unix(
@@ -4388,23 +4391,26 @@ fn recall_from_embedding(
     })
 }
 
-fn recall_query_task_keys(
+fn recall_query_metadata(
     db: &Database,
     query_text: &str,
     session_id: Option<&str>,
     turn_ordinal: Option<u64>,
-) -> anyhow::Result<Vec<String>> {
+) -> anyhow::Result<(Vec<String>, Option<i64>)> {
     let query_task_keys = extract_task_keys(query_text);
     let Some((session_id, turn_ordinal)) = session_id.zip(turn_ordinal) else {
-        return Ok(query_task_keys);
+        return Ok((query_task_keys, None));
     };
     let Some(segment) = db
         .conversation_segment_for_turn(session_id, turn_ordinal)
         .context("failed to load conversation segment for recall query")?
     else {
-        return Ok(query_task_keys);
+        return Ok((query_task_keys, None));
     };
-    Ok(merge_task_keys(&query_task_keys, &segment.task_keys))
+    Ok((
+        merge_task_keys(&query_task_keys, &segment.task_keys),
+        segment.id,
+    ))
 }
 
 fn cooldown_since_unix(query_timestamp: &str, cooldown_seconds: u64) -> Option<i64> {

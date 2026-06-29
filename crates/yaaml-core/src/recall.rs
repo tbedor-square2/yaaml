@@ -164,6 +164,26 @@ pub fn select_recall_candidates(
     query_task_keys: &[String],
     limit: usize,
 ) -> (Vec<RecallCandidate>, Vec<RecallCandidate>) {
+    select_recall_candidates_for_segment(
+        candidates,
+        memories,
+        current_project_id,
+        query_context,
+        query_task_keys,
+        None,
+        limit,
+    )
+}
+
+pub fn select_recall_candidates_for_segment(
+    candidates: Vec<RecallCandidate>,
+    memories: &[MemoryRecord],
+    current_project_id: &str,
+    query_context: &ContextMetadata,
+    query_task_keys: &[String],
+    current_segment_id: Option<i64>,
+    limit: usize,
+) -> (Vec<RecallCandidate>, Vec<RecallCandidate>) {
     let mut kept = Vec::new();
     let mut debug = Vec::new();
     for mut candidate in candidates {
@@ -177,6 +197,7 @@ pub fn select_recall_candidates(
                     current_project_id,
                     query_context,
                     query_task_keys,
+                    current_segment_id,
                 )
             })
             .unwrap_or_else(|| RecallFilterDecision {
@@ -305,6 +326,7 @@ fn recall_filter_decision(
     current_project_id: &str,
     query_context: &ContextMetadata,
     query_task_keys: &[String],
+    current_segment_id: Option<i64>,
 ) -> RecallFilterDecision {
     let memory_context = crate::infer_context_from_memory(memory);
     let same_project = memory.project_id.as_deref() == Some(current_project_id);
@@ -325,6 +347,9 @@ fn recall_filter_decision(
         .any(|key| is_task_state_identity_key(key));
     let weak_task_key_match = !candidate.rank.matched_task_keys.is_empty();
     let query_has_task_identity = has_recall_match_task_key(query_task_keys);
+    let query_has_strong_task_identity = query_task_keys
+        .iter()
+        .any(|key| is_strong_recall_task_key(key));
     let weak_query_context = is_weak_recall_query_context(query_context, query_task_keys);
     let episodic_durable_task_key_mismatch = is_episodic_durable(memory)
         && query_has_task_identity
@@ -340,6 +365,10 @@ fn recall_filter_decision(
     let strong_context = same_work_area
         || (same_repo && candidate.rank.context_score >= 0.36)
         || candidate.rank.context_score >= 0.42;
+    let same_active_segment_task_state = memory.validity == MemoryValidity::ValidWhileSegmentActive
+        && memory.origin_segment_id.is_some()
+        && memory.origin_segment_id == current_segment_id
+        && memory.origin_segment_status == Some(ConversationSegmentStatus::Active);
 
     let mut reasons = Vec::new();
     if !matches!(
@@ -363,6 +392,13 @@ fn recall_filter_decision(
                 reasons.push("drop:task_state_origin_segment_inactive".to_string());
                 return RecallFilterDecision {
                     keep: false,
+                    reasons,
+                };
+            }
+            if same_active_segment_task_state {
+                reasons.push("keep:task_state_same_active_segment".to_string());
+                return RecallFilterDecision {
+                    keep: true,
                     reasons,
                 };
             }
@@ -511,12 +547,23 @@ fn recall_filter_decision(
                 };
             }
             if memory.scope == MemoryScope::Global {
-                if query_has_task_identity
+                if query_has_strong_task_identity
                     && candidate.rank.matched_task_keys.is_empty()
                     && candidate.rank.context_score < 0.60
                     && matches!(memory.kind, MemoryKind::Lesson | MemoryKind::Workflow)
                 {
                     reasons.push("drop:global_durable_task_key_mismatch".to_string());
+                    return RecallFilterDecision {
+                        keep: false,
+                        reasons,
+                    };
+                }
+                if query_has_task_identity
+                    && candidate.rank.matched_task_keys.is_empty()
+                    && high_signal_context_mismatch
+                    && matches!(memory.kind, MemoryKind::Lesson | MemoryKind::Workflow)
+                {
+                    reasons.push("drop:global_high_signal_context_mismatch".to_string());
                     return RecallFilterDecision {
                         keep: false,
                         reasons,
@@ -540,7 +587,7 @@ fn recall_filter_decision(
                     reasons,
                 };
             } else if same_project
-                && query_has_task_identity
+                && query_has_strong_task_identity
                 && candidate.rank.matched_task_keys.is_empty()
                 && candidate.rank.context_score < 0.60
                 && matches!(memory.kind, MemoryKind::Lesson | MemoryKind::Workflow)
@@ -1303,7 +1350,7 @@ pub fn merge_task_keys(primary: &[String], secondary: &[String]) -> Vec<String> 
 pub fn build_recall_query(
     turns: &[TurnRecord],
     max_chars: usize,
-    tool_output_truncation_chars: usize,
+    _tool_output_truncation_chars: usize,
 ) -> String {
     let mut query = String::new();
     let mut suppressed_block: Option<&'static str> = None;
@@ -1325,11 +1372,10 @@ pub fn build_recall_query(
             if recall_query_suppressed_line(line) {
                 continue;
             }
-            let line = if line.trim_start().starts_with("tool output:") {
-                truncate_chars(line, tool_output_truncation_chars)
-            } else {
-                line.to_string()
-            };
+            if line.trim_start().starts_with("tool output:") {
+                continue;
+            }
+            let line = line.to_string();
             if !query.is_empty() {
                 query.push('\n');
             }
@@ -2425,6 +2471,100 @@ Datadog is blocked by a Cloudflare Access redirect.
     }
 
     #[test]
+    fn same_active_segment_keeps_task_state_without_identity_key_match() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let mut task_state = memory(
+            1,
+            "Current segment has an unresolved cleanup step",
+            MemoryKind::TaskState,
+            Some(current_project),
+            Vec::new(),
+        );
+        task_state.origin_segment_id = Some(42);
+        task_state.origin_segment_status = Some(ConversationSegmentStatus::Active);
+        task_state.validity = MemoryValidity::ValidWhileSegmentActive;
+        let memories = vec![task_state];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &[],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) = select_recall_candidates_for_segment(
+            ranked,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &[],
+            Some(42),
+            5,
+        );
+
+        assert_eq!(selected.len(), 1);
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"keep:task_state_same_active_segment".to_string()));
+    }
+
+    #[test]
+    fn different_active_segment_drops_task_state_without_identity_key_match() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let mut task_state = memory(
+            1,
+            "Different segment has an unresolved cleanup step",
+            MemoryKind::TaskState,
+            Some(current_project),
+            Vec::new(),
+        );
+        task_state.origin_segment_id = Some(42);
+        task_state.origin_segment_status = Some(ConversationSegmentStatus::Active);
+        task_state.validity = MemoryValidity::ValidWhileSegmentActive;
+        let memories = vec![task_state];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &[],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) = select_recall_candidates_for_segment(
+            ranked,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &[],
+            Some(43),
+            5,
+        );
+
+        assert!(selected.is_empty());
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:task_state_without_task_key_match".to_string()));
+    }
+
+    #[test]
     fn task_checkpoint_recalls_with_identity_even_after_origin_segment_inactive() {
         let current_project = "/Users/tbedor/Development/java";
         let hits = vec![VectorHit {
@@ -3030,7 +3170,7 @@ Datadog is blocked by a Cloudflare Access redirect.
     }
 
     #[test]
-    fn general_lesson_without_identity_keys_does_not_recall_for_path_specific_query() {
+    fn general_lesson_without_identity_keys_still_recalls_for_path_only_query() {
         let current_project = "/Users/tbedor/Development/java";
         let hits = vec![VectorHit {
             memory_id: 1,
@@ -3065,11 +3205,11 @@ Datadog is blocked by a Cloudflare Access redirect.
             5,
         );
 
-        assert!(selected.is_empty());
+        assert_eq!(selected.len(), 1);
         assert!(debug[0]
             .rank
             .filter_reasons
-            .contains(&"drop:same_project_durable_task_key_mismatch".to_string()));
+            .contains(&"keep:same_project_durable".to_string()));
     }
 
     #[test]
@@ -3127,7 +3267,7 @@ Datadog is blocked by a Cloudflare Access redirect.
         assert!(debug[0]
             .rank
             .filter_reasons
-            .contains(&"drop:same_project_durable_task_key_mismatch".to_string()));
+            .contains(&"drop:same_project_high_signal_context_mismatch".to_string()));
     }
 
     #[test]
@@ -3568,7 +3708,7 @@ Datadog is blocked by a Cloudflare Access redirect.
         assert!(debug[0]
             .rank
             .filter_reasons
-            .contains(&"drop:global_durable_task_key_mismatch".to_string()));
+            .contains(&"drop:global_high_signal_context_mismatch".to_string()));
     }
 
     #[test]
@@ -3739,7 +3879,7 @@ Datadog is blocked by a Cloudflare Access redirect; debug WARP authentication."#
     }
 
     #[test]
-    fn recall_query_excludes_long_tool_output() {
+    fn recall_query_excludes_tool_output() {
         let turn = TurnRecord {
             session_id: "session-1".to_string(),
             turn_id: Some("turn-1".to_string()),
@@ -3760,6 +3900,7 @@ Datadog is blocked by a Cloudflare Access redirect; debug WARP authentication."#
 
         assert!(query.contains("user: fix it"));
         assert!(query.contains("assistant: done"));
+        assert!(!query.contains("tool output:"));
         assert!(!query.contains(&"x".repeat(200)));
     }
 

@@ -47,9 +47,14 @@ pub struct StatsFilters {
 
 impl StatsFilters {
     pub fn new(origins: Vec<String>, excluded_origins: Vec<String>) -> Self {
+        let origins = normalized_filters(origins);
+        let mut excluded_origins = normalized_filters(excluded_origins);
+        if origins.is_empty() && !excluded_origins.iter().any(|origin| origin == "replay") {
+            excluded_origins.push("replay".to_string());
+        }
         Self {
-            origins: normalized_filters(origins),
-            excluded_origins: normalized_filters(excluded_origins),
+            origins,
+            excluded_origins,
         }
     }
 

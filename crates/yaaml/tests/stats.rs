@@ -84,6 +84,18 @@ fn stats_json_reports_recall_rates_volume_and_usefulness() {
         json!({
             "session_id": "session-1",
             "turn_ordinal": 1,
+            "recall_text": "replay recall",
+            "memory_ids": [31],
+            "recall_origin": "replay"
+        })
+        .to_string(),
+    );
+    enqueue_task(
+        &db,
+        "recall_eval",
+        json!({
+            "session_id": "session-1",
+            "turn_ordinal": 1,
             "recall_text": "",
             "memory_ids": [],
             "recall_origin": "session_background"
@@ -320,6 +332,33 @@ fn stats_json_filters_by_recall_origin() {
     )
     .unwrap();
     db.complete_eval_run(tool_run_id, "unix:112").unwrap();
+    let replay_run_id = db
+        .insert_eval_run_with_metadata(
+            "default",
+            "unix:120",
+            &json!({"session_id": "session-1", "turn_ordinal": 1}).to_string(),
+            recall_metadata_with_origin(1, "replay"),
+        )
+        .unwrap();
+    db.insert_eval_result(
+        replay_run_id,
+        tool_turn_row_id,
+        Some(31),
+        "2",
+        "weak backtest recall",
+        "unix:121",
+    )
+    .unwrap();
+    db.complete_eval_run(replay_run_id, "unix:122").unwrap();
+
+    let default = stats_json(&home, &project, []);
+    assert_eq!(default["filters"]["excluded_origins"], json!(["replay"]));
+    assert_eq!(default["recall_runs"], 2);
+    assert!(!default["by_origin"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|origin| origin["name"] == "replay"));
 
     let included = stats_json(&home, &project, ["--origin", "session_background"]);
     assert_eq!(
@@ -336,11 +375,17 @@ fn stats_json_filters_by_recall_origin() {
     let excluded = stats_json(&home, &project, ["--exclude-origin", "tool_pre_use"]);
     assert_eq!(
         excluded["filters"]["excluded_origins"],
-        json!(["tool_pre_use"])
+        json!(["tool_pre_use", "replay"])
     );
     assert_eq!(excluded["recall_runs"], 1);
     assert_eq!(excluded["useful"]["low_memory_results"], 0);
     assert_eq!(excluded["by_tool"].as_array().unwrap().len(), 0);
+
+    let replay = stats_json(&home, &project, ["--origin", "replay"]);
+    assert_eq!(replay["filters"]["origins"], json!(["replay"]));
+    assert_eq!(replay["useful"]["low_memory_results"], 1);
+    assert_eq!(replay["by_origin"][0]["name"], "replay");
+    assert_eq!(replay["by_origin"][0]["low_memory_results"], 1);
 }
 
 fn stats_json<const N: usize>(

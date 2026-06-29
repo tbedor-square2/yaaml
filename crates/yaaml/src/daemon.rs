@@ -248,7 +248,7 @@ pub fn refresh_conversation_segments_for_session(
         .context("failed to refresh memory segment metadata")?;
     db.remove_placeholder_task_keys_from_memories(&unix_timestamp())
         .context("failed to remove placeholder task keys from memories")?;
-    db.deactivate_task_state_memories_with_inactive_origin(&unix_timestamp())
+    db.deactivate_stale_task_state_memories(&unix_timestamp())
         .context("failed to deactivate stale task-state memories")?;
     Ok(written)
 }
@@ -1790,7 +1790,7 @@ pub fn expire_idle_conversation_segments(db: &Database, config: &Config) -> anyh
     if expired > 0 {
         db.remove_placeholder_task_keys_from_memories(&now)
             .context("failed to remove placeholder task keys from memories")?;
-        db.deactivate_task_state_memories_with_inactive_origin(&now)
+        db.deactivate_stale_task_state_memories(&now)
             .context("failed to deactivate stale task-state memories")?;
     }
     Ok(expired)

@@ -1149,7 +1149,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
         Ok(updated as u64)
     }
 
-    pub fn deactivate_task_state_memories_with_inactive_origin(
+    pub fn deactivate_stale_task_state_memories(
         &self,
         updated_at: &str,
     ) -> Result<u64, DatabaseError> {
@@ -1160,7 +1160,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
              WHERE is_active = 1
                AND memory_kind = 'task_state'
                AND validity = 'valid_while_segment_active'
-               AND origin_segment_id IS NOT NULL
                AND NOT EXISTS (
                    SELECT 1
                    FROM conversation_segments s
@@ -2960,8 +2959,7 @@ CREATE TABLE conversation_segments (
             .unwrap();
 
         assert_eq!(
-            db.deactivate_task_state_memories_with_inactive_origin("unix:3")
-                .unwrap(),
+            db.deactivate_stale_task_state_memories("unix:3").unwrap(),
             1
         );
 
@@ -2983,6 +2981,76 @@ CREATE TABLE conversation_segments (
         assert!(!stale.is_active);
         assert_eq!(stale.updated_at, "unix:3");
         assert!(active.is_active);
+        assert!(durable.is_active);
+    }
+
+    #[test]
+    fn unlinked_segment_active_task_state_is_deactivated() {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+        let unlinked_task_state = db
+            .insert_memory(&MemoryRecord {
+                id: None,
+                title: "Unlinked task state".to_string(),
+                body: "This transient status should not stay active without an origin segment."
+                    .to_string(),
+                scope: MemoryScope::Project,
+                kind: MemoryKind::TaskState,
+                task_keys: vec!["task:segment-cleanup".to_string()],
+                source_turn_refs: Vec::new(),
+                created_at: "unix:1".to_string(),
+                updated_at: "unix:1".to_string(),
+                is_active: true,
+                session_id: Some("session-1".to_string()),
+                project_id: Some("/tmp/project".to_string()),
+                project_descriptor: Some("project".to_string()),
+                lineage_refs: Vec::new(),
+                origin_segment_id: None,
+                origin_segment_status: None,
+                validity: MemoryValidity::ValidWhileSegmentActive,
+            })
+            .unwrap();
+        let durable_task_state = db
+            .insert_memory(&MemoryRecord {
+                id: None,
+                title: "Legacy durable task state".to_string(),
+                body: "A legacy durable task-state record is left for recall-time gates."
+                    .to_string(),
+                scope: MemoryScope::Project,
+                kind: MemoryKind::TaskState,
+                task_keys: vec!["task:legacy".to_string()],
+                source_turn_refs: Vec::new(),
+                created_at: "unix:1".to_string(),
+                updated_at: "unix:1".to_string(),
+                is_active: true,
+                session_id: Some("session-1".to_string()),
+                project_id: Some("/tmp/project".to_string()),
+                project_descriptor: Some("project".to_string()),
+                lineage_refs: Vec::new(),
+                origin_segment_id: None,
+                origin_segment_status: None,
+                validity: MemoryValidity::Durable,
+            })
+            .unwrap();
+
+        assert_eq!(
+            db.deactivate_stale_task_state_memories("unix:2").unwrap(),
+            1
+        );
+        let memories = db
+            .list_memories_by_ids(&[unlinked_task_state, durable_task_state])
+            .unwrap();
+        let unlinked = memories
+            .iter()
+            .find(|memory| memory.id == Some(unlinked_task_state))
+            .unwrap();
+        let durable = memories
+            .iter()
+            .find(|memory| memory.id == Some(durable_task_state))
+            .unwrap();
+
+        assert!(!unlinked.is_active);
+        assert_eq!(unlinked.updated_at, "unix:2");
         assert!(durable.is_active);
     }
 

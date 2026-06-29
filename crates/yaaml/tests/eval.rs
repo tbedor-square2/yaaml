@@ -1108,6 +1108,35 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
         "cargo test"
     );
 
+    let recent = Command::new(binary)
+        .arg("eval")
+        .arg("summary")
+        .arg("--json")
+        .arg("--since")
+        .arg("unix:1780876805")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .output()
+        .unwrap();
+    assert!(
+        recent.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&recent.stderr)
+    );
+    let recent_value: serde_json::Value = serde_json::from_slice(&recent.stdout).unwrap();
+    assert_eq!(recent_value["runs_considered"], 1);
+    assert_eq!(recent_value["results_considered"], 1);
+    assert_eq!(recent_value["judged_results"], 0);
+    assert_eq!(recent_value["score_counts"]["n/a"], 1);
+    assert!(recent_value["low_score_examples"]
+        .as_array()
+        .unwrap()
+        .is_empty());
+    assert!(recent_value["high_score_examples"]
+        .as_array()
+        .unwrap()
+        .is_empty());
+
     let shown = Command::new(binary)
         .arg("eval")
         .arg("show")

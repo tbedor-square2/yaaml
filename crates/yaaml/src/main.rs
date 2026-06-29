@@ -179,6 +179,9 @@ struct EvalSummaryArgs {
     /// Only include eval runs with this id or newer.
     #[arg(long)]
     since_run: Option<i64>,
+    /// Only include eval runs at or after this timestamp.
+    #[arg(long)]
+    since: Option<String>,
     /// Emit machine-readable JSON.
     #[arg(long)]
     json: bool,
@@ -620,6 +623,43 @@ fn parse_since_unix(value: &str) -> anyhow::Result<i64> {
     seconds.parse::<i64>().with_context(|| {
         format!("--since must be a Unix timestamp like unix:1782760000 or 1782760000, got {value}")
     })
+}
+
+fn timestamp_seconds(timestamp: &str) -> Option<i64> {
+    if let Some(value) = timestamp.strip_prefix("unix:") {
+        return value.parse().ok();
+    }
+    if timestamp.chars().all(|ch| ch.is_ascii_digit()) {
+        return timestamp.parse().ok();
+    }
+    let timestamp = timestamp.strip_suffix('Z')?;
+    let (date, time) = timestamp.split_once('T')?;
+    let mut date_parts = date.split('-');
+    let year: i32 = date_parts.next()?.parse().ok()?;
+    let month: u32 = date_parts.next()?.parse().ok()?;
+    let day: u32 = date_parts.next()?.parse().ok()?;
+    let mut time_parts = time.split(':');
+    let hour: u32 = time_parts.next()?.parse().ok()?;
+    let minute: u32 = time_parts.next()?.parse().ok()?;
+    let second_part = time_parts.next()?;
+    let second_text = second_part.split('.').next().unwrap_or(second_part);
+    let second: u32 = second_text.parse().ok()?;
+    let days = days_from_civil(year, month, day)?;
+    Some(days * 86_400 + hour as i64 * 3_600 + minute as i64 * 60 + second as i64)
+}
+
+fn days_from_civil(year: i32, month: u32, day: u32) -> Option<i64> {
+    if !(1..=12).contains(&month) || !(1..=31).contains(&day) {
+        return None;
+    }
+    let year = year - i32::from(month <= 2);
+    let era = if year >= 0 { year } else { year - 399 } / 400;
+    let year_of_era = year - era * 400;
+    let month = month as i32;
+    let day = day as i32;
+    let day_of_year = (153 * (month + if month > 2 { -3 } else { 9 }) + 2) / 5 + day - 1;
+    let day_of_era = year_of_era * 365 + year_of_era / 4 - year_of_era / 100 + day_of_year;
+    Some((era * 146_097 + day_of_era - 719_468) as i64)
 }
 
 fn tasks(args: TasksArgs) -> anyhow::Result<()> {
@@ -2421,9 +2461,18 @@ fn eval_summary(args: EvalSummaryArgs) -> anyhow::Result<()> {
     let mut db = Database::open(&db_path)
         .with_context(|| format!("failed to open {}", display(&db_path)))?;
     db.migrate().context("failed to migrate database")?;
+    let since_unix = args.since.as_deref().map(parse_since_unix).transpose()?;
     let runs = db
         .list_eval_runs_filtered(args.limit, args.since_run)
-        .context("failed to list eval runs")?;
+        .context("failed to list eval runs")?
+        .into_iter()
+        .filter(|run| {
+            since_unix.is_none_or(|since_unix| {
+                timestamp_seconds(&run.started_at)
+                    .is_some_and(|started_at| started_at >= since_unix)
+            })
+        })
+        .collect::<Vec<_>>();
     let summary = build_eval_summary(&db, runs)?;
 
     if args.json {

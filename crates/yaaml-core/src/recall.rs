@@ -1267,7 +1267,7 @@ pub fn segment_task_keys(text: &str) -> Vec<String> {
 pub fn segment_context_markers(turn: &TurnRecord) -> Vec<String> {
     let mut markers = Vec::new();
     if let Some(display_text) = &turn.display_text {
-        let display_text = strip_recall_suppressed_blocks_and_lines(display_text);
+        let display_text = strip_segment_context_suppressed_lines(display_text);
         let text_context = infer_context_from_text(&display_text);
         push_segment_context_markers(&mut markers, &text_context);
     }
@@ -1395,7 +1395,7 @@ fn looks_like_search_result_line(line: &str) -> bool {
     !line_number.is_empty() && line_number.chars().all(|ch| ch.is_ascii_digit())
 }
 
-fn strip_recall_suppressed_blocks_and_lines(text: &str) -> String {
+pub(crate) fn strip_recall_suppressed_blocks_and_lines(text: &str) -> String {
     let mut stripped = String::new();
     let mut suppressed_block: Option<&'static str> = None;
     for line in text.lines() {
@@ -1418,6 +1418,14 @@ fn strip_recall_suppressed_blocks_and_lines(text: &str) -> String {
         stripped.push_str(line);
     }
     stripped
+}
+
+pub(crate) fn strip_segment_context_suppressed_lines(text: &str) -> String {
+    strip_recall_suppressed_blocks_and_lines(text)
+        .lines()
+        .filter(|line| !line.trim_start().starts_with("tool output:"))
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 fn recall_query_suppressed_block_end(line: &str) -> Option<&'static str> {

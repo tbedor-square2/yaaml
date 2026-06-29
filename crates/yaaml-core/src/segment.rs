@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 
+use crate::recall::strip_segment_context_suppressed_lines;
 use crate::{
     infer_context_from_text, merge_contexts, segment_context_markers, segment_task_keys,
     ContextMetadata, ConversationSegmentRecord, ConversationSegmentStatus, TurnRecord,
@@ -7,6 +8,7 @@ use crate::{
 
 const MAX_SEGMENT_KEYS: usize = 16;
 const MAX_SEGMENT_PATH_KEYS: usize = 4;
+const SEGMENT_CONTEXT_TAIL_TURNS: usize = 1;
 
 pub fn build_conversation_segments(
     session_id: &str,
@@ -95,37 +97,36 @@ fn segment_record(
 }
 
 fn segment_context(turns: &[TurnRecord]) -> ContextMetadata {
-    let mut context = turns
+    let context_turns = segment_context_turns(turns);
+    let mut context = context_turns
         .iter()
         .find_map(|turn| turn.context.clone())
         .unwrap_or_default();
-    for turn in turns.iter().skip(1) {
+    for turn in context_turns.iter().skip(1) {
         if let Some(turn_context) = &turn.context {
             merge_contexts(&mut context, turn_context.clone());
         }
     }
-    let text = segment_context_text(turns);
+    let text = segment_context_text(context_turns);
     merge_contexts(&mut context, infer_context_from_text(&text));
     context
 }
 
-fn segment_context_text(turns: &[TurnRecord]) -> String {
-    const HEAD_TURNS: usize = 2;
-    const TAIL_TURNS: usize = 4;
-    if turns.len() <= HEAD_TURNS + TAIL_TURNS {
-        return turns
-            .iter()
-            .filter_map(|turn| turn.display_text.as_deref())
-            .collect::<Vec<_>>()
-            .join("\n");
+fn segment_context_turns(turns: &[TurnRecord]) -> &[TurnRecord] {
+    if turns.len() <= SEGMENT_CONTEXT_TAIL_TURNS {
+        turns
+    } else {
+        &turns[turns.len().saturating_sub(SEGMENT_CONTEXT_TAIL_TURNS)..]
     }
-    turns
+}
+
+fn segment_context_text(turns: &[TurnRecord]) -> String {
+    let text = turns
         .iter()
-        .take(HEAD_TURNS)
-        .chain(turns.iter().skip(turns.len().saturating_sub(TAIL_TURNS)))
         .filter_map(|turn| turn.display_text.as_deref())
         .collect::<Vec<_>>()
-        .join("\n")
+        .join("\n");
+    strip_segment_context_suppressed_lines(&text)
 }
 
 fn segment_summary(
@@ -466,7 +467,7 @@ mod tests {
         assert_eq!(segments[1].start_turn_ordinal, 3);
         assert_eq!(segments[1].end_turn_ordinal, 4);
         assert_eq!(segments[1].status, ConversationSegmentStatus::Active);
-        assert!(segments[0].summary.contains("yaaml"));
+        assert!(!segments[0].summary.contains("riskarbiter"));
         assert!(segments[1].summary.contains("riskarbiter"));
     }
 
@@ -500,7 +501,7 @@ mod tests {
         assert!(second_tags.contains(&"task-state".to_string()));
         assert!(third_tags.contains(&"ingestion".to_string()));
         assert!(segments[0].summary.contains("recall-eval"));
-        assert!(segments[1].summary.contains("segment"));
+        assert!(segments[1].summary.contains("task-state"));
         assert!(segments[2].summary.contains("ingestion"));
     }
 
@@ -567,6 +568,71 @@ mod tests {
 
         assert_eq!(segments.len(), 1);
         assert!(segments[0].summary.contains("task-state"));
+    }
+
+    #[test]
+    fn long_segment_context_does_not_accumulate_stale_head_tags() {
+        let turns = vec![
+            turn(
+                1,
+                "user: YAAML recall for an old Risk Arbiter rollout diagnostic",
+            ),
+            turn(2, "assistant: YAAML recall progress"),
+            turn(3, "assistant: YAAML recall progress"),
+            turn(4, "assistant: YAAML recall progress"),
+            turn(5, "assistant: YAAML recall progress"),
+            turn(6, "assistant: YAAML recall progress"),
+            turn(7, "user: YAAML stale task-state segment lifecycle"),
+            turn(8, "assistant: YAAML task-state segment context cleanup"),
+        ];
+
+        let segments = build_conversation_segments("session-1", &turns, "unix:1");
+
+        assert_eq!(segments.len(), 1);
+        let context = segments[0].context.as_ref().unwrap();
+        assert!(context.subject_tags.contains(&"yaaml".to_string()));
+        assert!(context.subject_tags.contains(&"task-state".to_string()));
+        assert!(!context.subject_tags.contains(&"riskarbiter".to_string()));
+        assert!(!segments[0].summary.contains("riskarbiter"));
+    }
+
+    #[test]
+    fn segment_context_ignores_internal_goal_blocks() {
+        let turns = vec![turn(
+            1,
+            "user: <codex_internal_context source=\"goal\">\n<objective>\ncontinue Risk Arbiter rollout work with Datadog and Cloudflare Access\n</objective>\n</codex_internal_context>\nuser: YAAML stale task-state segment lifecycle\nassistant: YAAML segment context cleanup",
+        )];
+
+        let segments = build_conversation_segments("session-1", &turns, "unix:1");
+
+        assert_eq!(segments.len(), 1);
+        let context = segments[0].context.as_ref().unwrap();
+        assert!(context.subject_tags.contains(&"yaaml".to_string()));
+        assert!(context.subject_tags.contains(&"task-state".to_string()));
+        assert!(!context.subject_tags.contains(&"riskarbiter".to_string()));
+        assert!(!context
+            .subject_tags
+            .contains(&"cloudflare-access".to_string()));
+        assert!(!context.subject_tags.contains(&"datadog".to_string()));
+    }
+
+    #[test]
+    fn segment_context_ignores_tool_output_lines() {
+        let turns = vec![turn(
+            1,
+            "user: YAAML recall quality\ntool call: exec_command\ntool output: Risk Arbiter Datadog Cloudflare Access output from an unrelated command fixture\nassistant: YAAML segment context cleanup",
+        )];
+
+        let segments = build_conversation_segments("session-1", &turns, "unix:1");
+
+        assert_eq!(segments.len(), 1);
+        let context = segments[0].context.as_ref().unwrap();
+        assert!(context.subject_tags.contains(&"yaaml".to_string()));
+        assert!(!context.subject_tags.contains(&"riskarbiter".to_string()));
+        assert!(!context
+            .subject_tags
+            .contains(&"cloudflare-access".to_string()));
+        assert!(!context.subject_tags.contains(&"datadog".to_string()));
     }
 
     fn turn(ordinal: u64, text: &str) -> TurnRecord {

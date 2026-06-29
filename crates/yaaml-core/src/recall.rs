@@ -333,6 +333,8 @@ fn recall_filter_decision(
     let access_blocker_context_mismatch = context_has_access_blocker(query_context)
         && !context_has_access_blocker(&memory_context)
         && !weak_task_key_match;
+    let high_signal_context_mismatch =
+        high_signal_recall_context_mismatch(query_context, &memory_context);
     let transient_plan_without_identity =
         is_transient_plan_memory(memory) && !task_state_identity_key_match;
     let strong_context = same_work_area
@@ -435,6 +437,17 @@ fn recall_filter_decision(
                     reasons,
                 };
             }
+            if query_has_task_identity
+                && candidate.rank.matched_task_keys.is_empty()
+                && same_project
+                && high_signal_context_mismatch
+            {
+                reasons.push("drop:project_fact_high_signal_context_mismatch".to_string());
+                return RecallFilterDecision {
+                    keep: false,
+                    reasons,
+                };
+            }
             if broad_project_id && !strong_context && !weak_task_key_match {
                 reasons.push("drop:broad_project_fact_weak_context".to_string());
                 return RecallFilterDecision {
@@ -498,6 +511,17 @@ fn recall_filter_decision(
                 };
             }
             if memory.scope == MemoryScope::Global {
+                if query_has_task_identity
+                    && candidate.rank.matched_task_keys.is_empty()
+                    && candidate.rank.context_score < 0.60
+                    && matches!(memory.kind, MemoryKind::Lesson | MemoryKind::Workflow)
+                {
+                    reasons.push("drop:global_durable_task_key_mismatch".to_string());
+                    return RecallFilterDecision {
+                        keep: false,
+                        reasons,
+                    };
+                }
                 if candidate.rank.context_score < 0.0 && !weak_task_key_match {
                     reasons.push("drop:global_durable_wrong_context".to_string());
                     return RecallFilterDecision {
@@ -511,6 +535,28 @@ fn recall_filter_decision(
                 && matches!(memory.kind, MemoryKind::Lesson | MemoryKind::Workflow)
             {
                 reasons.push("drop:same_project_weak_context".to_string());
+                return RecallFilterDecision {
+                    keep: false,
+                    reasons,
+                };
+            } else if same_project
+                && query_has_task_identity
+                && candidate.rank.matched_task_keys.is_empty()
+                && candidate.rank.context_score < 0.60
+                && matches!(memory.kind, MemoryKind::Lesson | MemoryKind::Workflow)
+            {
+                reasons.push("drop:same_project_durable_task_key_mismatch".to_string());
+                return RecallFilterDecision {
+                    keep: false,
+                    reasons,
+                };
+            } else if same_project
+                && query_has_task_identity
+                && candidate.rank.matched_task_keys.is_empty()
+                && high_signal_context_mismatch
+                && matches!(memory.kind, MemoryKind::Lesson | MemoryKind::Workflow)
+            {
+                reasons.push("drop:same_project_high_signal_context_mismatch".to_string());
                 return RecallFilterDecision {
                     keep: false,
                     reasons,
@@ -536,6 +582,29 @@ fn recall_filter_decision(
             }
         }
     }
+}
+
+fn high_signal_recall_context_mismatch(
+    query_context: &ContextMetadata,
+    memory_context: &ContextMetadata,
+) -> bool {
+    let query_tags = high_signal_recall_context_tags(query_context);
+    let memory_tags = high_signal_recall_context_tags(memory_context);
+    let same_known_work_area =
+        query_context.work_area.is_some() && query_context.work_area == memory_context.work_area;
+    !query_tags.is_empty()
+        && !memory_tags.is_empty()
+        && query_tags.is_disjoint(&memory_tags)
+        && !same_known_work_area
+}
+
+fn high_signal_recall_context_tags(context: &ContextMetadata) -> HashSet<String> {
+    context
+        .subject_tags
+        .iter()
+        .filter(|tag| is_high_signal_recall_context_tag(tag))
+        .cloned()
+        .collect()
 }
 
 fn is_weak_recall_query_context(
@@ -2132,7 +2201,7 @@ Datadog is blocked by a Cloudflare Access redirect.
                 .iter()
                 .map(|candidate| candidate.memory_id)
                 .collect::<Vec<_>>(),
-            vec![2, 3]
+            vec![2]
         );
         let dropped = debug
             .iter()
@@ -2142,6 +2211,14 @@ Datadog is blocked by a Cloudflare Access redirect.
             .rank
             .filter_reasons
             .contains(&"drop:task_state_without_task_key_match".to_string()));
+        let generic_workflow = debug
+            .iter()
+            .find(|candidate| candidate.memory_id == 3)
+            .unwrap();
+        assert!(generic_workflow
+            .rank
+            .filter_reasons
+            .contains(&"drop:same_project_durable_task_key_mismatch".to_string()));
     }
 
     #[test]
@@ -2953,7 +3030,7 @@ Datadog is blocked by a Cloudflare Access redirect.
     }
 
     #[test]
-    fn general_lesson_without_identity_keys_still_recalls_same_project() {
+    fn general_lesson_without_identity_keys_does_not_recall_for_path_specific_query() {
         let current_project = "/Users/tbedor/Development/java";
         let hits = vec![VectorHit {
             memory_id: 1,
@@ -2988,11 +3065,69 @@ Datadog is blocked by a Cloudflare Access redirect.
             5,
         );
 
-        assert_eq!(selected.len(), 1);
+        assert!(selected.is_empty());
         assert!(debug[0]
             .rank
             .filter_reasons
-            .contains(&"keep:same_project_durable".to_string()));
+            .contains(&"drop:same_project_durable_task_key_mismatch".to_string()));
+    }
+
+    #[test]
+    fn same_project_workflow_with_disjoint_high_signal_context_does_not_recall() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![MemoryRecord {
+            body: "Datadog observability workflow for polling production service metrics."
+                .to_string(),
+            project_descriptor: Some("squareup/java datadog observability".to_string()),
+            ..memory(
+                1,
+                "Datadog monitoring workflow",
+                MemoryKind::Workflow,
+                Some(current_project),
+                Vec::new(),
+            )
+        }];
+        let query_context = ContextMetadata {
+            repo_id: Some("squareup/java".to_string()),
+            repo_root: Some(current_project.to_string()),
+            activity_domain: Some("code".to_string()),
+            subject_tags: vec!["eval".to_string(), "mux".to_string()],
+            ..ContextMetadata::default()
+        };
+        let query_keys = vec![
+            "path:riskarbiter/src/test/java/com/squareup/riskarbiter/service/mux/muxmigrationutiltest.java"
+                .to_string(),
+        ];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &query_context,
+            &query_keys,
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &query_context,
+            &query_keys,
+            5,
+        );
+
+        assert!(selected.is_empty());
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:same_project_durable_task_key_mismatch".to_string()));
     }
 
     #[test]
@@ -3376,6 +3511,64 @@ Datadog is blocked by a Cloudflare Access redirect.
             .rank
             .filter_reasons
             .contains(&"drop:global_durable_wrong_context".to_string()));
+    }
+
+    #[test]
+    fn global_workflow_without_task_match_does_not_recall_for_path_specific_query() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![MemoryRecord {
+            scope: MemoryScope::Global,
+            body: "Datadog workflow for monitoring TD_11 rollout metrics.".to_string(),
+            project_id: None,
+            project_descriptor: Some("java datadog".to_string()),
+            ..memory(
+                1,
+                "Datadog workflow",
+                MemoryKind::Workflow,
+                None,
+                Vec::new(),
+            )
+        }];
+        let query_context = ContextMetadata {
+            repo_id: Some("squareup/java".to_string()),
+            repo_root: Some(current_project.to_string()),
+            activity_domain: Some("code".to_string()),
+            subject_tags: vec!["mux".to_string()],
+            ..ContextMetadata::default()
+        };
+        let query_keys = vec![
+            "path:riskarbiter/src/test/java/com/squareup/riskarbiter/service/mux/muxmigrationutiltest.java"
+                .to_string(),
+        ];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &query_context,
+            &query_keys,
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &query_context,
+            &query_keys,
+            5,
+        );
+
+        assert!(selected.is_empty());
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:global_durable_task_key_mismatch".to_string()));
     }
 
     #[test]

@@ -2424,6 +2424,7 @@ fn read_memory_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<MemoryRecord>
             "preference" => MemoryKind::Preference,
             "workflow" => MemoryKind::Workflow,
             "project_fact" => MemoryKind::ProjectFact,
+            "task_checkpoint" => MemoryKind::TaskCheckpoint,
             "task_state" => MemoryKind::TaskState,
             _ => MemoryKind::Lesson,
         },
@@ -3237,7 +3238,7 @@ WHERE session_id = 'session-1';
     fn memory_insert_roundtrips_kind_and_task_keys() {
         let mut db = Database::in_memory().unwrap();
         db.migrate().unwrap();
-        let memory = MemoryRecord {
+        let task_state = MemoryRecord {
             id: None,
             title: "PR memory".to_string(),
             body: "PR 481245 needs task-key aware recall.".to_string(),
@@ -3256,11 +3257,20 @@ WHERE session_id = 'session-1';
             origin_segment_status: None,
             validity: MemoryValidity::Durable,
         };
+        let task_checkpoint = MemoryRecord {
+            title: "PR checkpoint".to_string(),
+            body: "PR 481245 has unresolved reviewer follow-up.".to_string(),
+            kind: MemoryKind::TaskCheckpoint,
+            task_keys: vec!["pr:481245".to_string()],
+            ..task_state.clone()
+        };
 
-        db.insert_memory(&memory).unwrap();
+        db.insert_memory(&task_state).unwrap();
+        db.insert_memory(&task_checkpoint).unwrap();
         let memories = db.list_memories().unwrap();
 
         assert_eq!(memories[0].kind, MemoryKind::TaskState);
+        assert_eq!(memories[1].kind, MemoryKind::TaskCheckpoint);
         assert_eq!(
             memories[0].task_keys,
             vec!["pr:481245".to_string(), "tool:yaaml".to_string()]

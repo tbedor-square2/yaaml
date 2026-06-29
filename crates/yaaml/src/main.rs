@@ -1188,6 +1188,7 @@ fn diagnose_memory_failure(
     if accumulator.useful_count > 0 && accumulator.low_count > 0 {
         if rationale_mentions_wrong_context(&latest_low)
             || memory.kind == MemoryKind::TaskState
+            || memory.kind == MemoryKind::TaskCheckpoint
             || memory.kind == MemoryKind::ProjectFact
         {
             return "context_sensitive".to_string();
@@ -1232,7 +1233,10 @@ fn memory_health_evidence(
     if body_len < 300 {
         evidence.push(format!("short body ({body_len} chars)"));
     }
-    if memory.kind == MemoryKind::TaskState || memory.kind == MemoryKind::ProjectFact {
+    if matches!(
+        memory.kind,
+        MemoryKind::TaskState | MemoryKind::TaskCheckpoint | MemoryKind::ProjectFact
+    ) {
         evidence.push(format!("episodic kind ({})", memory.kind.as_str()));
     }
     let latest_low = accumulator
@@ -1317,6 +1321,7 @@ fn looks_stale_or_episodic(memory: &MemoryRecord, rationale: &str) -> bool {
         rationale
     );
     memory.kind == MemoryKind::TaskState
+        || memory.kind == MemoryKind::TaskCheckpoint
         || [
             "stale",
             "obsolete",

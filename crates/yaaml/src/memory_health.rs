@@ -164,6 +164,7 @@ fn diagnose_memory_failure(
     if accumulator.useful_count > 0 && accumulator.low_count > 0 {
         if rationale_mentions_wrong_context(&latest_low)
             || memory.kind == MemoryKind::TaskState
+            || memory.kind == MemoryKind::TaskCheckpoint
             || memory.kind == MemoryKind::ProjectFact
         {
             return "context_sensitive".to_string();
@@ -297,22 +298,24 @@ fn rationale_mentions_wrong_context(rationale: &str) -> bool {
 
 fn looks_stale_or_episodic(memory: &MemoryRecord, rationale: &str) -> bool {
     let text = format!("{} {} {}", memory.title, memory.body, rationale).to_ascii_lowercase();
-    [
-        "stale",
-        "already resolved",
-        "old task",
-        "past task",
-        "previously",
-        "no longer",
-        "current pr",
-        "this pr",
-        "branch",
-        "queued",
-        "parked",
-        "status",
-    ]
-    .iter()
-    .any(|needle| text.contains(needle))
+    memory.kind == MemoryKind::TaskState
+        || memory.kind == MemoryKind::TaskCheckpoint
+        || [
+            "stale",
+            "already resolved",
+            "old task",
+            "past task",
+            "previously",
+            "no longer",
+            "current pr",
+            "this pr",
+            "branch",
+            "queued",
+            "parked",
+            "status",
+        ]
+        .iter()
+        .any(|needle| text.contains(needle))
 }
 
 fn eval_summary_snippet(text: &str) -> String {

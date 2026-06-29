@@ -1323,7 +1323,7 @@ fn valid_refinement_target(
 fn formulation_system_prompt() -> &'static str {
     concat!(
         "Create concise durable memories from coding-agent transcript turns. ",
-        "Return only JSON shaped as {\"memories\":[{\"title\":\"...\",\"body\":\"...\",\"scope\":\"project\"|\"global\",\"kind\":\"preference\"|\"lesson\"|\"workflow\"|\"project_fact\"|\"task_state\",\"task_keys\":[\"type:value\"],\"project_descriptor\":\"...\",\"refine_memory_id\":123|null}]}. ",
+        "Return only JSON shaped as {\"memories\":[{\"title\":\"...\",\"body\":\"...\",\"scope\":\"project\"|\"global\",\"kind\":\"preference\"|\"lesson\"|\"workflow\"|\"project_fact\"|\"task_checkpoint\"|\"task_state\",\"task_keys\":[\"type:value\"],\"project_descriptor\":\"...\",\"refine_memory_id\":123|null}]}. ",
         "Return {\"memories\":[]} when the turns contain only ordinary progress updates, one-off command output, transient narration, or no durable lesson. ",
         "Prefer zero or one small, granular memory per batch; create multiple memories only when the turns contain distinct durable lessons or preferences. ",
         "If new turns correct, extend, or make more specific one of the provided existing candidate memories, return a full replacement memory and set refine_memory_id to that candidate id. ",
@@ -1332,7 +1332,8 @@ fn formulation_system_prompt() -> &'static str {
         "Focus memories on insights gained while solving the problem and on redirection provided by the user. ",
         "Always capture repeated user corrections, preferences, and process guidance as their own concise memories, including coding style preferences such as functional vs imperative style. ",
         "Use project scope when the preference is tied to the current project or language; use global scope only for durable cross-project user preferences or agent workflow patterns. ",
-        "Use task_state for segment-specific or short-lived state: PR, branch, ticket, status facts, unresolved next steps, proposed or recommended fixes, implementation order, open questions, blockers, and follow-up work. ",
+        "Use task_state only for segment-specific or short-lived state that should expire when the current conversation topic moves on: local status facts, proposed fixes, implementation order, unresolved next steps, open questions, blockers, and follow-up work. ",
+        "Use task_checkpoint for resumable PR, ticket, branch, or explicitly named task state that should return only when that same identity is mentioned again; include a strong task key such as pr:123, ticket:ABC-123, branch:name, or task:name. ",
         "Do not encode completed implementation plans as durable workflow or lesson memories; return no memory unless there is a reusable lesson. ",
         "Use workflow only for reusable procedures that should remain useful after the current task is complete."
     )
@@ -1341,9 +1342,10 @@ fn formulation_system_prompt() -> &'static str {
 fn consolidation_system_prompt() -> &'static str {
     concat!(
         "Merge overlapping coding-agent memories into one concise durable memory. ",
-        "Return only JSON shaped as {\"memories\":[{\"title\":\"...\",\"body\":\"...\",\"scope\":\"project\"|\"global\",\"kind\":\"preference\"|\"lesson\"|\"workflow\"|\"project_fact\"|\"task_state\",\"task_keys\":[\"type:value\"],\"project_descriptor\":\"...\"}]}. ",
+        "Return only JSON shaped as {\"memories\":[{\"title\":\"...\",\"body\":\"...\",\"scope\":\"project\"|\"global\",\"kind\":\"preference\"|\"lesson\"|\"workflow\"|\"project_fact\"|\"task_checkpoint\"|\"task_state\",\"task_keys\":[\"type:value\"],\"project_descriptor\":\"...\"}]}. ",
         "Preserve concrete facts, durable user preferences, commands, file paths, project state, and unresolved follow-up context. ",
-        "Keep task-specific plans, implementation order, blockers, next steps, and PR/ticket status as task_state rather than durable workflow. ",
+        "Keep segment-local plans, implementation order, blockers, and next steps as task_state rather than durable workflow. ",
+        "Keep resumable PR/ticket/branch status as task_checkpoint only when the source memories include a strong task identity key. ",
         "Remove repetition and transient narration. ",
         "Do not invent facts not present in the source memories. ",
         "Return exactly one memory."

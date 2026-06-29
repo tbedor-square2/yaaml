@@ -222,7 +222,10 @@ fn rank_recall_candidate(
     let weak_task_key_matches = matched_task_keys
         .len()
         .saturating_sub(strong_task_key_matches);
-    let task_key_bonus = if memory.kind == MemoryKind::TaskState {
+    let task_key_bonus = if matches!(
+        memory.kind,
+        MemoryKind::TaskState | MemoryKind::TaskCheckpoint
+    ) {
         (task_identity_key_matches as f32 * 0.28 + weak_task_key_matches as f32 * 0.03).min(0.70)
     } else {
         (strong_task_key_matches as f32 * 0.28 + weak_task_key_matches as f32 * 0.06).min(0.70)
@@ -245,16 +248,29 @@ fn rank_recall_candidate(
         penalty += 0.24;
         penalties.push("same_project_no_task_key_overlap".to_string());
     }
-    if memory.kind == MemoryKind::TaskState && task_identity_key_matches == 0 {
+    if matches!(
+        memory.kind,
+        MemoryKind::TaskState | MemoryKind::TaskCheckpoint
+    ) && task_identity_key_matches == 0
+    {
         penalty += 0.45;
-        penalties.push("task_state_without_identity_key_overlap".to_string());
+        penalties.push(format!(
+            "{}_without_identity_key_overlap",
+            memory.kind.as_str()
+        ));
     }
     if memory.scope == MemoryScope::Global
-        && memory.kind == MemoryKind::TaskState
+        && matches!(
+            memory.kind,
+            MemoryKind::TaskState | MemoryKind::TaskCheckpoint
+        )
         && task_identity_key_matches == 0
     {
         penalty += 0.35;
-        penalties.push("global_task_state_without_identity_key_overlap".to_string());
+        penalties.push(format!(
+            "global_{}_without_identity_key_overlap",
+            memory.kind.as_str()
+        ));
     }
 
     let score =
@@ -324,7 +340,11 @@ fn recall_filter_decision(
         || candidate.rank.context_score >= 0.42;
 
     let mut reasons = Vec::new();
-    if memory.kind != MemoryKind::TaskState && strong_task_key_match {
+    if !matches!(
+        memory.kind,
+        MemoryKind::TaskState | MemoryKind::TaskCheckpoint
+    ) && strong_task_key_match
+    {
         reasons.push("keep:strong_task_key_match".to_string());
         return RecallFilterDecision {
             keep: true,
@@ -357,6 +377,26 @@ fn recall_filter_decision(
                 reasons.push("drop:stale_task_state_semantic_context_only".to_string());
             } else {
                 reasons.push("drop:task_state_without_task_key_match".to_string());
+            }
+            RecallFilterDecision {
+                keep: false,
+                reasons,
+            }
+        }
+        MemoryKind::TaskCheckpoint => {
+            if task_state_identity_key_match {
+                reasons.push("keep:task_checkpoint_identity_key_match".to_string());
+                return RecallFilterDecision {
+                    keep: true,
+                    reasons,
+                };
+            }
+            if weak_task_key_match {
+                reasons.push("drop:task_checkpoint_without_identity_key_match".to_string());
+            } else if same_project && strong_context {
+                reasons.push("drop:task_checkpoint_semantic_context_only".to_string());
+            } else {
+                reasons.push("drop:task_checkpoint_without_task_key_match".to_string());
             }
             RecallFilterDecision {
                 keep: false,
@@ -599,6 +639,7 @@ pub fn infer_memory_kind(title: &str, body: &str, scope: MemoryScope) -> MemoryK
     {
         MemoryKind::Preference
     } else if looks_like_transient_task_state(title, body)
+        || looks_like_resumable_task_checkpoint(title, body)
         || text.contains("pr ")
         || text.contains("pr #")
         || text.contains("pull/")
@@ -606,7 +647,11 @@ pub fn infer_memory_kind(title: &str, body: &str, scope: MemoryScope) -> MemoryK
         || text.contains("status")
         || text.contains("blocked")
     {
-        MemoryKind::TaskState
+        if looks_like_resumable_task_checkpoint(title, body) {
+            MemoryKind::TaskCheckpoint
+        } else {
+            MemoryKind::TaskState
+        }
     } else if text.contains("workflow")
         || text.contains("command")
         || text.contains("run ")
@@ -629,8 +674,17 @@ pub fn normalize_memory_kind(
 ) -> MemoryKind {
     match kind.map(str::trim) {
         Some("preference") => MemoryKind::Preference,
+        Some("workflow") if looks_like_resumable_task_checkpoint(title, body) => {
+            MemoryKind::TaskCheckpoint
+        }
         Some("workflow") if looks_like_transient_task_state(title, body) => MemoryKind::TaskState,
         Some("workflow") => MemoryKind::Workflow,
+        Some("task_checkpoint") | Some("task-checkpoint") => MemoryKind::TaskCheckpoint,
+        Some("project_fact") | Some("project-fact")
+            if looks_like_resumable_task_checkpoint(title, body) =>
+        {
+            MemoryKind::TaskCheckpoint
+        }
         Some("project_fact") | Some("project-fact")
             if looks_like_transient_task_state(title, body) =>
         {
@@ -638,10 +692,43 @@ pub fn normalize_memory_kind(
         }
         Some("project_fact") | Some("project-fact") => MemoryKind::ProjectFact,
         Some("task_state") | Some("task-state") => MemoryKind::TaskState,
+        Some("lesson") if looks_like_resumable_task_checkpoint(title, body) => {
+            MemoryKind::TaskCheckpoint
+        }
         Some("lesson") if looks_like_transient_task_state(title, body) => MemoryKind::TaskState,
         Some("lesson") => MemoryKind::Lesson,
         _ => infer_memory_kind(title, body, scope),
     }
+}
+
+fn looks_like_resumable_task_checkpoint(title: &str, body: &str) -> bool {
+    let text = format!("{title}\n{body}").to_ascii_lowercase();
+    let has_identity = [
+        "pr ",
+        "pr #",
+        "pull request",
+        "pull/",
+        "ticket",
+        "linear",
+        "branch",
+    ]
+    .iter()
+    .any(|needle| text.contains(needle));
+    let has_resumable_state = [
+        "resume",
+        "when returning",
+        "if returning",
+        "remaining work",
+        "follow-up",
+        "next step",
+        "next fix",
+        "blocked",
+        "unresolved",
+        "status",
+    ]
+    .iter()
+    .any(|needle| text.contains(needle));
+    has_identity && has_resumable_state
 }
 
 fn looks_like_transient_task_state(title: &str, body: &str) -> bool {
@@ -706,6 +793,7 @@ fn context_has_access_blocker(context: &ContextMetadata) -> bool {
 
 pub fn is_transient_plan_memory(memory: &MemoryRecord) -> bool {
     memory.kind != MemoryKind::Preference
+        && memory.kind != MemoryKind::TaskCheckpoint
         && looks_like_transient_task_state(&memory.title, &memory.body)
 }
 
@@ -2241,6 +2329,100 @@ Datadog is blocked by a Cloudflare Access redirect.
     }
 
     #[test]
+    fn task_checkpoint_recalls_with_identity_even_after_origin_segment_inactive() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let mut checkpoint = memory(
+            1,
+            "PR 483111 has remaining reviewer follow-up",
+            MemoryKind::TaskCheckpoint,
+            Some(current_project),
+            vec!["pr:483111".to_string()],
+        );
+        checkpoint.origin_segment_id = Some(42);
+        checkpoint.origin_segment_status = Some(ConversationSegmentStatus::Superseded);
+        checkpoint.validity = MemoryValidity::Durable;
+        let memories = vec![checkpoint];
+        let query_keys = vec!["pr:483111".to_string()];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &query_keys,
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &query_keys,
+            5,
+        );
+
+        assert_eq!(selected.len(), 1);
+        assert_eq!(selected[0].memory_id, 1);
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"keep:task_checkpoint_identity_key_match".to_string()));
+    }
+
+    #[test]
+    fn task_checkpoint_does_not_recall_from_path_only_match() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![memory(
+            1,
+            "PR 483111 has remaining reviewer follow-up",
+            MemoryKind::TaskCheckpoint,
+            Some(current_project),
+            vec![
+                "pr:483111".to_string(),
+                "path:riskarbiter/src/main/java/foo.java".to_string(),
+            ],
+        )];
+        let query_keys = vec!["path:riskarbiter/src/main/java/foo.java".to_string()];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &query_keys,
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &query_keys,
+            5,
+        );
+
+        assert!(selected.is_empty());
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:task_checkpoint_without_identity_key_match".to_string()));
+    }
+
+    #[test]
     fn access_blocker_context_drops_same_project_observability_memory_without_task_key() {
         let current_project = "/Users/tbedor/Development/java";
         let hits = vec![VectorHit {
@@ -2670,6 +2852,15 @@ Datadog is blocked by a Cloudflare Access redirect.
 
     #[test]
     fn transient_plan_kind_normalization_prefers_task_state() {
+        assert_eq!(
+            normalize_memory_kind(
+                Some("project_fact"),
+                "PR 483111 reviewer follow-up",
+                "When returning to this PR, the remaining work is to address the unresolved reviewer thread.",
+                MemoryScope::Project,
+            ),
+            MemoryKind::TaskCheckpoint
+        );
         assert_eq!(
             normalize_memory_kind(
                 Some("workflow"),

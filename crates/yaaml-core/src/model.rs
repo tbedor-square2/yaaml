@@ -108,6 +108,7 @@ pub enum MemoryKind {
     Lesson,
     Workflow,
     ProjectFact,
+    TaskCheckpoint,
     TaskState,
 }
 
@@ -118,6 +119,7 @@ impl MemoryKind {
             Self::Lesson => "lesson",
             Self::Workflow => "workflow",
             Self::ProjectFact => "project_fact",
+            Self::TaskCheckpoint => "task_checkpoint",
             Self::TaskState => "task_state",
         }
     }

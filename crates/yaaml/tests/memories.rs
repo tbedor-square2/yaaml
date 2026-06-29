@@ -347,7 +347,7 @@ fn memories_apply_health_deactivates_only_high_confidence_actions() {
 
     assert_success(&output);
     let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
-    assert_eq!(value["applied_memories"], 2);
+    assert_eq!(value["applied_memories"], 3);
     let applied_ids = value["memories"]
         .as_array()
         .unwrap()
@@ -356,7 +356,7 @@ fn memories_apply_health_deactivates_only_high_confidence_actions() {
         .collect::<Vec<_>>();
     assert!(applied_ids.contains(&stale_memory_id));
     assert!(applied_ids.contains(&low_value_memory_id));
-    assert!(!applied_ids.contains(&wrong_context_memory_id));
+    assert!(applied_ids.contains(&wrong_context_memory_id));
     assert!(!applied_ids.contains(&useful_memory_id));
 
     let memories = Database::open(&fixture.db_path)
@@ -377,7 +377,7 @@ fn memories_apply_health_deactivates_only_high_confidence_actions() {
     };
     assert!(!active(stale_memory_id));
     assert!(!active(low_value_memory_id));
-    assert!(active(wrong_context_memory_id));
+    assert!(!active(wrong_context_memory_id));
     assert!(active(useful_memory_id));
 }
 

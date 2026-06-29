@@ -1467,10 +1467,16 @@ fn should_apply_memory_health_action(memory: &MemoryHealthDiagnostic) -> bool {
     if memory.low_rate < 0.70 {
         return false;
     }
-    matches!(
-        memory.recommended_action.as_str(),
-        "move_to_dormant" | "suppress_or_tombstone"
-    )
+    let high_confidence_context_failure = memory.low_rate >= 0.90
+        && matches!(
+            memory.recommended_action.as_str(),
+            "regenerate_metadata_or_tighten_gates" | "regenerate_task_keys"
+        );
+    high_confidence_context_failure
+        || matches!(
+            memory.recommended_action.as_str(),
+            "move_to_dormant" | "suppress_or_tombstone"
+        )
 }
 
 fn ratio(numerator: u64, denominator: u64) -> f64 {
@@ -4841,14 +4847,21 @@ mod tests {
             0,
             5
         )));
-
-        assert!(!should_apply_memory_health_action(&health_diagnostic(
+        assert!(should_apply_memory_health_action(&health_diagnostic(
             "wrong_context",
             "regenerate_metadata_or_tighten_gates",
             true,
             8,
             0,
             8
+        )));
+        assert!(should_apply_memory_health_action(&health_diagnostic(
+            "noisy_metadata",
+            "regenerate_task_keys",
+            true,
+            6,
+            0,
+            6
         )));
         assert!(!should_apply_memory_health_action(&health_diagnostic(
             "likely_low_value",
@@ -4865,6 +4878,22 @@ mod tests {
             6,
             1,
             5
+        )));
+        assert!(!should_apply_memory_health_action(&health_diagnostic(
+            "wrong_context",
+            "regenerate_metadata_or_tighten_gates",
+            true,
+            8,
+            1,
+            7
+        )));
+        assert!(!should_apply_memory_health_action(&health_diagnostic(
+            "wrong_context",
+            "regenerate_metadata_or_tighten_gates",
+            true,
+            8,
+            0,
+            7
         )));
         assert!(!should_apply_memory_health_action(&health_diagnostic(
             "stale_episodic",

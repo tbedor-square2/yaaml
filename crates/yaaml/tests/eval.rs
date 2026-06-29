@@ -311,6 +311,108 @@ fn eval_recall_turn_requires_session() {
 }
 
 #[test]
+fn eval_recall_empty_replay_scores_abstention_with_later_turns() {
+    let tmp = TempDir::new().unwrap();
+    let home = tmp.path().join("home");
+    let project = tmp.path().join("project");
+    fs::create_dir_all(home.join(".yaaml")).unwrap();
+    fs::create_dir_all(&project).unwrap();
+    let db_path = home.join(".yaaml").join("yaaml.db");
+    let server = fake_anthropic_server();
+    fs::write(
+        home.join(".yaaml").join("config.toml"),
+        format!(
+            r#"
+db_path = "{}"
+embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
+eval_judge_base_url = "{}"
+eval_judge_api_key_env = "YAAML_TEST_ANTHROPIC_KEY"
+"#,
+            db_path.display(),
+            server.base_url
+        ),
+    )
+    .unwrap();
+    let mut db = Database::open(&db_path).unwrap();
+    db.migrate().unwrap();
+    db.upsert_session(&SessionRecord {
+        id: "session-1".to_string(),
+        agent_type: AgentType::Codex,
+        project_id: project.display().to_string(),
+        transcript_file_path: tmp.path().join("missing.jsonl").display().to_string(),
+        started_at: Some("2026-06-08T00:00:00Z".to_string()),
+        last_seen_at: Some("2026-06-08T00:00:02Z".to_string()),
+    })
+    .unwrap();
+    for (ordinal, text) in [
+        (0, "debug the session visibility issue"),
+        (1, "the missing memory would have helped this follow-up"),
+    ] {
+        db.insert_turn(&TurnRecord {
+            session_id: "session-1".to_string(),
+            turn_id: Some(format!("turn-{ordinal}")),
+            ordinal,
+            byte_start: ordinal,
+            byte_end: ordinal + 1,
+            observed_at: Some(format!("2026-06-08T00:00:0{ordinal}Z")),
+            status: TurnStatus::Completed,
+            display_text: Some(text.to_string()),
+            cwd: Some(project.display().to_string()),
+            context: Some(yaaml_core::infer_context_from_path(&project)),
+        })
+        .unwrap();
+    }
+
+    let binary = env!("CARGO_BIN_EXE_yaaml");
+    let output = Command::new(binary)
+        .arg("eval")
+        .arg("recall")
+        .arg("--session")
+        .arg("session-1")
+        .arg("--turn")
+        .arg("0")
+        .arg("--json")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .env("YAAML_TEST_ANTHROPIC_KEY", "test-key")
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    server.join();
+    let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(value["evaluated_turns"], 1);
+    assert_eq!(value["evaluated_memories"], 0);
+    assert_eq!(value["score_counts"]["missed_useful_abstention"], 1);
+    let run_id = value["run_id"].as_i64().unwrap();
+
+    let show = Command::new(binary)
+        .arg("eval")
+        .arg("show")
+        .arg(run_id.to_string())
+        .arg("--json")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .output()
+        .unwrap();
+    assert!(
+        show.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&show.stderr)
+    );
+    let shown: serde_json::Value = serde_json::from_slice(&show.stdout).unwrap();
+    assert_eq!(shown["results"][0]["memory_id"], serde_json::Value::Null);
+    assert_eq!(
+        shown["results"][0]["judge_score"],
+        "missed_useful_abstention"
+    );
+}
+
+#[test]
 fn eval_list_includes_session_turn_score_and_human_timestamps() {
     let tmp = TempDir::new().unwrap();
     let home = tmp.path().join("home");

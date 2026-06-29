@@ -2080,15 +2080,11 @@ fn eval_recall(args: EvalRecallArgs) -> anyhow::Result<()> {
                 }
             };
         if candidates.is_empty() {
-            db.insert_eval_result(
-                run_id,
-                *turn_row_id,
-                None,
-                "neutral",
-                "no eligible recalled memories",
-                &now,
-            )
-            .context("failed to insert eval result")?;
+            let (score, rationale) =
+                judge_empty_replay_abstention(&db, judge_client.as_ref(), turn)
+                    .context("failed to judge empty replay recall")?;
+            db.insert_eval_result(run_id, *turn_row_id, None, &score, &rationale, &now)
+                .context("failed to insert eval result")?;
         } else {
             for candidate in candidates {
                 evaluated_memories += 1;
@@ -2218,6 +2214,69 @@ fn production_recall_eval_candidates(
         })
         .collect::<Vec<_>>();
     Ok(Some(candidates))
+}
+
+fn judge_empty_replay_abstention(
+    db: &Database,
+    judge_client: Option<&JudgeClient>,
+    turn: &TurnRecord,
+) -> anyhow::Result<(String, String)> {
+    let later_turns = db
+        .completed_turns_for_session_after_ordinal(&turn.session_id, turn.ordinal, 20)
+        .context("failed to load turns after replay recall")?;
+    let later_turns =
+        hydrate_turns(db, &later_turns).context("failed to hydrate replay abstention turns")?;
+    if later_turns.is_empty() {
+        return Ok((
+            "insufficient_context".to_string(),
+            "No subsequent completed turns were captured after empty recall, so abstention usefulness cannot be scored.".to_string(),
+        ));
+    }
+    let Some(client) = judge_client else {
+        return Ok((
+            "unjudged".to_string(),
+            "no eligible recalled memories".to_string(),
+        ));
+    };
+    let prompt = eval_abstention_prompt(&later_turns);
+    match client.structured_json(eval_judge_system_prompt(), &prompt) {
+        Ok(value) => {
+            let outcome = parse_eval_judge_response(&value);
+            Ok((
+                abstention_eval_score(&outcome.score).to_string(),
+                outcome.rationale,
+            ))
+        }
+        Err(error) => Ok((
+            "unjudged".to_string(),
+            format!("no eligible recalled memories; judge_error={error}"),
+        )),
+    }
+}
+
+fn eval_abstention_prompt(later_turns: &[TurnRecord]) -> String {
+    let later_text = later_turns
+        .iter()
+        .map(|turn| {
+            format!(
+                "Turn {}:\n{}",
+                turn.ordinal,
+                truncate_eval_text(turn.display_text.as_deref().unwrap_or(""), 2_000)
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n\n");
+    format!(
+        "Recalled context:\n# YAAML Recall\n\nmemory_count: 0\nmemory_ids: \n\n\nSubsequent conversation after recall:\n{}\n\nRate the recalled context from 1 to 5 using the rubric.",
+        truncate_eval_text(&later_text, 12_000)
+    )
+}
+
+fn abstention_eval_score(score: &str) -> &'static str {
+    match numeric_eval_score(score) {
+        Some(score) if score >= 4 => "missed_useful_abstention",
+        _ => "clean_abstention",
+    }
 }
 
 fn eval_replay_turns(

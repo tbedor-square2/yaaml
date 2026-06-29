@@ -31,7 +31,7 @@ use yaaml_core::{
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
 use yaaml_llm::ReqwestTransport;
 use yaaml_store::database::{
-    EvalResultRecord, EvalRunRecord, RecallEvalTaskRecord, TaskListRecord,
+    EvalResultRecord, EvalRunMetadata, EvalRunRecord, RecallEvalTaskRecord, TaskListRecord,
 };
 use yaaml_store::lock::DaemonLock;
 use yaaml_store::{Database, SqliteExactVectorIndex};
@@ -1890,7 +1890,7 @@ fn eval_recall(args: EvalRecallArgs) -> anyhow::Result<()> {
     db.migrate().context("failed to migrate database")?;
     let now = unix_timestamp();
     let run_id = db
-        .insert_eval_run(
+        .insert_eval_run_with_metadata(
             "default",
             &now,
             &serde_json::json!({
@@ -1900,9 +1900,15 @@ fn eval_recall(args: EvalRecallArgs) -> anyhow::Result<()> {
                 "judge_provider": config.eval_judge_provider,
                 "judge_model": config.eval_judge_model,
                 "judge_enabled": !args.no_judge,
-                "retrieval": "vector_or_lexical_fallback",
+                "retrieval": "current_active_memories_vector_or_lexical_fallback",
             })
             .to_string(),
+            EvalRunMetadata {
+                session_id: args.session.clone(),
+                turn_ordinal: args.turn,
+                recall_origin: "replay".to_string(),
+                ..EvalRunMetadata::default()
+            },
         )
         .context("failed to create eval run")?;
     let turns = eval_replay_turns(&db, &args).context("failed to load replay turns")?;
@@ -1921,12 +1927,6 @@ fn eval_recall(args: EvalRecallArgs) -> anyhow::Result<()> {
     let judge_client = eval_judge_client(&config, args.no_judge);
     let mut evaluated_memories = 0_u64;
     for ((turn_row_id, _), turn) in turns.iter().zip(hydrated_turns.iter()) {
-        let memories = match turn.observed_at.as_deref() {
-            Some(observed_at) => db
-                .list_active_memories_created_before(observed_at)
-                .context("failed to load memories for replay turn")?,
-            None => Vec::new(),
-        };
         let query = turn.display_text.clone().unwrap_or_default();
         let fallback_project = turn.cwd.as_deref().unwrap_or("");
         let query_context = context_from_turns(
@@ -1934,14 +1934,26 @@ fn eval_recall(args: EvalRecallArgs) -> anyhow::Result<()> {
             std::path::Path::new(fallback_project),
             &query,
         );
-        let candidates = select_eval_candidates(
-            &config,
-            &embedding_client,
-            &vector_index,
-            &query,
-            &query_context,
-            &memories,
-        );
+        let candidates =
+            match production_recall_eval_candidates(&db, &config, &embedding_client, turn, &now)? {
+                Some(candidates) => candidates,
+                None => {
+                    let memories = db
+                        .list_memories()
+                        .context("failed to load memories for replay turn")?
+                        .into_iter()
+                        .filter(|memory| memory.is_active)
+                        .collect::<Vec<_>>();
+                    select_eval_candidates(
+                        &config,
+                        &embedding_client,
+                        &vector_index,
+                        &query,
+                        &query_context,
+                        &memories,
+                    )
+                }
+            };
         if candidates.is_empty() {
             db.insert_eval_result(
                 run_id,
@@ -1995,6 +2007,92 @@ fn eval_recall(args: EvalRecallArgs) -> anyhow::Result<()> {
         );
     }
     Ok(())
+}
+
+fn production_recall_eval_candidates(
+    db: &Database,
+    config: &Config,
+    embedding_client: &OpenAiEmbeddingClient<ReqwestTransport>,
+    turn: &TurnRecord,
+    now: &str,
+) -> anyhow::Result<Option<Vec<EvalCandidate>>> {
+    let Some(session) = db
+        .session_by_id(&turn.session_id)
+        .context("failed to load replay session")?
+    else {
+        return Ok(Some(Vec::new()));
+    };
+    let window = u64::try_from(config.recall_live_turn_window).unwrap_or(u64::MAX);
+    let start_ordinal = turn.ordinal.saturating_add(1).saturating_sub(window.max(1));
+    let turns = db
+        .completed_turns_for_session_range(
+            &turn.session_id,
+            start_ordinal,
+            turn.ordinal.saturating_add(1),
+        )
+        .context("failed to load production replay recall turns")?;
+    let turns = hydrate_turns(db, &turns).context("failed to hydrate production replay turns")?;
+    if turns.is_empty() {
+        return Ok(Some(Vec::new()));
+    }
+    let recall_turns = active_segment_recall_turns(&turns);
+    let query = yaaml_core::build_recall_query(
+        recall_turns,
+        config.recall_query_max_chars,
+        config.tool_call_truncation_chars,
+    );
+    if query.trim().is_empty() {
+        return Ok(Some(Vec::new()));
+    }
+    let query_context = context_from_turns(recall_turns, Path::new(&session.project_id), &query);
+    let Ok(query_embedding) = embedding_client.embed(&query) else {
+        return Ok(None);
+    };
+    let recall_result = recall_from_embedding(
+        db,
+        config,
+        RecallEmbeddingRequest {
+            query_embedding: &query_embedding,
+            project_id: &session.project_id,
+            session_id: Some(turn.session_id.as_str()),
+            turn_ordinal: Some(turn.ordinal),
+            query_text: &query,
+            query_context: Some(query_context),
+            query_source: "replay".to_string(),
+            query_timestamp: now.to_string(),
+            apply_cooldown: false,
+        },
+    )?;
+    let selected_ids = recall_result.selected_memory_ids;
+    if selected_ids.is_empty() {
+        return Ok(Some(Vec::new()));
+    }
+    let memories = db
+        .list_active_memories_by_ids(&selected_ids)
+        .context("failed to load production replay memories")?;
+    let memory_by_id = memories
+        .into_iter()
+        .filter_map(|memory| memory.id.map(|id| (id, memory)))
+        .collect::<HashMap<_, _>>();
+    let score_by_id = recall_result
+        .memories
+        .into_iter()
+        .map(|memory| (memory.memory_id, memory.score))
+        .collect::<HashMap<_, _>>();
+    let candidates = selected_ids
+        .into_iter()
+        .enumerate()
+        .filter_map(|(index, memory_id)| {
+            let memory = memory_by_id.get(&memory_id)?.clone();
+            Some(EvalCandidate {
+                memory,
+                rank: index + 1,
+                retrieval_score: score_by_id.get(&memory_id).copied().unwrap_or_default(),
+                retrieval_strategy: "production_recall",
+            })
+        })
+        .collect::<Vec<_>>();
+    Ok(Some(candidates))
 }
 
 fn eval_replay_turns(

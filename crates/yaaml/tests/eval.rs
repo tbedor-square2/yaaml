@@ -172,7 +172,7 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     .unwrap();
     let mut db = Database::open(&db_path).unwrap();
     db.migrate().unwrap();
-    insert_transcript_backed_turn(&db, tmp.path(), &project, "early turn");
+    insert_transcript_backed_turn(&db, tmp.path(), &project, "use recall for targeted replay");
     db.insert_memory(&MemoryRecord {
         id: None,
         title: "Later eligible preference".to_string(),
@@ -229,8 +229,9 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     );
     let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
     assert_eq!(value["evaluated_turns"], 1);
-    assert_eq!(value["evaluated_memories"], 0);
-    assert_eq!(value["score_counts"]["neutral"], 1);
+    assert_eq!(value["evaluated_memories"], 1);
+    assert_eq!(value["score_counts"]["unjudged"], 1);
+    let first_run_id = value["run_id"].as_i64().unwrap();
 
     let output = Command::new(binary)
         .arg("eval")
@@ -255,6 +256,38 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     assert_eq!(value["evaluated_turns"], 1);
     assert_eq!(value["evaluated_memories"], 1);
     assert_eq!(value["score_counts"]["unjudged"], 1);
+    let second_run_id = value["run_id"].as_i64().unwrap();
+
+    let list = Command::new(binary)
+        .arg("eval")
+        .arg("list")
+        .arg("--json")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .output()
+        .unwrap();
+    assert!(
+        list.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&list.stderr)
+    );
+    let runs: serde_json::Value = serde_json::from_slice(&list.stdout).unwrap();
+    let first = runs
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|run| run["id"] == first_run_id)
+        .unwrap();
+    assert_eq!(first["session_id"], "session-1");
+    assert_eq!(first["turn_ordinal"], 0);
+    let second = runs
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|run| run["id"] == second_run_id)
+        .unwrap();
+    assert_eq!(second["session_id"], "session-1");
+    assert_eq!(second["turn_ordinal"], 1);
 }
 
 #[test]

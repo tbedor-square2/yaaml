@@ -568,6 +568,153 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
 }
 
 #[test]
+fn eval_requeue_stale_queues_insufficient_context_reruns() {
+    let tmp = TempDir::new().unwrap();
+    let home = tmp.path().join("home");
+    let project = tmp.path().join("project");
+    fs::create_dir_all(home.join(".yaaml")).unwrap();
+    fs::create_dir_all(&project).unwrap();
+    let db_path = home.join(".yaaml").join("yaaml.db");
+    fs::write(
+        home.join(".yaaml").join("config.toml"),
+        format!(
+            r#"
+db_path = "{}"
+embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
+"#,
+            db_path.display()
+        ),
+    )
+    .unwrap();
+    let mut db = Database::open(&db_path).unwrap();
+    db.migrate().unwrap();
+    db.upsert_session(&SessionRecord {
+        id: "session-1".to_string(),
+        agent_type: AgentType::Codex,
+        project_id: project.display().to_string(),
+        transcript_file_path: "/tmp/session.jsonl".to_string(),
+        started_at: Some("2026-06-08T00:00:00Z".to_string()),
+        last_seen_at: Some("2026-06-08T00:00:01Z".to_string()),
+    })
+    .unwrap();
+    for ordinal in 0..=1 {
+        db.insert_turn(&TurnRecord {
+            session_id: "session-1".to_string(),
+            turn_id: Some(format!("turn-{ordinal}")),
+            ordinal,
+            byte_start: ordinal * 10,
+            byte_end: ordinal * 10 + 10,
+            observed_at: Some(format!("2026-06-08T00:0{ordinal}:00Z")),
+            status: TurnStatus::Completed,
+            display_text: Some(format!("turn {ordinal}")),
+            cwd: Some(project.display().to_string()),
+            context: None,
+        })
+        .unwrap();
+    }
+    let turn_row_id = db
+        .turn_row_id_for_session_ordinal("session-1", 0)
+        .unwrap()
+        .unwrap();
+    let memory_id = db
+        .insert_memory(&MemoryRecord {
+            id: None,
+            title: "Queued stale eval memory".to_string(),
+            body: "This memory should be reconstructed for the stale recall eval rerun."
+                .to_string(),
+            scope: MemoryScope::Project,
+            kind: MemoryKind::Lesson,
+            task_keys: Vec::new(),
+            source_turn_refs: Vec::new(),
+            created_at: "unix:1781205300".to_string(),
+            updated_at: "unix:1781205300".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some(project.display().to_string()),
+            project_descriptor: Some("yaaml".to_string()),
+            lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: yaaml_core::MemoryValidity::Durable,
+        })
+        .unwrap();
+    let source_run_id = db
+        .insert_eval_run_with_metadata(
+            "recall_1_to_5",
+            "unix:1781205400",
+            &serde_json::json!({
+                "session_id": "session-1",
+                "turn_ordinal": 0,
+                "memory_ids": [memory_id],
+            })
+            .to_string(),
+            eval_metadata(0, "session_background"),
+        )
+        .unwrap();
+    db.insert_eval_result(
+        source_run_id,
+        turn_row_id,
+        Some(memory_id),
+        "insufficient_context",
+        "not enough later turns",
+        "unix:1781205401",
+    )
+    .unwrap();
+    db.complete_eval_run(source_run_id, "unix:1781205402")
+        .unwrap();
+
+    let binary = env!("CARGO_BIN_EXE_yaaml");
+    let output = Command::new(binary)
+        .arg("eval")
+        .arg("requeue-stale")
+        .arg("--limit")
+        .arg("5")
+        .arg("--json")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(value["queued"], 1);
+    assert_eq!(value["scanned_runs"], 1);
+    assert_eq!(value["stale_runs"], 1);
+    assert_eq!(value["skipped_already_pending"], 0);
+    assert_eq!(value["skipped_empty_recall_text"], 0);
+    let tasks = db.list_recall_eval_tasks(10).unwrap();
+    assert_eq!(tasks.len(), 1);
+    assert_eq!(tasks[0].session_id.as_deref(), Some("session-1"));
+    assert_eq!(tasks[0].turn_ordinal, Some(0));
+    assert_eq!(
+        tasks[0].recall_origin.as_deref(),
+        Some("session_background")
+    );
+    assert_eq!(tasks[0].memory_count, 1);
+
+    let second_output = Command::new(binary)
+        .arg("eval")
+        .arg("requeue-stale")
+        .arg("--json")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .output()
+        .unwrap();
+    assert!(
+        second_output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&second_output.stderr)
+    );
+    let second_value: serde_json::Value = serde_json::from_slice(&second_output.stdout).unwrap();
+    assert_eq!(second_value["queued"], 0);
+    assert_eq!(second_value["stale_runs"], 1);
+    assert_eq!(second_value["skipped_already_pending"], 1);
+}
+
+#[test]
 fn eval_recall_uses_mocked_anthropic_judge() {
     let tmp = TempDir::new().unwrap();
     let home = tmp.path().join("home");

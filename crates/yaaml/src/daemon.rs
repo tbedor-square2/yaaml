@@ -1015,28 +1015,52 @@ fn recall_eval_memory_text(memory: &MemoryRecord) -> String {
     )
 }
 
+#[derive(Debug, Clone, Default, Serialize)]
+pub struct StaleRecallEvalQueueReport {
+    pub scanned_runs: u64,
+    pub stale_runs: u64,
+    pub queued: u64,
+    pub skipped_already_scored: u64,
+    pub skipped_already_pending: u64,
+    pub skipped_rerun: u64,
+    pub skipped_missing_anchor: u64,
+    pub skipped_no_later_turns: u64,
+    pub skipped_empty_recall_text: u64,
+}
+
 pub fn queue_stale_recall_eval_tasks(db: &Database, limit: usize) -> anyhow::Result<u64> {
+    Ok(queue_stale_recall_eval_tasks_report(db, limit)?.queued)
+}
+
+pub fn queue_stale_recall_eval_tasks_report(
+    db: &Database,
+    limit: usize,
+) -> anyhow::Result<StaleRecallEvalQueueReport> {
     let runs = db
         .list_eval_runs(200)
         .context("failed to list eval runs for stale recall eval queue")?;
-    let mut queued = 0_u64;
+    let mut report = StaleRecallEvalQueueReport::default();
     for run in runs {
-        if queued as usize >= limit {
+        if report.queued as usize >= limit {
             break;
         }
+        report.scanned_runs += 1;
         if run.score.as_deref() != Some("insufficient_context") {
             continue;
         }
+        report.stale_runs += 1;
         if db
             .recall_eval_scored_rerun_exists(run.id)
             .context("failed to check scored recall eval rerun state")?
         {
+            report.skipped_already_scored += 1;
             continue;
         }
         if db
             .recall_eval_pending_rerun_exists(run.id)
             .context("failed to check pending recall eval rerun state")?
         {
+            report.skipped_already_pending += 1;
             continue;
         }
         let config_json = serde_json::from_str::<serde_json::Value>(&run.config_json)
@@ -1046,18 +1070,22 @@ pub fn queue_stale_recall_eval_tasks(db: &Database, limit: usize) -> anyhow::Res
             .and_then(serde_json::Value::as_i64)
             .is_some()
         {
+            report.skipped_rerun += 1;
             continue;
         }
         let Some(session_id) = run.session_id.as_deref() else {
+            report.skipped_missing_anchor += 1;
             continue;
         };
         let Some(turn_ordinal) = run.turn_ordinal else {
+            report.skipped_missing_anchor += 1;
             continue;
         };
         let later_turns = db
             .completed_turns_for_session_after_ordinal(session_id, turn_ordinal, 1)
             .context("failed to check later turns for stale recall eval")?;
         if later_turns.is_empty() {
+            report.skipped_no_later_turns += 1;
             continue;
         }
         let memory_ids = config_json
@@ -1072,6 +1100,7 @@ pub fn queue_stale_recall_eval_tasks(db: &Database, limit: usize) -> anyhow::Res
         let recall_text = reconstruct_recall_eval_text(db, &memory_ids)
             .context("failed to reconstruct stale recall eval text")?;
         if recall_text.trim().is_empty() {
+            report.skipped_empty_recall_text += 1;
             continue;
         }
         let payload_json = serde_json::to_string(&RecallEvalTaskPayload {
@@ -1106,9 +1135,9 @@ pub fn queue_stale_recall_eval_tasks(db: &Database, limit: usize) -> anyhow::Res
             updated_at: now,
         })
         .context("failed to enqueue stale recall eval task")?;
-        queued += 1;
+        report.queued += 1;
     }
-    Ok(queued)
+    Ok(report)
 }
 
 pub fn queue_memory_consolidation_if_due(

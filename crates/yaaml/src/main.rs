@@ -126,6 +126,8 @@ enum EvalCommand {
     Summary(EvalSummaryArgs),
     /// Summarize eval outcomes by recalled memory.
     Memories(EvalMemoriesArgs),
+    /// Requeue stale n/a recall evals that now have later turns.
+    RequeueStale(EvalRequeueStaleArgs),
 }
 
 #[derive(Debug, Parser)]
@@ -196,6 +198,16 @@ struct EvalMemoriesArgs {
     /// Sort mode for the memory diagnostics.
     #[arg(long, value_enum, default_value_t = EvalMemorySort::Mixed)]
     sort: EvalMemorySort,
+    /// Emit machine-readable JSON.
+    #[arg(long)]
+    json: bool,
+}
+
+#[derive(Debug, Parser)]
+struct EvalRequeueStaleArgs {
+    /// Maximum stale eval runs to requeue.
+    #[arg(long, default_value_t = 10)]
+    limit: usize,
     /// Emit machine-readable JSON.
     #[arg(long)]
     json: bool,
@@ -1846,6 +1858,7 @@ fn eval(args: EvalArgs) -> anyhow::Result<()> {
         EvalCommand::Show(args) => eval_show(args),
         EvalCommand::Summary(args) => eval_summary(args),
         EvalCommand::Memories(args) => eval_memories(args),
+        EvalCommand::RequeueStale(args) => eval_requeue_stale(args),
     }
 }
 
@@ -2249,6 +2262,33 @@ fn eval_memories(args: EvalMemoriesArgs) -> anyhow::Result<()> {
         println!("{}", serde_json::to_string_pretty(&diagnostics)?);
     } else {
         print_human_eval_memory_diagnostics(&diagnostics);
+    }
+    Ok(())
+}
+
+fn eval_requeue_stale(args: EvalRequeueStaleArgs) -> anyhow::Result<()> {
+    let cwd = env::current_dir().context("failed to determine current directory")?;
+    let config = Config::load_for_cwd(&cwd).context("failed to load config")?;
+    let db_path = config.db_path().context("failed to resolve db_path")?;
+    let mut db = Database::open(&db_path)
+        .with_context(|| format!("failed to open {}", display(&db_path)))?;
+    db.migrate().context("failed to migrate database")?;
+    let report = yaaml::daemon::queue_stale_recall_eval_tasks_report(&db, args.limit)
+        .context("failed to requeue stale recall evals")?;
+    if args.json {
+        println!("{}", serde_json::to_string_pretty(&report)?);
+    } else if report.queued == 0 {
+        println!(
+            "No stale recall evals queued (stale={}, already_scored={}, already_pending={}, missing_anchor={}, no_later_turns={}, empty_recall_text={})",
+            report.stale_runs,
+            report.skipped_already_scored,
+            report.skipped_already_pending,
+            report.skipped_missing_anchor,
+            report.skipped_no_later_turns,
+            report.skipped_empty_recall_text
+        );
+    } else {
+        println!("Queued {} stale recall evals", report.queued);
     }
     Ok(())
 }

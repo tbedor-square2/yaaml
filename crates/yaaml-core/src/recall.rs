@@ -8,7 +8,7 @@ use serde::Serialize;
 use crate::paths::project_hash;
 use crate::{
     context_score, infer_context_from_text, ContextMetadata, ConversationSegmentStatus, MemoryKind,
-    MemoryRecord, MemoryScope, MemoryValidity, TurnRecord,
+    MemoryRecord, MemoryScope, TurnRecord,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -368,8 +368,7 @@ fn recall_filter_decision(
     let strong_context = same_work_area
         || (same_repo && candidate.rank.context_score >= 0.36)
         || candidate.rank.context_score >= 0.42;
-    let same_active_segment_task_state = memory.validity == MemoryValidity::ValidWhileSegmentActive
-        && memory.origin_segment_id.is_some()
+    let same_active_segment_task_state = memory.origin_segment_id.is_some()
         && memory.origin_segment_id == current_segment_id
         && memory.origin_segment_status == Some(ConversationSegmentStatus::Active);
 
@@ -395,8 +394,7 @@ fn recall_filter_decision(
                     reasons,
                 };
             }
-            if memory.validity == MemoryValidity::ValidWhileSegmentActive
-                && memory.origin_segment_id.is_some()
+            if memory.origin_segment_id.is_some()
                 && memory.origin_segment_status != Some(ConversationSegmentStatus::Active)
             {
                 reasons.push("drop:task_state_origin_segment_inactive".to_string());
@@ -1832,7 +1830,7 @@ mod tests {
 
     use tempfile::TempDir;
 
-    use crate::{MemoryKind, MemoryRecord, MemoryScope};
+    use crate::{MemoryKind, MemoryRecord, MemoryScope, MemoryValidity};
 
     use crate::TurnStatus;
 
@@ -2501,6 +2499,53 @@ Datadog is blocked by a Cloudflare Access redirect.
         task_state.origin_segment_id = Some(42);
         task_state.origin_segment_status = Some(ConversationSegmentStatus::Active);
         task_state.validity = MemoryValidity::ValidWhileSegmentActive;
+        let memories = vec![task_state];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &[],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) = select_recall_candidates_for_segment(
+            ranked,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &[],
+            Some(42),
+            5,
+        );
+
+        assert_eq!(selected.len(), 1);
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"keep:task_state_same_active_segment".to_string()));
+    }
+
+    #[test]
+    fn same_active_segment_keeps_legacy_durable_task_state() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let mut task_state = memory(
+            1,
+            "Current segment has a legacy task-state row",
+            MemoryKind::TaskState,
+            Some(current_project),
+            Vec::new(),
+        );
+        task_state.origin_segment_id = Some(42);
+        task_state.origin_segment_status = Some(ConversationSegmentStatus::Active);
+        task_state.validity = MemoryValidity::Durable;
         let memories = vec![task_state];
         let ranked = rank_recall_candidates(
             &hits,

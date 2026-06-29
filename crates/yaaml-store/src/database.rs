@@ -1159,7 +1159,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
                  updated_at = ?1
              WHERE is_active = 1
                AND memory_kind = 'task_state'
-               AND validity = 'valid_while_segment_active'
                AND NOT EXISTS (
                    SELECT 1
                    FROM conversation_segments s
@@ -2985,7 +2984,7 @@ CREATE TABLE conversation_segments (
     }
 
     #[test]
-    fn unlinked_segment_active_task_state_is_deactivated() {
+    fn unlinked_task_state_is_deactivated_regardless_of_legacy_validity() {
         let mut db = Database::in_memory().unwrap();
         db.migrate().unwrap();
         let unlinked_task_state = db
@@ -3010,11 +3009,11 @@ CREATE TABLE conversation_segments (
                 validity: MemoryValidity::ValidWhileSegmentActive,
             })
             .unwrap();
-        let durable_task_state = db
+        let legacy_durable_task_state = db
             .insert_memory(&MemoryRecord {
                 id: None,
                 title: "Legacy durable task state".to_string(),
-                body: "A legacy durable task-state record is left for recall-time gates."
+                body: "A legacy durable task-state record should not outlive its segment."
                     .to_string(),
                 scope: MemoryScope::Project,
                 kind: MemoryKind::TaskState,
@@ -3035,23 +3034,24 @@ CREATE TABLE conversation_segments (
 
         assert_eq!(
             db.deactivate_stale_task_state_memories("unix:2").unwrap(),
-            1
+            2
         );
         let memories = db
-            .list_memories_by_ids(&[unlinked_task_state, durable_task_state])
+            .list_memories_by_ids(&[unlinked_task_state, legacy_durable_task_state])
             .unwrap();
         let unlinked = memories
             .iter()
             .find(|memory| memory.id == Some(unlinked_task_state))
             .unwrap();
-        let durable = memories
+        let legacy_durable = memories
             .iter()
-            .find(|memory| memory.id == Some(durable_task_state))
+            .find(|memory| memory.id == Some(legacy_durable_task_state))
             .unwrap();
 
         assert!(!unlinked.is_active);
         assert_eq!(unlinked.updated_at, "unix:2");
-        assert!(durable.is_active);
+        assert!(!legacy_durable.is_active);
+        assert_eq!(legacy_durable.updated_at, "unix:2");
     }
 
     #[test]

@@ -789,11 +789,15 @@ mod tests {
             recall_result_limit: 5,
             ..Config::default()
         };
-        let candidates = vec![
+        let mut candidates = vec![
             candidate_with_score(1, 1.20),
             proven_useful_candidate(2, 1.10),
             candidate_with_score(3, 1.00),
         ];
+        candidates[0]
+            .rank
+            .matched_task_keys
+            .push("path:src/lib.rs".to_string());
         let mut memories = vec![memory(1, "body"), memory(2, "body"), memory(3, "body")];
         memories[0].kind = MemoryKind::ProjectFact;
         memories[1].kind = MemoryKind::Workflow;
@@ -811,7 +815,7 @@ mod tests {
                 current_project_id: "/tmp/yaaml",
                 query_text: "query",
                 query_context: &query_context,
-                query_task_keys: &[],
+                query_task_keys: &["path:src/lib.rs".to_string()],
                 current_segment_id: None,
             },
         )

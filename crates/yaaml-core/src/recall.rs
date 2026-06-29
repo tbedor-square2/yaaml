@@ -518,6 +518,13 @@ fn recall_filter_decision(
                     reasons,
                 };
             }
+            if same_project && !strong_context && !weak_task_key_match {
+                reasons.push("drop:same_project_fact_weak_context".to_string());
+                return RecallFilterDecision {
+                    keep: false,
+                    reasons,
+                };
+            }
             if same_project && weak_query_context {
                 reasons.push("drop:same_project_weak_context".to_string());
                 return RecallFilterDecision {
@@ -633,9 +640,24 @@ fn recall_filter_decision(
                     reasons,
                 };
             } else if same_project
+                && memory.kind == MemoryKind::Workflow
+                && candidate.rank.matched_task_keys.is_empty()
+                && memory_has_only_tool_task_keys(memory)
+                && !has_exact_tool_task_key_overlap(query_task_keys, memory)
+                && context_gated_durable
+            {
+                reasons.push("drop:same_project_tool_workflow_without_tool_match".to_string());
+                return RecallFilterDecision {
+                    keep: false,
+                    reasons,
+                };
+            } else if same_project
                 && inactive_origin_segment(memory)
                 && candidate.rank.matched_task_keys.is_empty()
                 && candidate.rank.context_score < 0.42
+                && !(memory.kind == MemoryKind::Workflow
+                    && memory_has_only_tool_task_keys(memory)
+                    && has_exact_tool_task_key_overlap(query_task_keys, memory))
                 && context_gated_durable
             {
                 reasons.push("drop:inactive_origin_durable_weak_context".to_string());
@@ -754,6 +776,25 @@ fn phase_bridge_only_broad_tracking_match(candidate: &RecallCandidate) -> bool {
 
 fn is_broad_tracking_identity_key(key: &str) -> bool {
     key.starts_with("pr:") || key.starts_with("ticket:") || key.starts_with("task:")
+}
+
+fn memory_has_only_tool_task_keys(memory: &MemoryRecord) -> bool {
+    !memory.task_keys.is_empty()
+        && memory
+            .task_keys
+            .iter()
+            .all(|key| key.to_ascii_lowercase().starts_with("tool:"))
+}
+
+fn has_exact_tool_task_key_overlap(query_task_keys: &[String], memory: &MemoryRecord) -> bool {
+    query_task_keys.iter().any(|query_key| {
+        let query_key = query_key.to_ascii_lowercase();
+        query_key.starts_with("tool:")
+            && memory
+                .task_keys
+                .iter()
+                .any(|memory_key| memory_key.to_ascii_lowercase() == query_key)
+    })
 }
 
 fn specific_recall_task_key_match(candidate: &RecallCandidate) -> bool {
@@ -2533,7 +2574,7 @@ Datadog is blocked by a Cloudflare Access redirect.
         let current_project = "/Users/tbedor/Development/java";
         let hits = vec![VectorHit {
             memory_id: 1,
-            similarity: 0.95,
+            similarity: 1.0,
         }];
         let memories = vec![memory(
             1,
@@ -2875,7 +2916,7 @@ Datadog is blocked by a Cloudflare Access redirect.
             "retarget PR 483111 to master and update the pull request body",
         );
         let query_keys = vec!["pr:483111".to_string()];
-        let ranked = rank_recall_candidates(
+        let mut ranked = rank_recall_candidates(
             &hits,
             &memories,
             current_project,
@@ -2886,6 +2927,7 @@ Datadog is blocked by a Cloudflare Access redirect.
                 project_score_bonus: 0.05,
             },
         );
+        ranked[0].score = 1.55;
 
         let (selected, debug) = select_recall_candidates(
             ranked,
@@ -3327,6 +3369,52 @@ Datadog is blocked by a Cloudflare Access redirect.
             .rank
             .filter_reasons
             .contains(&"drop:project_fact_task_key_mismatch".to_string()));
+    }
+
+    #[test]
+    fn same_project_fact_without_key_match_needs_strong_context() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![MemoryRecord {
+            body: "MLP-4410 refactored to one unscheduled job with dry_run flag.".to_string(),
+            project_descriptor: Some("java".to_string()),
+            ..memory(
+                1,
+                "MLP-4410 implementation complete",
+                MemoryKind::ProjectFact,
+                Some(current_project),
+                vec![
+                    "ticket:mlp-4410".to_string(),
+                    "branch:tbedor/mlp-4410-archival-review-rpc".to_string(),
+                ],
+            )
+        }];
+        let query_context = infer_context_from_text(
+            "RuleSummary should include pending archival date metadata for the rules table.",
+        );
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &query_context,
+            &[],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) =
+            select_recall_candidates(ranked, &memories, current_project, &query_context, &[], 5);
+
+        assert!(selected.is_empty());
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:same_project_fact_weak_context".to_string()));
     }
 
     #[test]
@@ -4332,6 +4420,111 @@ Datadog is blocked by a Cloudflare Access redirect.
             select_recall_candidates(ranked, &memories, current_project, &query_context, &[], 5);
 
         assert_eq!(selected.len(), 1);
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"keep:same_project_durable".to_string()));
+    }
+
+    #[test]
+    fn same_project_tool_only_workflow_needs_tool_match() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![MemoryRecord {
+            body:
+                "The sq riskarbiter rule pending-archivals command supports staging verification."
+                    .to_string(),
+            project_descriptor: Some("squareup/java riskarbiter".to_string()),
+            origin_segment_id: Some(42),
+            origin_segment_status: Some(ConversationSegmentStatus::Superseded),
+            ..memory(
+                1,
+                "Risk Arbiter CLI verification workflow",
+                MemoryKind::Workflow,
+                Some(current_project),
+                vec!["tool:sq".to_string()],
+            )
+        }];
+        let query_context = infer_context_from_text(
+            "Risk Arbiter pending archivals staging verification data model.",
+        );
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &query_context,
+            &[],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) =
+            select_recall_candidates(ranked, &memories, current_project, &query_context, &[], 5);
+
+        assert!(selected.is_empty());
+        assert!(
+            debug[0]
+                .rank
+                .filter_reasons
+                .contains(&"drop:same_project_tool_workflow_without_tool_match".to_string()),
+            "{:?}",
+            debug[0].rank.filter_reasons
+        );
+    }
+
+    #[test]
+    fn same_project_tool_only_workflow_with_tool_match_recalls() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 1.0,
+        }];
+        let memories = vec![MemoryRecord {
+            body:
+                "The sq riskarbiter rule pending-archivals command supports staging verification."
+                    .to_string(),
+            project_descriptor: Some("squareup/java riskarbiter".to_string()),
+            origin_segment_id: Some(42),
+            origin_segment_status: Some(ConversationSegmentStatus::Superseded),
+            ..memory(
+                1,
+                "Risk Arbiter CLI verification workflow",
+                MemoryKind::Workflow,
+                Some(current_project),
+                vec!["tool:sq".to_string()],
+            )
+        }];
+        let query_context =
+            infer_context_from_text("run sq riskarbiter rule pending-archivals in staging");
+        let query_keys = vec!["tool:sq".to_string()];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &query_context,
+            &query_keys,
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &query_context,
+            &query_keys,
+            5,
+        );
+
+        assert_eq!(selected.len(), 1, "{:?}", debug[0].rank.filter_reasons);
+        assert_eq!(selected[0].memory_id, 1);
         assert!(debug[0]
             .rank
             .filter_reasons

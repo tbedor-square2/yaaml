@@ -464,6 +464,12 @@ fn recall_filter_decision(
                 reasons.push("keep:cross_project_strong_context".to_string());
             } else if weak_task_key_match {
                 reasons.push("keep:weak_task_key_semantic_durable".to_string());
+            } else if memory.kind != MemoryKind::Preference {
+                reasons.push("drop:cross_project_weak_context".to_string());
+                return RecallFilterDecision {
+                    keep: false,
+                    reasons,
+                };
             } else {
                 reasons.push("keep:semantic_durable".to_string());
             }
@@ -2902,6 +2908,48 @@ Datadog is blocked by a Cloudflare Access redirect.
             .rank
             .filter_reasons
             .contains(&"keep:semantic_durable".to_string()));
+    }
+
+    #[test]
+    fn cross_project_workflow_without_context_does_not_recall() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![memory(
+            1,
+            "Snowflake checkpoint recovery workflow",
+            MemoryKind::Workflow,
+            Some("/Users/tbedor/Development/forge-signalsmith"),
+            Vec::new(),
+        )];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &[],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &[],
+            5,
+        );
+
+        assert!(selected.is_empty());
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:cross_project_weak_context".to_string()));
     }
 
     #[test]

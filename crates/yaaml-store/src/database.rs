@@ -8,10 +8,10 @@ use serde::Serialize;
 use thiserror::Error;
 use yaaml_core::status::{BacklogStatus, Status, TaskFailure, WorkerStatus};
 use yaaml_core::{
-    extract_task_keys, infer_context_from_memory, infer_context_from_path, ContextMetadata,
-    ConversationSegmentRecord, ConversationSegmentStatus, EmbeddingRecord, MemoryKind,
-    MemoryRecord, MemoryScope, MemoryValidity, SessionRecord, SourceTurnRef, TaskRecord,
-    TaskStatus, TurnRecord,
+    extract_task_keys, infer_context_from_memory, infer_context_from_path, is_placeholder_task_key,
+    ContextMetadata, ConversationSegmentRecord, ConversationSegmentStatus, EmbeddingRecord,
+    MemoryKind, MemoryRecord, MemoryScope, MemoryValidity, SessionRecord, SourceTurnRef,
+    TaskRecord, TaskStatus, TurnRecord,
 };
 
 use crate::migrations::{EXPECTED_SCHEMA_VERSION, MIGRATIONS};
@@ -1170,6 +1170,37 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
             params![updated_at],
         )?;
         Ok(updated as u64)
+    }
+
+    pub fn remove_placeholder_task_keys_from_memories(
+        &self,
+        updated_at: &str,
+    ) -> Result<u64, DatabaseError> {
+        let memories = self.list_memories()?;
+        let mut updated = 0_u64;
+        for mut memory in memories {
+            let Some(memory_id) = memory.id else {
+                continue;
+            };
+            let original_keys = memory.task_keys.clone();
+            memory.task_keys.retain(|key| !is_placeholder_task_key(key));
+            if memory.task_keys == original_keys {
+                continue;
+            }
+            let task_keys = serde_json::to_string(&memory.task_keys)?;
+            self.conn.execute(
+                "UPDATE memories
+                 SET task_keys = ?1,
+                     updated_at = ?2
+                 WHERE id = ?3",
+                params![task_keys, updated_at, memory_id],
+            )?;
+            memory.updated_at = updated_at.to_string();
+            let context = infer_context_from_memory(&memory);
+            self.upsert_context_metadata("memory", &memory_id.to_string(), &context, updated_at)?;
+            updated += 1;
+        }
+        Ok(updated)
     }
 
     pub fn list_memories(&self) -> Result<Vec<MemoryRecord>, DatabaseError> {
@@ -2953,6 +2984,49 @@ CREATE TABLE conversation_segments (
         assert_eq!(stale.updated_at, "unix:3");
         assert!(active.is_active);
         assert!(durable.is_active);
+    }
+
+    #[test]
+    fn placeholder_task_key_cleanup_rewrites_memory_keys() {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+        let memory_id = db
+            .insert_memory(&MemoryRecord {
+                id: None,
+                title: "Checkpoint with leaked examples".to_string(),
+                body: "The task checkpoint copied placeholder task keys from the prompt."
+                    .to_string(),
+                scope: MemoryScope::Project,
+                kind: MemoryKind::TaskCheckpoint,
+                task_keys: vec![
+                    "pr:123".to_string(),
+                    "ticket:abc-123".to_string(),
+                    "pr:481245".to_string(),
+                ],
+                source_turn_refs: Vec::new(),
+                created_at: "unix:1".to_string(),
+                updated_at: "unix:1".to_string(),
+                is_active: true,
+                session_id: Some("session-1".to_string()),
+                project_id: Some("/tmp/project".to_string()),
+                project_descriptor: Some("project".to_string()),
+                lineage_refs: Vec::new(),
+                origin_segment_id: None,
+                origin_segment_status: None,
+                validity: MemoryValidity::Durable,
+            })
+            .unwrap();
+
+        assert_eq!(
+            db.remove_placeholder_task_keys_from_memories("unix:2")
+                .unwrap(),
+            1
+        );
+        let memory = db.list_memories_by_ids(&[memory_id]).unwrap().remove(0);
+
+        assert!(memory.is_active);
+        assert_eq!(memory.updated_at, "unix:2");
+        assert_eq!(memory.task_keys, vec!["pr:481245".to_string()]);
     }
 
     #[test]

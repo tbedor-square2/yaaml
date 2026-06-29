@@ -626,6 +626,7 @@ pub fn extract_task_keys(text: &str) -> Vec<String> {
             break;
         }
     }
+    keys.retain(|key| !is_placeholder_task_key(key));
     keys
 }
 
@@ -920,6 +921,13 @@ fn prefixed_identity_key(token: &str) -> Option<String> {
         return None;
     }
     Some(format!("{prefix}:{value}"))
+}
+
+pub fn is_placeholder_task_key(key: &str) -> bool {
+    matches!(
+        key.to_ascii_lowercase().as_str(),
+        "pr:123" | "ticket:abc-123" | "branch:name" | "task:name"
+    )
 }
 
 fn ticket_key(token: &str) -> Option<String> {
@@ -1994,6 +2002,17 @@ Datadog is blocked by a Cloudflare Access redirect.
 
         assert!(!keys.contains(&"ticket:477-".to_string()));
         assert!(!keys.contains(&"ticket:123-456".to_string()));
+    }
+
+    #[test]
+    fn task_key_extraction_rejects_prompt_placeholder_identity_keys() {
+        let keys =
+            extract_task_keys("examples include pr:123, ticket:ABC-123, branch:name, task:name");
+
+        assert!(!keys.contains(&"pr:123".to_string()));
+        assert!(!keys.contains(&"ticket:ABC-123".to_string()));
+        assert!(!keys.contains(&"branch:name".to_string()));
+        assert!(!keys.contains(&"task:name".to_string()));
     }
 
     #[test]

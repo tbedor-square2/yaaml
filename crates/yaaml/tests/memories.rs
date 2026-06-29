@@ -55,6 +55,58 @@ fn memories_stats_reports_active_project_counts() {
 }
 
 #[test]
+fn memories_list_filters_by_kind_and_active_state() {
+    let fixture = MemoryFixture::new();
+    let checkpoint_id = fixture.insert_memory_with(
+        "PR checkpoint",
+        "PR 481245 has unresolved reviewer follow-up.",
+        true,
+        yaaml_core::MemoryKind::TaskCheckpoint,
+        vec!["pr:481245".to_string()],
+    );
+    fixture.insert_memory_with(
+        "Inactive checkpoint",
+        "PR 111111 was superseded.",
+        false,
+        yaaml_core::MemoryKind::TaskCheckpoint,
+        vec!["pr:111111".to_string()],
+    );
+    fixture.insert_memory_with(
+        "Durable lesson",
+        "Use focused memory list filters for corpus audits.",
+        true,
+        yaaml_core::MemoryKind::Lesson,
+        Vec::new(),
+    );
+
+    let output = fixture.command([
+        "memories",
+        "list",
+        "--kind",
+        "task_checkpoint",
+        "--query",
+        "reviewer",
+        "--json",
+    ]);
+
+    assert_success(&output);
+    let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let memories = value.as_array().unwrap();
+    assert_eq!(memories.len(), 1);
+    assert_eq!(memories[0]["memory_id"], checkpoint_id);
+    assert_eq!(memories[0]["kind"], "task_checkpoint");
+    assert_eq!(memories[0]["active"], true);
+    assert_eq!(memories[0]["task_keys"][0], "pr:481245");
+
+    let output = fixture.command(["memories", "list", "--kind", "task_checkpoint"]);
+    assert_success(&output);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("1. id="));
+    assert!(stdout.contains("kind=task_checkpoint"));
+    assert!(!stdout.contains("Inactive checkpoint"));
+}
+
+#[test]
 fn memories_health_classifies_failure_modes_and_actions() {
     let fixture = MemoryFixture::new();
     fixture.insert_session_with_turns(1);

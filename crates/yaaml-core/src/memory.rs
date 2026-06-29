@@ -6,8 +6,8 @@ use serde_json::Value;
 use thiserror::Error;
 
 use crate::{
-    extract_task_keys, infer_context_from_memory, normalize_memory_kind, MemoryKind, MemoryRecord,
-    MemoryScope, MemoryValidity, SourceTurnRef,
+    extract_task_keys, infer_context_from_memory, is_placeholder_task_key, normalize_memory_kind,
+    MemoryKind, MemoryRecord, MemoryScope, MemoryValidity, SourceTurnRef,
 };
 
 #[derive(Debug, Error)]
@@ -152,7 +152,7 @@ pub fn embedding_text(memory: &MemoryRecord) -> String {
 
 fn normalize_task_key(key: &str) -> Option<String> {
     let key = key.trim().to_ascii_lowercase();
-    if key.is_empty() || !key.contains(':') {
+    if key.is_empty() || !key.contains(':') || is_placeholder_task_key(&key) {
         None
     } else {
         Some(key)
@@ -338,6 +338,29 @@ version = "0.1.0"
 
         assert_eq!(memories[0].refine_memory_id, Some(42));
         assert_eq!(memories[1].refine_memory_id, Some(43));
+    }
+
+    #[test]
+    fn formulation_filters_placeholder_task_keys() {
+        let memories = parse_formulation_response(
+            &json!({
+                "memories": [
+                    {
+                        "title":"Task checkpoint",
+                        "body":"When returning to the PR, use the real key from the transcript.",
+                        "kind":"task_checkpoint",
+                        "task_keys":["pr:123", "ticket:ABC-123", "branch:name", "task:name", "pr:481245"],
+                        "project_descriptor":"yaaml"
+                    }
+                ]
+            }),
+            "default",
+            500,
+        )
+        .unwrap();
+
+        assert_eq!(memories[0].kind, MemoryKind::TaskCheckpoint);
+        assert_eq!(memories[0].task_keys, vec!["pr:481245".to_string()]);
     }
 
     #[test]

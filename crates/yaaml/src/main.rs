@@ -292,6 +292,8 @@ struct SegmentsListArgs {
 enum MemoriesCommand {
     /// Show memory counts by scope, kind, and project.
     Stats(MemoriesStatsArgs),
+    /// List stored memories with optional filters.
+    List(MemoriesListArgs),
     /// Diagnose recall performance failure modes by memory.
     Health(MemoriesHealthArgs),
     /// Soft-deactivate memories with high-confidence bad health recommendations.
@@ -302,6 +304,28 @@ enum MemoriesCommand {
 
 #[derive(Debug, Parser)]
 struct MemoriesStatsArgs {
+    /// Emit machine-readable JSON.
+    #[arg(long)]
+    json: bool,
+}
+
+#[derive(Debug, Parser)]
+struct MemoriesListArgs {
+    /// Maximum memories to show.
+    #[arg(long, default_value_t = 25)]
+    limit: usize,
+    /// Include inactive memories.
+    #[arg(long)]
+    include_inactive: bool,
+    /// Restrict to one memory kind.
+    #[arg(long)]
+    kind: Option<String>,
+    /// Restrict to one project id.
+    #[arg(long)]
+    project: Option<String>,
+    /// Case-insensitive text search over title/body/task keys/project descriptor.
+    #[arg(long)]
+    query: Option<String>,
     /// Emit machine-readable JSON.
     #[arg(long)]
     json: bool,
@@ -592,6 +616,25 @@ struct MemoryProjectCount {
 }
 
 #[derive(Debug, Serialize)]
+struct MemoryListEntry {
+    memory_id: i64,
+    title: String,
+    body: String,
+    scope: String,
+    kind: String,
+    active: bool,
+    project_id: Option<String>,
+    project_descriptor: Option<String>,
+    task_keys: Vec<String>,
+    created_at: String,
+    updated_at: String,
+    session_id: Option<String>,
+    origin_segment_id: Option<i64>,
+    origin_segment_status: Option<String>,
+    validity: String,
+}
+
+#[derive(Debug, Serialize)]
 struct MemoryRebuildOutput {
     deactivated_memories: u64,
     cleared_memory_tasks: u64,
@@ -672,6 +715,7 @@ struct MemoryHealthDiagnostic {
 fn memories(args: MemoriesArgs) -> anyhow::Result<()> {
     match args.command {
         MemoriesCommand::Stats(args) => memories_stats(args),
+        MemoriesCommand::List(args) => memories_list(args),
         MemoriesCommand::Health(args) => memories_health(args),
         MemoriesCommand::ApplyHealth(args) => memories_apply_health(args),
         MemoriesCommand::Rebuild(args) => memories_rebuild(args),
@@ -825,6 +869,120 @@ fn memories_stats(args: MemoriesStatsArgs) -> anyhow::Result<()> {
         print_human_memory_stats(&stats);
     }
     Ok(())
+}
+
+fn memories_list(args: MemoriesListArgs) -> anyhow::Result<()> {
+    let (_config, db) = open_database_for_cwd()?;
+    let mut memories = db.list_memories().context("failed to list memories")?;
+    let kind_filter = args.kind.as_deref().map(str::trim).map(str::to_string);
+    let query_filter = args
+        .query
+        .as_deref()
+        .map(|query| query.to_ascii_lowercase());
+    memories.retain(|memory| {
+        if !args.include_inactive && !memory.is_active {
+            return false;
+        }
+        if let Some(kind) = kind_filter.as_deref() {
+            if memory.kind.as_str() != kind {
+                return false;
+            }
+        }
+        if let Some(project) = args.project.as_deref() {
+            if memory.project_id.as_deref() != Some(project) {
+                return false;
+            }
+        }
+        if let Some(query) = query_filter.as_deref() {
+            let haystack = format!(
+                "{}\n{}\n{}\n{}",
+                memory.title,
+                memory.body,
+                memory.task_keys.join("\n"),
+                memory.project_descriptor.as_deref().unwrap_or("")
+            )
+            .to_ascii_lowercase();
+            if !haystack.contains(query) {
+                return false;
+            }
+        }
+        true
+    });
+    memories.sort_by(|left, right| {
+        right
+            .updated_at
+            .cmp(&left.updated_at)
+            .then_with(|| right.id.cmp(&left.id))
+    });
+    memories.truncate(args.limit);
+    let entries = memories
+        .into_iter()
+        .map(memory_list_entry)
+        .collect::<Vec<_>>();
+    if args.json {
+        println!("{}", serde_json::to_string_pretty(&entries)?);
+    } else {
+        print_human_memory_list(&entries);
+    }
+    Ok(())
+}
+
+fn memory_list_entry(memory: MemoryRecord) -> MemoryListEntry {
+    MemoryListEntry {
+        memory_id: memory.id.unwrap_or_default(),
+        title: memory.title,
+        body: memory.body,
+        scope: memory.scope.as_str().to_string(),
+        kind: memory.kind.as_str().to_string(),
+        active: memory.is_active,
+        project_id: memory.project_id,
+        project_descriptor: memory.project_descriptor,
+        task_keys: memory.task_keys,
+        created_at: memory.created_at,
+        updated_at: memory.updated_at,
+        session_id: memory.session_id,
+        origin_segment_id: memory.origin_segment_id,
+        origin_segment_status: memory
+            .origin_segment_status
+            .map(|status| status.as_str().to_string()),
+        validity: memory.validity.as_str().to_string(),
+    }
+}
+
+fn print_human_memory_list(memories: &[MemoryListEntry]) {
+    println!("Memories");
+    if memories.is_empty() {
+        println!("  none");
+        return;
+    }
+    for (index, memory) in memories.iter().enumerate() {
+        let keys = if memory.task_keys.is_empty() {
+            "-".to_string()
+        } else {
+            memory
+                .task_keys
+                .iter()
+                .take(8)
+                .cloned()
+                .collect::<Vec<_>>()
+                .join(", ")
+        };
+        println!(
+            "  {}. id={} kind={} scope={} active={} updated={}",
+            index + 1,
+            memory.memory_id,
+            memory.kind,
+            memory.scope,
+            memory.active,
+            memory.updated_at
+        );
+        println!("     title={}", memory.title);
+        println!(
+            "     project={} keys={}",
+            memory.project_id.as_deref().unwrap_or("-"),
+            keys
+        );
+    }
 }
 
 fn memories_health(args: MemoriesHealthArgs) -> anyhow::Result<()> {

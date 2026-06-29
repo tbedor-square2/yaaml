@@ -246,6 +246,8 @@ pub fn refresh_conversation_segments_for_session(
         .context("failed to persist conversation segments")?;
     db.refresh_memory_segment_metadata_for_session(session_id, &unix_timestamp())
         .context("failed to refresh memory segment metadata")?;
+    db.remove_placeholder_task_keys_from_memories(&unix_timestamp())
+        .context("failed to remove placeholder task keys from memories")?;
     db.deactivate_task_state_memories_with_inactive_origin(&unix_timestamp())
         .context("failed to deactivate stale task-state memories")?;
     Ok(written)
@@ -1333,7 +1335,7 @@ fn formulation_system_prompt() -> &'static str {
         "Always capture repeated user corrections, preferences, and process guidance as their own concise memories, including coding style preferences such as functional vs imperative style. ",
         "Use project scope when the preference is tied to the current project or language; use global scope only for durable cross-project user preferences or agent workflow patterns. ",
         "Use task_state only for segment-specific or short-lived state that should expire when the current conversation topic moves on: local status facts, proposed fixes, implementation order, unresolved next steps, open questions, blockers, and follow-up work. ",
-        "Use task_checkpoint for resumable PR, ticket, branch, or explicitly named task state that should return only when that same identity is mentioned again; include a strong task key such as pr:123, ticket:ABC-123, branch:name, or task:name. ",
+        "Use task_checkpoint for resumable PR, ticket, branch, or explicitly named task state that should return only when that same identity is mentioned again; include only strong task keys copied from the transcript, and do not invent placeholder keys. ",
         "Do not encode completed implementation plans as durable workflow or lesson memories; return no memory unless there is a reusable lesson. ",
         "Use workflow only for reusable procedures that should remain useful after the current task is complete."
     )
@@ -1786,6 +1788,8 @@ pub fn expire_idle_conversation_segments(db: &Database, config: &Config) -> anyh
         }
     }
     if expired > 0 {
+        db.remove_placeholder_task_keys_from_memories(&now)
+            .context("failed to remove placeholder task keys from memories")?;
         db.deactivate_task_state_memories_with_inactive_origin(&now)
             .context("failed to deactivate stale task-state memories")?;
     }

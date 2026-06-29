@@ -309,6 +309,7 @@ fn recall_filter_decision(
         .any(|key| is_task_state_identity_key(key));
     let weak_task_key_match = !candidate.rank.matched_task_keys.is_empty();
     let query_has_task_identity = has_recall_match_task_key(query_task_keys);
+    let weak_query_context = is_weak_recall_query_context(query_context, query_task_keys);
     let episodic_durable_task_key_mismatch = is_episodic_durable(memory)
         && query_has_task_identity
         && has_recall_match_task_key(&memory.task_keys)
@@ -401,6 +402,13 @@ fn recall_filter_decision(
                     reasons,
                 };
             }
+            if same_project && weak_query_context {
+                reasons.push("drop:same_project_weak_context".to_string());
+                return RecallFilterDecision {
+                    keep: false,
+                    reasons,
+                };
+            }
             if same_project || strong_context {
                 reasons.push("keep:project_fact_context".to_string());
                 RecallFilterDecision {
@@ -458,6 +466,15 @@ fn recall_filter_decision(
                     };
                 }
                 reasons.push("keep:global_durable".to_string());
+            } else if same_project
+                && weak_query_context
+                && matches!(memory.kind, MemoryKind::Lesson | MemoryKind::Workflow)
+            {
+                reasons.push("drop:same_project_weak_context".to_string());
+                return RecallFilterDecision {
+                    keep: false,
+                    reasons,
+                };
             } else if same_project {
                 reasons.push("keep:same_project_durable".to_string());
             } else if strong_context {
@@ -479,6 +496,35 @@ fn recall_filter_decision(
             }
         }
     }
+}
+
+fn is_weak_recall_query_context(
+    query_context: &ContextMetadata,
+    query_task_keys: &[String],
+) -> bool {
+    query_context.work_area.is_none()
+        && !has_recall_match_task_key(query_task_keys)
+        && !query_context
+            .subject_tags
+            .iter()
+            .any(|tag| is_high_signal_recall_context_tag(tag))
+}
+
+fn is_high_signal_recall_context_tag(tag: &str) -> bool {
+    !matches!(
+        tag,
+        "linear"
+            | "work-tracking"
+            | "github"
+            | "pr"
+            | "ci"
+            | "docs"
+            | "slack"
+            | "java"
+            | "codex"
+            | "claude-code"
+            | "tool-hook"
+    )
 }
 
 fn is_broad_project_id(project_id: Option<&str>) -> bool {
@@ -2950,6 +2996,90 @@ Datadog is blocked by a Cloudflare Access redirect.
             .rank
             .filter_reasons
             .contains(&"drop:cross_project_weak_context".to_string()));
+    }
+
+    #[test]
+    fn same_project_workflow_with_generic_repo_context_does_not_recall() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![memory(
+            1,
+            "Rule config refactor workflow",
+            MemoryKind::Workflow,
+            Some(current_project),
+            Vec::new(),
+        )];
+        let query_context = ContextMetadata {
+            repo_id: Some("squareup/java".to_string()),
+            repo_root: Some(current_project.to_string()),
+            activity_domain: Some("code".to_string()),
+            subject_tags: vec!["java".to_string()],
+            ..ContextMetadata::default()
+        };
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &query_context,
+            &[],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) =
+            select_recall_candidates(ranked, &memories, current_project, &query_context, &[], 5);
+
+        assert!(selected.is_empty());
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:same_project_weak_context".to_string()));
+    }
+
+    #[test]
+    fn same_project_workflow_with_specific_context_still_recalls() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![MemoryRecord {
+            body: "RiskArbiter rule config refactor workflow".to_string(),
+            project_descriptor: Some("squareup/java riskarbiter".to_string()),
+            ..memory(
+                1,
+                "Rule config refactor workflow",
+                MemoryKind::Workflow,
+                Some(current_project),
+                Vec::new(),
+            )
+        }];
+        let query_context = infer_context_from_text("riskarbiter rule config refactor in java");
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &query_context,
+            &[],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) =
+            select_recall_candidates(ranked, &memories, current_project, &query_context, &[], 5);
+
+        assert_eq!(selected.len(), 1);
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"keep:same_project_durable".to_string()));
     }
 
     #[test]

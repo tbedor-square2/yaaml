@@ -680,6 +680,10 @@ mod tests {
         let mut memories = vec![memory(1, "body"), memory(2, "body"), memory(3, "body")];
         memories[1].kind = MemoryKind::Workflow;
         memories[2].kind = MemoryKind::Preference;
+        let query_context = ContextMetadata {
+            subject_tags: vec!["yaaml".to_string()],
+            ..ContextMetadata::default()
+        };
 
         let selected = select_recall_candidates_with_llm_filter(
             &config,
@@ -687,7 +691,7 @@ mod tests {
             &memories,
             "/tmp/yaaml",
             "query",
-            &ContextMetadata::default(),
+            &query_context,
             &[],
         )
         .selected

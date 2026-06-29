@@ -358,9 +358,35 @@ fn stats_json_filters_by_recall_origin() {
     .unwrap();
     db.complete_eval_run(replay_run_id, "unix:122").unwrap();
 
+    let delayed_manual_run_id = db
+        .insert_eval_run_with_metadata(
+            "recall_1_to_5",
+            "unix:130",
+            &json!({
+                "session_id": "session-1",
+                "turn_ordinal": 0,
+                "memory_ids": [41],
+                "recall_origin": "manual_query"
+            })
+            .to_string(),
+            recall_metadata_with_origin(0, "manual_query"),
+        )
+        .unwrap();
+    db.insert_eval_result(
+        delayed_manual_run_id,
+        background_turn_row_id,
+        Some(41),
+        "insufficient_context",
+        "not enough later turns",
+        "unix:131",
+    )
+    .unwrap();
+    db.complete_eval_run(delayed_manual_run_id, "unix:132")
+        .unwrap();
+
     let default = stats_json(&home, &project, []);
     assert_eq!(default["filters"]["excluded_origins"], json!(["replay"]));
-    assert_eq!(default["recall_runs"], 2);
+    assert_eq!(default["recall_runs"], 3);
     assert!(!default["by_origin"]
         .as_array()
         .unwrap()
@@ -384,18 +410,28 @@ fn stats_json_filters_by_recall_origin() {
         excluded["filters"]["excluded_origins"],
         json!(["tool_pre_use", "replay"])
     );
-    assert_eq!(excluded["recall_runs"], 1);
+    assert_eq!(excluded["recall_runs"], 2);
     assert_eq!(excluded["useful"]["low_memory_results"], 0);
     assert_eq!(excluded["by_tool"].as_array().unwrap().len(), 0);
 
     let recent = stats_json(&home, &project, ["--since", "unix:105"]);
     assert_eq!(recent["filters"]["since_unix"], 105);
-    assert_eq!(recent["recall_runs"], 1);
-    assert_eq!(recent["non_empty_recall_runs"], 1);
-    assert_eq!(recent["by_origin"][0]["name"], "tool_pre_use");
+    assert_eq!(recent["recall_runs"], 2);
+    assert_eq!(recent["non_empty_recall_runs"], 2);
+    assert!(recent["by_origin"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|origin| origin["name"] == "tool_pre_use"));
+    assert!(recent["by_origin"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|origin| origin["name"] == "manual_query"));
     assert_eq!(recent["by_tool"][0]["name"], "Bash");
     assert_eq!(recent["useful"]["evaluated_recall_runs"], 1);
     assert_eq!(recent["useful"]["low_memory_results"], 1);
+    assert_eq!(recent["useful"]["insufficient_context_results"], 1);
 
     let replay = stats_json(&home, &project, ["--origin", "replay"]);
     assert_eq!(replay["filters"]["origins"], json!(["replay"]));

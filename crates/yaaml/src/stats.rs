@@ -15,7 +15,7 @@ struct StatsAnchor {
 
 #[derive(Debug, Deserialize)]
 struct StatsRecallEvalTaskPayload {
-    session_id: String,
+    session_id: Option<String>,
     turn_ordinal: Option<u64>,
     recall_text: String,
     memory_ids: Vec<i64>,
@@ -27,11 +27,26 @@ struct StatsRecallEvalTaskPayload {
 
 #[derive(Debug, Clone)]
 struct StatsRecallVolumeRun {
+    session_id: Option<String>,
+    turn_ordinal: Option<u64>,
     memory_count: usize,
-    recall_chars: usize,
+    recall_chars: Option<usize>,
     recall_at: Option<String>,
     filter_telemetry: Option<RecallFilterTelemetry>,
     recall_origin: String,
+    tool_name: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct StatsEvalRunConfigPayload {
+    memory_ids: Option<Vec<i64>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+struct StatsRecallRunKey {
+    recall_origin: String,
+    session_id: Option<String>,
+    turn_ordinal: Option<u64>,
     tool_name: Option<String>,
 }
 
@@ -267,6 +282,30 @@ pub fn build_stats_with_filters(
         })
         .collect::<Vec<_>>();
 
+    let mut volume_keys = volume_runs
+        .iter()
+        .map(StatsRecallVolumeRun::key)
+        .collect::<HashSet<_>>();
+    for run in &eval_runs {
+        let key = eval_run_key(run);
+        if volume_keys.contains(&key) {
+            continue;
+        }
+        let Some(volume) = eval_run_fallback_volume(run) else {
+            continue;
+        };
+        volume_keys.insert(key);
+        if let Some(anchor) = volume.anchor() {
+            if eligible.contains(&anchor) {
+                turns_with_recall.insert(anchor.clone());
+                recall_eval_by_anchor
+                    .entry(anchor)
+                    .or_insert(volume.clone());
+            }
+        }
+        volume_runs.push(volume);
+    }
+
     let mut evaluated_recall_runs = 0_usize;
     let mut useful_recall_runs = 0_usize;
     let mut judged_memory_results = 0_usize;
@@ -366,14 +405,18 @@ pub fn build_stats_with_filters(
         segment.recall_runs += 1;
         if volume_run.memory_count > 0 {
             segment.non_empty_runs += 1;
-            segment.recall_chars.push(volume_run.recall_chars);
+            if let Some(recall_chars) = volume_run.recall_chars {
+                segment.recall_chars.push(recall_chars);
+            }
         }
         if let Some(tool_name) = &volume_run.tool_name {
             let tool_segment = tool_accumulators.entry(tool_name.clone()).or_default();
             tool_segment.recall_runs += 1;
             if volume_run.memory_count > 0 {
                 tool_segment.non_empty_runs += 1;
-                tool_segment.recall_chars.push(volume_run.recall_chars);
+                if let Some(recall_chars) = volume_run.recall_chars {
+                    tool_segment.recall_chars.push(recall_chars);
+                }
             }
         }
     }
@@ -542,21 +585,72 @@ fn recall_eval_task_volume(
     payload_json: &str,
 ) -> Option<(Option<StatsAnchor>, StatsRecallVolumeRun)> {
     let payload = serde_json::from_str::<StatsRecallEvalTaskPayload>(payload_json).ok()?;
-    let anchor = payload.turn_ordinal.map(|turn_ordinal| StatsAnchor {
-        session_id: payload.session_id,
-        turn_ordinal,
-    });
+    let anchor =
+        payload
+            .session_id
+            .clone()
+            .zip(payload.turn_ordinal)
+            .map(|(session_id, turn_ordinal)| StatsAnchor {
+                session_id,
+                turn_ordinal,
+            });
     Some((
         anchor,
         StatsRecallVolumeRun {
+            session_id: payload.session_id,
+            turn_ordinal: payload.turn_ordinal,
             memory_count: payload.memory_ids.len(),
-            recall_chars: payload.recall_text.chars().count(),
+            recall_chars: Some(payload.recall_text.chars().count()),
             recall_at: payload.recall_at,
             filter_telemetry: payload.filter_telemetry,
             recall_origin: payload.recall_origin,
             tool_name: payload.tool_name,
         },
     ))
+}
+
+fn eval_run_fallback_volume(run: &EvalRunRecord) -> Option<StatsRecallVolumeRun> {
+    let config = serde_json::from_str::<StatsEvalRunConfigPayload>(&run.config_json).ok()?;
+    Some(StatsRecallVolumeRun {
+        session_id: run.session_id.clone(),
+        turn_ordinal: run.turn_ordinal,
+        memory_count: config.memory_ids?.len(),
+        recall_chars: None,
+        recall_at: Some(run.started_at.clone()),
+        filter_telemetry: None,
+        recall_origin: run.recall_origin.clone(),
+        tool_name: run.tool_name.clone(),
+    })
+}
+
+impl StatsRecallVolumeRun {
+    fn anchor(&self) -> Option<StatsAnchor> {
+        self.session_id
+            .clone()
+            .zip(self.turn_ordinal)
+            .map(|(session_id, turn_ordinal)| StatsAnchor {
+                session_id,
+                turn_ordinal,
+            })
+    }
+
+    fn key(&self) -> StatsRecallRunKey {
+        StatsRecallRunKey {
+            recall_origin: self.recall_origin.clone(),
+            session_id: self.session_id.clone(),
+            turn_ordinal: self.turn_ordinal,
+            tool_name: self.tool_name.clone(),
+        }
+    }
+}
+
+fn eval_run_key(run: &EvalRunRecord) -> StatsRecallRunKey {
+    StatsRecallRunKey {
+        recall_origin: run.recall_origin.clone(),
+        session_id: run.session_id.clone(),
+        turn_ordinal: run.turn_ordinal,
+        tool_name: run.tool_name.clone(),
+    }
 }
 
 fn timestamp_seconds(timestamp: &str) -> Option<i64> {
@@ -610,7 +704,7 @@ fn build_volume_stats(volumes: &[StatsRecallVolumeRun]) -> StatsVolume {
         .collect::<Vec<_>>();
     let recall_chars = volumes
         .iter()
-        .map(|volume| volume.recall_chars)
+        .filter_map(|volume| volume.recall_chars)
         .collect::<Vec<_>>();
     let mut buckets = StatsMemoryCountBuckets::default();
     for count in &memory_counts {

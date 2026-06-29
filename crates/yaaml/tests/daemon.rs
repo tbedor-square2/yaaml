@@ -1707,36 +1707,6 @@ fn background_recall_uses_stored_segment_keys_for_task_state() {
         last_seen_at: Some("2026-06-08T00:00:01Z".to_string()),
     })
     .unwrap();
-    let memory_id = db
-        .insert_memory(&MemoryRecord {
-            id: None,
-            title: "Current PR state".to_string(),
-            body: "PR 481583 needs the segment-key regression test before continuing.".to_string(),
-            scope: MemoryScope::Project,
-            kind: MemoryKind::TaskState,
-            task_keys: vec!["pr:481583".to_string()],
-            source_turn_refs: Vec::new(),
-            created_at: "2026-06-08T00:00:00Z".to_string(),
-            updated_at: "2026-06-08T00:00:00Z".to_string(),
-            is_active: true,
-            session_id: None,
-            project_id: Some(project_id.clone()),
-            project_descriptor: Some("yaaml, Rust".to_string()),
-            lineage_refs: Vec::new(),
-            origin_segment_id: None,
-            origin_segment_status: None,
-            validity: yaaml_core::MemoryValidity::Durable,
-        })
-        .unwrap();
-    db.upsert_embedding(&EmbeddingRecord {
-        memory_id,
-        embedding_model: config.embedding_model.clone(),
-        dimensions: 2,
-        embedding_blob: encode_f32_embedding(&[1.0, 0.0]),
-        embedded_text_hash: "hash".to_string(),
-        updated_at: "2026-06-08T00:00:00Z".to_string(),
-    })
-    .unwrap();
     let turn = TurnRecord {
         session_id: "session-1".to_string(),
         turn_id: Some("turn-1".to_string()),
@@ -1746,7 +1716,7 @@ fn background_recall_uses_stored_segment_keys_for_task_state() {
         observed_at: None,
         status: yaaml_core::TurnStatus::Completed,
         display_text: Some("user: continue the active task".to_string()),
-        cwd: Some(project_id),
+        cwd: Some(project_id.clone()),
         context: Some(yaaml_core::infer_context_from_path(&project)),
     };
     db.insert_turn(&turn).unwrap();
@@ -1765,6 +1735,41 @@ fn background_recall_uses_stored_segment_keys_for_task_state() {
             updated_at: "unix:1".to_string(),
         }],
     )
+    .unwrap();
+    let active_segment_id = db
+        .conversation_segment_for_turn("session-1", 0)
+        .unwrap()
+        .unwrap()
+        .id;
+    let memory_id = db
+        .insert_memory(&MemoryRecord {
+            id: None,
+            title: "Current PR state".to_string(),
+            body: "PR 481583 needs the segment-key regression test before continuing.".to_string(),
+            scope: MemoryScope::Project,
+            kind: MemoryKind::TaskState,
+            task_keys: vec!["pr:481583".to_string()],
+            source_turn_refs: Vec::new(),
+            created_at: "2026-06-08T00:00:00Z".to_string(),
+            updated_at: "2026-06-08T00:00:00Z".to_string(),
+            is_active: true,
+            session_id: Some("session-1".to_string()),
+            project_id: Some(project_id.clone()),
+            project_descriptor: Some("yaaml, Rust".to_string()),
+            lineage_refs: Vec::new(),
+            origin_segment_id: active_segment_id,
+            origin_segment_status: None,
+            validity: yaaml_core::MemoryValidity::ValidWhileSegmentActive,
+        })
+        .unwrap();
+    db.upsert_embedding(&EmbeddingRecord {
+        memory_id,
+        embedding_model: config.embedding_model.clone(),
+        dimensions: 2,
+        embedding_blob: encode_f32_embedding(&[1.0, 0.0]),
+        embedded_text_hash: "hash".to_string(),
+        updated_at: "2026-06-08T00:00:00Z".to_string(),
+    })
     .unwrap();
 
     refresh_recall_with_embedding(

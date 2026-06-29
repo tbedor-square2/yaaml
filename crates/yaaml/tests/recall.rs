@@ -169,7 +169,7 @@ recall_llm_filter_enabled = false
         title: "Task-key recall".to_string(),
         body: "PR 481245 should use task-key aware ranking.".to_string(),
         scope: MemoryScope::Project,
-        kind: MemoryKind::TaskState,
+        kind: MemoryKind::TaskCheckpoint,
         task_keys: vec!["pr:481245".to_string()],
         source_turn_refs: Vec::new(),
         created_at: "2026-06-08T00:00:00Z".to_string(),
@@ -534,10 +534,10 @@ recall_llm_filter_enabled = false
         &mut db,
         MemoryRecord {
             id: None,
-            title: "Target PR state".to_string(),
+            title: "Target PR checkpoint".to_string(),
             body: "PR 481245 should be recalled for this task.".to_string(),
             scope: MemoryScope::Project,
-            kind: MemoryKind::TaskState,
+            kind: MemoryKind::TaskCheckpoint,
             task_keys: vec!["pr:481245".to_string()],
             source_turn_refs: Vec::new(),
             created_at: "2026-06-08T00:00:00Z".to_string(),
@@ -1679,6 +1679,11 @@ recall_live_turn_window = 2
         }],
     )
     .unwrap();
+    let active_segment_id = db
+        .conversation_segment_for_turn("segment-key-session", 1)
+        .unwrap()
+        .unwrap()
+        .id;
     let memory_id = insert_memory_with_embedding(
         &mut db,
         MemoryRecord {
@@ -1692,13 +1697,13 @@ recall_live_turn_window = 2
             created_at: "2026-06-08T00:00:00Z".to_string(),
             updated_at: "2026-06-08T00:00:00Z".to_string(),
             is_active: true,
-            session_id: None,
+            session_id: Some("segment-key-session".to_string()),
             project_id: Some(project_id),
             project_descriptor: Some("yaaml, Rust CLI memory daemon".to_string()),
             lineage_refs: Vec::new(),
-            origin_segment_id: None,
+            origin_segment_id: active_segment_id,
             origin_segment_status: None,
-            validity: yaaml_core::MemoryValidity::Durable,
+            validity: yaaml_core::MemoryValidity::ValidWhileSegmentActive,
         },
     );
 

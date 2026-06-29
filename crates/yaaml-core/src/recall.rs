@@ -385,6 +385,13 @@ fn recall_filter_decision(
 
     match memory.kind {
         MemoryKind::TaskState => {
+            if same_active_segment_task_state {
+                reasons.push("keep:task_state_same_active_segment".to_string());
+                return RecallFilterDecision {
+                    keep: true,
+                    reasons,
+                };
+            }
             if memory.validity == MemoryValidity::ValidWhileSegmentActive
                 && memory.origin_segment_id.is_some()
                 && memory.origin_segment_status != Some(ConversationSegmentStatus::Active)
@@ -395,21 +402,9 @@ fn recall_filter_decision(
                     reasons,
                 };
             }
-            if same_active_segment_task_state {
-                reasons.push("keep:task_state_same_active_segment".to_string());
-                return RecallFilterDecision {
-                    keep: true,
-                    reasons,
-                };
-            }
             if task_state_identity_key_match {
-                reasons.push("keep:task_state_identity_key_match".to_string());
-                return RecallFilterDecision {
-                    keep: true,
-                    reasons,
-                };
-            }
-            if weak_task_key_match {
+                reasons.push("drop:task_state_outside_origin_segment_identity_match".to_string());
+            } else if weak_task_key_match {
                 reasons.push("drop:task_state_without_identity_key_match".to_string());
             } else if same_project && strong_context {
                 reasons.push("drop:stale_task_state_semantic_context_only".to_string());
@@ -2209,8 +2204,8 @@ Datadog is blocked by a Cloudflare Access redirect.
             ),
             memory(
                 2,
-                "Target PR state",
-                MemoryKind::TaskState,
+                "Target PR checkpoint",
+                MemoryKind::TaskCheckpoint,
                 Some(current_project),
                 vec!["pr:481245".to_string()],
             ),
@@ -2562,6 +2557,54 @@ Datadog is blocked by a Cloudflare Access redirect.
             .rank
             .filter_reasons
             .contains(&"drop:task_state_without_task_key_match".to_string()));
+    }
+
+    #[test]
+    fn different_active_segment_drops_task_state_even_with_identity_key_match() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let mut task_state = memory(
+            1,
+            "Different segment PR status",
+            MemoryKind::TaskState,
+            Some(current_project),
+            vec!["pr:483111".to_string()],
+        );
+        task_state.origin_segment_id = Some(42);
+        task_state.origin_segment_status = Some(ConversationSegmentStatus::Active);
+        task_state.validity = MemoryValidity::ValidWhileSegmentActive;
+        let memories = vec![task_state];
+        let query_keys = vec!["pr:483111".to_string()];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &query_keys,
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) = select_recall_candidates_for_segment(
+            ranked,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &query_keys,
+            Some(43),
+            5,
+        );
+
+        assert!(selected.is_empty());
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:task_state_outside_origin_segment_identity_match".to_string()));
     }
 
     #[test]

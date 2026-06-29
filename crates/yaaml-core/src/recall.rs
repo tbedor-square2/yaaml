@@ -360,6 +360,9 @@ fn recall_filter_decision(
         && !weak_task_key_match;
     let high_signal_context_mismatch =
         high_signal_recall_context_mismatch(query_context, &memory_context);
+    let explicit_user_preference = explicit_user_preference_memory(memory);
+    let context_gated_durable = matches!(memory.kind, MemoryKind::Lesson | MemoryKind::Workflow)
+        || (memory.kind == MemoryKind::Preference && !explicit_user_preference);
     let transient_plan_without_identity =
         is_transient_plan_memory(memory) && !task_state_identity_key_match;
     let strong_context = same_work_area
@@ -531,7 +534,7 @@ fn recall_filter_decision(
             }
             if memory.scope == MemoryScope::Project
                 && broad_project_id
-                && matches!(memory.kind, MemoryKind::Lesson | MemoryKind::Workflow)
+                && context_gated_durable
                 && !strong_context
                 && !weak_task_key_match
             {
@@ -545,7 +548,7 @@ fn recall_filter_decision(
                 if query_has_strong_task_identity
                     && candidate.rank.matched_task_keys.is_empty()
                     && candidate.rank.context_score < 0.60
-                    && matches!(memory.kind, MemoryKind::Lesson | MemoryKind::Workflow)
+                    && context_gated_durable
                 {
                     reasons.push("drop:global_durable_task_key_mismatch".to_string());
                     return RecallFilterDecision {
@@ -556,7 +559,7 @@ fn recall_filter_decision(
                 if query_has_task_identity
                     && candidate.rank.matched_task_keys.is_empty()
                     && high_signal_context_mismatch
-                    && matches!(memory.kind, MemoryKind::Lesson | MemoryKind::Workflow)
+                    && context_gated_durable
                 {
                     reasons.push("drop:global_high_signal_context_mismatch".to_string());
                     return RecallFilterDecision {
@@ -572,10 +575,7 @@ fn recall_filter_decision(
                     };
                 }
                 reasons.push("keep:global_durable".to_string());
-            } else if same_project
-                && weak_query_context
-                && matches!(memory.kind, MemoryKind::Lesson | MemoryKind::Workflow)
-            {
+            } else if same_project && weak_query_context && context_gated_durable {
                 reasons.push("drop:same_project_weak_context".to_string());
                 return RecallFilterDecision {
                     keep: false,
@@ -585,7 +585,7 @@ fn recall_filter_decision(
                 && query_has_strong_task_identity
                 && candidate.rank.matched_task_keys.is_empty()
                 && candidate.rank.context_score < 0.60
-                && matches!(memory.kind, MemoryKind::Lesson | MemoryKind::Workflow)
+                && context_gated_durable
             {
                 reasons.push("drop:same_project_durable_task_key_mismatch".to_string());
                 return RecallFilterDecision {
@@ -596,7 +596,7 @@ fn recall_filter_decision(
                 && query_has_task_identity
                 && candidate.rank.matched_task_keys.is_empty()
                 && high_signal_context_mismatch
-                && matches!(memory.kind, MemoryKind::Lesson | MemoryKind::Workflow)
+                && context_gated_durable
             {
                 reasons.push("drop:same_project_high_signal_context_mismatch".to_string());
                 return RecallFilterDecision {
@@ -609,7 +609,7 @@ fn recall_filter_decision(
                 reasons.push("keep:cross_project_strong_context".to_string());
             } else if weak_task_key_match {
                 reasons.push("keep:weak_task_key_semantic_durable".to_string());
-            } else if memory.kind != MemoryKind::Preference {
+            } else if !explicit_user_preference {
                 reasons.push("drop:cross_project_weak_context".to_string());
                 return RecallFilterDecision {
                     keep: false,
@@ -894,6 +894,25 @@ fn is_episodic_durable(memory: &MemoryRecord) -> bool {
         memory.kind,
         MemoryKind::Lesson | MemoryKind::ProjectFact | MemoryKind::Workflow
     )
+}
+
+fn explicit_user_preference_memory(memory: &MemoryRecord) -> bool {
+    if memory.kind != MemoryKind::Preference {
+        return false;
+    }
+    let text = format!("{} {}", memory.title, memory.body).to_ascii_lowercase();
+    [
+        "prefer",
+        "preference",
+        "user correction",
+        "user redirected",
+        "user prefers",
+        "repeatedly prefers",
+        "coding style",
+        "style preference",
+    ]
+    .iter()
+    .any(|needle| text.contains(needle))
 }
 
 fn context_has_access_blocker(context: &ContextMetadata) -> bool {
@@ -3540,6 +3559,53 @@ Datadog is blocked by a Cloudflare Access redirect.
             Some(current_project),
             Vec::new(),
         )];
+        let query_context = ContextMetadata {
+            repo_id: Some("squareup/java".to_string()),
+            repo_root: Some(current_project.to_string()),
+            activity_domain: Some("code".to_string()),
+            subject_tags: vec!["java".to_string()],
+            ..ContextMetadata::default()
+        };
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &query_context,
+            &[],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) =
+            select_recall_candidates(ranked, &memories, current_project, &query_context, &[], 5);
+
+        assert!(selected.is_empty());
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:same_project_weak_context".to_string()));
+    }
+
+    #[test]
+    fn same_project_technical_preference_with_generic_repo_context_does_not_recall() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![MemoryRecord {
+            body: "RiskArbiter uses @Named(FlagName) with injected FeatureFlag<Boolean>, evaluated via getValue(). Bind flags in RiskarbiterFeatureModule.".to_string(),
+            project_descriptor: Some("squareup/java riskarbiter".to_string()),
+            ..memory(
+                1,
+                "RiskArbiter flag injection pattern",
+                MemoryKind::Preference,
+                Some(current_project),
+                Vec::new(),
+            )
+        }];
         let query_context = ContextMetadata {
             repo_id: Some("squareup/java".to_string()),
             repo_root: Some(current_project.to_string()),

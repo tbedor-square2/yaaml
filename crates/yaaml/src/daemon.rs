@@ -17,11 +17,12 @@ use serde_json::json;
 use yaaml_core::{
     active_segment_recall_turns, build_active_segment_recall_query, build_conversation_segments,
     build_recall_query, derive_project_descriptor, embedded_text_hash, embedding_text,
-    extract_task_keys, find_consolidation_clusters, merge_task_keys, parse_eval_judge_response,
+    find_consolidation_clusters, merge_task_keys, parse_eval_judge_response,
     parse_formulation_response, rank_recall_candidates, recall_file_path, render_recall_markdown,
-    session_recall_file_path, write_recall_file, ClusterMemory, Config, ConversationSegmentStatus,
-    EmbeddingRecord, MemoryKind, MemoryRecord, MemoryScope, MemoryValidity, RecallMemory,
-    RecallRankingOptions, SourceTurnRef, TaskRecord, TaskStatus, TurnRecord, VectorIndex,
+    segment_task_keys, session_recall_file_path, write_recall_file, ClusterMemory, Config,
+    ConversationSegmentStatus, EmbeddingRecord, MemoryKind, MemoryRecord, MemoryScope,
+    MemoryValidity, RecallMemory, RecallRankingOptions, SourceTurnRef, TaskRecord, TaskStatus,
+    TurnRecord, VectorIndex,
 };
 use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
@@ -2128,7 +2129,7 @@ fn active_segment_recall_metadata(
     query_text: &str,
     recent_turns: &[TurnRecord],
 ) -> anyhow::Result<(Vec<String>, Option<i64>)> {
-    let query_task_keys = extract_task_keys(query_text);
+    let query_task_keys = segment_task_keys(query_text);
     let Some(latest_turn) = recent_turns.last() else {
         return Ok((query_task_keys, None));
     };

@@ -23,10 +23,10 @@ use yaaml_core::{
     infer_context_from_memory, infer_context_from_path, infer_context_from_text, infer_memory_kind,
     is_transient_plan_memory, merge_contexts, merge_task_keys, parse_eval_judge_response,
     parse_memory_ids, rank_recall_candidates, recall_file_path, render_recall_markdown,
-    session_recall_file_path, write_recall_file, Config, ConfigPaths, ContextMetadata,
-    ConversationSegmentRecord, EmbeddingRecord, MemoryKind, MemoryRecord, MemoryScope,
-    MemoryValidity, RecallMemory, RecallRankDetails, RecallRankingOptions, RecallWrite,
-    SessionRecord, TurnRecord, VectorIndex,
+    segment_task_keys, session_recall_file_path, write_recall_file, Config, ConfigPaths,
+    ContextMetadata, ConversationSegmentRecord, EmbeddingRecord, MemoryKind, MemoryRecord,
+    MemoryScope, MemoryValidity, RecallMemory, RecallRankDetails, RecallRankingOptions,
+    RecallWrite, SessionRecord, TurnRecord, VectorIndex,
 };
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
 use yaaml_llm::ReqwestTransport;
@@ -4097,6 +4097,7 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
                     .unwrap_or_default(),
                 query_timestamp,
                 query_source,
+                query_text: args.debug_ranking.then_some(query),
                 project_id: result_project_id,
                 selected_memory_ids,
                 memories,
@@ -4401,6 +4402,8 @@ struct RecallCommandOutput {
     turn_ordinal: u64,
     query_timestamp: String,
     query_source: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    query_text: Option<String>,
     project_id: String,
     selected_memory_ids: Vec<i64>,
     memories: Vec<RecallMemory>,
@@ -4549,6 +4552,7 @@ fn recall_for_historical_turn(
                 turn_ordinal,
                 query_timestamp: result.query_timestamp,
                 query_source: result.query_source,
+                query_text: args.debug_ranking.then_some(query),
                 project_id: result.project_id,
                 selected_memory_ids: result.selected_memory_ids,
                 memories: result.memories,
@@ -4735,7 +4739,7 @@ fn recall_query_metadata(
     session_id: Option<&str>,
     turn_ordinal: Option<u64>,
 ) -> anyhow::Result<(Vec<String>, Option<i64>)> {
-    let query_task_keys = extract_task_keys(query_text);
+    let query_task_keys = segment_task_keys(query_text);
     let Some((session_id, turn_ordinal)) = session_id.zip(turn_ordinal) else {
         return Ok((query_task_keys, None));
     };

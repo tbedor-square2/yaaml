@@ -1888,6 +1888,89 @@ fn background_recall_uses_stored_segment_keys_for_task_state() {
 }
 
 #[test]
+fn background_recall_ignores_assistant_only_task_keys_for_task_checkpoints() {
+    let tmp = TempDir::new().unwrap();
+    let config = Config {
+        recall_dir: tmp.path().join("recall").display().to_string(),
+        ..Config::default()
+    };
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+    let project = tmp.path().join("project");
+    fs::create_dir_all(&project).unwrap();
+    let project_id = project.canonicalize().unwrap().display().to_string();
+    db.upsert_session(&SessionRecord {
+        id: "session-1".to_string(),
+        agent_type: AgentType::Codex,
+        project_id: project_id.clone(),
+        transcript_file_path: "/tmp/session-1.jsonl".to_string(),
+        started_at: Some("2026-06-08T00:00:00Z".to_string()),
+        last_seen_at: Some("2026-06-08T00:00:01Z".to_string()),
+    })
+    .unwrap();
+    let memory_id = db
+        .insert_memory(&MemoryRecord {
+            id: None,
+            title: "Stale PR checkpoint".to_string(),
+            body: "PR 481245 used an older implementation path.".to_string(),
+            scope: MemoryScope::Project,
+            kind: MemoryKind::TaskCheckpoint,
+            task_keys: vec!["pr:481245".to_string()],
+            source_turn_refs: Vec::new(),
+            created_at: "2026-06-08T00:00:00Z".to_string(),
+            updated_at: "2026-06-08T00:00:00Z".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some(project_id.clone()),
+            project_descriptor: Some("yaaml, Rust".to_string()),
+            lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: yaaml_core::MemoryValidity::Durable,
+        })
+        .unwrap();
+    db.upsert_embedding(&EmbeddingRecord {
+        memory_id,
+        embedding_model: config.embedding_model.clone(),
+        dimensions: 2,
+        embedding_blob: encode_f32_embedding(&[1.0, 0.0]),
+        embedded_text_hash: "hash".to_string(),
+        updated_at: "2026-06-08T00:00:00Z".to_string(),
+    })
+    .unwrap();
+    let turn = TurnRecord {
+        session_id: "session-1".to_string(),
+        turn_id: Some("turn-1".to_string()),
+        ordinal: 0,
+        byte_start: 0,
+        byte_end: 10,
+        observed_at: None,
+        status: yaaml_core::TurnStatus::Completed,
+        display_text: Some(
+            "user: research the Blox migration path\nassistant: PR 481245 touched usage_verification.py"
+                .to_string(),
+        ),
+        cwd: Some(project_id),
+        context: Some(yaaml_core::infer_context_from_path(&project)),
+    };
+    db.insert_turn(&turn).unwrap();
+
+    let write = refresh_recall_with_embedding(
+        &db,
+        &config,
+        &project.canonicalize().unwrap(),
+        std::slice::from_ref(&turn),
+        &[1.0, 0.0],
+        "new completed turn",
+    )
+    .unwrap();
+
+    assert_eq!(write, yaaml_core::RecallWrite::NoopEmptyResults);
+    let path = session_recall_file_path(&config.recall_dir().unwrap(), "session-1");
+    assert!(!path.exists());
+}
+
+#[test]
 fn recall_eval_task_defers_until_anchor_turn_is_ingested() {
     let mut db = Database::in_memory().unwrap();
     db.migrate().unwrap();

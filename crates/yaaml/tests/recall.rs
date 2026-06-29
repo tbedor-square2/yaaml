@@ -236,6 +236,7 @@ recall_llm_filter_enabled = false
     );
     server.join();
     let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(value["query_text"], "what should PR 481245 recall");
     assert_eq!(value["selected_memory_ids"][0], memory_id);
     assert_eq!(
         value["ranking"][0]["rank"]["matched_task_keys"][0],
@@ -252,6 +253,89 @@ recall_llm_filter_enabled = false
         db.count_tasks_by_status(TASK_KIND_RECALL_EVAL, TaskStatus::Queued)
             .unwrap(),
         0
+    );
+}
+
+#[test]
+fn recall_query_ignores_assistant_only_task_keys_for_task_checkpoints() {
+    let tmp = TempDir::new().unwrap();
+    let home = tmp.path().join("home");
+    let project = tmp.path().join("project");
+    fs::create_dir_all(home.join(".yaaml")).unwrap();
+    fs::create_dir_all(&project).unwrap();
+    let db_path = home.join(".yaaml").join("yaaml.db");
+    let server = fake_embedding_server();
+    fs::write(
+        home.join(".yaaml").join("config.toml"),
+        format!(
+            r#"
+db_path = "{}"
+embedding_base_url = "{}"
+recall_llm_filter_enabled = false
+"#,
+            db_path.display(),
+            server.base_url
+        ),
+    )
+    .unwrap();
+
+    let project_id = project.canonicalize().unwrap().display().to_string();
+    let mut db = Database::open(&db_path).unwrap();
+    db.migrate().unwrap();
+    let memory_id = insert_memory_with_embedding(
+        &mut db,
+        MemoryRecord {
+            id: None,
+            title: "Stale PR checkpoint".to_string(),
+            body: "PR 481245 used an older implementation path.".to_string(),
+            scope: MemoryScope::Project,
+            kind: MemoryKind::TaskCheckpoint,
+            task_keys: vec!["pr:481245".to_string()],
+            source_turn_refs: Vec::new(),
+            created_at: "2026-06-08T00:00:00Z".to_string(),
+            updated_at: "2026-06-08T00:00:00Z".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some(project_id),
+            project_descriptor: Some("yaaml, Rust CLI memory daemon".to_string()),
+            lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: yaaml_core::MemoryValidity::Durable,
+        },
+    );
+
+    let output = Command::new(env!("CARGO_BIN_EXE_yaaml"))
+        .arg("recall")
+        .arg("--query")
+        .arg("user: research the Blox migration path\nassistant: PR 481245 touched usage_verification.py")
+        .arg("--json")
+        .arg("--debug-ranking")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .env("OPENAI_API_KEY", "test-key")
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    server.join();
+    let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert!(value["selected_memory_ids"].as_array().unwrap().is_empty());
+    let stale = value["ranking"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|entry| entry["memory_id"] == memory_id)
+        .unwrap();
+    assert_eq!(stale["selected"], false);
+    assert_eq!(stale["rank"]["matched_task_keys"], serde_json::json!([]));
+    assert_eq!(
+        stale["filter_reasons"][0],
+        "drop:task_checkpoint_semantic_context_only"
     );
 }
 

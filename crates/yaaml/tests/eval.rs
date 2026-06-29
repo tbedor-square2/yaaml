@@ -1137,6 +1137,56 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
         .unwrap()
         .is_empty());
 
+    let replay_only = Command::new(binary)
+        .arg("eval")
+        .arg("summary")
+        .arg("--json")
+        .arg("--origin")
+        .arg("replay")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .output()
+        .unwrap();
+    assert!(
+        replay_only.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&replay_only.stderr)
+    );
+    let replay_value: serde_json::Value = serde_json::from_slice(&replay_only.stdout).unwrap();
+    assert_eq!(replay_value["runs_considered"], 1);
+    assert_eq!(replay_value["results_considered"], 2);
+    assert_eq!(replay_value["judged_results"], 2);
+    assert_eq!(replay_value["origin_breakdown"][0]["name"], "replay");
+    assert_eq!(
+        replay_value["low_score_examples"][0]["memory_title"],
+        "Weak memory"
+    );
+    assert_eq!(
+        replay_value["high_score_examples"][0]["memory_title"],
+        "Useful memory"
+    );
+
+    let without_replay = Command::new(binary)
+        .arg("eval")
+        .arg("summary")
+        .arg("--json")
+        .arg("--exclude-origin")
+        .arg("replay")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .output()
+        .unwrap();
+    assert!(
+        without_replay.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&without_replay.stderr)
+    );
+    let without_replay_value: serde_json::Value =
+        serde_json::from_slice(&without_replay.stdout).unwrap();
+    assert_eq!(without_replay_value["runs_considered"], 1);
+    assert_eq!(without_replay_value["results_considered"], 1);
+    assert_eq!(without_replay_value["score_counts"]["n/a"], 1);
+
     let shown = Command::new(binary)
         .arg("eval")
         .arg("show")

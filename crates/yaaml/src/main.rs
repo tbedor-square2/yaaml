@@ -182,6 +182,12 @@ struct EvalSummaryArgs {
     /// Only include eval runs at or after this timestamp.
     #[arg(long)]
     since: Option<String>,
+    /// Include only eval runs from this recall origin. Repeatable.
+    #[arg(long)]
+    origin: Vec<String>,
+    /// Exclude eval runs from this recall origin. Repeatable.
+    #[arg(long)]
+    exclude_origin: Vec<String>,
     /// Emit machine-readable JSON.
     #[arg(long)]
     json: bool,
@@ -623,6 +629,11 @@ fn parse_since_unix(value: &str) -> anyhow::Result<i64> {
     seconds.parse::<i64>().with_context(|| {
         format!("--since must be a Unix timestamp like unix:1782760000 or 1782760000, got {value}")
     })
+}
+
+fn eval_origin_included(origin: &str, included: &[String], excluded: &[String]) -> bool {
+    (included.is_empty() || included.iter().any(|allowed| allowed == origin))
+        && !excluded.iter().any(|blocked| blocked == origin)
 }
 
 fn timestamp_seconds(timestamp: &str) -> Option<i64> {
@@ -2466,6 +2477,7 @@ fn eval_summary(args: EvalSummaryArgs) -> anyhow::Result<()> {
         .list_eval_runs_filtered(args.limit, args.since_run)
         .context("failed to list eval runs")?
         .into_iter()
+        .filter(|run| eval_origin_included(&run.recall_origin, &args.origin, &args.exclude_origin))
         .filter(|run| {
             since_unix.is_none_or(|since_unix| {
                 timestamp_seconds(&run.started_at)

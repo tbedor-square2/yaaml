@@ -236,6 +236,9 @@ struct StatsArgs {
     /// Maximum recent eval runs to consider for usefulness metrics.
     #[arg(long, default_value_t = 1000)]
     eval_limit: usize,
+    /// Include only turns, recall runs, and eval runs at or after this timestamp.
+    #[arg(long)]
+    since: Option<String>,
     /// Include only recall/eval records from this origin. Repeatable.
     #[arg(long)]
     origin: Vec<String>,
@@ -600,7 +603,8 @@ fn status(args: StatusArgs) -> anyhow::Result<()> {
 
 fn stats(args: StatsArgs) -> anyhow::Result<()> {
     let (_config, db) = open_database_for_cwd()?;
-    let filters = yaaml::stats::StatsFilters::new(args.origin, args.exclude_origin);
+    let since_unix = args.since.as_deref().map(parse_since_unix).transpose()?;
+    let filters = yaaml::stats::StatsFilters::new(args.origin, args.exclude_origin, since_unix);
     let stats = yaaml::stats::build_stats_with_filters(&db, args.eval_limit, filters)?;
     if args.json {
         println!("{}", serde_json::to_string_pretty(&stats)?);
@@ -608,6 +612,14 @@ fn stats(args: StatsArgs) -> anyhow::Result<()> {
         yaaml::stats::print_human_stats(&stats);
     }
     Ok(())
+}
+
+fn parse_since_unix(value: &str) -> anyhow::Result<i64> {
+    let trimmed = value.trim();
+    let seconds = trimmed.strip_prefix("unix:").unwrap_or(trimmed);
+    seconds.parse::<i64>().with_context(|| {
+        format!("--since must be a Unix timestamp like unix:1782760000 or 1782760000, got {value}")
+    })
 }
 
 fn tasks(args: TasksArgs) -> anyhow::Result<()> {

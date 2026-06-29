@@ -19,6 +19,7 @@ struct StatsRecallEvalTaskPayload {
     turn_ordinal: Option<u64>,
     recall_text: String,
     memory_ids: Vec<i64>,
+    recall_at: Option<String>,
     filter_telemetry: Option<RecallFilterTelemetry>,
     recall_origin: String,
     tool_name: Option<String>,
@@ -28,6 +29,7 @@ struct StatsRecallEvalTaskPayload {
 struct StatsRecallVolumeRun {
     memory_count: usize,
     recall_chars: usize,
+    recall_at: Option<String>,
     filter_telemetry: Option<RecallFilterTelemetry>,
     recall_origin: String,
     tool_name: Option<String>,
@@ -37,10 +39,15 @@ struct StatsRecallVolumeRun {
 pub struct StatsFilters {
     origins: Vec<String>,
     excluded_origins: Vec<String>,
+    since_unix: Option<i64>,
 }
 
 impl StatsFilters {
-    pub fn new(origins: Vec<String>, excluded_origins: Vec<String>) -> Self {
+    pub fn new(
+        origins: Vec<String>,
+        excluded_origins: Vec<String>,
+        since_unix: Option<i64>,
+    ) -> Self {
         let origins = normalized_filters(origins);
         let mut excluded_origins = normalized_filters(excluded_origins);
         if origins.is_empty() && !excluded_origins.iter().any(|origin| origin == "replay") {
@@ -49,11 +56,12 @@ impl StatsFilters {
         Self {
             origins,
             excluded_origins,
+            since_unix,
         }
     }
 
     fn is_active(&self) -> bool {
-        !self.origins.is_empty() || !self.excluded_origins.is_empty()
+        !self.origins.is_empty() || !self.excluded_origins.is_empty() || self.since_unix.is_some()
     }
 
     fn includes_origin(&self, origin: &str) -> bool {
@@ -69,6 +77,9 @@ impl StatsFilters {
             return None;
         }
         let mut parts = Vec::new();
+        if let Some(since_unix) = self.since_unix {
+            parts.push(format!("since=unix:{since_unix}"));
+        }
         if !self.origins.is_empty() {
             parts.push(format!("origin={}", self.origins.join(",")));
         }
@@ -195,6 +206,14 @@ pub fn build_stats_with_filters(
         .completed_turn_anchors()
         .context("failed to load completed turn anchors")?
         .into_iter()
+        .filter(|turn| {
+            filters.since_unix.is_none_or(|since_unix| {
+                turn.observed_at
+                    .as_deref()
+                    .and_then(timestamp_seconds)
+                    .is_some_and(|observed_at| observed_at >= since_unix)
+            })
+        })
         .map(|turn| StatsAnchor {
             session_id: turn.session_id,
             turn_ordinal: turn.ordinal,
@@ -211,6 +230,17 @@ pub fn build_stats_with_filters(
         let Some((anchor, volume)) = recall_eval_task_volume(&task.payload_json) else {
             continue;
         };
+        let recall_seconds = volume
+            .recall_at
+            .as_deref()
+            .or(Some(task.created_at.as_str()))
+            .and_then(timestamp_seconds);
+        if filters
+            .since_unix
+            .is_some_and(|since_unix| recall_seconds.is_none_or(|seconds| seconds < since_unix))
+        {
+            continue;
+        }
         if !filters.includes_origin(&volume.recall_origin) {
             continue;
         }
@@ -229,6 +259,12 @@ pub fn build_stats_with_filters(
         .context("failed to list eval runs")?
         .into_iter()
         .filter(|run| filters.includes_origin(&run.recall_origin))
+        .filter(|run| {
+            filters.since_unix.is_none_or(|since_unix| {
+                timestamp_seconds(&run.started_at)
+                    .is_some_and(|started_at| started_at >= since_unix)
+            })
+        })
         .collect::<Vec<_>>();
 
     let mut evaluated_recall_runs = 0_usize;
@@ -515,11 +551,49 @@ fn recall_eval_task_volume(
         StatsRecallVolumeRun {
             memory_count: payload.memory_ids.len(),
             recall_chars: payload.recall_text.chars().count(),
+            recall_at: payload.recall_at,
             filter_telemetry: payload.filter_telemetry,
             recall_origin: payload.recall_origin,
             tool_name: payload.tool_name,
         },
     ))
+}
+
+fn timestamp_seconds(timestamp: &str) -> Option<i64> {
+    if let Some(value) = timestamp.strip_prefix("unix:") {
+        return value.parse().ok();
+    }
+    if timestamp.chars().all(|ch| ch.is_ascii_digit()) {
+        return timestamp.parse().ok();
+    }
+    let timestamp = timestamp.strip_suffix('Z')?;
+    let (date, time) = timestamp.split_once('T')?;
+    let mut date_parts = date.split('-');
+    let year: i32 = date_parts.next()?.parse().ok()?;
+    let month: u32 = date_parts.next()?.parse().ok()?;
+    let day: u32 = date_parts.next()?.parse().ok()?;
+    let mut time_parts = time.split(':');
+    let hour: u32 = time_parts.next()?.parse().ok()?;
+    let minute: u32 = time_parts.next()?.parse().ok()?;
+    let second_part = time_parts.next()?;
+    let second_text = second_part.split('.').next().unwrap_or(second_part);
+    let second: u32 = second_text.parse().ok()?;
+    let days = days_from_civil(year, month, day)?;
+    Some(days * 86_400 + hour as i64 * 3_600 + minute as i64 * 60 + second as i64)
+}
+
+fn days_from_civil(year: i32, month: u32, day: u32) -> Option<i64> {
+    if !(1..=12).contains(&month) || !(1..=31).contains(&day) {
+        return None;
+    }
+    let year = year - i32::from(month <= 2);
+    let era = if year >= 0 { year } else { year - 399 } / 400;
+    let year_of_era = year - era * 400;
+    let month = month as i32;
+    let day = day as i32;
+    let day_of_year = (153 * (month + if month > 2 { -3 } else { 9 }) + 2) / 5 + day - 1;
+    let day_of_era = year_of_era * 365 + year_of_era / 4 - year_of_era / 100 + day_of_year;
+    Some((era * 146_097 + day_of_era - 719_468) as i64)
 }
 
 fn eval_run_anchor(run: &EvalRunRecord) -> Option<StatsAnchor> {

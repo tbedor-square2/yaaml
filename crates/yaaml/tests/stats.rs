@@ -274,6 +274,7 @@ fn stats_json_filters_by_recall_origin() {
             "turn_ordinal": 0,
             "recall_text": "background recall",
             "memory_ids": [11],
+            "recall_at": "unix:100",
             "recall_origin": "session_background"
         })
         .to_string(),
@@ -286,6 +287,7 @@ fn stats_json_filters_by_recall_origin() {
             "turn_ordinal": 1,
             "recall_text": "tool recall",
             "memory_ids": [21],
+            "recall_at": "unix:110",
             "recall_origin": "tool_pre_use",
             "tool_name": "Bash"
         })
@@ -385,6 +387,15 @@ fn stats_json_filters_by_recall_origin() {
     assert_eq!(excluded["recall_runs"], 1);
     assert_eq!(excluded["useful"]["low_memory_results"], 0);
     assert_eq!(excluded["by_tool"].as_array().unwrap().len(), 0);
+
+    let recent = stats_json(&home, &project, ["--since", "unix:105"]);
+    assert_eq!(recent["filters"]["since_unix"], 105);
+    assert_eq!(recent["recall_runs"], 1);
+    assert_eq!(recent["non_empty_recall_runs"], 1);
+    assert_eq!(recent["by_origin"][0]["name"], "tool_pre_use");
+    assert_eq!(recent["by_tool"][0]["name"], "Bash");
+    assert_eq!(recent["useful"]["evaluated_recall_runs"], 1);
+    assert_eq!(recent["useful"]["low_memory_results"], 1);
 
     let replay = stats_json(&home, &project, ["--origin", "replay"]);
     assert_eq!(replay["filters"]["origins"], json!(["replay"]));

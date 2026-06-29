@@ -308,6 +308,13 @@ fn memories_apply_health_deactivates_only_high_confidence_actions() {
             "tool:sq".to_string(),
         ],
     );
+    let vague_memory_id = fixture.insert_memory_with(
+        "Agent tools portal",
+        "go/agent-tools is useful.",
+        true,
+        yaaml_core::MemoryKind::Lesson,
+        Vec::new(),
+    );
     let useful_memory_id = fixture.insert_memory_with(
         "Use tmux for long-running jobs",
         "When a long-running process must survive beyond the current interaction, start it in tmux and inspect it with capture-pane.",
@@ -349,6 +356,16 @@ fn memories_apply_health_deactivates_only_high_confidence_actions() {
         ],
     );
     fixture.insert_eval_scores(
+        vague_memory_id,
+        &[
+            ("1", "Too vague."),
+            ("1", "Under-contextualized."),
+            ("2", "Not actionable."),
+            ("1", "No useful signal."),
+            ("1", "Too generic."),
+        ],
+    );
+    fixture.insert_eval_scores(
         useful_memory_id,
         &[
             ("5", "Directly actionable and relevant."),
@@ -370,7 +387,7 @@ fn memories_apply_health_deactivates_only_high_confidence_actions() {
 
     assert_success(&output);
     let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
-    assert_eq!(value["applied_memories"], 3);
+    assert_eq!(value["applied_memories"], 4);
     let applied_ids = value["memories"]
         .as_array()
         .unwrap()
@@ -380,6 +397,7 @@ fn memories_apply_health_deactivates_only_high_confidence_actions() {
     assert!(applied_ids.contains(&stale_memory_id));
     assert!(applied_ids.contains(&low_value_memory_id));
     assert!(applied_ids.contains(&wrong_context_memory_id));
+    assert!(applied_ids.contains(&vague_memory_id));
     assert!(!applied_ids.contains(&useful_memory_id));
 
     let memories = Database::open(&fixture.db_path)
@@ -388,6 +406,7 @@ fn memories_apply_health_deactivates_only_high_confidence_actions() {
             stale_memory_id,
             low_value_memory_id,
             wrong_context_memory_id,
+            vague_memory_id,
             useful_memory_id,
         ])
         .unwrap();
@@ -401,6 +420,7 @@ fn memories_apply_health_deactivates_only_high_confidence_actions() {
     assert!(!active(stale_memory_id));
     assert!(!active(low_value_memory_id));
     assert!(!active(wrong_context_memory_id));
+    assert!(!active(vague_memory_id));
     assert!(active(useful_memory_id));
 }
 

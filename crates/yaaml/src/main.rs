@@ -1474,7 +1474,7 @@ fn should_apply_memory_health_action(memory: &MemoryHealthDiagnostic) -> bool {
     let high_confidence_context_failure = memory.low_rate >= 0.90
         && matches!(
             memory.recommended_action.as_str(),
-            "regenerate_metadata_or_tighten_gates" | "regenerate_task_keys"
+            "refine_or_suppress" | "regenerate_metadata_or_tighten_gates" | "regenerate_task_keys"
         );
     high_confidence_context_failure
         || matches!(
@@ -4910,6 +4910,14 @@ mod tests {
             6,
             0,
             6
+        )));
+        assert!(should_apply_memory_health_action(&health_diagnostic(
+            "vague_under_contextualized",
+            "refine_or_suppress",
+            true,
+            9,
+            0,
+            9
         )));
         assert!(!should_apply_memory_health_action(&health_diagnostic(
             "likely_low_value",

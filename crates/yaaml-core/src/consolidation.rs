@@ -9,6 +9,7 @@ pub struct ClusterMemory {
     pub project_id: Option<String>,
     pub title: String,
     pub body: String,
+    pub task_keys: Vec<String>,
     pub lineage_refs: Vec<i64>,
     pub embedding: Vec<f32>,
 }
@@ -160,6 +161,9 @@ fn memories_are_lexically_overlapping(left: &ClusterMemory, right: &ClusterMemor
     {
         return true;
     }
+    if memories_share_specific_task_key(left, right) {
+        return true;
+    }
     let title_similarity = token_jaccard(&left.title, &right.title);
     let body_similarity = token_jaccard(&left.body, &right.body);
     let text_similarity = token_jaccard(
@@ -169,6 +173,44 @@ fn memories_are_lexically_overlapping(left: &ClusterMemory, right: &ClusterMemor
 
     (title_similarity >= 0.45 && (body_similarity >= 0.25 || text_similarity >= 0.35))
         || text_similarity >= 0.45
+}
+
+fn memories_share_specific_task_key(left: &ClusterMemory, right: &ClusterMemory) -> bool {
+    let right_keys = right
+        .task_keys
+        .iter()
+        .filter_map(|key| consolidation_identity_key(key))
+        .collect::<HashSet<_>>();
+    left.task_keys
+        .iter()
+        .filter_map(|key| consolidation_identity_key(key))
+        .any(|key| right_keys.contains(&key))
+}
+
+fn consolidation_identity_key(key: &str) -> Option<String> {
+    let key = key.trim().to_ascii_lowercase();
+    if key.is_empty() {
+        return None;
+    }
+    let (prefix, value) = key.split_once(':')?;
+    if value.len() < 2 {
+        return None;
+    }
+    if matches!(
+        prefix,
+        "component"
+            | "concern"
+            | "experiment"
+            | "feature"
+            | "path"
+            | "project"
+            | "recall"
+            | "tool"
+            | "type"
+    ) {
+        return None;
+    }
+    Some(key)
 }
 
 fn token_jaccard(left: &str, right: &str) -> f32 {
@@ -277,6 +319,7 @@ mod tests {
             project_id: project_id.map(str::to_string),
             title: format!("topic{memory_id}"),
             body: format!("detail{memory_id}"),
+            task_keys: Vec::new(),
             lineage_refs: Vec::new(),
             embedding: vec![x, 1.0 - x],
         }
@@ -289,6 +332,25 @@ mod tests {
             project_id: Some("/tmp/yaaml".to_string()),
             title: title.to_string(),
             body: body.to_string(),
+            task_keys: Vec::new(),
+            lineage_refs: Vec::new(),
+            embedding: vec![x, 1.0 - x],
+        }
+    }
+
+    fn memory_with_task_keys(
+        memory_id: i64,
+        title: &str,
+        task_keys: Vec<&str>,
+        x: f32,
+    ) -> ClusterMemory {
+        ClusterMemory {
+            memory_id,
+            scope: MemoryScope::Project,
+            project_id: Some("/tmp/yaaml".to_string()),
+            title: title.to_string(),
+            body: format!("body {memory_id}"),
+            task_keys: task_keys.into_iter().map(str::to_string).collect(),
             lineage_refs: Vec::new(),
             embedding: vec![x, 1.0 - x],
         }
@@ -377,6 +439,60 @@ mod tests {
 
         assert_eq!(clusters.len(), 1);
         assert_eq!(clusters[0].memory_ids, vec![1, 2]);
+    }
+
+    #[test]
+    fn shared_specific_task_key_clusters_related_memories() {
+        let clusters = find_consolidation_clusters(
+            &[
+                memory_with_task_keys(
+                    1,
+                    "YAAML recall project-fact gate",
+                    vec!["commit:c0ac8c5", "tool:yaaml"],
+                    1.0,
+                ),
+                memory_with_task_keys(
+                    2,
+                    "Recall filter for broad project facts",
+                    vec!["commit:c0ac8c5", "pr:521", "tool:yaaml"],
+                    0.2,
+                ),
+                memory_with_task_keys(
+                    3,
+                    "Project facts require topical recall context",
+                    vec!["pr:521", "tool:yaaml"],
+                    0.4,
+                ),
+                memory_with_task_keys(
+                    4,
+                    "Recall gate for project facts",
+                    vec!["pr:521", "tool:yaaml"],
+                    0.6,
+                ),
+            ],
+            0.01,
+            3,
+            5,
+        );
+
+        assert_eq!(clusters.len(), 1);
+        assert_eq!(clusters[0].memory_ids, vec![1, 2, 3, 4]);
+    }
+
+    #[test]
+    fn broad_task_keys_do_not_cluster_without_other_overlap() {
+        let clusters = find_consolidation_clusters(
+            &[
+                memory_with_task_keys(1, "one", vec!["tool:yaaml"], 1.0),
+                memory_with_task_keys(2, "two", vec!["tool:yaaml"], 0.2),
+                memory_with_task_keys(3, "three", vec!["tool:yaaml"], 0.4),
+            ],
+            0.01,
+            3,
+            5,
+        );
+
+        assert!(clusters.is_empty());
     }
 
     #[test]

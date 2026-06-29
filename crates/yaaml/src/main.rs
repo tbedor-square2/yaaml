@@ -20,13 +20,14 @@ use yaaml::turn_hydration::{context_from_turns, hydrate_turns};
 use yaaml_core::{
     active_segment_recall_turns, context_score, counterfactual_citation_score,
     derive_project_descriptor, embedded_text_hash, embedding_text, extract_task_keys,
-    infer_context_from_memory, infer_context_from_path, infer_context_from_text, infer_memory_kind,
-    is_transient_plan_memory, merge_contexts, merge_task_keys, parse_eval_judge_response,
-    parse_memory_ids, rank_recall_candidates, recall_file_path, render_recall_markdown,
-    segment_task_keys, session_recall_file_path, write_recall_file, Config, ConfigPaths,
-    ContextMetadata, ConversationSegmentRecord, EmbeddingRecord, MemoryKind, MemoryRecord,
-    MemoryScope, MemoryValidity, RecallMemory, RecallRankDetails, RecallRankingOptions,
-    RecallWrite, SessionRecord, TurnRecord, VectorIndex,
+    find_consolidation_clusters, infer_context_from_memory, infer_context_from_path,
+    infer_context_from_text, infer_memory_kind, is_transient_plan_memory, merge_contexts,
+    merge_task_keys, parse_eval_judge_response, parse_memory_ids, rank_recall_candidates,
+    recall_file_path, render_recall_markdown, segment_task_keys, session_recall_file_path,
+    write_recall_file, ClusterMemory, Config, ConfigPaths, ContextMetadata,
+    ConversationSegmentRecord, EmbeddingRecord, MemoryKind, MemoryRecord, MemoryScope,
+    MemoryValidity, RecallMemory, RecallRankDetails, RecallRankingOptions, RecallWrite,
+    SessionRecord, TurnRecord, VectorIndex,
 };
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
 use yaaml_llm::ReqwestTransport;
@@ -330,6 +331,8 @@ enum MemoriesCommand {
     Stats(MemoriesStatsArgs),
     /// List stored memories with optional filters.
     List(MemoriesListArgs),
+    /// List active consolidation candidate clusters.
+    Clusters(MemoriesClustersArgs),
     /// Diagnose recall performance failure modes by memory.
     Health(MemoriesHealthArgs),
     /// Soft-deactivate memories with high-confidence bad health recommendations.
@@ -360,6 +363,22 @@ struct MemoriesListArgs {
     #[arg(long)]
     project: Option<String>,
     /// Case-insensitive text search over title/body/task keys/project descriptor.
+    #[arg(long)]
+    query: Option<String>,
+    /// Emit machine-readable JSON.
+    #[arg(long)]
+    json: bool,
+}
+
+#[derive(Debug, Parser)]
+struct MemoriesClustersArgs {
+    /// Maximum clusters to show.
+    #[arg(long, default_value_t = 10)]
+    limit: usize,
+    /// Maximum memories to show per cluster.
+    #[arg(long, default_value_t = 8)]
+    memories_per_cluster: usize,
+    /// Case-insensitive text search over title/body/task keys/project descriptor before clustering.
     #[arg(long)]
     query: Option<String>,
     /// Emit machine-readable JSON.
@@ -735,6 +754,24 @@ struct MemoryListEntry {
 }
 
 #[derive(Debug, Serialize)]
+struct MemoryClusterEntry {
+    memory_ids: Vec<i64>,
+    mean_distance: f32,
+    memory_count: usize,
+    memories: Vec<MemoryClusterMemoryEntry>,
+}
+
+#[derive(Debug, Serialize)]
+struct MemoryClusterMemoryEntry {
+    memory_id: i64,
+    title: String,
+    kind: String,
+    scope: String,
+    project_id: Option<String>,
+    task_keys: Vec<String>,
+}
+
+#[derive(Debug, Serialize)]
 struct MemoryRebuildOutput {
     deactivated_memories: u64,
     cleared_memory_tasks: u64,
@@ -817,6 +854,7 @@ fn memories(args: MemoriesArgs) -> anyhow::Result<()> {
     match args.command {
         MemoriesCommand::Stats(args) => memories_stats(args),
         MemoriesCommand::List(args) => memories_list(args),
+        MemoriesCommand::Clusters(args) => memories_clusters(args),
         MemoriesCommand::Health(args) => memories_health(args),
         MemoriesCommand::ApplyHealth(args) => memories_apply_health(args),
         MemoriesCommand::Rebuild(args) => memories_rebuild(args),
@@ -995,15 +1033,7 @@ fn memories_list(args: MemoriesListArgs) -> anyhow::Result<()> {
             }
         }
         if let Some(query) = query_filter.as_deref() {
-            let haystack = format!(
-                "{}\n{}\n{}\n{}",
-                memory.title,
-                memory.body,
-                memory.task_keys.join("\n"),
-                memory.project_descriptor.as_deref().unwrap_or("")
-            )
-            .to_ascii_lowercase();
-            if !haystack.contains(query) {
+            if !memory_search_haystack(memory).contains(query) {
                 return false;
             }
         }
@@ -1028,6 +1058,95 @@ fn memories_list(args: MemoriesListArgs) -> anyhow::Result<()> {
     Ok(())
 }
 
+fn memories_clusters(args: MemoriesClustersArgs) -> anyhow::Result<()> {
+    let (config, db) = open_database_for_cwd()?;
+    let mut memories = db.list_memories().context("failed to list memories")?;
+    let query_filter = args
+        .query
+        .as_deref()
+        .map(|query| query.to_ascii_lowercase());
+    memories.retain(|memory| {
+        if let Some(query) = query_filter.as_deref() {
+            let haystack = memory_search_haystack(memory);
+            if !haystack.contains(query) {
+                return false;
+            }
+        }
+        true
+    });
+    let memories_by_id = memories
+        .iter()
+        .filter_map(|memory| memory.id.map(|id| (id, memory)))
+        .collect::<HashMap<_, _>>();
+    let mut cluster_memories = Vec::new();
+    for memory in memories.iter().filter(|memory| memory.is_active) {
+        let Some(memory_id) = memory.id else {
+            continue;
+        };
+        let Some(embedding) = db
+            .get_embedding(memory_id)
+            .context("failed to load memory embedding")?
+        else {
+            continue;
+        };
+        if embedding.embedding_model != config.embedding_model {
+            continue;
+        }
+        let Some(vector) = yaaml_store::database::decode_f32_embedding(&embedding.embedding_blob)
+        else {
+            continue;
+        };
+        cluster_memories.push(ClusterMemory {
+            memory_id,
+            scope: memory.scope,
+            project_id: memory.project_id.clone(),
+            title: memory.title.clone(),
+            body: memory.body.clone(),
+            task_keys: memory.task_keys.clone(),
+            lineage_refs: memory.lineage_refs.clone(),
+            embedding: vector,
+        });
+    }
+    let mut clusters = find_consolidation_clusters(
+        &cluster_memories,
+        config.memory_cluster_distance_threshold,
+        config.memory_cluster_min_size,
+        config.memory_cluster_max_size,
+    );
+    clusters.truncate(args.limit);
+    let entries = clusters
+        .into_iter()
+        .map(|cluster| {
+            let memories = cluster
+                .memory_ids
+                .iter()
+                .take(args.memories_per_cluster)
+                .filter_map(|memory_id| memories_by_id.get(memory_id).copied())
+                .map(|memory| MemoryClusterMemoryEntry {
+                    memory_id: memory.id.unwrap_or_default(),
+                    title: memory.title.clone(),
+                    kind: memory.kind.as_str().to_string(),
+                    scope: memory.scope.as_str().to_string(),
+                    project_id: memory.project_id.clone(),
+                    task_keys: memory.task_keys.clone(),
+                })
+                .collect::<Vec<_>>();
+            MemoryClusterEntry {
+                memory_count: cluster.memory_ids.len(),
+                memory_ids: cluster.memory_ids,
+                mean_distance: cluster.mean_distance,
+                memories,
+            }
+        })
+        .collect::<Vec<_>>();
+    if args.json {
+        println!("{}", serde_json::to_string_pretty(&entries)?);
+    } else {
+        print_human_memory_clusters(&entries);
+    }
+    Ok(())
+}
+
 fn memory_list_entry(memory: MemoryRecord) -> MemoryListEntry {
     MemoryListEntry {
         memory_id: memory.id.unwrap_or_default(),
@@ -1047,6 +1166,60 @@ fn memory_list_entry(memory: MemoryRecord) -> MemoryListEntry {
             .origin_segment_status
             .map(|status| status.as_str().to_string()),
         validity: memory.validity.as_str().to_string(),
+    }
+}
+
+fn memory_search_haystack(memory: &MemoryRecord) -> String {
+    format!(
+        "{}\n{}\n{}\n{}",
+        memory.title,
+        memory.body,
+        memory.task_keys.join("\n"),
+        memory.project_descriptor.as_deref().unwrap_or("")
+    )
+    .to_ascii_lowercase()
+}
+
+fn print_human_memory_clusters(clusters: &[MemoryClusterEntry]) {
+    println!("Memory consolidation clusters");
+    if clusters.is_empty() {
+        println!("  none");
+        return;
+    }
+    for (index, cluster) in clusters.iter().enumerate() {
+        println!(
+            "  {}. memories={} mean_distance={:.4} ids={}",
+            index + 1,
+            cluster.memory_count,
+            cluster.mean_distance,
+            cluster
+                .memory_ids
+                .iter()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
+        for memory in &cluster.memories {
+            let keys = if memory.task_keys.is_empty() {
+                "-".to_string()
+            } else {
+                memory
+                    .task_keys
+                    .iter()
+                    .take(6)
+                    .cloned()
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            };
+            println!(
+                "     - id={} kind={} project={} keys={} title={}",
+                memory.memory_id,
+                memory.kind,
+                memory.project_id.as_deref().unwrap_or("-"),
+                keys,
+                memory.title
+            );
+        }
     }
 }
 

@@ -1286,6 +1286,7 @@ fn consolidation_cluster_memories(
             project_id: memory.project_id,
             title: memory.title,
             body: memory.body,
+            task_keys: memory.task_keys,
             lineage_refs: memory.lineage_refs,
             embedding: vector,
         });

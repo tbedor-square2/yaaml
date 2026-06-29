@@ -2,8 +2,8 @@ use std::process::Command;
 
 use tempfile::TempDir;
 use yaaml_core::{
-    AgentType, MemoryRecord, MemoryScope, SessionRecord, SourceTurnRef, TaskRecord, TaskStatus,
-    TurnRecord, TurnStatus,
+    AgentType, Config, EmbeddingRecord, MemoryRecord, MemoryScope, SessionRecord, SourceTurnRef,
+    TaskRecord, TaskStatus, TurnRecord, TurnStatus,
 };
 use yaaml_store::Database;
 
@@ -104,6 +104,51 @@ fn memories_list_filters_by_kind_and_active_state() {
     assert!(stdout.contains("1. id="));
     assert!(stdout.contains("kind=task_checkpoint"));
     assert!(!stdout.contains("Inactive checkpoint"));
+}
+
+#[test]
+fn memories_clusters_reports_active_consolidation_candidates() {
+    let fixture = MemoryFixture::new();
+    fixture.insert_session_with_turns(1);
+    let first = fixture.insert_memory_with_embedding(
+        "YAAML recall project-fact gate",
+        "Drop broad same-project facts unless topical context is strong.",
+        yaaml_core::MemoryKind::ProjectFact,
+        vec!["commit:c0ac8c5".to_string()],
+        vec![1.0, 0.0, 0.0],
+    );
+    let second = fixture.insert_memory_with_embedding(
+        "Recall filter for broad project facts",
+        "Broad project facts need topical overlap before recall.",
+        yaaml_core::MemoryKind::ProjectFact,
+        vec!["commit:c0ac8c5".to_string()],
+        vec![1.0, 0.0, 0.0],
+    );
+    let third = fixture.insert_memory_with_embedding(
+        "Project facts require topical recall context",
+        "The recall gate prevents generic facts from surfacing in narrow debugging tasks.",
+        yaaml_core::MemoryKind::Workflow,
+        vec!["commit:c0ac8c5".to_string()],
+        vec![1.0, 0.0, 0.0],
+    );
+
+    let output = fixture.command(["memories", "clusters", "--query", "c0ac8c5", "--json"]);
+
+    assert_success(&output);
+    let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let clusters = value.as_array().unwrap();
+    assert_eq!(clusters.len(), 1);
+    let memory_ids = clusters[0]["memory_ids"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|value| value.as_i64().unwrap())
+        .collect::<Vec<_>>();
+    assert_eq!(memory_ids, vec![first, second, third]);
+    assert_eq!(
+        clusters[0]["memories"][0]["title"],
+        "YAAML recall project-fact gate"
+    );
 }
 
 #[test]
@@ -588,6 +633,28 @@ backlog_formulation_turn_window = 10
             validity: yaaml_core::MemoryValidity::Durable,
         })
         .unwrap()
+    }
+
+    fn insert_memory_with_embedding(
+        &self,
+        title: &str,
+        body: &str,
+        kind: yaaml_core::MemoryKind,
+        task_keys: Vec<String>,
+        vector: Vec<f32>,
+    ) -> i64 {
+        let memory_id = self.insert_memory_with(title, body, true, kind, task_keys);
+        let db = Database::open(&self.db_path).unwrap();
+        db.upsert_embedding(&EmbeddingRecord {
+            memory_id,
+            embedding_model: Config::default().embedding_model,
+            dimensions: vector.len() as u64,
+            embedding_blob: yaaml_store::database::encode_f32_embedding(&vector),
+            embedded_text_hash: "test-hash".to_string(),
+            updated_at: "unix:1".to_string(),
+        })
+        .unwrap();
+        memory_id
     }
 
     fn insert_task(&self, kind: &str, status: TaskStatus) {

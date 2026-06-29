@@ -230,7 +230,7 @@ fn health_mode_adjustment(
         "likely_low_value" => (-0.25, false),
         "noisy_metadata" => (-(candidate.rank.task_key_bonus + 0.18).min(0.42), true),
         "context_sensitive" | "mixed_performance" => {
-            if strong_task(candidate) || candidate.rank.context_score >= 0.50 {
+            if strong_specific_task(candidate) || candidate.rank.context_score >= 0.50 {
                 (0.04, false)
             } else {
                 (-0.24, false)
@@ -253,6 +253,19 @@ fn strong_task(candidate: &RecallCandidate) -> bool {
             .filter_reasons
             .iter()
             .any(|reason| reason == "keep:strong_task_key_match")
+}
+
+fn strong_specific_task(candidate: &RecallCandidate) -> bool {
+    strong_task(candidate)
+        && candidate
+            .rank
+            .matched_task_keys
+            .iter()
+            .any(|key| !is_broad_tracking_identity_key(key))
+}
+
+fn is_broad_tracking_identity_key(key: &str) -> bool {
+    key.starts_with("pr:") || key.starts_with("ticket:") || key.starts_with("task:")
 }
 
 impl MemoryHealthSummary {
@@ -451,6 +464,66 @@ mod tests {
         assert!(reranked[0].rank.penalties.iter().any(|penalty| {
             penalty.contains("health_action_rerank:workflow:context_sensitive_wrong_context")
         }));
+    }
+
+    #[test]
+    fn health_action_rerank_penalizes_context_sensitive_memory_with_only_broad_task_match() {
+        let memory = memory(1, "Context-sensitive PR status", MemoryKind::ProjectFact);
+        let memories = vec![memory];
+        let history = [
+            score_with_rationale(1, "5", "Useful for the original PR cleanup task."),
+            score_with_rationale(
+                1,
+                "2",
+                "The recalled context is unrelated to this later branch-management task.",
+            ),
+        ];
+        let health = build_memory_health_summaries(&memories, &history);
+        let mut candidate = candidate(1, 1.20);
+        candidate.rank.task_key_bonus = 0.28;
+        candidate.rank.context_score = 0.20;
+        candidate.rank.matched_task_keys = vec!["pr:483111".to_string()];
+
+        let reranked = apply_health_action_rerank(vec![candidate], &memories, &health);
+
+        assert!(reranked[0].score < 1.0);
+        assert!(reranked[0]
+            .rank
+            .penalties
+            .iter()
+            .any(|penalty| penalty.contains("project_fact:context_sensitive")));
+    }
+
+    #[test]
+    fn health_action_rerank_keeps_context_sensitive_memory_with_specific_task_match() {
+        let memory = memory(
+            1,
+            "Context-sensitive target workflow",
+            MemoryKind::ProjectFact,
+        );
+        let memories = vec![memory];
+        let history = [
+            score_with_rationale(1, "5", "Useful for the exact target cleanup task."),
+            score_with_rationale(
+                1,
+                "2",
+                "The recalled context is unrelated to another task in the same repo.",
+            ),
+        ];
+        let health = build_memory_health_summaries(&memories, &history);
+        let mut candidate = candidate(1, 1.20);
+        candidate.rank.task_key_bonus = 0.28;
+        candidate.rank.context_score = 0.20;
+        candidate.rank.matched_task_keys = vec!["target://service:tests".to_string()];
+
+        let reranked = apply_health_action_rerank(vec![candidate], &memories, &health);
+
+        assert!(reranked[0].score > 1.0);
+        assert!(reranked[0]
+            .rank
+            .penalties
+            .iter()
+            .any(|penalty| penalty.contains("project_fact:context_sensitive")));
     }
 
     #[test]

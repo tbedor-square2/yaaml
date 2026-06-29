@@ -8,6 +8,7 @@ use crate::{
 
 const MAX_SEGMENT_KEYS: usize = 16;
 const MAX_SEGMENT_PATH_KEYS: usize = 4;
+const MAX_NON_IDENTITY_SEGMENT_TURNS: usize = 24;
 const SEGMENT_CONTEXT_TAIL_TURNS: usize = 1;
 
 pub fn build_conversation_segments(
@@ -347,6 +348,9 @@ impl SegmentRange {
     }
 
     fn matches(&self, keys: &[String], context_markers: &[String]) -> bool {
+        if self.len() >= MAX_NON_IDENTITY_SEGMENT_TURNS && !has_identity_key(&self.keys) {
+            return false;
+        }
         if !self.keys.is_empty() && !keys.is_empty() {
             let overlapping = overlapping_keys(&self.keys, keys);
             if overlapping.is_empty() {
@@ -372,6 +376,14 @@ impl SegmentRange {
         }
         push_markers(&mut self.context_markers, markers);
     }
+
+    fn len(&self) -> usize {
+        self.end_index.saturating_sub(self.start_index) + 1
+    }
+}
+
+fn has_identity_key(keys: &[String]) -> bool {
+    keys.iter().any(|key| is_identity_key(key))
 }
 
 #[cfg(test)]
@@ -520,6 +532,57 @@ mod tests {
         assert_eq!(segments[0].start_turn_ordinal, 1);
         assert_eq!(segments[0].end_turn_ordinal, 4);
         assert_eq!(segments[0].status, ConversationSegmentStatus::Active);
+    }
+
+    #[test]
+    fn segment_builder_rolls_over_long_non_identity_path_segment() {
+        let turns = (1..=30)
+            .map(|ordinal| {
+                turn(
+                    ordinal,
+                    "user: continue YAAML recall quality work in crates/yaaml-core/src/recall.rs",
+                )
+            })
+            .collect::<Vec<_>>();
+
+        let segments = build_conversation_segments("session-1", &turns, "unix:1");
+
+        assert_eq!(segments.len(), 2);
+        assert_eq!(segments[0].start_turn_ordinal, 1);
+        assert_eq!(segments[0].end_turn_ordinal, 24);
+        assert_eq!(segments[0].status, ConversationSegmentStatus::Superseded);
+        assert_eq!(segments[1].start_turn_ordinal, 25);
+        assert_eq!(segments[1].end_turn_ordinal, 30);
+        assert_eq!(segments[1].status, ConversationSegmentStatus::Active);
+        assert!(segments[0]
+            .task_keys
+            .contains(&"path:crates/yaaml-core/src/recall.rs".to_string()));
+        assert!(segments[1]
+            .task_keys
+            .contains(&"path:crates/yaaml-core/src/recall.rs".to_string()));
+    }
+
+    #[test]
+    fn segment_builder_keeps_long_identity_segment() {
+        let turns = (1..=30)
+            .map(|ordinal| {
+                turn(
+                    ordinal,
+                    "user: continue PR #483111 for MLP-4410 in crates/yaaml-core/src/recall.rs",
+                )
+            })
+            .collect::<Vec<_>>();
+
+        let segments = build_conversation_segments("session-1", &turns, "unix:1");
+
+        assert_eq!(segments.len(), 1);
+        assert_eq!(segments[0].start_turn_ordinal, 1);
+        assert_eq!(segments[0].end_turn_ordinal, 30);
+        assert_eq!(segments[0].status, ConversationSegmentStatus::Active);
+        assert!(segments[0].task_keys.contains(&"pr:483111".to_string()));
+        assert!(segments[0]
+            .task_keys
+            .contains(&"ticket:MLP-4410".to_string()));
     }
 
     #[test]

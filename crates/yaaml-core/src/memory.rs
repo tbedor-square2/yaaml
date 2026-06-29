@@ -364,6 +364,34 @@ version = "0.1.0"
     }
 
     #[test]
+    fn planning_diagnostics_are_normalized_to_task_state() {
+        let memories = parse_formulation_response(
+            &json!({
+                "memories": [
+                    {
+                        "title":"Recall quality bottleneck: segment drift",
+                        "body":"Main wins will come from segment identity and task-state expiry before changing recall ranking.",
+                        "scope":"project",
+                        "kind":"project_fact"
+                    },
+                    {
+                        "title":"Segment backfill plan",
+                        "body":"Solution requires segment-based grouping; backfill segments before changing ranking.",
+                        "scope":"project",
+                        "kind":"lesson"
+                    }
+                ]
+            }),
+            "yaaml",
+            1000,
+        )
+        .unwrap();
+
+        assert_eq!(memories[0].kind, MemoryKind::TaskState);
+        assert_eq!(memories[1].kind, MemoryKind::TaskState);
+    }
+
+    #[test]
     fn embedding_text_includes_key_memory_fields() {
         let memory = MemoryRecord {
             id: Some(1),

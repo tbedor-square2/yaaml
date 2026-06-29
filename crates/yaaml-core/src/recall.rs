@@ -364,7 +364,7 @@ fn recall_filter_decision(
     let context_gated_durable = matches!(memory.kind, MemoryKind::Lesson | MemoryKind::Workflow)
         || (memory.kind == MemoryKind::Preference && !explicit_user_preference);
     let transient_plan_without_identity =
-        is_transient_plan_memory(memory) && !task_state_identity_key_match;
+        is_transient_plan_memory(memory) && !specific_recall_task_key_match(candidate);
     let strong_context = same_work_area
         || (same_repo && candidate.rank.context_score >= 0.36)
         || candidate.rank.context_score >= 0.42;
@@ -373,6 +373,13 @@ fn recall_filter_decision(
         && memory.origin_segment_status == Some(ConversationSegmentStatus::Active);
 
     let mut reasons = Vec::new();
+    if transient_plan_without_identity {
+        reasons.push("drop:transient_plan_without_identity_key".to_string());
+        return RecallFilterDecision {
+            keep: false,
+            reasons,
+        };
+    }
     if !matches!(
         memory.kind,
         MemoryKind::TaskState | MemoryKind::TaskCheckpoint
@@ -717,6 +724,14 @@ fn is_broad_tracking_identity_key(key: &str) -> bool {
     key.starts_with("pr:") || key.starts_with("ticket:") || key.starts_with("task:")
 }
 
+fn specific_recall_task_key_match(candidate: &RecallCandidate) -> bool {
+    candidate
+        .rank
+        .matched_task_keys
+        .iter()
+        .any(|key| is_recall_match_task_key(key) && !is_broad_tracking_identity_key(key))
+}
+
 fn is_broad_project_id(project_id: Option<&str>) -> bool {
     let Some(project_id) = project_id else {
         return false;
@@ -884,7 +899,7 @@ fn looks_like_resumable_task_checkpoint(title: &str, body: &str) -> bool {
 
 fn looks_like_transient_task_state(title: &str, body: &str) -> bool {
     let text = format!("{title}\n{body}").to_ascii_lowercase();
-    [
+    if [
         "current pr",
         "current branch",
         "current progress",
@@ -900,10 +915,20 @@ fn looks_like_transient_task_state(title: &str, body: &str) -> bool {
         "recommended fix",
         "remaining work",
         "follow-up",
+        "next improvement",
+        "main wins will come",
         "todo",
     ]
     .iter()
     .any(|needle| text.contains(needle))
+    {
+        return true;
+    }
+    text.contains("solution requires")
+        && (text.contains("before changing")
+            || text.contains("backfill")
+            || text.contains("next")
+            || text.contains("remaining"))
 }
 
 fn matched_task_keys(query_task_keys: &[String], memory_task_keys: &[String]) -> Vec<String> {
@@ -964,6 +989,7 @@ fn context_has_access_blocker(context: &ContextMetadata) -> bool {
 pub fn is_transient_plan_memory(memory: &MemoryRecord) -> bool {
     memory.kind != MemoryKind::Preference
         && memory.kind != MemoryKind::TaskCheckpoint
+        && memory.kind != MemoryKind::TaskState
         && looks_like_transient_task_state(&memory.title, &memory.body)
 }
 
@@ -3381,6 +3407,95 @@ Datadog is blocked by a Cloudflare Access redirect.
     }
 
     #[test]
+    fn stored_planning_diagnostic_without_identity_does_not_survive_same_project() {
+        let current_project = "/Users/tbedor/Development/yaaml";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let mut planning_memory = memory(
+            1,
+            "Recall quality bottleneck: segment and task-state drift over session length",
+            MemoryKind::ProjectFact,
+            Some(current_project),
+            Vec::new(),
+        );
+        planning_memory.body = "Main wins will come from segment identity and task-state expiry before changing recall ranking.".to_string();
+        let memories = vec![planning_memory];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &[],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &[],
+            5,
+        );
+
+        assert!(selected.is_empty());
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:transient_plan_without_identity_key".to_string()));
+    }
+
+    #[test]
+    fn stored_planning_diagnostic_with_only_broad_identity_does_not_survive_same_project() {
+        let current_project = "/Users/tbedor/Development/yaaml";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let mut planning_memory = memory(
+            1,
+            "Recall quality bottleneck: segment and task-state drift over session length",
+            MemoryKind::ProjectFact,
+            Some(current_project),
+            vec!["pr:483111".to_string()],
+        );
+        planning_memory.body = "Main wins will come from segment identity and task-state expiry, not from adjusting memory volume.".to_string();
+        let memories = vec![planning_memory];
+        let query_keys = vec!["pr:483111".to_string()];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &query_keys,
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &query_keys,
+            5,
+        );
+
+        assert!(selected.is_empty());
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:transient_plan_without_identity_key".to_string()));
+    }
+
+    #[test]
     fn transient_plan_kind_normalization_prefers_task_state() {
         assert_eq!(
             normalize_memory_kind(
@@ -3396,6 +3511,24 @@ Datadog is blocked by a Cloudflare Access redirect.
                 Some("workflow"),
                 "Segment-based recall architecture",
                 "Proposed multi-step fix with implementation order and backfill before ranking.",
+                MemoryScope::Project,
+            ),
+            MemoryKind::TaskState
+        );
+        assert_eq!(
+            normalize_memory_kind(
+                Some("project_fact"),
+                "Recall quality bottleneck: segment drift",
+                "Main wins will come from segment identity and task-state expiry before changing recall ranking.",
+                MemoryScope::Project,
+            ),
+            MemoryKind::TaskState
+        );
+        assert_eq!(
+            normalize_memory_kind(
+                Some("lesson"),
+                "Segment backfill plan",
+                "Solution requires segment-based grouping; backfill segments before changing ranking.",
                 MemoryScope::Project,
             ),
             MemoryKind::TaskState

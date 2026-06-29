@@ -1688,6 +1688,7 @@ fn recall_file_is_written_after_memory_exists_and_new_turn_completes() {
     let tmp = TempDir::new().unwrap();
     let config = Config {
         recall_dir: tmp.path().join("recall").display().to_string(),
+        recall_memory_cooldown_seconds: 0,
         ..Config::default()
     };
     let mut db = Database::in_memory().unwrap();
@@ -1747,7 +1748,7 @@ fn recall_file_is_written_after_memory_exists_and_new_turn_completes() {
     };
     db.insert_turn(&turn).unwrap();
 
-    refresh_recall_with_embedding(
+    let write = refresh_recall_with_embedding(
         &db,
         &config,
         &project.canonicalize().unwrap(),
@@ -1756,6 +1757,7 @@ fn recall_file_is_written_after_memory_exists_and_new_turn_completes() {
         "new completed turn",
     )
     .unwrap();
+    assert_eq!(write, yaaml_core::RecallWrite::Written);
     let path = session_recall_file_path(&config.recall_dir().unwrap(), "session-1");
     let markdown = fs::read_to_string(path).unwrap();
 
@@ -1811,7 +1813,7 @@ fn background_recall_uses_stored_segment_keys_for_task_state() {
         byte_end: 10,
         observed_at: None,
         status: yaaml_core::TurnStatus::Completed,
-        display_text: Some("user: continue the active task".to_string()),
+        display_text: Some("user: continue PR 481583 active task".to_string()),
         cwd: Some(project_id.clone()),
         context: Some(yaaml_core::infer_context_from_path(&project)),
     };
@@ -1854,7 +1856,7 @@ fn background_recall_uses_stored_segment_keys_for_task_state() {
             project_descriptor: Some("yaaml, Rust".to_string()),
             lineage_refs: Vec::new(),
             origin_segment_id: active_segment_id,
-            origin_segment_status: None,
+            origin_segment_status: Some(ConversationSegmentStatus::Active),
             validity: yaaml_core::MemoryValidity::ValidWhileSegmentActive,
         })
         .unwrap();
@@ -1868,7 +1870,7 @@ fn background_recall_uses_stored_segment_keys_for_task_state() {
     })
     .unwrap();
 
-    refresh_recall_with_embedding(
+    let write = refresh_recall_with_embedding(
         &db,
         &config,
         &project.canonicalize().unwrap(),
@@ -1877,6 +1879,7 @@ fn background_recall_uses_stored_segment_keys_for_task_state() {
         "new completed turn",
     )
     .unwrap();
+    assert_eq!(write, yaaml_core::RecallWrite::Written);
     let path = session_recall_file_path(&config.recall_dir().unwrap(), "session-1");
     let markdown = fs::read_to_string(path).unwrap();
 

@@ -170,13 +170,34 @@ fn strict_kind_diverse_top_fallback_selection(
     let Some(top_candidate) = candidates.first() else {
         return Vec::new();
     };
-    if top_candidate.score < 0.75 {
+    let active_segment_task_states = candidates
+        .iter()
+        .filter(|candidate| is_active_segment_task_state(candidate))
+        .collect::<Vec<_>>();
+    if top_candidate.score < 0.75 && active_segment_task_states.is_empty() {
         return Vec::new();
     }
 
     let mut selected = Vec::new();
+    for candidate in active_segment_task_states {
+        selected.push(candidate.clone());
+        if selected.len() == limit {
+            return selected;
+        }
+    }
+
     let mut seen_kinds = HashSet::new();
+    for candidate in &selected {
+        seen_kinds.insert(memory_kind(candidate, memories));
+    }
+    let selected_ids = selected
+        .iter()
+        .map(|candidate| candidate.memory_id)
+        .collect::<HashSet<_>>();
     for (index, candidate) in candidates.iter().enumerate() {
+        if selected_ids.contains(&candidate.memory_id) {
+            continue;
+        }
         let kind = memory_kind(candidate, memories);
         let keep = (index == 0 || has_task_match(candidate) || !seen_kinds.contains(&kind))
             && candidate.score >= 0.90;
@@ -193,6 +214,14 @@ fn strict_kind_diverse_top_fallback_selection(
         selected.push(top_candidate.clone());
     }
     selected
+}
+
+fn is_active_segment_task_state(candidate: &RecallCandidate) -> bool {
+    candidate
+        .rank
+        .filter_reasons
+        .iter()
+        .any(|reason| reason == "keep:task_state_same_active_segment")
 }
 
 fn has_task_match(candidate: &RecallCandidate) -> bool {
@@ -671,6 +700,30 @@ mod tests {
             .collect::<Vec<_>>();
 
         assert_eq!(selected, vec![1, 2]);
+    }
+
+    #[test]
+    fn strict_kind_diverse_selection_prioritizes_active_segment_task_state() {
+        let mut candidates = vec![
+            candidate_with_score(1, 1.20),
+            candidate_with_score(2, 0.40),
+            candidate_with_score(3, 1.10),
+        ];
+        candidates[1]
+            .rank
+            .filter_reasons
+            .push("keep:task_state_same_active_segment".to_string());
+        let mut memories = vec![memory(1, "body"), memory(2, "body"), memory(3, "body")];
+        memories[0].kind = MemoryKind::TaskCheckpoint;
+        memories[1].kind = MemoryKind::TaskState;
+        memories[2].kind = MemoryKind::Workflow;
+
+        let selected = strict_kind_diverse_top_fallback_selection(&candidates, &memories, 2)
+            .into_iter()
+            .map(|candidate| candidate.memory_id)
+            .collect::<Vec<_>>();
+
+        assert_eq!(selected, vec![2, 1]);
     }
 
     #[test]

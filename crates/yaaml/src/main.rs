@@ -160,6 +160,9 @@ struct EvalListArgs {
     /// Only include eval runs with this id or newer.
     #[arg(long)]
     since_run: Option<i64>,
+    /// Only include eval runs at or after this timestamp.
+    #[arg(long)]
+    since: Option<String>,
     /// Emit machine-readable JSON.
     #[arg(long)]
     json: bool,
@@ -637,6 +640,12 @@ fn parse_since_unix(value: &str) -> anyhow::Result<i64> {
 fn eval_origin_included(origin: &str, included: &[String], excluded: &[String]) -> bool {
     (included.is_empty() || included.iter().any(|allowed| allowed == origin))
         && !excluded.iter().any(|blocked| blocked == origin)
+}
+
+fn eval_run_in_since_window(run: &EvalRunRecord, since_unix: Option<i64>) -> bool {
+    since_unix.is_none_or(|since_unix| {
+        timestamp_seconds(&run.started_at).is_some_and(|started_at| started_at >= since_unix)
+    })
 }
 
 fn timestamp_seconds(timestamp: &str) -> Option<i64> {
@@ -2362,9 +2371,13 @@ fn eval_list(args: EvalListArgs) -> anyhow::Result<()> {
     let mut db = Database::open(&db_path)
         .with_context(|| format!("failed to open {}", display(&db_path)))?;
     db.migrate().context("failed to migrate database")?;
+    let since_unix = args.since.as_deref().map(parse_since_unix).transpose()?;
     let runs = db
         .list_eval_runs_filtered(args.limit, args.since_run)
-        .context("failed to list eval runs")?;
+        .context("failed to list eval runs")?
+        .into_iter()
+        .filter(|run| eval_run_in_since_window(run, since_unix))
+        .collect::<Vec<_>>();
     let runs = runs.into_iter().map(EvalListRun::from).collect::<Vec<_>>();
     if args.json {
         println!("{}", serde_json::to_string_pretty(&runs)?);
@@ -2572,12 +2585,7 @@ fn eval_summary(args: EvalSummaryArgs) -> anyhow::Result<()> {
         .context("failed to list eval runs")?
         .into_iter()
         .filter(|run| eval_origin_included(&run.recall_origin, &args.origin, &args.exclude_origin))
-        .filter(|run| {
-            since_unix.is_none_or(|since_unix| {
-                timestamp_seconds(&run.started_at)
-                    .is_some_and(|started_at| started_at >= since_unix)
-            })
-        })
+        .filter(|run| eval_run_in_since_window(run, since_unix))
         .collect::<Vec<_>>();
     let summary = build_eval_summary(&db, runs)?;
 
@@ -5056,6 +5064,54 @@ mod tests {
             human_timestamp("2026-06-11T00:00:00Z"),
             "2026-06-11T00:00:00Z"
         );
+    }
+
+    #[test]
+    fn eval_since_window_filters_by_started_at() {
+        assert!(eval_run_in_since_window(
+            &eval_run_with_started_at("unix:1782771000"),
+            Some(1782771000)
+        ));
+        assert!(eval_run_in_since_window(
+            &eval_run_with_started_at("1782771001"),
+            Some(1782771000)
+        ));
+        assert!(!eval_run_in_since_window(
+            &eval_run_with_started_at("unix:1782770999"),
+            Some(1782771000)
+        ));
+        assert!(!eval_run_in_since_window(
+            &eval_run_with_started_at("not-a-timestamp"),
+            Some(1782771000)
+        ));
+        assert!(eval_run_in_since_window(
+            &eval_run_with_started_at("not-a-timestamp"),
+            None
+        ));
+    }
+
+    fn eval_run_with_started_at(started_at: &str) -> EvalRunRecord {
+        EvalRunRecord {
+            id: 1,
+            strategy: "recall_1_to_5".to_string(),
+            started_at: started_at.to_string(),
+            completed_at: None,
+            config_json: "{}".to_string(),
+            session_id: None,
+            turn_ordinal: None,
+            agent_turn_id: None,
+            recall_origin: "session_background".to_string(),
+            tool_name: None,
+            tool_use_id: None,
+            tool_input_summary: None,
+            injected: None,
+            segment_start_turn_ordinal: None,
+            segment_end_turn_ordinal: None,
+            segment_summary: None,
+            segment_task_keys: Vec::new(),
+            result_count: 0,
+            score: None,
+        }
     }
 
     #[test]

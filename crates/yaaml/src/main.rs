@@ -133,6 +133,12 @@ struct EvalRecallArgs {
     /// Maximum turns to replay.
     #[arg(long, default_value_t = 10)]
     limit: usize,
+    /// Restrict replay to one session id.
+    #[arg(long)]
+    session: Option<String>,
+    /// Restrict replay to one completed turn ordinal. Requires --session.
+    #[arg(long)]
+    turn: Option<u64>,
     /// Disable remote LLM judging and record retrieval metadata only.
     #[arg(long)]
     no_judge: bool,
@@ -1681,6 +1687,9 @@ fn eval(args: EvalArgs) -> anyhow::Result<()> {
 }
 
 fn eval_recall(args: EvalRecallArgs) -> anyhow::Result<()> {
+    if args.turn.is_some() && args.session.is_none() {
+        bail!("--turn requires --session");
+    }
     let cwd = env::current_dir().context("failed to determine current directory")?;
     let config = Config::load_for_cwd(&cwd).context("failed to load config")?;
     let db_path = config.db_path().context("failed to resolve db_path")?;
@@ -1694,6 +1703,8 @@ fn eval_recall(args: EvalRecallArgs) -> anyhow::Result<()> {
             &now,
             &serde_json::json!({
                 "limit": args.limit,
+                "session": args.session.as_deref(),
+                "turn": args.turn,
                 "judge_provider": config.eval_judge_provider,
                 "judge_model": config.eval_judge_model,
                 "judge_enabled": !args.no_judge,
@@ -1702,9 +1713,7 @@ fn eval_recall(args: EvalRecallArgs) -> anyhow::Result<()> {
             .to_string(),
         )
         .context("failed to create eval run")?;
-    let turns = db
-        .list_turns_with_ids(args.limit)
-        .context("failed to load replay turns")?;
+    let turns = eval_replay_turns(&db, &args).context("failed to load replay turns")?;
     let raw_turns = turns
         .iter()
         .map(|(_, turn)| turn.clone())
@@ -1794,6 +1803,47 @@ fn eval_recall(args: EvalRecallArgs) -> anyhow::Result<()> {
         );
     }
     Ok(())
+}
+
+fn eval_replay_turns(
+    db: &Database,
+    args: &EvalRecallArgs,
+) -> anyhow::Result<Vec<(i64, TurnRecord)>> {
+    match (args.session.as_deref(), args.turn) {
+        (Some(session_id), Some(turn)) => {
+            let turn = db
+                .turn_with_id_for_session_ordinal(session_id, turn)
+                .with_context(|| format!("failed to load turn {turn} for session {session_id}"))?
+                .with_context(|| format!("turn {turn} for session {session_id} not found"))?;
+            Ok(vec![turn])
+        }
+        (Some(session_id), None) => db
+            .turns_for_session(session_id, args.limit)
+            .with_context(|| format!("failed to load turns for session {session_id}"))?
+            .into_iter()
+            .map(|turn| {
+                let row_id = db
+                    .turn_row_id_for_session_ordinal(&turn.session_id, turn.ordinal)
+                    .with_context(|| {
+                        format!(
+                            "failed to load row id for session {} turn {}",
+                            turn.session_id, turn.ordinal
+                        )
+                    })?
+                    .with_context(|| {
+                        format!(
+                            "row id for session {} turn {} not found",
+                            turn.session_id, turn.ordinal
+                        )
+                    })?;
+                Ok((row_id, turn))
+            })
+            .collect(),
+        (None, None) => db
+            .list_turns_with_ids(args.limit)
+            .context("failed to load replay turns"),
+        (None, Some(_)) => unreachable!("validated before eval replay turn loading"),
+    }
 }
 
 fn eval_list(args: EvalListArgs) -> anyhow::Result<()> {

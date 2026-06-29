@@ -1297,6 +1297,23 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
         Ok(turns)
     }
 
+    pub fn turn_with_id_for_session_ordinal(
+        &self,
+        session_id: &str,
+        ordinal: u64,
+    ) -> Result<Option<(i64, TurnRecord)>, DatabaseError> {
+        self.conn
+            .query_row(
+                "SELECT id, session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text, cwd, context_json
+                 FROM turns
+                 WHERE session_id = ?1 AND ordinal = ?2",
+                params![session_id, u64_to_i64(ordinal)],
+                |row| Ok((row.get(0)?, read_turn_record_from_offset(row, 1)?)),
+            )
+            .optional()
+            .map_err(DatabaseError::from)
+    }
+
     pub fn replace_conversation_segments_for_session(
         &self,
         session_id: &str,

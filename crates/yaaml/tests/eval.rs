@@ -152,6 +152,132 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
 }
 
 #[test]
+fn eval_recall_can_target_specific_session_turn() {
+    let tmp = TempDir::new().unwrap();
+    let home = tmp.path().join("home");
+    let project = tmp.path().join("project");
+    fs::create_dir_all(home.join(".yaaml")).unwrap();
+    fs::create_dir_all(&project).unwrap();
+    let db_path = home.join(".yaaml").join("yaaml.db");
+    fs::write(
+        home.join(".yaaml").join("config.toml"),
+        format!(
+            r#"
+db_path = "{}"
+embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
+"#,
+            db_path.display()
+        ),
+    )
+    .unwrap();
+    let mut db = Database::open(&db_path).unwrap();
+    db.migrate().unwrap();
+    insert_transcript_backed_turn(&db, tmp.path(), &project, "early turn");
+    db.insert_memory(&MemoryRecord {
+        id: None,
+        title: "Later eligible preference".to_string(),
+        body: "use recall for targeted replay".to_string(),
+        scope: MemoryScope::Project,
+        kind: MemoryKind::Preference,
+        task_keys: Vec::new(),
+        source_turn_refs: Vec::new(),
+        created_at: "2026-06-08T00:00:04Z".to_string(),
+        updated_at: "2026-06-08T00:00:04Z".to_string(),
+        is_active: true,
+        session_id: None,
+        project_id: Some(project.display().to_string()),
+        project_descriptor: Some("yaaml".to_string()),
+        lineage_refs: Vec::new(),
+        origin_segment_id: None,
+        origin_segment_status: None,
+        validity: yaaml_core::MemoryValidity::Durable,
+    })
+    .unwrap();
+    db.insert_turn(&TurnRecord {
+        session_id: "session-1".to_string(),
+        turn_id: Some("turn-2".to_string()),
+        ordinal: 1,
+        byte_start: 0,
+        byte_end: 0,
+        observed_at: Some("2026-06-08T00:00:05Z".to_string()),
+        status: TurnStatus::Completed,
+        display_text: Some("use recall for targeted replay".to_string()),
+        cwd: Some(project.display().to_string()),
+        context: Some(yaaml_core::infer_context_from_path(&project)),
+    })
+    .unwrap();
+
+    let binary = env!("CARGO_BIN_EXE_yaaml");
+    let output = Command::new(binary)
+        .arg("eval")
+        .arg("recall")
+        .arg("--session")
+        .arg("session-1")
+        .arg("--turn")
+        .arg("0")
+        .arg("--no-judge")
+        .arg("--json")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(value["evaluated_turns"], 1);
+    assert_eq!(value["evaluated_memories"], 0);
+    assert_eq!(value["score_counts"]["neutral"], 1);
+
+    let output = Command::new(binary)
+        .arg("eval")
+        .arg("recall")
+        .arg("--session")
+        .arg("session-1")
+        .arg("--turn")
+        .arg("1")
+        .arg("--no-judge")
+        .arg("--json")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(value["evaluated_turns"], 1);
+    assert_eq!(value["evaluated_memories"], 1);
+    assert_eq!(value["score_counts"]["unjudged"], 1);
+}
+
+#[test]
+fn eval_recall_turn_requires_session() {
+    let tmp = TempDir::new().unwrap();
+    let project = tmp.path().join("project");
+    fs::create_dir_all(&project).unwrap();
+    let binary = env!("CARGO_BIN_EXE_yaaml");
+
+    let output = Command::new(binary)
+        .arg("eval")
+        .arg("recall")
+        .arg("--turn")
+        .arg("0")
+        .current_dir(&project)
+        .output()
+        .unwrap();
+
+    assert!(!output.status.success());
+    assert!(String::from_utf8_lossy(&output.stderr).contains("--turn requires --session"));
+}
+
+#[test]
 fn eval_list_includes_session_turn_score_and_human_timestamps() {
     let tmp = TempDir::new().unwrap();
     let home = tmp.path().join("home");

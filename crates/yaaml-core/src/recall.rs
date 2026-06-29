@@ -313,6 +313,9 @@ fn recall_filter_decision(
         && query_has_task_identity
         && has_recall_match_task_key(&memory.task_keys)
         && candidate.rank.matched_task_keys.is_empty();
+    let access_blocker_context_mismatch = context_has_access_blocker(query_context)
+        && !context_has_access_blocker(&memory_context)
+        && !weak_task_key_match;
     let transient_plan_without_identity =
         is_transient_plan_memory(memory) && !task_state_identity_key_match;
     let strong_context = same_work_area
@@ -360,6 +363,13 @@ fn recall_filter_decision(
             }
         }
         MemoryKind::ProjectFact => {
+            if access_blocker_context_mismatch {
+                reasons.push("drop:access_blocker_context_mismatch".to_string());
+                return RecallFilterDecision {
+                    keep: false,
+                    reasons,
+                };
+            }
             if transient_plan_without_identity {
                 reasons.push("drop:transient_plan_without_identity_key".to_string());
                 return RecallFilterDecision {
@@ -406,6 +416,13 @@ fn recall_filter_decision(
             }
         }
         MemoryKind::Preference | MemoryKind::Lesson | MemoryKind::Workflow => {
+            if access_blocker_context_mismatch {
+                reasons.push("drop:access_blocker_context_mismatch".to_string());
+                return RecallFilterDecision {
+                    keep: false,
+                    reasons,
+                };
+            }
             if transient_plan_without_identity {
                 reasons.push("drop:transient_plan_without_identity_key".to_string());
                 return RecallFilterDecision {
@@ -626,6 +643,13 @@ fn is_episodic_durable(memory: &MemoryRecord) -> bool {
         memory.kind,
         MemoryKind::Lesson | MemoryKind::ProjectFact | MemoryKind::Workflow
     )
+}
+
+fn context_has_access_blocker(context: &ContextMetadata) -> bool {
+    context
+        .subject_tags
+        .iter()
+        .any(|tag| matches!(tag.as_str(), "auth" | "cloudflare-access" | "warp" | "vpn"))
 }
 
 pub fn is_transient_plan_memory(memory: &MemoryRecord) -> bool {
@@ -1226,6 +1250,7 @@ fn extend_unique_set(values: &mut HashSet<String>, incoming: HashSet<String>) {
 }
 
 pub fn segment_task_keys(text: &str) -> Vec<String> {
+    let text = strip_recall_suppressed_blocks_and_lines(text);
     let user_keys = segment_task_keys_from_lines(
         text.lines()
             .filter(|line| line.trim_start().starts_with("user:")),
@@ -1242,7 +1267,8 @@ pub fn segment_task_keys(text: &str) -> Vec<String> {
 pub fn segment_context_markers(turn: &TurnRecord) -> Vec<String> {
     let mut markers = Vec::new();
     if let Some(display_text) = &turn.display_text {
-        let text_context = infer_context_from_text(display_text);
+        let display_text = strip_recall_suppressed_blocks_and_lines(display_text);
+        let text_context = infer_context_from_text(&display_text);
         push_segment_context_markers(&mut markers, &text_context);
     }
     if markers.is_empty() {
@@ -1369,8 +1395,33 @@ fn looks_like_search_result_line(line: &str) -> bool {
     !line_number.is_empty() && line_number.chars().all(|ch| ch.is_ascii_digit())
 }
 
+fn strip_recall_suppressed_blocks_and_lines(text: &str) -> String {
+    let mut stripped = String::new();
+    let mut suppressed_block: Option<&'static str> = None;
+    for line in text.lines() {
+        if let Some(end_tag) = suppressed_block {
+            if line.trim_start().starts_with(end_tag) {
+                suppressed_block = None;
+            }
+            continue;
+        }
+        if let Some(end_tag) = recall_query_suppressed_block_end(line) {
+            suppressed_block = Some(end_tag);
+            continue;
+        }
+        if recall_query_suppressed_line(line) {
+            continue;
+        }
+        if !stripped.is_empty() {
+            stripped.push('\n');
+        }
+        stripped.push_str(line);
+    }
+    stripped
+}
+
 fn recall_query_suppressed_block_end(line: &str) -> Option<&'static str> {
-    let line = line.trim_start();
+    let line = role_prefixed_content(line.trim_start());
     if line.starts_with("<codex_internal_context") {
         Some("</codex_internal_context>")
     } else if line.starts_with("<environment_context>") {
@@ -1378,6 +1429,15 @@ fn recall_query_suppressed_block_end(line: &str) -> Option<&'static str> {
     } else {
         None
     }
+}
+
+fn role_prefixed_content(line: &str) -> &str {
+    for prefix in ["user:", "assistant:", "message:"] {
+        if let Some(rest) = line.strip_prefix(prefix) {
+            return rest.trim_start();
+        }
+    }
+    line
 }
 
 fn recall_query_suppressed_line(line: &str) -> bool {
@@ -1729,6 +1789,25 @@ assistant: still use yaaml recall for context.
 
         assert!(keys.contains(&"pr:481245".to_string()));
         assert!(keys.contains(&"ticket:MLP-4400".to_string()));
+    }
+
+    #[test]
+    fn segment_task_keys_ignore_codex_internal_goal_blocks() {
+        let keys = segment_task_keys(
+            r#"user: <codex_internal_context source="goal">
+Continue working toward the active thread goal.
+<objective>
+Poll trigger:td_11 and flag:riskarbiter-should-fetch-generated-signals-from-mux.
+</objective>
+</codex_internal_context>
+Datadog is blocked by a Cloudflare Access redirect.
+"#,
+        );
+
+        assert!(!keys.contains(&"trigger:td_11".to_string()));
+        assert!(
+            !keys.contains(&"flag:riskarbiter-should-fetch-generated-signals-from-mux".to_string())
+        );
     }
 
     #[test]
@@ -2099,6 +2178,100 @@ assistant: still use yaaml recall for context.
             .rank
             .filter_reasons
             .contains(&"drop:task_state_origin_segment_inactive".to_string()));
+    }
+
+    #[test]
+    fn access_blocker_context_drops_same_project_observability_memory_without_task_key() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![memory(
+            1,
+            "TD_11 Datadog monitoring workflow",
+            MemoryKind::Workflow,
+            Some(current_project),
+            Vec::new(),
+        )];
+        let query_context = ContextMetadata {
+            subject_tags: vec![
+                "datadog".to_string(),
+                "cloudflare-access".to_string(),
+                "warp".to_string(),
+            ],
+            ..ContextMetadata::default()
+        };
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &query_context,
+            &[],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) =
+            select_recall_candidates(ranked, &memories, current_project, &query_context, &[], 5);
+
+        assert!(selected.is_empty());
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:access_blocker_context_mismatch".to_string()));
+    }
+
+    #[test]
+    fn access_blocker_context_keeps_same_project_auth_memory() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![memory(
+            1,
+            "Datadog Cloudflare Access troubleshooting",
+            MemoryKind::Workflow,
+            Some(current_project),
+            Vec::new(),
+        )];
+        let query_context = ContextMetadata {
+            subject_tags: vec![
+                "datadog".to_string(),
+                "cloudflare-access".to_string(),
+                "warp".to_string(),
+            ],
+            ..ContextMetadata::default()
+        };
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &query_context,
+            &[],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) =
+            select_recall_candidates(ranked, &memories, current_project, &query_context, &[], 5);
+
+        assert_eq!(
+            selected
+                .iter()
+                .map(|candidate| candidate.memory_id)
+                .collect::<Vec<_>>(),
+            vec![1]
+        );
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"keep:same_project_durable".to_string()));
     }
 
     #[test]
@@ -2882,6 +3055,42 @@ assistant: still use yaaml recall for context.
         );
         assert!(!query.contains("recall eval failures"));
         assert!(query.contains("task-state segment lifecycle"));
+    }
+
+    #[test]
+    fn active_segment_query_stops_when_visible_turn_shifts_to_access_blocker() {
+        let turns = vec![
+            turn(
+                1,
+                "user: monitor Risk Arbiter TD_11 Mux rollout health for trigger:td_11",
+            ),
+            turn(
+                2,
+                "assistant: TD_11 Mux flagging rate is stable and safety metrics are clean",
+            ),
+            turn(
+                3,
+                r#"user: <codex_internal_context source="goal">
+Continue working toward the active thread goal.
+<objective>
+Poll trigger:td_11 after the Mux cutover.
+</objective>
+</codex_internal_context>
+Datadog is blocked by a Cloudflare Access redirect; debug WARP authentication."#,
+            ),
+        ];
+
+        let active = active_segment_recall_turns(&turns);
+        let query = build_active_segment_recall_query(&turns, 4_000, 80);
+
+        assert_eq!(
+            active.iter().map(|turn| turn.ordinal).collect::<Vec<_>>(),
+            vec![3]
+        );
+        assert!(!query.contains("trigger:td_11"));
+        assert!(!query.contains("TD_11 Mux flagging"));
+        assert!(query.contains("Cloudflare Access redirect"));
+        assert!(query.contains("WARP authentication"));
     }
 
     fn empty_rank() -> RecallRankDetails {

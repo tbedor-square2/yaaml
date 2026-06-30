@@ -3212,10 +3212,7 @@ fn build_eval_summary(db: &Database, runs: Vec<EvalRunRecord>) -> anyhow::Result
             .eval_results_for_run(run.id)
             .with_context(|| format!("failed to load eval results for run {}", run.id))?;
         let run_context = eval_run_context(run);
-        if db
-            .recall_eval_scored_rerun_exists(run.id)
-            .with_context(|| format!("failed to check scored rerun for eval run {}", run.id))?
-        {
+        if eval_run_has_scored_successor(db, run.id, &run_context)? {
             continue;
         }
         let has_insufficient_context = results
@@ -3408,6 +3405,24 @@ fn build_eval_summary(db: &Database, runs: Vec<EvalRunRecord>) -> anyhow::Result
         low_score_examples,
         high_score_examples,
     })
+}
+
+fn eval_run_has_scored_successor(
+    db: &Database,
+    run_id: i64,
+    run_context: &EvalRunContext,
+) -> anyhow::Result<bool> {
+    if db
+        .recall_eval_scored_rerun_exists(run_id)
+        .with_context(|| format!("failed to check scored rerun for eval run {run_id}"))?
+    {
+        return Ok(true);
+    }
+    let Some(source_run_id) = run_context.rerun_for_eval_run_id else {
+        return Ok(false);
+    };
+    db.newer_scored_recall_eval_rerun_exists(source_run_id, run_id)
+        .with_context(|| format!("failed to check newer rerun for eval run {run_id}"))
 }
 
 fn eval_segment_summaries(

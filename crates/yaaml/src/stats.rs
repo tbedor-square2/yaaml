@@ -40,6 +40,7 @@ struct StatsRecallVolumeRun {
 #[derive(Debug, Deserialize)]
 struct StatsEvalRunConfigPayload {
     memory_ids: Option<Vec<i64>>,
+    rerun_for_eval_run_id: Option<i64>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -282,10 +283,7 @@ pub fn build_stats_with_filters(
         }) {
             continue;
         }
-        if db
-            .recall_eval_scored_rerun_exists(run.id)
-            .with_context(|| format!("failed to check scored rerun for eval run {}", run.id))?
-        {
+        if stats_eval_run_has_scored_successor(db, &run)? {
             continue;
         }
         eval_runs.push(run);
@@ -619,6 +617,23 @@ fn recall_eval_task_volume(
             tool_name: payload.tool_name,
         },
     ))
+}
+
+fn stats_eval_run_has_scored_successor(db: &Database, run: &EvalRunRecord) -> Result<bool> {
+    if db
+        .recall_eval_scored_rerun_exists(run.id)
+        .with_context(|| format!("failed to check scored rerun for eval run {}", run.id))?
+    {
+        return Ok(true);
+    }
+    let Ok(config) = serde_json::from_str::<StatsEvalRunConfigPayload>(&run.config_json) else {
+        return Ok(false);
+    };
+    let Some(source_run_id) = config.rerun_for_eval_run_id else {
+        return Ok(false);
+    };
+    db.newer_scored_recall_eval_rerun_exists(source_run_id, run.id)
+        .with_context(|| format!("failed to check newer rerun for eval run {}", run.id))
 }
 
 fn eval_run_fallback_volume(

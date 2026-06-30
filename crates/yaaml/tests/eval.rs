@@ -994,6 +994,31 @@ eval_judge_api_key_env = "YAAML_TEST_ANTHROPIC_KEY"
     .unwrap();
     db.complete_eval_run(source_run_id, "unix:1781205402")
         .unwrap();
+    let stale_rerun_id = db
+        .insert_eval_run_with_metadata(
+            "default",
+            "unix:1781205403",
+            &serde_json::json!({
+                "session_id": "session-1",
+                "turn_ordinal": 0,
+                "memory_ids": [memory_id],
+                "rerun_for_eval_run_id": source_run_id,
+            })
+            .to_string(),
+            eval_metadata(0, "replay"),
+        )
+        .unwrap();
+    db.insert_eval_result(
+        stale_rerun_id,
+        turn_row_id,
+        Some(memory_id),
+        "2",
+        "stale rerun score",
+        "unix:1781205404",
+    )
+    .unwrap();
+    db.complete_eval_run(stale_rerun_id, "unix:1781205405")
+        .unwrap();
 
     let binary = env!("CARGO_BIN_EXE_yaaml");
     let output = Command::new(binary)

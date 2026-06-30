@@ -618,6 +618,31 @@ fn stats_json_excludes_superseded_eval_runs() {
     .unwrap();
     db.complete_eval_run(source_run_id, "unix:102").unwrap();
 
+    let stale_rerun_id = db
+        .insert_eval_run_with_metadata(
+            "default",
+            "unix:105",
+            &json!({
+                "session_id": "session-1",
+                "turn_ordinal": 0,
+                "memory_ids": [11],
+                "rerun_for_eval_run_id": source_run_id
+            })
+            .to_string(),
+            recall_metadata_with_origin(0, "session_background"),
+        )
+        .unwrap();
+    db.insert_eval_result(
+        stale_rerun_id,
+        turn_row_id,
+        Some(11),
+        "2",
+        "stale rerun score",
+        "unix:106",
+    )
+    .unwrap();
+    db.complete_eval_run(stale_rerun_id, "unix:107").unwrap();
+
     let rerun_id = db
         .insert_eval_run_with_metadata(
             "default",

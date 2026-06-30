@@ -969,6 +969,29 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
         Ok(eval_exists != 0)
     }
 
+    pub fn newer_scored_recall_eval_rerun_exists(
+        &self,
+        source_eval_run_id: i64,
+        current_eval_run_id: i64,
+    ) -> Result<bool, DatabaseError> {
+        let eval_exists: i64 = self.conn.query_row(
+            "SELECT EXISTS(
+                SELECT 1
+                FROM eval_runs
+                JOIN eval_results ON eval_results.eval_run_id = eval_runs.id
+                WHERE CAST(json_extract(eval_runs.config_json, '$.rerun_for_eval_run_id') AS INTEGER) = ?1
+                  AND eval_runs.id > ?2
+                  AND eval_results.judge_score IS NOT NULL
+                  AND eval_results.judge_score != ''
+                  AND eval_results.judge_score != 'insufficient_context'
+                  AND eval_results.judge_score != 'unjudged'
+             )",
+            params![source_eval_run_id, current_eval_run_id],
+            |row| row.get(0),
+        )?;
+        Ok(eval_exists != 0)
+    }
+
     pub fn insert_memory(&self, memory: &MemoryRecord) -> Result<i64, DatabaseError> {
         let source_turn_refs = serde_json::to_string(&memory.source_turn_refs)?;
         let lineage_refs = serde_json::to_string(&memory.lineage_refs)?;

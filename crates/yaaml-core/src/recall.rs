@@ -667,6 +667,7 @@ fn recall_filter_decision(
                 && candidate.rank.matched_task_keys.is_empty()
                 && memory_has_only_tool_task_keys(memory)
                 && !has_exact_tool_task_key_overlap(query_task_keys, memory)
+                && !has_proven_useful_health_signal(candidate)
                 && context_gated_durable
             {
                 reasons.push("drop:same_project_tool_workflow_without_tool_match".to_string());
@@ -743,6 +744,14 @@ fn has_unmatched_topical_query_context(
     let same_known_work_area =
         query_context.work_area.is_some() && query_context.work_area == memory_context.work_area;
     !query_tags.is_empty() && !same_known_work_area && query_tags.is_disjoint(&memory_tags)
+}
+
+fn has_proven_useful_health_signal(candidate: &RecallCandidate) -> bool {
+    candidate
+        .rank
+        .penalties
+        .iter()
+        .any(|penalty| penalty.contains(":proven_useful:"))
 }
 
 fn topical_high_signal_recall_context_tags(context: &ContextMetadata) -> HashSet<String> {
@@ -4668,8 +4677,6 @@ Datadog is blocked by a Cloudflare Access redirect.
                 "The sq riskarbiter rule pending-archivals command supports staging verification."
                     .to_string(),
             project_descriptor: Some("squareup/java riskarbiter".to_string()),
-            origin_segment_id: Some(42),
-            origin_segment_status: Some(ConversationSegmentStatus::Superseded),
             ..memory(
                 1,
                 "Risk Arbiter CLI verification workflow",
@@ -4705,6 +4712,56 @@ Datadog is blocked by a Cloudflare Access redirect.
             "{:?}",
             debug[0].rank.filter_reasons
         );
+    }
+
+    #[test]
+    fn same_project_tool_only_workflow_with_proven_useful_health_recalls() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![MemoryRecord {
+            body:
+                "The sq riskarbiter rule pending-archivals command supports staging verification."
+                    .to_string(),
+            project_descriptor: Some("squareup/java riskarbiter".to_string()),
+            ..memory(
+                1,
+                "Risk Arbiter CLI verification workflow",
+                MemoryKind::Workflow,
+                Some(current_project),
+                vec!["tool:sq".to_string()],
+            )
+        }];
+        let query_context = infer_context_from_text(
+            "Risk Arbiter pending archivals staging verification data model.",
+        );
+        let mut ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &query_context,
+            &[],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+        ranked[0]
+            .rank
+            .penalties
+            .push("health_action_rerank:workflow:proven_useful:0.26".to_string());
+
+        let (selected, debug) =
+            select_recall_candidates(ranked, &memories, current_project, &query_context, &[], 5);
+
+        assert_eq!(selected.len(), 1, "{:?}", debug[0].rank.filter_reasons);
+        assert_eq!(selected[0].memory_id, 1);
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"keep:same_project_durable".to_string()));
     }
 
     #[test]

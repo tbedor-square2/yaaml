@@ -165,6 +165,12 @@ struct EvalListArgs {
     /// Only include eval runs at or after this timestamp or duration, e.g. unix:1782760000 or 24h.
     #[arg(long)]
     since: Option<String>,
+    /// Include only eval runs from this recall origin. Repeatable.
+    #[arg(long)]
+    origin: Vec<String>,
+    /// Exclude eval runs from this recall origin. Repeatable.
+    #[arg(long)]
+    exclude_origin: Vec<String>,
     /// Emit machine-readable JSON.
     #[arg(long)]
     json: bool,
@@ -212,6 +218,12 @@ struct EvalMemoriesArgs {
     /// Only include eval runs at or after this timestamp or duration, e.g. unix:1782760000 or 24h.
     #[arg(long)]
     since: Option<String>,
+    /// Include only eval runs from this recall origin. Repeatable.
+    #[arg(long)]
+    origin: Vec<String>,
+    /// Exclude eval runs from this recall origin. Repeatable.
+    #[arg(long)]
+    exclude_origin: Vec<String>,
     /// Maximum memories to show.
     #[arg(long, default_value_t = 25)]
     limit: usize,
@@ -2583,6 +2595,7 @@ fn eval_list(args: EvalListArgs) -> anyhow::Result<()> {
         .list_eval_runs_filtered(args.limit, args.since_run)
         .context("failed to list eval runs")?
         .into_iter()
+        .filter(|run| eval_origin_included(&run.recall_origin, &args.origin, &args.exclude_origin))
         .filter(|run| eval_run_in_since_window(run, since_unix))
         .collect::<Vec<_>>();
     let runs = runs.into_iter().map(EvalListRun::from).collect::<Vec<_>>();
@@ -2816,6 +2829,7 @@ fn eval_memories(args: EvalMemoriesArgs) -> anyhow::Result<()> {
         .list_eval_runs_filtered(args.eval_limit, args.since_run)
         .context("failed to list eval runs")?
         .into_iter()
+        .filter(|run| eval_origin_included(&run.recall_origin, &args.origin, &args.exclude_origin))
         .filter(|run| eval_run_in_since_window(run, since_unix))
         .collect::<Vec<_>>();
     let diagnostics = build_eval_memory_diagnostics(&db, runs, args.sort, args.limit)?;
@@ -2909,12 +2923,17 @@ fn build_eval_memory_diagnostics(
 ) -> anyhow::Result<EvalMemoryDiagnostics> {
     let mut accumulators = BTreeMap::<i64, EvalMemoryAccumulator>::new();
     let mut result_rows_considered = 0_usize;
+    let mut eval_runs_considered = 0_usize;
 
     for run in &runs {
         let run_context = eval_run_context(run);
         let results = db
             .eval_results_for_run(run.id)
             .with_context(|| format!("failed to load eval results for run {}", run.id))?;
+        if eval_run_has_scored_successor(db, run.id, &run_context)? {
+            continue;
+        }
+        eval_runs_considered += 1;
         for result in results {
             let Some(memory_id) = result.memory_id else {
                 continue;
@@ -2977,7 +2996,7 @@ fn build_eval_memory_diagnostics(
     memories.truncate(limit);
 
     Ok(EvalMemoryDiagnostics {
-        eval_runs_considered: runs.len(),
+        eval_runs_considered,
         result_rows_considered,
         memories_considered: memory_ids.len(),
         sort: eval_memory_sort_name(sort).to_string(),

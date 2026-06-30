@@ -700,6 +700,30 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
         .as_array()
         .unwrap()
         .is_empty());
+
+    let memories = Command::new(binary)
+        .arg("eval")
+        .arg("memories")
+        .arg("--json")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .output()
+        .unwrap();
+    assert!(
+        memories.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&memories.stderr)
+    );
+    let memories_value: serde_json::Value = serde_json::from_slice(&memories.stdout).unwrap();
+    assert_eq!(memories_value["eval_runs_considered"], 1);
+    assert_eq!(memories_value["result_rows_considered"], 1);
+    assert_eq!(memories_value["memories"][0]["memory_id"], memory_id);
+    assert_eq!(memories_value["memories"][0]["selected_count"], 1);
+    assert_eq!(
+        memories_value["memories"][0]["insufficient_context_count"],
+        0
+    );
+    assert_eq!(memories_value["memories"][0]["average_score"], 5.0);
 }
 
 #[test]
@@ -1459,6 +1483,29 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     assert_eq!(without_replay_value["results_considered"], 1);
     assert_eq!(without_replay_value["score_counts"]["n/a"], 1);
 
+    let listed_without_replay = Command::new(binary)
+        .arg("eval")
+        .arg("list")
+        .arg("--json")
+        .arg("--exclude-origin")
+        .arg("replay")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .output()
+        .unwrap();
+    assert!(
+        listed_without_replay.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&listed_without_replay.stderr)
+    );
+    let listed_without_replay_value: serde_json::Value =
+        serde_json::from_slice(&listed_without_replay.stdout).unwrap();
+    assert_eq!(listed_without_replay_value.as_array().unwrap().len(), 1);
+    assert_eq!(
+        listed_without_replay_value[0]["recall_origin"],
+        "session_background"
+    );
+
     let shown = Command::new(binary)
         .arg("eval")
         .arg("show")
@@ -1677,6 +1724,25 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     .unwrap();
     db.complete_eval_run(second_run_id, "2026-06-08T00:00:08Z")
         .unwrap();
+    let replay_run_id = db
+        .insert_eval_run_with_metadata(
+            "recall_1_to_5",
+            "2026-06-08T00:00:09Z",
+            r#"{"session_id":"session-1","turn_ordinal":7}"#,
+            eval_metadata(7, "replay"),
+        )
+        .unwrap();
+    db.insert_eval_result(
+        replay_run_id,
+        turn_row_id,
+        Some(low_memory_id),
+        "1",
+        "replay-only low result",
+        "2026-06-08T00:00:10Z",
+    )
+    .unwrap();
+    db.complete_eval_run(replay_run_id, "2026-06-08T00:00:11Z")
+        .unwrap();
 
     let binary = env!("CARGO_BIN_EXE_yaaml");
     let output = Command::new(binary)
@@ -1693,8 +1759,8 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
         String::from_utf8_lossy(&output.stderr)
     );
     let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
-    assert_eq!(value["eval_runs_considered"], 2);
-    assert_eq!(value["result_rows_considered"], 3);
+    assert_eq!(value["eval_runs_considered"], 3);
+    assert_eq!(value["result_rows_considered"], 4);
     assert_eq!(value["memories_considered"], 2);
     assert_eq!(value["memories"][0]["memory_id"], mixed_memory_id);
     assert_eq!(value["memories"][0]["selected_count"], 2);
@@ -1710,6 +1776,8 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
         .arg("memories")
         .arg("--since-run")
         .arg(second_run_id.to_string())
+        .arg("--exclude-origin")
+        .arg("replay")
         .arg("--json")
         .current_dir(&project)
         .env("HOME", &home)
@@ -1732,6 +1800,8 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
         .arg("memories")
         .arg("--since")
         .arg("unix:1780876806")
+        .arg("--exclude-origin")
+        .arg("replay")
         .arg("--json")
         .current_dir(&project)
         .env("HOME", &home)
@@ -1753,6 +1823,31 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     );
     assert_eq!(since_filtered_value["memories"][0]["average_score"], 5.0);
 
+    let origin_filtered = Command::new(binary)
+        .arg("eval")
+        .arg("memories")
+        .arg("--exclude-origin")
+        .arg("replay")
+        .arg("--json")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .output()
+        .unwrap();
+    assert!(
+        origin_filtered.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&origin_filtered.stderr)
+    );
+    let origin_filtered_value: serde_json::Value =
+        serde_json::from_slice(&origin_filtered.stdout).unwrap();
+    assert_eq!(origin_filtered_value["eval_runs_considered"], 2);
+    assert_eq!(origin_filtered_value["result_rows_considered"], 3);
+    assert_eq!(origin_filtered_value["memories_considered"], 2);
+    assert_eq!(
+        origin_filtered_value["memories"][0]["memory_id"],
+        mixed_memory_id
+    );
+
     let low_sorted = Command::new(binary)
         .arg("eval")
         .arg("memories")
@@ -1770,7 +1865,7 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     );
     let low_value: serde_json::Value = serde_json::from_slice(&low_sorted.stdout).unwrap();
     assert_eq!(low_value["sort"], "low");
-    assert_eq!(low_value["memories"][0]["memory_id"], mixed_memory_id);
+    assert_eq!(low_value["memories"][0]["memory_id"], low_memory_id);
 
     let human = Command::new(binary)
         .arg("eval")

@@ -4,6 +4,7 @@ use std::net::TcpListener;
 use std::path::Path;
 use std::process::Command;
 use std::thread;
+use std::time::{Duration, Instant};
 
 use tempfile::TempDir;
 use yaaml_core::{
@@ -35,12 +36,25 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     let mut db = Database::open(&db_path).unwrap();
     db.migrate().unwrap();
     insert_transcript_backed_turn(&db, tmp.path(), &project, "use recall");
+    db.insert_turn(&TurnRecord {
+        session_id: "session-1".to_string(),
+        turn_id: Some("turn-2".to_string()),
+        ordinal: 1,
+        byte_start: 100,
+        byte_end: 110,
+        observed_at: Some("2026-06-08T00:00:02Z".to_string()),
+        status: TurnStatus::Completed,
+        display_text: Some("later follow-up".to_string()),
+        cwd: Some(project.display().to_string()),
+        context: Some(yaaml_core::infer_context_from_path(&project)),
+    })
+    .unwrap();
     db.insert_memory(&MemoryRecord {
         id: None,
         title: "Earlier memory".to_string(),
         body: "Useful context".to_string(),
         scope: MemoryScope::Project,
-        kind: MemoryKind::Lesson,
+        kind: MemoryKind::ProjectFact,
         task_keys: Vec::new(),
         source_turn_refs: Vec::new(),
         created_at: "2026-06-08T00:00:01Z".to_string(),
@@ -149,6 +163,91 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
             .len(),
         0
     );
+}
+
+#[test]
+fn eval_recall_bulk_judged_replay_skips_turns_without_later_context() {
+    let tmp = TempDir::new().unwrap();
+    let home = tmp.path().join("home");
+    let project = tmp.path().join("project");
+    fs::create_dir_all(home.join(".yaaml")).unwrap();
+    fs::create_dir_all(&project).unwrap();
+    let db_path = home.join(".yaaml").join("yaaml.db");
+    fs::write(
+        home.join(".yaaml").join("config.toml"),
+        format!(
+            r#"
+db_path = "{}"
+embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
+"#,
+            db_path.display()
+        ),
+    )
+    .unwrap();
+    let mut db = Database::open(&db_path).unwrap();
+    db.migrate().unwrap();
+    for (session_id, ordinals) in [
+        ("single-turn-session", vec![0_u64]),
+        ("eligible-session", vec![0_u64, 1_u64]),
+    ] {
+        db.upsert_session(&SessionRecord {
+            id: session_id.to_string(),
+            agent_type: AgentType::Codex,
+            project_id: project.display().to_string(),
+            transcript_file_path: tmp
+                .path()
+                .join(format!("{session_id}.jsonl"))
+                .display()
+                .to_string(),
+            started_at: Some("2026-06-08T00:00:00Z".to_string()),
+            last_seen_at: Some("2026-06-08T00:00:02Z".to_string()),
+        })
+        .unwrap();
+        for ordinal in ordinals {
+            db.insert_turn(&TurnRecord {
+                session_id: session_id.to_string(),
+                turn_id: Some(format!("{session_id}-{ordinal}")),
+                ordinal,
+                byte_start: ordinal,
+                byte_end: ordinal + 1,
+                observed_at: Some(format!("2026-06-08T00:00:0{ordinal}Z")),
+                status: TurnStatus::Completed,
+                display_text: Some(format!("{session_id} turn {ordinal}")),
+                cwd: Some(project.display().to_string()),
+                context: Some(yaaml_core::infer_context_from_path(&project)),
+            })
+            .unwrap();
+        }
+    }
+    let eligible_turn_row_id = db
+        .turn_row_id_for_session_ordinal("eligible-session", 0)
+        .unwrap()
+        .unwrap();
+
+    let binary = env!("CARGO_BIN_EXE_yaaml");
+    let output = Command::new(binary)
+        .arg("eval")
+        .arg("recall")
+        .arg("--limit")
+        .arg("1")
+        .arg("--json")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(value["evaluated_turns"], 1);
+    assert_eq!(value["score_counts"]["n/a"], serde_json::Value::Null);
+    let run_id = value["run_id"].as_i64().unwrap();
+    let results = db.eval_results_for_run(run_id).unwrap();
+    assert_eq!(results.len(), 1);
+    assert_eq!(results[0].turn_id, eligible_turn_row_id);
 }
 
 #[test]
@@ -899,12 +998,25 @@ eval_judge_api_key_env = "YAAML_TEST_ANTHROPIC_KEY"
     let mut db = Database::open(&db_path).unwrap();
     db.migrate().unwrap();
     insert_transcript_backed_turn(&db, tmp.path(), &project, "use recall");
+    db.insert_turn(&TurnRecord {
+        session_id: "session-1".to_string(),
+        turn_id: Some("turn-2".to_string()),
+        ordinal: 1,
+        byte_start: 100,
+        byte_end: 110,
+        observed_at: Some("2026-06-08T00:00:04Z".to_string()),
+        status: TurnStatus::Completed,
+        display_text: Some("later follow-up".to_string()),
+        cwd: Some(project.display().to_string()),
+        context: Some(yaaml_core::infer_context_from_path(&project)),
+    })
+    .unwrap();
     db.insert_memory(&MemoryRecord {
         id: None,
         title: "Earlier memory".to_string(),
         body: "Useful context".to_string(),
         scope: MemoryScope::Project,
-        kind: MemoryKind::Lesson,
+        kind: MemoryKind::ProjectFact,
         task_keys: Vec::new(),
         source_turn_refs: Vec::new(),
         created_at: "2026-06-08T00:00:01Z".to_string(),
@@ -924,6 +1036,10 @@ eval_judge_api_key_env = "YAAML_TEST_ANTHROPIC_KEY"
     let output = Command::new(binary)
         .arg("eval")
         .arg("recall")
+        .arg("--session")
+        .arg("session-1")
+        .arg("--turn")
+        .arg("0")
         .arg("--limit")
         .arg("1")
         .arg("--json")
@@ -1898,9 +2014,22 @@ impl FakeServer {
 
 fn fake_anthropic_server() -> FakeServer {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    listener.set_nonblocking(true).unwrap();
     let base_url = format!("http://{}", listener.local_addr().unwrap());
     let handle = thread::spawn(move || {
-        let (mut stream, _) = listener.accept().unwrap();
+        let deadline = Instant::now() + Duration::from_secs(5);
+        let (mut stream, _) = loop {
+            match listener.accept() {
+                Ok(connection) => break connection,
+                Err(error)
+                    if error.kind() == std::io::ErrorKind::WouldBlock
+                        && Instant::now() < deadline =>
+                {
+                    thread::sleep(Duration::from_millis(10));
+                }
+                Err(error) => panic!("fake Anthropic server failed to accept request: {error}"),
+            }
+        };
         let mut buffer = [0_u8; 8192];
         let _ = stream.read(&mut buffer).unwrap();
         let body = r#"{"content":[{"type":"text","text":"{\"score\":\"5\",\"rationale\":\"directly relevant\"}"}]}"#;

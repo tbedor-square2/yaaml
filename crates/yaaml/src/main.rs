@@ -2537,31 +2537,40 @@ fn eval_replay_turns(
                 .with_context(|| format!("turn {turn} for session {session_id} not found"))?;
             Ok(vec![turn])
         }
-        (Some(session_id), None) => db
-            .turns_for_session(session_id, args.limit)
-            .with_context(|| format!("failed to load turns for session {session_id}"))?
-            .into_iter()
-            .map(|turn| {
-                let row_id = db
-                    .turn_row_id_for_session_ordinal(&turn.session_id, turn.ordinal)
-                    .with_context(|| {
-                        format!(
-                            "failed to load row id for session {} turn {}",
-                            turn.session_id, turn.ordinal
-                        )
-                    })?
-                    .with_context(|| {
-                        format!(
-                            "row id for session {} turn {} not found",
-                            turn.session_id, turn.ordinal
-                        )
-                    })?;
-                Ok((row_id, turn))
-            })
-            .collect(),
-        (None, None) => db
-            .list_turns_with_ids(args.limit)
-            .context("failed to load replay turns"),
+        (Some(session_id), None) => {
+            let turns = if args.no_judge {
+                db.turns_for_session(session_id, args.limit)
+            } else {
+                db.turns_for_session_with_later_completed_turns(session_id, args.limit)
+            }
+            .with_context(|| format!("failed to load turns for session {session_id}"))?;
+            turns
+                .into_iter()
+                .map(|turn| {
+                    let row_id = db
+                        .turn_row_id_for_session_ordinal(&turn.session_id, turn.ordinal)
+                        .with_context(|| {
+                            format!(
+                                "failed to load row id for session {} turn {}",
+                                turn.session_id, turn.ordinal
+                            )
+                        })?
+                        .with_context(|| {
+                            format!(
+                                "row id for session {} turn {} not found",
+                                turn.session_id, turn.ordinal
+                            )
+                        })?;
+                    Ok((row_id, turn))
+                })
+                .collect()
+        }
+        (None, None) => if args.no_judge {
+            db.list_turns_with_ids(args.limit)
+        } else {
+            db.list_turns_with_ids_having_later_completed_turns(args.limit)
+        }
+        .context("failed to load replay turns"),
         (None, Some(_)) => unreachable!("validated before eval replay turn loading"),
     }
 }

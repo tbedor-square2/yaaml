@@ -748,6 +748,38 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
         Ok(turns)
     }
 
+    pub fn turns_for_session_with_later_completed_turns(
+        &self,
+        session_id: &str,
+        limit: usize,
+    ) -> Result<Vec<TurnRecord>, DatabaseError> {
+        let mut stmt = self.conn.prepare(
+            "SELECT session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text, cwd, context_json
+             FROM turns t
+             WHERE t.session_id = ?1
+               AND t.status = 'completed'
+               AND EXISTS (
+                   SELECT 1
+                   FROM turns later
+                   WHERE later.session_id = t.session_id
+                     AND later.status = 'completed'
+                     AND later.ordinal > t.ordinal
+               )
+             ORDER BY t.ordinal DESC
+             LIMIT ?2",
+        )?;
+        let rows = stmt.query_map(
+            params![session_id, u64_to_i64(limit as u64)],
+            read_turn_record,
+        )?;
+        let mut turns = Vec::new();
+        for row in rows {
+            turns.push(row?);
+        }
+        turns.reverse();
+        Ok(turns)
+    }
+
     pub fn completed_turns_for_session_range(
         &self,
         session_id: &str,
@@ -1375,6 +1407,34 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
             "SELECT id, session_id, turn_id, ordinal, byte_start, byte_end, observed_at, status, display_text, cwd, context_json
              FROM turns
              ORDER BY observed_at, id
+             LIMIT ?1",
+        )?;
+        let rows = stmt.query_map(params![u64_to_i64(limit as u64)], |row| {
+            Ok((row.get(0)?, read_turn_record_from_offset(row, 1)?))
+        })?;
+        let mut turns = Vec::new();
+        for row in rows {
+            turns.push(row?);
+        }
+        Ok(turns)
+    }
+
+    pub fn list_turns_with_ids_having_later_completed_turns(
+        &self,
+        limit: usize,
+    ) -> Result<Vec<(i64, TurnRecord)>, DatabaseError> {
+        let mut stmt = self.conn.prepare(
+            "SELECT t.id, t.session_id, t.turn_id, t.ordinal, t.byte_start, t.byte_end, t.observed_at, t.status, t.display_text, t.cwd, t.context_json
+             FROM turns t
+             WHERE t.status = 'completed'
+               AND EXISTS (
+                   SELECT 1
+                   FROM turns later
+                   WHERE later.session_id = t.session_id
+                     AND later.status = 'completed'
+                     AND later.ordinal > t.ordinal
+               )
+             ORDER BY t.observed_at, t.id
              LIMIT ?1",
         )?;
         let rows = stmt.query_map(params![u64_to_i64(limit as u64)], |row| {

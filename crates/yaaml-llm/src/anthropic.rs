@@ -148,21 +148,31 @@ pub fn parse_json_from_text(text: &str) -> Result<Value, ProviderError> {
         return Ok(value);
     }
 
-    let Some(start) = trimmed.find(['{', '[']) else {
+    let mut saw_json_start = false;
+    let mut last_error = None;
+    for (start, _) in trimmed
+        .char_indices()
+        .filter(|(_, character)| matches!(character, '{' | '['))
+    {
+        saw_json_start = true;
+        let mut deserializer = serde_json::Deserializer::from_str(&trimmed[start..]);
+        match Value::deserialize(&mut deserializer) {
+            Ok(value) => return Ok(value),
+            Err(error) => last_error = Some(error),
+        }
+    }
+
+    if !saw_json_start {
         return Err(ProviderError::Parse(
             "message text did not contain JSON".to_string(),
         ));
-    };
-    let end = trimmed.rfind(['}', ']']).ok_or_else(|| {
-        ProviderError::Parse("message text did not contain complete JSON".to_string())
-    })?;
-    if end <= start {
-        return Err(ProviderError::Parse(
-            "message text did not contain complete JSON".to_string(),
-        ));
     }
-    serde_json::from_str::<Value>(&trimmed[start..=end])
-        .map_err(|error| ProviderError::Parse(error.to_string()))
+
+    Err(ProviderError::Parse(
+        last_error
+            .map(|error| error.to_string())
+            .unwrap_or_else(|| "message text did not contain complete JSON".to_string()),
+    ))
 }
 
 #[cfg(test)]
@@ -217,6 +227,17 @@ mod tests {
         let value = parse_json_from_text("Here is JSON:\n{\"title\":\"Memory\"}\nThanks").unwrap();
 
         assert_eq!(value["title"], "Memory");
+    }
+
+    #[test]
+    fn parses_first_json_value_when_response_has_trailing_json_or_text() {
+        let value = parse_json_from_text(
+            "```json\n{\"memories\":[{\"title\":\"Memory\"}]}\n```\n\n{\"ignored\":true}",
+        )
+        .unwrap();
+
+        assert_eq!(value["memories"][0]["title"], "Memory");
+        assert!(value.get("ignored").is_none());
     }
 
     #[test]

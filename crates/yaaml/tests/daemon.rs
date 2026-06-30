@@ -832,7 +832,7 @@ fn dedupe_keeps_related_but_distinct_same_project_memories() {
 }
 
 #[test]
-fn consolidation_scheduler_queues_one_delayed_task_for_new_memories() {
+fn consolidation_scheduler_skips_when_no_active_cluster_exists() {
     let mut db = Database::in_memory().unwrap();
     db.migrate().unwrap();
     db.insert_memory(&memory(
@@ -847,14 +847,12 @@ fn consolidation_scheduler_queues_one_delayed_task_for_new_memories() {
     };
 
     let queued = queue_memory_consolidation_if_due(&db, &config).unwrap();
-    let duplicate = queue_memory_consolidation_if_due(&db, &config).unwrap();
 
-    assert!(queued.is_some());
-    assert!(duplicate.is_none());
+    assert!(queued.is_none());
     assert_eq!(
         db.count_tasks_by_status(TASK_KIND_MEMORY_CONSOLIDATION, TaskStatus::Queued)
             .unwrap(),
-        1
+        0
     );
 }
 
@@ -922,6 +920,89 @@ fn consolidation_scheduler_requeues_when_active_cluster_still_exists() {
             .unwrap(),
         1
     );
+}
+
+#[test]
+fn consolidation_scheduler_ignores_unrelated_new_singleton_memory() {
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+    let cluster_memories = [
+        (
+            "Backtest turn context improves recall ranking",
+            "Turn context metadata improves recall ranking for multi-project sessions.",
+            vec![1.0_f32, 0.0],
+        ),
+        (
+            "Backtest confirmed turn context recall ranking improved",
+            "Backtests confirmed turn context improves recall ranking for multi-project sessions.",
+            vec![0.8_f32, 0.2],
+        ),
+        (
+            "Backtest showed improved recall ranking with turn context",
+            "Known bad sessions now return project-specific memories after turn context hydration.",
+            vec![0.6_f32, 0.4],
+        ),
+    ];
+    for (title, body, vector) in cluster_memories {
+        let memory_id = db
+            .insert_memory(&memory(title, body, Some("/tmp/yaaml")))
+            .unwrap();
+        db.upsert_embedding(&EmbeddingRecord {
+            memory_id,
+            embedding_model: "text-embedding-3-small".to_string(),
+            dimensions: vector.len() as u64,
+            embedding_blob: encode_f32_embedding(&vector),
+            embedded_text_hash: format!("hash-{memory_id}"),
+            updated_at: "2026-06-08T00:00:00Z".to_string(),
+        })
+        .unwrap();
+    }
+    let mut unrelated = memory(
+        "Unrelated new singleton",
+        "This fresh memory should not delay an older consolidation cluster.",
+        Some("/tmp/yaaml"),
+    );
+    unrelated.created_at = "unix:9999999999".to_string();
+    unrelated.updated_at = "unix:9999999999".to_string();
+    let unrelated_id = db.insert_memory(&unrelated).unwrap();
+    db.upsert_embedding(&EmbeddingRecord {
+        memory_id: unrelated_id,
+        embedding_model: "text-embedding-3-small".to_string(),
+        dimensions: 2,
+        embedding_blob: encode_f32_embedding(&[-1.0_f32, 0.0]),
+        embedded_text_hash: format!("hash-{unrelated_id}"),
+        updated_at: "unix:9999999999".to_string(),
+    })
+    .unwrap();
+    let config = Config {
+        consolidation_dark_period_seconds: 300,
+        ..Config::default()
+    };
+
+    let queued = queue_memory_consolidation_if_due(&db, &config).unwrap();
+
+    assert!(queued.is_some());
+    let queued_id = queued.unwrap();
+    let task = db
+        .list_tasks_by_kind(TASK_KIND_MEMORY_CONSOLIDATION)
+        .unwrap()
+        .into_iter()
+        .find(|task| task.id == queued_id)
+        .unwrap();
+    assert!(task
+        .next_run_at
+        .as_deref()
+        .unwrap_or("")
+        .starts_with("unix:"));
+    let next_run_seconds = task
+        .next_run_at
+        .as_deref()
+        .unwrap()
+        .strip_prefix("unix:")
+        .unwrap()
+        .parse::<i64>()
+        .unwrap();
+    assert!(next_run_seconds < 9_999_999_999);
 }
 
 #[test]
@@ -1007,6 +1088,106 @@ fn consolidation_task_merges_top_cluster_and_preserves_lineage() {
     assert!(db.get_embedding(active[0].id.unwrap()).unwrap().is_some());
     assert_eq!(
         db.count_tasks_by_status(TASK_KIND_MEMORY_CONSOLIDATION, TaskStatus::Completed)
+            .unwrap(),
+        1
+    );
+}
+
+#[test]
+fn consolidation_task_queues_next_when_another_cluster_remains() {
+    std::env::set_var("YAAML_TEST_CONSOLIDATION_KEY", "test-key");
+    std::env::set_var("YAAML_TEST_OPENAI_KEY", "test-key");
+    let anthropic = fake_anthropic_server(
+        r#"{"memories":[{"title":"YAAML recall scheduler consolidation","body":"YAAML consolidation should continue draining active duplicate memory clusters after each merge completes.","scope":"project","project_descriptor":"yaaml, Rust"}]}"#,
+    );
+    let embedding = fake_embedding_server();
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+    for (title, body, project_id, vector) in [
+        (
+            "YAAML scheduler should queue next consolidation",
+            "After one duplicate cluster merges, another active duplicate cluster should schedule the next consolidation.",
+            "/tmp/yaaml",
+            vec![1.0_f32, 0.0],
+        ),
+        (
+            "YAAML consolidation scheduler drains clusters",
+            "The consolidation scheduler should keep draining duplicate clusters until no active cluster remains.",
+            "/tmp/yaaml",
+            vec![0.99_f32, 0.01],
+        ),
+        (
+            "YAAML consolidation requeues after task completion",
+            "Completed consolidation tasks should enqueue another consolidation when active clusters remain.",
+            "/tmp/yaaml",
+            vec![0.98_f32, 0.02],
+        ),
+        (
+            "Other project duplicate cluster remains one",
+            "A separate project still has a duplicate memory cluster after the first consolidation finishes.",
+            "/tmp/other",
+            vec![0.0_f32, 1.0],
+        ),
+        (
+            "Other project duplicate cluster remains two",
+            "Another project duplicate memory should keep consolidation work active after the first merge.",
+            "/tmp/other",
+            vec![0.01_f32, 0.99],
+        ),
+        (
+            "Other project duplicate cluster remains three",
+            "The scheduler should notice remaining duplicate clusters in a different project.",
+            "/tmp/other",
+            vec![0.02_f32, 0.98],
+        ),
+    ] {
+        let memory_id = db
+            .insert_memory(&memory(title, body, Some(project_id)))
+            .unwrap();
+        db.upsert_embedding(&EmbeddingRecord {
+            memory_id,
+            embedding_model: "text-embedding-3-small".to_string(),
+            dimensions: vector.len() as u64,
+            embedding_blob: encode_f32_embedding(&vector),
+            embedded_text_hash: format!("hash-{memory_id}"),
+            updated_at: "2026-06-08T00:00:00Z".to_string(),
+        })
+        .unwrap();
+    }
+    db.enqueue_task(&TaskRecord {
+        id: None,
+        kind: TASK_KIND_MEMORY_CONSOLIDATION.to_string(),
+        status: TaskStatus::Queued,
+        priority: 0,
+        payload_json: "{}".to_string(),
+        attempts: 0,
+        max_attempts: 5,
+        next_run_at: None,
+        last_error: None,
+        created_at: "2026-06-08T00:00:00Z".to_string(),
+        updated_at: "2026-06-08T00:00:00Z".to_string(),
+    })
+    .unwrap();
+    let config = Config {
+        consolidation_api_key_env: "YAAML_TEST_CONSOLIDATION_KEY".to_string(),
+        consolidation_base_url: Some(anthropic.base_url.clone()),
+        consolidation_dark_period_seconds: 0,
+        embedding_api_key_env: "YAAML_TEST_OPENAI_KEY".to_string(),
+        embedding_base_url: Some(embedding.base_url.clone()),
+        ..Config::default()
+    };
+
+    assert_eq!(run_queued_tasks(&db, &config, 1).unwrap(), 1);
+    anthropic.join();
+    embedding.join();
+
+    assert_eq!(
+        db.count_tasks_by_status(TASK_KIND_MEMORY_CONSOLIDATION, TaskStatus::Completed)
+            .unwrap(),
+        1
+    );
+    assert_eq!(
+        db.count_tasks_by_status(TASK_KIND_MEMORY_CONSOLIDATION, TaskStatus::Queued)
             .unwrap(),
         1
     );

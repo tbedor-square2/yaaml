@@ -406,6 +406,10 @@ pub fn run_queued_tasks(db: &Database, config: &Config, limit: usize) -> anyhow:
                 }
                 db.complete_task(task_id, &unix_timestamp())
                     .context("failed to complete task")?;
+                if task.kind == TASK_KIND_MEMORY_CONSOLIDATION {
+                    queue_memory_consolidation_if_due(db, config)
+                        .context("failed to queue next memory consolidation")?;
+                }
                 completed += 1;
             }
             Ok(TaskRunOutcome::Deferred) => {}
@@ -1156,9 +1160,9 @@ pub fn queue_memory_consolidation_if_due(
         return Ok(None);
     }
 
-    let Some(latest_memory_created_at) = db
-        .latest_active_memory_created_at()
-        .context("failed to load latest active memory timestamp")?
+    let Some(latest_memory_created_at) =
+        latest_top_consolidation_cluster_memory_created_at(db, config)
+            .context("failed to load latest consolidation cluster memory timestamp")?
     else {
         return Ok(None);
     };
@@ -1206,6 +1210,13 @@ pub fn queue_memory_consolidation_if_due(
 }
 
 fn active_consolidation_cluster_exists(db: &Database, config: &Config) -> anyhow::Result<bool> {
+    Ok(top_consolidation_cluster(db, config)?.is_some())
+}
+
+fn top_consolidation_cluster(
+    db: &Database,
+    config: &Config,
+) -> anyhow::Result<Option<yaaml_core::MemoryCluster>> {
     let cluster_memories = consolidation_cluster_memories(db, config)?;
     let clusters = find_consolidation_clusters(
         &cluster_memories,
@@ -1213,7 +1224,24 @@ fn active_consolidation_cluster_exists(db: &Database, config: &Config) -> anyhow
         config.memory_cluster_min_size,
         config.memory_cluster_max_size,
     );
-    Ok(!clusters.is_empty())
+    Ok(clusters.into_iter().next())
+}
+
+fn latest_top_consolidation_cluster_memory_created_at(
+    db: &Database,
+    config: &Config,
+) -> anyhow::Result<Option<String>> {
+    let Some(cluster) = top_consolidation_cluster(db, config)? else {
+        return Ok(None);
+    };
+    let memories = db
+        .list_memories_by_ids(&cluster.memory_ids)
+        .context("failed to load top consolidation cluster memories")?;
+    Ok(memories
+        .into_iter()
+        .filter(|memory| memory.is_active)
+        .max_by_key(|memory| timestamp_seconds(&memory.created_at).unwrap_or(i64::MIN))
+        .map(|memory| memory.created_at))
 }
 
 fn should_defer_memory_consolidation(
@@ -1224,9 +1252,9 @@ fn should_defer_memory_consolidation(
     if task.attempts.saturating_add(1) >= task.max_attempts {
         return Ok(false);
     }
-    let Some(latest_memory_created_at) = db
-        .latest_active_memory_created_at()
-        .context("failed to load latest active memory timestamp")?
+    let Some(latest_memory_created_at) =
+        latest_top_consolidation_cluster_memory_created_at(db, config)
+            .context("failed to load latest consolidation cluster memory timestamp")?
     else {
         return Ok(false);
     };

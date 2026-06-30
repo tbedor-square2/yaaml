@@ -1705,6 +1705,171 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
 }
 
 #[test]
+fn eval_summary_since_window_includes_more_than_fifty_runs_by_default() {
+    let tmp = TempDir::new().unwrap();
+    let home = tmp.path().join("home");
+    let project = tmp.path().join("project");
+    fs::create_dir_all(home.join(".yaaml")).unwrap();
+    fs::create_dir_all(&project).unwrap();
+    let db_path = home.join(".yaaml").join("yaaml.db");
+    fs::write(
+        home.join(".yaaml").join("config.toml"),
+        format!(
+            r#"
+db_path = "{}"
+embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
+"#,
+            db_path.display()
+        ),
+    )
+    .unwrap();
+
+    let mut db = Database::open(&db_path).unwrap();
+    db.migrate().unwrap();
+    db.upsert_session(&SessionRecord {
+        id: "session-1".to_string(),
+        agent_type: AgentType::Codex,
+        project_id: project.display().to_string(),
+        transcript_file_path: "/tmp/session.jsonl".to_string(),
+        started_at: Some("unix:0".to_string()),
+        last_seen_at: Some("unix:200".to_string()),
+    })
+    .unwrap();
+    db.insert_turn(&TurnRecord {
+        session_id: "session-1".to_string(),
+        turn_id: Some("turn-7".to_string()),
+        ordinal: 7,
+        byte_start: 0,
+        byte_end: 10,
+        observed_at: Some("unix:100".to_string()),
+        status: TurnStatus::Completed,
+        display_text: Some("use recall".to_string()),
+        cwd: None,
+        context: None,
+    })
+    .unwrap();
+    let turn_row_id = db
+        .turn_row_id_for_session_ordinal("session-1", 7)
+        .unwrap()
+        .unwrap();
+    let low_memory_id = db
+        .insert_memory(&MemoryRecord {
+            id: None,
+            title: "Old low memory still in window".to_string(),
+            body: "Wrong context".to_string(),
+            scope: MemoryScope::Project,
+            kind: MemoryKind::Lesson,
+            task_keys: Vec::new(),
+            source_turn_refs: Vec::new(),
+            created_at: "unix:90".to_string(),
+            updated_at: "unix:90".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some(project.display().to_string()),
+            project_descriptor: Some("yaaml".to_string()),
+            lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: yaaml_core::MemoryValidity::Durable,
+        })
+        .unwrap();
+    let useful_memory_id = db
+        .insert_memory(&MemoryRecord {
+            id: None,
+            title: "Recent useful memory".to_string(),
+            body: "Good context".to_string(),
+            scope: MemoryScope::Project,
+            kind: MemoryKind::Lesson,
+            task_keys: Vec::new(),
+            source_turn_refs: Vec::new(),
+            created_at: "unix:90".to_string(),
+            updated_at: "unix:90".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some(project.display().to_string()),
+            project_descriptor: Some("yaaml".to_string()),
+            lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: yaaml_core::MemoryValidity::Durable,
+        })
+        .unwrap();
+
+    let low_run_id = db
+        .insert_eval_run_with_metadata(
+            "recall_1_to_5",
+            "unix:100",
+            &format!(
+                r#"{{"session_id":"session-1","turn_ordinal":7,"memory_ids":[{}]}}"#,
+                low_memory_id
+            ),
+            eval_metadata(7, "session_background"),
+        )
+        .unwrap();
+    db.insert_eval_result(
+        low_run_id,
+        turn_row_id,
+        Some(low_memory_id),
+        "2",
+        "wrong context",
+        "unix:101",
+    )
+    .unwrap();
+    db.complete_eval_run(low_run_id, "unix:102").unwrap();
+
+    for offset in 0..55 {
+        let started_at = format!("unix:{}", 110 + offset);
+        let run_id = db
+            .insert_eval_run_with_metadata(
+                "recall_1_to_5",
+                &started_at,
+                &format!(
+                    r#"{{"session_id":"session-1","turn_ordinal":7,"memory_ids":[{}]}}"#,
+                    useful_memory_id
+                ),
+                eval_metadata(7, "session_background"),
+            )
+            .unwrap();
+        db.insert_eval_result(
+            run_id,
+            turn_row_id,
+            Some(useful_memory_id),
+            "5",
+            "useful context",
+            &format!("unix:{}", 111 + offset),
+        )
+        .unwrap();
+        db.complete_eval_run(run_id, &format!("unix:{}", 112 + offset))
+            .unwrap();
+    }
+
+    let output = Command::new(env!("CARGO_BIN_EXE_yaaml"))
+        .arg("eval")
+        .arg("summary")
+        .arg("--json")
+        .arg("--since")
+        .arg("unix:100")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(value["runs_considered"], 56);
+    assert_eq!(value["score_counts"]["2"], 1);
+    assert_eq!(value["score_counts"]["5"], 55);
+    assert_eq!(
+        value["low_score_examples"][0]["memory_title"],
+        "Old low memory still in window"
+    );
+}
+
+#[test]
 fn eval_memories_reports_memory_level_mixed_scores() {
     let tmp = TempDir::new().unwrap();
     let home = tmp.path().join("home");

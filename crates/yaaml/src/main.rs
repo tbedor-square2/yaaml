@@ -188,7 +188,7 @@ struct EvalShowArgs {
 #[derive(Debug, Parser)]
 struct EvalSummaryArgs {
     /// Maximum recent runs to summarize.
-    #[arg(long, default_value_t = 50)]
+    #[arg(long, default_value_t = 1000)]
     limit: usize,
     /// Only include eval runs with this id or newer.
     #[arg(long)]

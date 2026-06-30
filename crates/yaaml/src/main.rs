@@ -779,6 +779,7 @@ struct MemoryListEntry {
     origin_segment_id: Option<i64>,
     origin_segment_status: Option<String>,
     validity: String,
+    superseded_by_memory_id: Option<i64>,
 }
 
 #[derive(Debug, Serialize)]
@@ -1194,6 +1195,7 @@ fn memory_list_entry(memory: MemoryRecord) -> MemoryListEntry {
             .origin_segment_status
             .map(|status| status.as_str().to_string()),
         validity: memory.validity.as_str().to_string(),
+        superseded_by_memory_id: memory.superseded_by_memory_id,
     }
 }
 
@@ -1631,7 +1633,14 @@ fn diagnose_memory_failure(
         .unwrap_or("")
         .to_ascii_lowercase();
 
+    if memory.superseded_by_memory_id.is_some() {
+        return "superseded".to_string();
+    }
+
     if judged_count >= 5 && accumulator.useful_count == 0 && low_rate >= 0.70 {
+        if looks_outdated_or_superseded(memory, &latest_low) {
+            return "outdated".to_string();
+        }
         if looks_like_stale_task_state(memory, &latest_low) {
             return "stale_task_state".to_string();
         }
@@ -1671,6 +1680,9 @@ fn diagnose_memory_failure(
     }
 
     if judged_count > 0 && low_rate >= 0.70 {
+        if looks_outdated_or_superseded(memory, &latest_low) {
+            return "outdated".to_string();
+        }
         if body_len < 300 {
             return "vague_under_contextualized".to_string();
         }
@@ -1724,6 +1736,9 @@ fn memory_health_evidence(
     if looks_stale_or_episodic(memory, &latest_low) {
         evidence.push("memory/rationale has stale episodic signals".to_string());
     }
+    if looks_outdated_or_superseded(memory, &latest_low) {
+        evidence.push("memory/rationale has outdated or superseded signals".to_string());
+    }
     if accumulator.useful_count > 0 && accumulator.low_count > 0 {
         evidence.push(format!(
             "mixed eval outcomes: useful_rate={:.1}% low_rate={:.1}%",
@@ -1737,6 +1752,8 @@ fn memory_health_evidence(
 fn recommended_memory_action(failure_mode: &str) -> String {
     match failure_mode {
         "wrong_context" => "regenerate_metadata_or_tighten_gates",
+        "superseded" => "move_to_dormant",
+        "outdated" => "move_to_dormant",
         "stale_task_state" => "move_to_dormant",
         "stale_episodic" => "move_to_dormant",
         "vague_under_contextualized" => "refine_or_suppress",
@@ -1824,6 +1841,32 @@ fn looks_stale_or_episodic(memory: &MemoryRecord, rationale: &str) -> bool {
         .any(|needle| text.contains(needle))
 }
 
+fn looks_outdated_or_superseded(memory: &MemoryRecord, rationale: &str) -> bool {
+    if memory.superseded_by_memory_id.is_some() {
+        return true;
+    }
+    let text = format!(
+        "{}\n{}\n{}",
+        memory.title.to_ascii_lowercase(),
+        memory.body.to_ascii_lowercase(),
+        rationale
+    );
+    [
+        "superseded",
+        "outdated",
+        "obsolete",
+        "replaced by",
+        "no longer applies",
+        "no longer true",
+        "newer memory",
+        "later context",
+        "later decision",
+        "updated guidance",
+    ]
+    .iter()
+    .any(|needle| text.contains(needle))
+}
+
 fn looks_like_stale_task_state(memory: &MemoryRecord, rationale: &str) -> bool {
     matches!(
         memory.kind,
@@ -1865,6 +1908,8 @@ fn home_dir_string() -> String {
 
 fn health_severity(memory: &MemoryHealthDiagnostic) -> (u8, u64, u64) {
     let mode_rank = match memory.failure_mode.as_str() {
+        "superseded" => 11,
+        "outdated" => 10,
         "wrong_context" => 10,
         "stale_task_state" => 9,
         "stale_episodic" => 9,
@@ -4143,9 +4188,9 @@ fn eval_judge_system_prompt() -> &'static str {
         "5: recalled context was relevant, concise, and actionable. ",
         "4: recalled context was relevant and concise, but not directly actionable. ",
         "3: recalled context was partially relevant, but also partially irrelevant or overly long. ",
-        "2: recalled context had only weak relevance, was stale/misleading, or required substantial filtering before use. ",
+        "2: recalled context had only weak relevance, was stale/misleading/outdated, or required substantial filtering before use. ",
         "1: recalled context was not relevant. ",
-        "For scores 1 or 2, name the main failure mode in the rationale when possible: stale task state, wrong context, noisy metadata, too generic, or too long."
+        "For scores 1 or 2, name the main failure mode in the rationale when possible: stale task state, outdated or superseded guidance, wrong context, noisy metadata, too generic, or too long."
     )
 }
 
@@ -4539,12 +4584,22 @@ fn read_active_recall_file(
 }
 
 fn cached_memory_requires_recall_refresh(memory: &MemoryRecord) -> bool {
-    is_transient_plan_memory(memory)
-        && !memory.task_keys.iter().any(|key| {
-            key.split_once(':')
-                .map(|(prefix, _)| prefix != "tool")
-                .unwrap_or(true)
-        })
+    memory.superseded_by_memory_id.is_some()
+        || segment_scoped_memory_from_inactive_origin(memory)
+        || is_transient_plan_memory(memory)
+            && !memory.task_keys.iter().any(|key| {
+                key.split_once(':')
+                    .map(|(prefix, _)| prefix != "tool")
+                    .unwrap_or(true)
+            })
+}
+
+fn segment_scoped_memory_from_inactive_origin(memory: &MemoryRecord) -> bool {
+    matches!(
+        memory.kind,
+        MemoryKind::ProjectFact | MemoryKind::TaskCheckpoint | MemoryKind::TaskState
+    ) && memory.origin_segment_id.is_some()
+        && memory.origin_segment_status != Some(yaaml_core::ConversationSegmentStatus::Active)
 }
 
 fn invalidate_recall_file(recall_path: &std::path::Path) -> anyhow::Result<()> {
@@ -4996,6 +5051,7 @@ fn remember(args: RememberArgs) -> anyhow::Result<()> {
         origin_segment_id: None,
         origin_segment_status: None,
         validity: MemoryValidity::Durable,
+        superseded_by_memory_id: None,
     };
     let text = embedding_text(&memory);
     let embedding_client = OpenAiEmbeddingClient::new(
@@ -5272,6 +5328,47 @@ mod tests {
     }
 
     #[test]
+    fn cached_recall_refreshes_segment_scoped_memory_from_inactive_origin() {
+        let active = cache_test_memory(
+            MemoryKind::ProjectFact,
+            Some(ConversationSegmentRecord {
+                id: Some(1),
+                session_id: "session-1".to_string(),
+                start_turn_ordinal: 1,
+                end_turn_ordinal: 2,
+                summary: "active task".to_string(),
+                task_keys: Vec::new(),
+                context: None,
+                status: yaaml_core::ConversationSegmentStatus::Active,
+                created_at: "unix:1".to_string(),
+                updated_at: "unix:1".to_string(),
+            }),
+            None,
+        );
+        let inactive = cache_test_memory(
+            MemoryKind::ProjectFact,
+            Some(ConversationSegmentRecord {
+                id: Some(2),
+                session_id: "session-1".to_string(),
+                start_turn_ordinal: 3,
+                end_turn_ordinal: 4,
+                summary: "completed task".to_string(),
+                task_keys: Vec::new(),
+                context: None,
+                status: yaaml_core::ConversationSegmentStatus::Completed,
+                created_at: "unix:2".to_string(),
+                updated_at: "unix:2".to_string(),
+            }),
+            None,
+        );
+        let superseded = cache_test_memory(MemoryKind::Lesson, None, Some(42));
+
+        assert!(!cached_memory_requires_recall_refresh(&active));
+        assert!(cached_memory_requires_recall_refresh(&inactive));
+        assert!(cached_memory_requires_recall_refresh(&superseded));
+    }
+
+    #[test]
     fn eval_since_window_filters_by_started_at() {
         assert!(eval_run_in_since_window(
             &eval_run_with_started_at("unix:1782771000"),
@@ -5319,6 +5416,33 @@ mod tests {
         }
     }
 
+    fn cache_test_memory(
+        kind: MemoryKind,
+        segment: Option<ConversationSegmentRecord>,
+        superseded_by_memory_id: Option<i64>,
+    ) -> MemoryRecord {
+        MemoryRecord {
+            id: Some(1),
+            title: "cached memory".to_string(),
+            body: "cached memory body".to_string(),
+            scope: MemoryScope::Project,
+            kind,
+            task_keys: Vec::new(),
+            source_turn_refs: Vec::new(),
+            created_at: "unix:1".to_string(),
+            updated_at: "unix:1".to_string(),
+            is_active: true,
+            session_id: Some("session-1".to_string()),
+            project_id: Some("/tmp/project".to_string()),
+            project_descriptor: Some("project".to_string()),
+            lineage_refs: Vec::new(),
+            origin_segment_id: segment.as_ref().and_then(|segment| segment.id),
+            origin_segment_status: segment.map(|segment| segment.status),
+            validity: MemoryValidity::Durable,
+            superseded_by_memory_id,
+        }
+    }
+
     #[test]
     fn health_apply_policy_accepts_only_high_confidence_inactive_actions() {
         assert!(should_apply_memory_health_action(&health_diagnostic(
@@ -5331,6 +5455,22 @@ mod tests {
         )));
         assert!(should_apply_memory_health_action(&health_diagnostic(
             "stale_task_state",
+            "move_to_dormant",
+            true,
+            6,
+            0,
+            5
+        )));
+        assert!(should_apply_memory_health_action(&health_diagnostic(
+            "outdated",
+            "move_to_dormant",
+            true,
+            6,
+            0,
+            5
+        )));
+        assert!(should_apply_memory_health_action(&health_diagnostic(
+            "superseded",
             "move_to_dormant",
             true,
             6,

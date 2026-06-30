@@ -1430,9 +1430,9 @@ fn recall_eval_system_prompt() -> &'static str {
         "5: recalled context was relevant, concise, and actionable. ",
         "4: recalled context was relevant and concise, but not directly actionable. ",
         "3: recalled context was partially relevant, but also partially irrelevant or overly long. ",
-        "2: recalled context had only weak relevance, was stale/misleading, or required substantial filtering before use. ",
+        "2: recalled context had only weak relevance, was stale/misleading/outdated, or required substantial filtering before use. ",
         "1: recalled context was not relevant. ",
-        "For scores 1 or 2, name the main failure mode in the rationale when possible: stale task state, wrong context, noisy metadata, too generic, or too long."
+        "For scores 1 or 2, name the main failure mode in the rationale when possible: stale task state, outdated or superseded guidance, wrong context, noisy metadata, too generic, or too long."
     )
 }
 
@@ -2329,6 +2329,7 @@ mod tests {
             origin_segment_id: None,
             origin_segment_status: None,
             validity: MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         }];
 
         let prompt = formulation_prompt(&config, "java", &[], &candidates);
@@ -2478,6 +2479,7 @@ mod tests {
             origin_segment_id: None,
             origin_segment_status: None,
             validity: MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         }
     }
 }

@@ -64,6 +64,7 @@ recall_memory_cooldown_seconds = 1200
         origin_segment_id: None,
         origin_segment_status: None,
         validity: yaaml_core::MemoryValidity::Durable,
+        superseded_by_memory_id: None,
     };
     let memory_id = db.insert_memory(&memory).unwrap();
     db.upsert_embedding(&EmbeddingRecord {
@@ -204,6 +205,7 @@ recall_llm_filter_enabled = false
         origin_segment_id: None,
         origin_segment_status: None,
         validity: yaaml_core::MemoryValidity::Durable,
+        superseded_by_memory_id: None,
     };
     let memory_id = db.insert_memory(&memory).unwrap();
     db.upsert_embedding(&EmbeddingRecord {
@@ -302,6 +304,7 @@ recall_llm_filter_enabled = false
             origin_segment_id: None,
             origin_segment_status: None,
             validity: yaaml_core::MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         },
     );
 
@@ -408,6 +411,7 @@ recall_llm_filter_enabled = false
             origin_segment_id: None,
             origin_segment_status: None,
             validity: yaaml_core::MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         },
     );
     drop(db);
@@ -507,6 +511,7 @@ recall_llm_filter_enabled = false
                     origin_segment_id: None,
                     origin_segment_status: None,
                     validity: yaaml_core::MemoryValidity::Durable,
+                    superseded_by_memory_id: None,
                 },
             )
         })
@@ -607,6 +612,7 @@ recall_llm_filter_enabled = false
             origin_segment_id: None,
             origin_segment_status: None,
             validity: yaaml_core::MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         },
     );
     let now_unix = SystemTime::now()
@@ -744,6 +750,7 @@ recall_llm_filter_enabled = false
             origin_segment_id: None,
             origin_segment_status: None,
             validity: yaaml_core::MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         },
     );
     let target_id = insert_memory_with_embedding(
@@ -766,6 +773,7 @@ recall_llm_filter_enabled = false
             origin_segment_id: None,
             origin_segment_status: None,
             validity: yaaml_core::MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         },
     );
 
@@ -874,6 +882,7 @@ recall_result_limit = 1
         origin_segment_id: None,
         origin_segment_status: None,
         validity: yaaml_core::MemoryValidity::Durable,
+                superseded_by_memory_id: None,
         },
     );
     let useful_memory_id = insert_memory_with_embedding(
@@ -896,6 +905,7 @@ recall_result_limit = 1
         origin_segment_id: None,
         origin_segment_status: None,
         validity: yaaml_core::MemoryValidity::Durable,
+                superseded_by_memory_id: None,
         },
     );
     let run_id = db.insert_eval_run("recall", "unix:3", "{}").unwrap();
@@ -1000,6 +1010,7 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
             origin_segment_id: None,
             origin_segment_status: None,
             validity: yaaml_core::MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         })
         .unwrap();
     db.deactivate_memory(memory_id, "2026-06-08T00:00:01Z")
@@ -1080,6 +1091,7 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
             origin_segment_id: None,
             origin_segment_status: None,
             validity: yaaml_core::MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         })
         .unwrap();
     db.deactivate_memory(memory_id, "2026-06-08T00:00:01Z")
@@ -1163,6 +1175,7 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
                 origin_segment_id: None,
                 origin_segment_status: None,
                 validity: yaaml_core::MemoryValidity::Durable,
+                superseded_by_memory_id: None,
             })
             .unwrap()
         })
@@ -1244,6 +1257,7 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
             origin_segment_id: None,
             origin_segment_status: None,
             validity: yaaml_core::MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         })
         .unwrap();
     let recall_path = recall_file_path(&recall_dir, &project_id);
@@ -1271,6 +1285,83 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     );
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(!stdout.contains("Segment implementation order"));
+    assert!(stdout.contains("no recall file"));
+    assert!(!recall_path.exists());
+}
+
+#[test]
+fn bare_recall_invalidates_cached_superseded_memory() {
+    let tmp = TempDir::new().unwrap();
+    let home = tmp.path().join("home");
+    let project = tmp.path().join("project");
+    fs::create_dir_all(home.join(".yaaml")).unwrap();
+    fs::create_dir_all(&project).unwrap();
+    let db_path = home.join(".yaaml").join("yaaml.db");
+    let recall_dir = home.join(".yaaml").join("recall");
+    fs::write(
+        home.join(".yaaml").join("config.toml"),
+        format!(
+            r#"
+db_path = "{}"
+recall_dir = "{}"
+embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
+"#,
+            db_path.display(),
+            recall_dir.display()
+        ),
+    )
+    .unwrap();
+
+    let project_id = project.canonicalize().unwrap();
+    let mut db = Database::open(&db_path).unwrap();
+    db.migrate().unwrap();
+    let memory_id = db
+        .insert_memory(&MemoryRecord {
+            id: None,
+            title: "Superseded recall memory".to_string(),
+            body: "This memory should not be printed after it is superseded.".to_string(),
+            scope: MemoryScope::Project,
+            kind: MemoryKind::Lesson,
+            task_keys: vec!["target:recall-cache".to_string()],
+            source_turn_refs: Vec::new(),
+            created_at: "2026-06-08T00:00:00Z".to_string(),
+            updated_at: "2026-06-08T00:00:00Z".to_string(),
+            is_active: true,
+            session_id: None,
+            project_id: Some(project_id.display().to_string()),
+            project_descriptor: Some("yaaml, Rust CLI memory daemon".to_string()),
+            lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: yaaml_core::MemoryValidity::Durable,
+            superseded_by_memory_id: Some(1234),
+        })
+        .unwrap();
+    let recall_path = recall_file_path(&recall_dir, &project_id);
+    fs::create_dir_all(recall_path.parent().unwrap()).unwrap();
+    fs::write(
+        &recall_path,
+        format!(
+            "# YAAML Recall\n\nmemory_count: 1\nmemory_ids: {memory_id}\n\n## Superseded recall memory\n\nThis memory should not be printed.\n"
+        ),
+    )
+    .unwrap();
+
+    let output = Command::new(env!("CARGO_BIN_EXE_yaaml"))
+        .arg("recall")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .env_remove("CODEX_THREAD_ID")
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(!stdout.contains("Superseded recall memory"));
     assert!(stdout.contains("no recall file"));
     assert!(!recall_path.exists());
 }
@@ -1322,6 +1413,7 @@ recall_llm_filter_enabled = false
         origin_segment_id: None,
         origin_segment_status: None,
         validity: yaaml_core::MemoryValidity::Durable,
+        superseded_by_memory_id: None,
     };
     let memory_id = db.insert_memory(&memory).unwrap();
     db.upsert_embedding(&EmbeddingRecord {
@@ -1450,6 +1542,7 @@ recall_llm_filter_enabled = false
         origin_segment_id: None,
         origin_segment_status: None,
         validity: yaaml_core::MemoryValidity::Durable,
+        superseded_by_memory_id: None,
     };
     let memory_id = db.insert_memory(&memory).unwrap();
     db.upsert_embedding(&EmbeddingRecord {
@@ -1653,6 +1746,7 @@ recall_llm_filter_enabled = false
         origin_segment_id: None,
         origin_segment_status: None,
         validity: yaaml_core::MemoryValidity::Durable,
+        superseded_by_memory_id: None,
     };
     let memory_id = db.insert_memory(&memory).unwrap();
     db.upsert_embedding(&EmbeddingRecord {
@@ -1781,6 +1875,7 @@ recall_live_turn_window = 2
         origin_segment_id: None,
         origin_segment_status: None,
         validity: yaaml_core::MemoryValidity::Durable,
+        superseded_by_memory_id: None,
     };
     let memory_id = db.insert_memory(&memory).unwrap();
     db.upsert_embedding(&EmbeddingRecord {
@@ -1965,6 +2060,7 @@ recall_live_turn_window = 2
             origin_segment_id: active_segment_id,
             origin_segment_status: None,
             validity: yaaml_core::MemoryValidity::ValidWhileSegmentActive,
+            superseded_by_memory_id: None,
         },
     );
 

@@ -58,6 +58,7 @@ fn status_human_output_reflects_database_state() {
         origin_segment_id: None,
         origin_segment_status: None,
         validity: yaaml_core::MemoryValidity::Durable,
+        superseded_by_memory_id: None,
     })
     .unwrap();
 

@@ -53,6 +53,7 @@ impl MemoryDraft {
             origin_segment_id: None,
             origin_segment_status: None,
             validity: MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         }
     }
 }
@@ -411,6 +412,7 @@ version = "0.1.0"
             origin_segment_id: None,
             origin_segment_status: None,
             validity: crate::MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         };
 
         let text = embedding_text(&memory);

@@ -67,6 +67,7 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
         origin_segment_id: None,
         origin_segment_status: None,
         validity: yaaml_core::MemoryValidity::Durable,
+        superseded_by_memory_id: None,
     })
     .unwrap();
 
@@ -290,6 +291,7 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
         origin_segment_id: None,
         origin_segment_status: None,
         validity: yaaml_core::MemoryValidity::Durable,
+        superseded_by_memory_id: None,
     })
     .unwrap();
     db.insert_turn(&TurnRecord {
@@ -725,6 +727,7 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
             origin_segment_id: None,
             origin_segment_status: None,
             validity: yaaml_core::MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         })
         .unwrap();
     let source_run_id = db
@@ -894,6 +897,7 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
             origin_segment_id: None,
             origin_segment_status: None,
             validity: yaaml_core::MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         })
         .unwrap();
     let source_run_id = db
@@ -1029,6 +1033,7 @@ eval_judge_api_key_env = "YAAML_TEST_ANTHROPIC_KEY"
         origin_segment_id: None,
         origin_segment_status: None,
         validity: yaaml_core::MemoryValidity::Durable,
+        superseded_by_memory_id: None,
     })
     .unwrap();
 
@@ -1104,6 +1109,7 @@ eval_judge_api_key_env = "YAAML_TEST_ANTHROPIC_KEY"
             origin_segment_id: None,
             origin_segment_status: None,
             validity: yaaml_core::MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         })
         .unwrap();
     let turn_row_id = db
@@ -1325,6 +1331,7 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
             origin_segment_id: None,
             origin_segment_status: None,
             validity: yaaml_core::MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         })
         .unwrap();
     let high_memory_id = db
@@ -1346,6 +1353,7 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
             origin_segment_id: None,
             origin_segment_status: None,
             validity: yaaml_core::MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         })
         .unwrap();
     let run_id = db
@@ -1771,6 +1779,7 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
             origin_segment_id: None,
             origin_segment_status: None,
             validity: yaaml_core::MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         })
         .unwrap();
     let useful_memory_id = db
@@ -1792,6 +1801,7 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
             origin_segment_id: None,
             origin_segment_status: None,
             validity: yaaml_core::MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         })
         .unwrap();
 
@@ -1935,6 +1945,7 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
             origin_segment_id: None,
             origin_segment_status: None,
             validity: yaaml_core::MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         })
         .unwrap();
     let low_memory_id = db
@@ -1956,6 +1967,7 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
             origin_segment_id: None,
             origin_segment_status: None,
             validity: yaaml_core::MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         })
         .unwrap();
     let first_run_id = db

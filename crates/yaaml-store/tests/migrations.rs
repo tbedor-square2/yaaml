@@ -9,7 +9,7 @@ fn migration_creates_expected_tables_and_is_idempotent() {
     db.migrate().unwrap();
     db.migrate().unwrap();
 
-    assert_eq!(db.schema_version().unwrap(), 6);
+    assert_eq!(db.schema_version().unwrap(), 7);
     let tables = db
         .table_names()
         .unwrap()
@@ -52,7 +52,7 @@ fn migration_creates_expected_tables_and_is_idempotent() {
         );
     }
     let memory_columns = db.column_names("memories").unwrap();
-    for expected in ["origin_segment_id", "validity"] {
+    for expected in ["origin_segment_id", "validity", "superseded_by_memory_id"] {
         assert!(
             memory_columns.contains(&expected.to_string()),
             "missing memories column {expected}"

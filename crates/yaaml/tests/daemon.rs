@@ -150,6 +150,7 @@ fn idle_segment_expiry_abandons_existing_active_segments() {
             origin_segment_id: segment_id,
             origin_segment_status: None,
             validity: yaaml_core::MemoryValidity::ValidWhileSegmentActive,
+            superseded_by_memory_id: None,
         })
         .unwrap();
 
@@ -475,6 +476,7 @@ fn formulation_can_refine_existing_candidate_memory() {
             origin_segment_id: None,
             origin_segment_status: None,
             validity: yaaml_core::MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         })
         .unwrap();
     assert_eq!(existing_id, 1);
@@ -706,6 +708,7 @@ fn memory_queue_skips_already_covered_source_refs() {
         origin_segment_id: None,
         origin_segment_status: None,
         validity: yaaml_core::MemoryValidity::Durable,
+        superseded_by_memory_id: None,
     })
     .unwrap();
     let config = Config {
@@ -757,6 +760,7 @@ fn inactive_memories_do_not_cover_source_refs_for_rebuild() {
         origin_segment_id: None,
         origin_segment_status: None,
         validity: yaaml_core::MemoryValidity::Durable,
+        superseded_by_memory_id: None,
     })
     .unwrap();
     let config = Config {
@@ -1836,6 +1840,7 @@ fn recall_file_is_written_after_memory_exists_and_new_turn_completes() {
         origin_segment_id: None,
         origin_segment_status: None,
         validity: yaaml_core::MemoryValidity::Durable,
+        superseded_by_memory_id: None,
     };
     let memory_id = db.insert_memory(&memory).unwrap();
     db.upsert_embedding(&EmbeddingRecord {
@@ -1971,6 +1976,7 @@ fn background_recall_uses_stored_segment_keys_for_task_state() {
             origin_segment_id: active_segment_id,
             origin_segment_status: Some(ConversationSegmentStatus::Active),
             validity: yaaml_core::MemoryValidity::ValidWhileSegmentActive,
+            superseded_by_memory_id: None,
         })
         .unwrap();
     db.upsert_embedding(&EmbeddingRecord {
@@ -2040,6 +2046,7 @@ fn background_recall_ignores_assistant_only_task_keys_for_task_checkpoints() {
             origin_segment_id: None,
             origin_segment_status: None,
             validity: yaaml_core::MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         })
         .unwrap();
     db.upsert_embedding(&EmbeddingRecord {
@@ -2451,5 +2458,6 @@ fn memory(title: &str, body: &str, project_id: Option<&str>) -> MemoryRecord {
         origin_segment_id: None,
         origin_segment_status: None,
         validity: yaaml_core::MemoryValidity::Durable,
+        superseded_by_memory_id: None,
     }
 }

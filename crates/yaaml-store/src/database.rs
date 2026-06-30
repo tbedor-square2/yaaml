@@ -1056,8 +1056,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
             "INSERT INTO memories (
                 title, body, scope, memory_kind, task_keys, source_turn_refs, created_at,
                 updated_at, is_active, session_id, project_id, project_descriptor, lineage_refs,
-                origin_segment_id, validity
-             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)",
+                origin_segment_id, validity, superseded_by_memory_id
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)",
             params![
                 memory.title,
                 memory.body,
@@ -1074,6 +1074,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
                 lineage_refs,
                 memory.origin_segment_id,
                 memory.validity.as_str(),
+                memory.superseded_by_memory_id,
             ],
         )?;
         let memory_id = self.conn.last_insert_rowid();
@@ -1135,9 +1136,10 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
             self.conn.execute(
                 "UPDATE memories
                  SET is_active = 0,
-                     updated_at = ?1
-                 WHERE id = ?2",
-                params![updated_at, source_id],
+                     updated_at = ?1,
+                     superseded_by_memory_id = ?2
+                 WHERE id = ?3",
+                params![updated_at, consolidated_id, source_id],
             )?;
         }
         Ok(consolidated_id)
@@ -1298,7 +1300,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
         let mut stmt = self.conn.prepare(
             "SELECT id, title, body, scope, memory_kind, task_keys, source_turn_refs,
                     created_at, updated_at, is_active, session_id, project_id,
-                    project_descriptor, lineage_refs, origin_segment_id, validity,
+                    project_descriptor, lineage_refs, origin_segment_id, validity, superseded_by_memory_id,
                     (SELECT status FROM conversation_segments WHERE id = memories.origin_segment_id)
              FROM memories
              ORDER BY id",
@@ -1322,7 +1324,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
                 .query_row(
                     "SELECT id, title, body, scope, memory_kind, task_keys, source_turn_refs,
                             created_at, updated_at, is_active, session_id, project_id,
-                            project_descriptor, lineage_refs, origin_segment_id, validity,
+                            project_descriptor, lineage_refs, origin_segment_id, validity, superseded_by_memory_id,
                             (SELECT status FROM conversation_segments WHERE id = memories.origin_segment_id)
                      FROM memories
                      WHERE id = ?1 AND is_active = 1",
@@ -1348,7 +1350,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
                 .query_row(
                     "SELECT id, title, body, scope, memory_kind, task_keys, source_turn_refs,
                             created_at, updated_at, is_active, session_id, project_id,
-                            project_descriptor, lineage_refs, origin_segment_id, validity,
+                            project_descriptor, lineage_refs, origin_segment_id, validity, superseded_by_memory_id,
                             (SELECT status FROM conversation_segments WHERE id = memories.origin_segment_id)
                      FROM memories
                      WHERE id = ?1",
@@ -1370,7 +1372,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
         let mut stmt = self.conn.prepare(
             "SELECT id, title, body, scope, memory_kind, task_keys, source_turn_refs,
                     created_at, updated_at, is_active, session_id, project_id,
-                    project_descriptor, lineage_refs, origin_segment_id, validity,
+                    project_descriptor, lineage_refs, origin_segment_id, validity, superseded_by_memory_id,
                     (SELECT status FROM conversation_segments WHERE id = memories.origin_segment_id)
              FROM memories
              WHERE is_active = 1 AND created_at < ?1
@@ -2567,7 +2569,8 @@ fn read_memory_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<MemoryRecord>
     let task_keys_json: String = row.get(5)?;
     let source_turn_refs_json: String = row.get(6)?;
     let lineage_refs_json: String = row.get(13)?;
-    let origin_segment_status: Option<String> = row.get(16)?;
+    let superseded_by_memory_id: Option<i64> = row.get(16)?;
+    let origin_segment_status: Option<String> = row.get(17)?;
     let title: String = row.get(1)?;
     let body: String = row.get(2)?;
     let scope = match scope.as_str() {
@@ -2614,6 +2617,7 @@ fn read_memory_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<MemoryRecord>
             "valid_while_segment_active" => MemoryValidity::ValidWhileSegmentActive,
             _ => MemoryValidity::Durable,
         },
+        superseded_by_memory_id,
     })
 }
 
@@ -3004,6 +3008,7 @@ CREATE TABLE conversation_segments (
                 origin_segment_id: None,
                 origin_segment_status: None,
                 validity: MemoryValidity::Durable,
+                superseded_by_memory_id: None,
             })
             .unwrap();
 
@@ -3080,6 +3085,7 @@ CREATE TABLE conversation_segments (
                 origin_segment_id: None,
                 origin_segment_status: None,
                 validity: MemoryValidity::Durable,
+                superseded_by_memory_id: None,
             })
             .unwrap();
 
@@ -3165,6 +3171,7 @@ CREATE TABLE conversation_segments (
                 origin_segment_id: stale_segment_id,
                 origin_segment_status: None,
                 validity: MemoryValidity::ValidWhileSegmentActive,
+                superseded_by_memory_id: None,
             })
             .unwrap();
         let active_task_state = db
@@ -3186,6 +3193,7 @@ CREATE TABLE conversation_segments (
                 origin_segment_id: active_segment_id,
                 origin_segment_status: None,
                 validity: MemoryValidity::ValidWhileSegmentActive,
+                superseded_by_memory_id: None,
             })
             .unwrap();
         let durable_lesson = db
@@ -3208,6 +3216,7 @@ CREATE TABLE conversation_segments (
                 origin_segment_id: stale_segment_id,
                 origin_segment_status: None,
                 validity: MemoryValidity::Durable,
+                superseded_by_memory_id: None,
             })
             .unwrap();
 
@@ -3261,6 +3270,7 @@ CREATE TABLE conversation_segments (
                 origin_segment_id: None,
                 origin_segment_status: None,
                 validity: MemoryValidity::ValidWhileSegmentActive,
+                superseded_by_memory_id: None,
             })
             .unwrap();
         let legacy_durable_task_state = db
@@ -3283,6 +3293,7 @@ CREATE TABLE conversation_segments (
                 origin_segment_id: None,
                 origin_segment_status: None,
                 validity: MemoryValidity::Durable,
+                superseded_by_memory_id: None,
             })
             .unwrap();
 
@@ -3336,6 +3347,7 @@ CREATE TABLE conversation_segments (
                 origin_segment_id: None,
                 origin_segment_status: None,
                 validity: MemoryValidity::Durable,
+                superseded_by_memory_id: None,
             })
             .unwrap();
 
@@ -3652,6 +3664,7 @@ WHERE session_id = 'session-1';
             origin_segment_id: None,
             origin_segment_status: None,
             validity: MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         };
         let task_checkpoint = MemoryRecord {
             title: "PR checkpoint".to_string(),
@@ -3695,6 +3708,7 @@ WHERE session_id = 'session-1';
             origin_segment_id: None,
             origin_segment_status: None,
             validity: MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         };
 
         db.insert_memory(&memory).unwrap();
@@ -3725,6 +3739,7 @@ WHERE session_id = 'session-1';
             origin_segment_id: None,
             origin_segment_status: None,
             validity: MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         };
 
         let memory_id = db.insert_memory(&memory).unwrap();
@@ -3761,6 +3776,7 @@ WHERE session_id = 'session-1';
             origin_segment_id: None,
             origin_segment_status: None,
             validity: MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         };
         let memory_id = db.insert_memory(&memory).unwrap();
         let embedded_text = yaaml_core::embedding_text(&memory);
@@ -3806,6 +3822,7 @@ WHERE session_id = 'session-1';
             origin_segment_id: None,
             origin_segment_status: None,
             validity: MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         };
         let first = db.insert_memory(&source("first")).unwrap();
         let second = db.insert_memory(&source("second")).unwrap();
@@ -3827,6 +3844,7 @@ WHERE session_id = 'session-1';
             origin_segment_id: None,
             origin_segment_status: None,
             validity: MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         };
 
         let merged_id = db
@@ -3840,6 +3858,14 @@ WHERE session_id = 'session-1';
             .find(|memory| memory.id == Some(merged_id))
             .unwrap();
         assert_eq!(merged.lineage_refs, vec![first, second]);
+        for source_id in [first, second] {
+            let source = memories
+                .iter()
+                .find(|memory| memory.id == Some(source_id))
+                .unwrap();
+            assert!(!source.is_active);
+            assert_eq!(source.superseded_by_memory_id, Some(merged_id));
+        }
     }
 
     #[test]

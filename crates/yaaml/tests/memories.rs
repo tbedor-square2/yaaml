@@ -631,6 +631,7 @@ backlog_formulation_turn_window = 10
             origin_segment_id: None,
             origin_segment_status: None,
             validity: yaaml_core::MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         })
         .unwrap()
     }

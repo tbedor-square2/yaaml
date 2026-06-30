@@ -167,6 +167,7 @@ pub struct MemoryRecord {
     pub origin_segment_id: Option<i64>,
     pub origin_segment_status: Option<ConversationSegmentStatus>,
     pub validity: MemoryValidity,
+    pub superseded_by_memory_id: Option<i64>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

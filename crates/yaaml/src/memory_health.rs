@@ -149,7 +149,14 @@ fn diagnose_memory_failure(
         .unwrap_or("")
         .to_ascii_lowercase();
 
+    if memory.superseded_by_memory_id.is_some() {
+        return "superseded".to_string();
+    }
+
     if judged_count >= 5 && accumulator.useful_count == 0 && low_rate >= 0.70 {
+        if looks_outdated_or_superseded(memory, &latest_low) {
+            return "outdated".to_string();
+        }
         if looks_like_stale_task_state(memory, &latest_low) {
             return "stale_task_state".to_string();
         }
@@ -189,6 +196,9 @@ fn diagnose_memory_failure(
     }
 
     if judged_count > 0 && low_rate >= 0.70 {
+        if looks_outdated_or_superseded(memory, &latest_low) {
+            return "outdated".to_string();
+        }
         if body_len < 300 {
             return "vague_under_contextualized".to_string();
         }
@@ -217,6 +227,12 @@ fn health_mode_adjustment(
     candidate: &RecallCandidate,
     memory_health: &MemoryHealthSummary,
 ) -> (f32, bool) {
+    if matches!(
+        memory_health.failure_mode.as_str(),
+        "superseded" | "outdated"
+    ) {
+        return (-0.85, false);
+    }
     if memory_health.low_count > 0 && !strong_specific_task(candidate) {
         return (-0.75, false);
     }
@@ -361,6 +377,27 @@ fn looks_stale_or_episodic(memory: &MemoryRecord, rationale: &str) -> bool {
         ]
         .iter()
         .any(|needle| text.contains(needle))
+}
+
+fn looks_outdated_or_superseded(memory: &MemoryRecord, rationale: &str) -> bool {
+    if memory.superseded_by_memory_id.is_some() {
+        return true;
+    }
+    let text = format!("{} {} {}", memory.title, memory.body, rationale).to_ascii_lowercase();
+    [
+        "superseded",
+        "outdated",
+        "obsolete",
+        "replaced by",
+        "no longer applies",
+        "no longer true",
+        "newer memory",
+        "later context",
+        "later decision",
+        "updated guidance",
+    ]
+    .iter()
+    .any(|needle| text.contains(needle))
 }
 
 fn looks_like_stale_task_state(memory: &MemoryRecord, rationale: &str) -> bool {
@@ -699,6 +736,52 @@ mod tests {
             .any(|penalty| penalty.contains("task_state:stale_task_state")));
     }
 
+    #[test]
+    fn health_action_rerank_classifies_outdated_durable_memory() {
+        let memory = memory(1, "Old rollout guidance", MemoryKind::ProjectFact);
+        let memories = vec![memory];
+        let history = vec![
+            score_with_rationale(1, "2", "The memory is outdated by a later decision."),
+            score_with_rationale(1, "1", "This guidance has been superseded."),
+            score_with_rationale(1, "2", "The old direction no longer applies."),
+            score_with_rationale(1, "1", "A newer memory replaced this fact."),
+            score_with_rationale(1, "2", "The recalled context is obsolete."),
+        ];
+        let health = build_memory_health_summaries(&memories, &history);
+
+        assert_eq!(health[&1].failure_mode, "outdated");
+
+        let reranked = apply_health_action_rerank(vec![candidate(1, 1.20)], &memories, &health);
+
+        assert!(reranked[0].score < 0.30);
+        assert!(reranked[0]
+            .rank
+            .penalties
+            .iter()
+            .any(|penalty| penalty.contains("project_fact:outdated")));
+    }
+
+    #[test]
+    fn health_action_rerank_classifies_explicitly_superseded_memory() {
+        let mut memory = memory(1, "Merged memory source", MemoryKind::Lesson);
+        memory.superseded_by_memory_id = Some(2);
+        let memories = vec![memory];
+        let health = build_memory_health_summaries(&memories, &[]);
+
+        assert_eq!(health.get(&1), None);
+
+        let history = vec![score_with_rationale(
+            1,
+            "5",
+            "Even if a prior eval was useful, explicit supersession should dominate.",
+        )];
+        let health = build_memory_health_summaries(&memories, &history);
+
+        assert_eq!(health[&1].failure_mode, "superseded");
+        let reranked = apply_health_action_rerank(vec![candidate(1, 1.20)], &memories, &health);
+        assert!(reranked[0].score < 0.50);
+    }
+
     fn memory(id: i64, title: &str, kind: MemoryKind) -> MemoryRecord {
         MemoryRecord {
             id: Some(id),
@@ -718,6 +801,7 @@ mod tests {
             origin_segment_id: None,
             origin_segment_status: None,
             validity: yaaml_core::MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         }
     }
 

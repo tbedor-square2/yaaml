@@ -1,4 +1,4 @@
-pub const EXPECTED_SCHEMA_VERSION: i64 = 6;
+pub const EXPECTED_SCHEMA_VERSION: i64 = 7;
 
 pub const MIGRATIONS: &[&str] = &[
     r#"
@@ -172,5 +172,10 @@ ALTER TABLE memories ADD COLUMN origin_segment_id INTEGER;
 ALTER TABLE memories ADD COLUMN validity TEXT NOT NULL DEFAULT 'durable';
 
 UPDATE schema_version SET version = 6;
+"#,
+    r#"
+ALTER TABLE memories ADD COLUMN superseded_by_memory_id INTEGER;
+
+UPDATE schema_version SET version = 7;
 "#,
 ];

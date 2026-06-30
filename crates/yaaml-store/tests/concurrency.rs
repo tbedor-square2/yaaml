@@ -24,6 +24,7 @@ fn memory(title: &str) -> MemoryRecord {
         origin_segment_id: None,
         origin_segment_status: None,
         validity: MemoryValidity::Durable,
+        superseded_by_memory_id: None,
     }
 }
 

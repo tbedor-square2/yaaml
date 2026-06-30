@@ -373,6 +373,13 @@ fn recall_filter_decision(
         && memory.origin_segment_status == Some(ConversationSegmentStatus::Active);
 
     let mut reasons = Vec::new();
+    if memory.superseded_by_memory_id.is_some() {
+        reasons.push("drop:superseded_memory".to_string());
+        return RecallFilterDecision {
+            keep: false,
+            reasons,
+        };
+    }
     if transient_plan_without_identity {
         reasons.push("drop:transient_plan_without_identity_key".to_string());
         return RecallFilterDecision {
@@ -3425,6 +3432,49 @@ Datadog is blocked by a Cloudflare Access redirect.
     }
 
     #[test]
+    fn selection_drops_explicitly_superseded_memory() {
+        let current_project = "/Users/tbedor/Development/yaaml";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let mut superseded = memory(
+            1,
+            "Old recall filtering guidance",
+            MemoryKind::Lesson,
+            Some(current_project),
+            vec!["target:recall-filter".to_string()],
+        );
+        superseded.superseded_by_memory_id = Some(2);
+        let memories = vec![superseded];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &["target:recall-filter".to_string()],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &["target:recall-filter".to_string()],
+            5,
+        );
+
+        assert!(selected.is_empty());
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:superseded_memory".to_string()));
+    }
+
+    #[test]
     fn semantic_context_alone_does_not_keep_task_state() {
         let current_project = "/Users/tbedor/Development/java";
         let hits = vec![VectorHit {
@@ -5361,6 +5411,7 @@ Datadog is blocked by a Cloudflare Access redirect; debug WARP authentication."#
             origin_segment_id: None,
             origin_segment_status: None,
             validity: MemoryValidity::Durable,
+            superseded_by_memory_id: None,
         }
     }
 

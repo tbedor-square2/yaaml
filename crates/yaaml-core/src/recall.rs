@@ -1065,13 +1065,13 @@ fn looks_like_transient_task_state(title: &str, body: &str) -> bool {
 fn matched_task_keys(query_task_keys: &[String], memory_task_keys: &[String]) -> Vec<String> {
     let mut matched = Vec::new();
     for query_key in query_task_keys {
-        if !is_recall_match_task_key(query_key) {
+        if !is_matchable_task_key(query_key) {
             continue;
         }
         let normalized_query_key = query_key.to_ascii_lowercase();
         if memory_task_keys
             .iter()
-            .filter(|memory_key| is_recall_match_task_key(memory_key))
+            .filter(|memory_key| is_matchable_task_key(memory_key))
             .any(|memory_key| memory_key.to_ascii_lowercase() == normalized_query_key)
         {
             push_unique(&mut matched, query_key.clone());
@@ -1125,6 +1125,12 @@ pub fn is_transient_plan_memory(memory: &MemoryRecord) -> bool {
 }
 
 fn is_recall_match_task_key(key: &str) -> bool {
+    key.split_once(':')
+        .map(|(prefix, _)| !matches!(prefix, "tool" | "topic"))
+        .unwrap_or(true)
+}
+
+fn is_matchable_task_key(key: &str) -> bool {
     key.split_once(':')
         .map(|(prefix, _)| prefix != "tool")
         .unwrap_or(true)
@@ -2620,6 +2626,77 @@ Datadog is blocked by a Cloudflare Access redirect.
             },
         );
 
+        assert_eq!(ranked[0].rank.task_key_bonus, 0.0);
+        assert!(!ranked[0]
+            .rank
+            .penalties
+            .contains(&"same_project_no_task_key_overlap".to_string()));
+    }
+
+    #[test]
+    fn topic_key_match_is_weak_recall_evidence() {
+        let current_project = "/Users/tbedor/Development/yaaml";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![memory(
+            1,
+            "YAAML segment lifecycle lesson",
+            MemoryKind::Lesson,
+            Some(current_project),
+            vec!["topic:task-state".to_string()],
+        )];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &["topic:task-state".to_string()],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        assert_eq!(
+            ranked[0].rank.matched_task_keys,
+            vec!["topic:task-state".to_string()]
+        );
+        assert_eq!(ranked[0].rank.task_key_bonus, 0.06);
+        assert!(!ranked[0]
+            .rank
+            .penalties
+            .contains(&"same_project_no_task_key_overlap".to_string()));
+    }
+
+    #[test]
+    fn topic_only_query_does_not_create_task_mismatch_penalty() {
+        let current_project = "/Users/tbedor/Development/yaaml";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.95,
+        }];
+        let memories = vec![memory(
+            1,
+            "YAAML segment lifecycle lesson",
+            MemoryKind::Lesson,
+            Some(current_project),
+            vec!["topic:recall-eval".to_string()],
+        )];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &["topic:task-state".to_string()],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        assert!(ranked[0].rank.matched_task_keys.is_empty());
         assert_eq!(ranked[0].rank.task_key_bonus, 0.0);
         assert!(!ranked[0]
             .rank

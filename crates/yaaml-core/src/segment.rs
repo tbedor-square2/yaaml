@@ -77,8 +77,10 @@ fn segment_record(
 ) -> ConversationSegmentRecord {
     let segment_turns = &turns[range.start_index..=range.end_index];
     let context = segment_context(segment_turns);
+    let mut task_keys = range.keys;
+    push_keys(&mut task_keys, segment_topic_keys(&context));
     let summary = segment_summary(
-        &range.keys,
+        &task_keys,
         &context,
         range.start_turn_ordinal,
         range.end_turn_ordinal,
@@ -89,7 +91,7 @@ fn segment_record(
         start_turn_ordinal: range.start_turn_ordinal,
         end_turn_ordinal: range.end_turn_ordinal,
         summary,
-        task_keys: range.keys,
+        task_keys,
         context: Some(context),
         status,
         created_at: timestamp.to_string(),
@@ -175,6 +177,25 @@ fn segment_topic_label(context: &ContextMetadata) -> Option<String> {
     } else {
         Some(tags.into_iter().take(3).collect::<Vec<_>>().join(", "))
     }
+}
+
+fn segment_topic_keys(context: &ContextMetadata) -> Vec<String> {
+    let mut tags = context
+        .subject_tags
+        .iter()
+        .filter(|tag| segment_summary_tag(tag))
+        .cloned()
+        .collect::<Vec<_>>();
+    tags.sort_by(|left, right| {
+        segment_summary_tag_priority(left)
+            .cmp(&segment_summary_tag_priority(right))
+            .then_with(|| left.cmp(right))
+    });
+    tags.dedup();
+    tags.into_iter()
+        .take(3)
+        .map(|tag| format!("topic:{tag}"))
+        .collect()
 }
 
 fn segment_summary_tag(tag: &str) -> bool {
@@ -522,9 +543,48 @@ mod tests {
         assert!(first_tags.contains(&"recall-eval".to_string()));
         assert!(second_tags.contains(&"task-state".to_string()));
         assert!(third_tags.contains(&"ingestion".to_string()));
+        assert!(segments[0]
+            .task_keys
+            .contains(&"topic:recall-eval".to_string()));
+        assert!(segments[1]
+            .task_keys
+            .contains(&"topic:task-state".to_string()));
+        assert!(segments[2]
+            .task_keys
+            .contains(&"topic:ingestion".to_string()));
         assert!(segments[0].summary.contains("recall-eval"));
         assert!(segments[1].summary.contains("task-state"));
         assert!(segments[2].summary.contains("ingestion"));
+    }
+
+    #[test]
+    fn segment_builder_derives_bounded_topic_keys_from_context() {
+        let turns = vec![
+            turn(
+                1,
+                "user: continue YAAML recall quality, eval metrics, memory consolidation, llm filter, daemon backlog, transcript ingestion",
+            ),
+            turn(2, "assistant: compared recall eval and consolidation behavior"),
+        ];
+
+        let segments = build_conversation_segments("session-1", &turns, "unix:1");
+
+        assert_eq!(segments.len(), 1);
+        let topic_keys = segments[0]
+            .task_keys
+            .iter()
+            .filter(|key| key.starts_with("topic:"))
+            .cloned()
+            .collect::<Vec<_>>();
+        assert_eq!(
+            topic_keys,
+            vec![
+                "topic:recall-eval".to_string(),
+                "topic:memory-consolidation".to_string(),
+                "topic:eval".to_string(),
+            ]
+        );
+        assert!(segments[0].summary.contains("topic:recall-eval"));
     }
 
     #[test]

@@ -865,15 +865,10 @@ fn numeric_eval_score(score: &str) -> Option<u8> {
 
 fn recall_eval_context_turns(
     db: &Database,
-    payload: &RecallEvalTaskPayload,
+    _payload: &RecallEvalTaskPayload,
     session_id: &str,
     turn_ordinal: u64,
 ) -> anyhow::Result<Vec<TurnRecord>> {
-    if payload.recall_origin == "tool_pre_use" {
-        return db
-            .completed_turns_for_session_range(session_id, turn_ordinal, turn_ordinal + 1)
-            .context("failed to load tool recall anchor turn");
-    }
     db.completed_turns_for_session_after_ordinal(session_id, turn_ordinal, 20)
         .context("failed to load turns after recall")
 }

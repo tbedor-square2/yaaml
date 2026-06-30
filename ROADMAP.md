@@ -89,9 +89,10 @@ Avoid repeatedly surfacing the same memory while it is likely already in the age
 Use deterministic tool and command signals when they can narrow recall without adding another lossy classifier.
 
 - Let memory creation optionally attach activation metadata such as tool name, command regex, repo, task key, or PR key.
-- At runtime, match against observable hook payloads and shell command patterns before vector ranking within the narrowed candidate set.
+- At runtime, prefer signals already present in transcripts, segment metadata, and explicit recall queries before vector ranking within the narrowed candidate set.
 - Keep this optional and evidence-driven; file watching and normal session recall should remain the primary path.
 - Avoid broad semantic labels such as `situation:pr-comment` until evals show they improve useful recall per context token.
+- Do not reintroduce broad pre-tool hooks without a separate experiment, deterministic activation rules, and metrics that segment hook recall from ordinary session recall.
 
 ## Memory Quality
 
@@ -125,9 +126,9 @@ Keep skill instructions explicit about YAAML surfaces.
 
 File watching should remain the primary integration path.
 
-- Optional hooks can improve latency or observability.
-- Hooks should not become required for normal transcript ingestion.
-- Hook payloads should carry pointers and metadata, not full transcript content.
+- The broad Codex PreToolUse hook experiment was removed because it fired too often and added low-value context.
+- Future hooks, if any, should be narrow observability hooks with deterministic activation rules, not general-purpose context injection.
+- Hooks should not become required for normal transcript ingestion or recall.
 
 ## Non-Goals For Now
 

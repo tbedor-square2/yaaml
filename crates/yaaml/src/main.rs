@@ -521,21 +521,6 @@ struct RecallArgs {
     /// Recall source for eval segmentation.
     #[arg(long, value_enum)]
     origin: Option<RecallOriginArg>,
-    /// Tool name for tool-triggered recall, e.g. Bash or apply_patch.
-    #[arg(long)]
-    tool_name: Option<String>,
-    /// Codex tool-use id for tool-triggered recall.
-    #[arg(long)]
-    tool_use_id: Option<String>,
-    /// Short command/input summary for tool-triggered recall.
-    #[arg(long)]
-    tool_input_summary: Option<String>,
-    /// Raw tool input JSON; Bash/apply_patch commands are summarized automatically.
-    #[arg(long)]
-    tool_input_json: Option<String>,
-    /// Emit Codex PreToolUse hook JSON with additionalContext.
-    #[arg(long)]
-    codex_hook_output: bool,
     /// Session id to replay recall for.
     #[arg(long)]
     session: Option<String>,
@@ -560,7 +545,6 @@ struct RecallArgs {
 enum RecallOriginArg {
     SessionBackground,
     ManualQuery,
-    ToolPreUse,
 }
 
 impl RecallOriginArg {
@@ -568,7 +552,6 @@ impl RecallOriginArg {
         match self {
             Self::SessionBackground => "session_background",
             Self::ManualQuery => "manual_query",
-            Self::ToolPreUse => "tool_pre_use",
         }
     }
 }
@@ -4215,9 +4198,7 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
         bail!("--debug-ranking requires --json");
     }
 
-    let tool_input_summary = tool_input_summary(&args)?;
-    let tool_query = tool_recall_query(&args, tool_input_summary.as_deref());
-    let explicit_recall = args.query.is_some() || tool_query.is_some();
+    let explicit_recall = args.query.is_some();
 
     if !explicit_recall && (args.session.is_some() || args.turn.is_some()) {
         return recall_for_historical_turn(args, &config, &db);
@@ -4225,7 +4206,7 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
 
     let recall_path = contextual_recall_file_path(&recall_dir, &project_id_path, &db)?;
     let recall_selection_limit = effective_recall_selection_limit(&config);
-    let Some(query) = args.query.clone().or(tool_query) else {
+    let Some(query) = args.query.clone() else {
         if args.json || args.debug_ranking {
             bail!("--json and --debug-ranking require --query or --session/--turn");
         }
@@ -4267,19 +4248,11 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
         .context("failed to embed recall query")?;
     let now = unix_timestamp();
     let project_id = project_id_path.display().to_string();
-    let recall_origin = args.origin.map(RecallOriginArg::as_str).unwrap_or(
-        if args.tool_name.is_some() || args.tool_input_json.is_some() {
-            "tool_pre_use"
-        } else {
-            "manual_query"
-        },
-    );
+    let recall_origin = args
+        .origin
+        .map(RecallOriginArg::as_str)
+        .unwrap_or("manual_query");
     let query_source = match recall_origin {
-        "tool_pre_use" => args
-            .tool_name
-            .as_deref()
-            .map(|tool_name| format!("tool_pre_use:{tool_name}"))
-            .unwrap_or_else(|| "tool_pre_use".to_string()),
         "manual_query" => "user input".to_string(),
         other => other.to_string(),
     };
@@ -4321,22 +4294,12 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
             yaaml::daemon::RecallEvalMetadata {
                 recall_origin: recall_origin.to_string(),
                 turn_id: args.turn_id.clone(),
-                tool_name: args.tool_name.clone(),
-                tool_use_id: args.tool_use_id.clone(),
-                tool_input_summary: tool_input_summary.clone(),
-                injected: (recall_origin == "tool_pre_use").then_some(!selected_ids.is_empty()),
+                tool_name: None,
+                tool_use_id: None,
+                tool_input_summary: None,
+                injected: None,
             },
         )?;
-    }
-    if args.codex_hook_output {
-        println!(
-            "{}",
-            serde_json::to_string(&codex_hook_recall_output(
-                !selected_ids.is_empty(),
-                &rendered
-            ))?
-        );
-        return Ok(());
     }
     if args.json {
         println!(
@@ -4378,43 +4341,6 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
         }
     }
     Ok(())
-}
-
-fn tool_input_summary(args: &RecallArgs) -> anyhow::Result<Option<String>> {
-    if let Some(summary) = args.tool_input_summary.as_deref() {
-        let summary = summary.trim();
-        if !summary.is_empty() {
-            return Ok(Some(truncate_chars(summary, 500)));
-        }
-    }
-    let Some(input_json) = args.tool_input_json.as_deref() else {
-        return Ok(None);
-    };
-    let value: serde_json::Value =
-        serde_json::from_str(input_json).context("failed to parse --tool-input-json")?;
-    let summary = value
-        .get("command")
-        .and_then(serde_json::Value::as_str)
-        .or_else(|| {
-            value
-                .pointer("/tool_input/command")
-                .and_then(serde_json::Value::as_str)
-        })
-        .or_else(|| value.get("cmd").and_then(serde_json::Value::as_str))
-        .map(str::to_string)
-        .unwrap_or_else(|| truncate_chars(&value.to_string(), 500));
-    Ok(Some(truncate_chars(summary.trim(), 500)))
-}
-
-fn tool_recall_query(args: &RecallArgs, tool_input_summary: Option<&str>) -> Option<String> {
-    let tool_name = args.tool_name.as_deref()?;
-    let mut parts = vec![format!("tool:{tool_name}")];
-    if let Some(summary) = tool_input_summary {
-        if !summary.trim().is_empty() {
-            parts.push(format!("tool input: {summary}"));
-        }
-    }
-    Some(parts.join("\n"))
 }
 
 fn recall_anchor_from_args_or_current(
@@ -4464,19 +4390,6 @@ fn queue_query_recall_eval(
         0,
     )?;
     Ok(())
-}
-
-fn codex_hook_recall_output(injected: bool, rendered: &str) -> serde_json::Value {
-    if injected {
-        serde_json::json!({
-            "hookSpecificOutput": {
-                "hookEventName": "PreToolUse",
-                "additionalContext": rendered,
-            },
-        })
-    } else {
-        serde_json::json!({})
-    }
 }
 
 fn refresh_missing_recall_file(

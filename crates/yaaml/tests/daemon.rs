@@ -1616,86 +1616,6 @@ fn recall_eval_scores_each_recalled_memory() {
 }
 
 #[test]
-fn tool_pre_use_recall_eval_scores_completed_anchor_turn() {
-    std::env::set_var("YAAML_TEST_EVAL_KEY", "test-key");
-    let judge =
-        fake_anthropic_server_with_requests(r#"{"score":"4","rationale":"same turn context"}"#, 1);
-    let mut db = Database::in_memory().unwrap();
-    db.migrate().unwrap();
-    db.upsert_session(&SessionRecord {
-        id: "session-1".to_string(),
-        agent_type: AgentType::Codex,
-        project_id: "/tmp/yaaml".to_string(),
-        transcript_file_path: "/tmp/session.jsonl".to_string(),
-        started_at: Some("2026-06-08T00:00:00Z".to_string()),
-        last_seen_at: Some("2026-06-08T00:00:01Z".to_string()),
-    })
-    .unwrap();
-    db.insert_turn(&TurnRecord {
-        session_id: "session-1".to_string(),
-        turn_id: Some("turn-0".to_string()),
-        ordinal: 0,
-        byte_start: 0,
-        byte_end: 10,
-        observed_at: Some("2026-06-08T00:00:02Z".to_string()),
-        status: yaaml_core::TurnStatus::Completed,
-        display_text: Some("same turn used the recalled tool guidance".to_string()),
-        cwd: None,
-        context: None,
-    })
-    .unwrap();
-    let memory_id = db
-        .insert_memory(&memory(
-            "Tool recall memory",
-            "Use the tool-specific guidance.",
-            Some("/tmp/yaaml"),
-        ))
-        .unwrap();
-    db.enqueue_task(&TaskRecord {
-        id: None,
-        kind: TASK_KIND_RECALL_EVAL.to_string(),
-        status: TaskStatus::Queued,
-        priority: 0,
-        payload_json: serde_json::json!({
-            "session_id": "session-1",
-            "turn_ordinal": 0,
-            "recall_text": "tool recall text",
-            "memory_ids": [memory_id],
-            "recall_origin": "tool_pre_use",
-            "tool_name": "Bash",
-            "injected": true,
-        })
-        .to_string(),
-        attempts: 0,
-        max_attempts: 5,
-        next_run_at: None,
-        last_error: None,
-        created_at: "2026-06-08T00:00:00Z".to_string(),
-        updated_at: "2026-06-08T00:00:00Z".to_string(),
-    })
-    .unwrap();
-    let config = Config {
-        eval_judge_api_key_env: "YAAML_TEST_EVAL_KEY".to_string(),
-        eval_judge_base_url: Some(judge.base_url.clone()),
-        ..Config::default()
-    };
-
-    assert_eq!(run_queued_tasks(&db, &config, 1).unwrap(), 1);
-    judge.join();
-
-    let runs = db.list_eval_runs(1).unwrap();
-    assert_eq!(runs[0].recall_origin, "tool_pre_use");
-    assert_eq!(runs[0].tool_name.as_deref(), Some("Bash"));
-    let results = db.eval_results_for_run(runs[0].id).unwrap();
-    assert_eq!(results[0].judge_score.as_deref(), Some("4"));
-    assert_eq!(
-        db.count_tasks_by_status(TASK_KIND_RECALL_EVAL, TaskStatus::Queued)
-            .unwrap(),
-        0
-    );
-}
-
-#[test]
 fn empty_recall_eval_records_abstention_category() {
     std::env::set_var("YAAML_TEST_EVAL_KEY", "test-key");
     let judge = fake_anthropic_server_with_requests(
@@ -1726,6 +1646,19 @@ fn empty_recall_eval_records_abstention_category() {
         context: None,
     })
     .unwrap();
+    db.insert_turn(&TurnRecord {
+        session_id: "session-1".to_string(),
+        turn_id: Some("turn-1".to_string()),
+        ordinal: 1,
+        byte_start: 10,
+        byte_end: 20,
+        observed_at: Some("2026-06-08T00:00:03Z".to_string()),
+        status: yaaml_core::TurnStatus::Completed,
+        display_text: Some("later turn shows a useful memory was missed".to_string()),
+        cwd: None,
+        context: None,
+    })
+    .unwrap();
     db.enqueue_task(&TaskRecord {
         id: None,
         kind: TASK_KIND_RECALL_EVAL.to_string(),
@@ -1736,8 +1669,7 @@ fn empty_recall_eval_records_abstention_category() {
             "turn_ordinal": 0,
             "recall_text": "",
             "memory_ids": [],
-            "recall_origin": "tool_pre_use",
-            "tool_name": "Bash",
+            "recall_origin": "manual_query",
             "injected": false,
         })
         .to_string(),

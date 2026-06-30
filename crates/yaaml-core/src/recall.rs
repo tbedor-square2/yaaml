@@ -534,6 +534,16 @@ fn recall_filter_decision(
                     reasons,
                 };
             }
+            if same_project
+                && !specific_recall_task_key_match(candidate)
+                && candidate.similarity < 0.60
+            {
+                reasons.push("drop:project_fact_weak_semantic_match".to_string());
+                return RecallFilterDecision {
+                    keep: false,
+                    reasons,
+                };
+            }
             if broad_project_id && !strong_context && !weak_task_key_match {
                 reasons.push("drop:broad_project_fact_weak_context".to_string());
                 return RecallFilterDecision {
@@ -3867,6 +3877,117 @@ Datadog is blocked by a Cloudflare Access redirect.
             .rank
             .filter_reasons
             .contains(&"keep:project_fact_context".to_string()));
+    }
+
+    #[test]
+    fn same_project_fact_with_topic_only_weak_semantic_match_drops() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.53,
+        }];
+        let mut mux_timeout_fact = memory(
+            1,
+            "Mux feature-fetch timeout causing DLQ backlog",
+            MemoryKind::ProjectFact,
+            Some(current_project),
+            vec![
+                "topic:risk-arbiter".to_string(),
+                "topic:riskarbiter".to_string(),
+            ],
+        );
+        mux_timeout_fact.body =
+            "TD_11 failed because MuxFeatureFetcher timed out on GetFeatures.".to_string();
+        mux_timeout_fact.project_descriptor = Some("java riskarbiter".to_string());
+        let memories = vec![mux_timeout_fact];
+        let query_context = ContextMetadata {
+            repo_id: Some("squareup/java".to_string()),
+            work_area: Some("riskarbiter".to_string()),
+            activity_domain: Some("code".to_string()),
+            subject_tags: vec![
+                "risk-arbiter".to_string(),
+                "riskarbiter".to_string(),
+                "mux".to_string(),
+            ],
+            ..ContextMetadata::default()
+        };
+        let query_keys = vec![
+            "topic:risk-arbiter".to_string(),
+            "topic:riskarbiter".to_string(),
+        ];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &query_context,
+            &query_keys,
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+        assert!(ranked[0].rank.context_score >= 0.42);
+        assert!(!specific_recall_task_key_match(&ranked[0]));
+
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &query_context,
+            &query_keys,
+            5,
+        );
+
+        assert!(selected.is_empty(), "{:?}", debug[0].rank.filter_reasons);
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:project_fact_weak_semantic_match".to_string()));
+    }
+
+    #[test]
+    fn same_project_fact_with_specific_key_match_survives_weak_semantic_match() {
+        let current_project = "/Users/tbedor/Development/java";
+        let hits = vec![VectorHit {
+            memory_id: 1,
+            similarity: 0.53,
+        }];
+        let mux_timeout_fact = memory(
+            1,
+            "Mux feature-fetch timeout causing DLQ backlog",
+            MemoryKind::ProjectFact,
+            Some(current_project),
+            vec!["trigger:td_11".to_string()],
+        );
+        let memories = vec![mux_timeout_fact];
+        let query_context = infer_context_from_text("debug Mux timeout for TD_11");
+        let query_keys = vec!["trigger:td_11".to_string()];
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &query_context,
+            &query_keys,
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &query_context,
+            &query_keys,
+            5,
+        );
+
+        assert_eq!(selected.len(), 1, "{:?}", debug[0].rank.filter_reasons);
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"keep:strong_task_key_match".to_string()));
     }
 
     #[test]

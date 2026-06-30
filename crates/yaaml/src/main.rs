@@ -162,7 +162,7 @@ struct EvalListArgs {
     /// Only include eval runs with this id or newer.
     #[arg(long)]
     since_run: Option<i64>,
-    /// Only include eval runs at or after this timestamp.
+    /// Only include eval runs at or after this timestamp or duration, e.g. unix:1782760000 or 24h.
     #[arg(long)]
     since: Option<String>,
     /// Emit machine-readable JSON.
@@ -187,7 +187,7 @@ struct EvalSummaryArgs {
     /// Only include eval runs with this id or newer.
     #[arg(long)]
     since_run: Option<i64>,
-    /// Only include eval runs at or after this timestamp.
+    /// Only include eval runs at or after this timestamp or duration, e.g. unix:1782760000 or 24h.
     #[arg(long)]
     since: Option<String>,
     /// Include only eval runs from this recall origin. Repeatable.
@@ -253,7 +253,7 @@ struct StatsArgs {
     /// Maximum recent eval runs to consider for usefulness metrics.
     #[arg(long, default_value_t = 1000)]
     eval_limit: usize,
-    /// Include only turns, recall runs, and eval runs at or after this timestamp.
+    /// Include only turns, recall runs, and eval runs at or after this timestamp or duration, e.g. unix:1782760000 or 24h.
     #[arg(long)]
     since: Option<String>,
     /// Include only recall/eval records from this origin. Repeatable.
@@ -652,9 +652,38 @@ fn stats(args: StatsArgs) -> anyhow::Result<()> {
 fn parse_since_unix(value: &str) -> anyhow::Result<i64> {
     let trimmed = value.trim();
     let seconds = trimmed.strip_prefix("unix:").unwrap_or(trimmed);
+    if let Some(since) = parse_since_duration(seconds)? {
+        return Ok(since);
+    }
     seconds.parse::<i64>().with_context(|| {
-        format!("--since must be a Unix timestamp like unix:1782760000 or 1782760000, got {value}")
+        format!(
+            "--since must be a Unix timestamp like unix:1782760000, a raw timestamp like 1782760000, or a duration like 24h, got {value}"
+        )
     })
+}
+
+fn parse_since_duration(value: &str) -> anyhow::Result<Option<i64>> {
+    let Some(unit) = value.chars().last().filter(|ch| ch.is_ascii_alphabetic()) else {
+        return Ok(None);
+    };
+    let amount = &value[..value.len().saturating_sub(unit.len_utf8())];
+    if amount.is_empty() || !amount.chars().all(|ch| ch.is_ascii_digit()) {
+        return Ok(None);
+    }
+    let amount = amount
+        .parse::<i64>()
+        .with_context(|| format!("invalid --since duration amount in {value}"))?;
+    let multiplier = match unit {
+        's' => 1,
+        'm' => 60,
+        'h' => 60 * 60,
+        'd' => 24 * 60 * 60,
+        'w' => 7 * 24 * 60 * 60,
+        _ => bail!("unsupported --since duration unit {unit}; use s, m, h, d, or w"),
+    };
+    Ok(Some(
+        unix_timestamp_seconds().saturating_sub(amount.saturating_mul(multiplier)),
+    ))
 }
 
 fn eval_origin_included(origin: &str, included: &[String], excluded: &[String]) -> bool {
@@ -5201,11 +5230,15 @@ fn load_config(cwd: &std::path::Path, explicit_config: Option<PathBuf>) -> anyho
 }
 
 fn unix_timestamp() -> String {
+    format!("unix:{}", unix_timestamp_seconds())
+}
+
+fn unix_timestamp_seconds() -> i64 {
     let seconds = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map(|duration| duration.as_secs())
         .unwrap_or(0);
-    format!("unix:{seconds}")
+    i64::try_from(seconds).unwrap_or(i64::MAX)
 }
 
 fn human_timestamp(timestamp: &str) -> String {
@@ -5264,6 +5297,30 @@ mod tests {
             human_timestamp("2026-06-11T00:00:00Z"),
             "2026-06-11T00:00:00Z"
         );
+    }
+
+    #[test]
+    fn parse_since_unix_accepts_timestamps_and_durations() {
+        assert_eq!(parse_since_unix("unix:1782760000").unwrap(), 1782760000);
+        assert_eq!(parse_since_unix("1782760000").unwrap(), 1782760000);
+
+        let before = unix_timestamp_seconds();
+        let since = parse_since_unix("24h").unwrap();
+        let after = unix_timestamp_seconds();
+        assert!(since <= after - 24 * 60 * 60);
+        assert!(since >= before - 24 * 60 * 60);
+
+        let before = unix_timestamp_seconds();
+        let since = parse_since_unix("2w").unwrap();
+        let after = unix_timestamp_seconds();
+        assert!(since <= after - 2 * 7 * 24 * 60 * 60);
+        assert!(since >= before - 2 * 7 * 24 * 60 * 60);
+    }
+
+    #[test]
+    fn parse_since_unix_rejects_unknown_duration_units() {
+        let error = parse_since_unix("1y").unwrap_err().to_string();
+        assert!(error.contains("unsupported --since duration unit y"));
     }
 
     #[test]

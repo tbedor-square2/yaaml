@@ -3,6 +3,9 @@
 Recall experiments are stored as timestamped directories so strategy results can
 be compared over time.
 
+Cross-experiment lessons and decisions are summarized in
+`../../EXPERIMENTS_LOG.md`.
+
 ## 2026-06-26: Codex PreToolUse Hook Removed
 
 The broad Codex PreToolUse hook experiment was removed from default installation.
@@ -58,7 +61,9 @@ Use `scripts/recall-5x5-worktree-metrics.py` for the agent-driven 5x5 loop:
 3. Run the same recall backtest for baseline plus all candidate worktrees.
 4. Collate comparable metrics into `manifest.json`, `summary.json`, and
    `REPORT.md`.
-5. Pick the most promising approach, then iterate on that approach 4 more times.
+5. Append the durable result to `EXPERIMENTS_LOG.md` on the primary branch,
+   including links to the report directory and any worktrees/subtrees used.
+6. Pick the most promising approach, then iterate on that approach 4 more times.
 
 Command shape:
 
@@ -92,8 +97,12 @@ Procedure:
 3. Implement each approach in a separate worktree.
 4. Run `scripts/recall-5x5-worktree-metrics.py` with baseline plus the 5
    candidate worktrees.
-5. Review the generated `REPORT.md`, choose the most promising approach, and
-   iterate on that approach 4 more times.
+5. Review the generated `REPORT.md`.
+6. Return to the primary branch and update `EXPERIMENTS_LOG.md` with the
+   experiment date, candidates, metrics, links to the generated artifacts, links
+   or paths for the relevant worktrees/subtrees, lessons learned, and the
+   selected next action.
+7. Choose the most promising approach and iterate on that approach 4 more times.
 
 Metrics to compare:
 
@@ -107,7 +116,9 @@ Metrics to compare:
 8. missed_useful_empty_rate
 
 Treat empty recall as abstention, not failure. Commit only the selected
-production change unless asked to preserve failed experiments.
+production change unless asked to preserve failed experiments. Always preserve
+the experiment readout by committing the generated report artifacts and the
+`EXPERIMENTS_LOG.md` entry on the primary branch.
 ```
 
 Use `scripts/recall-5x5-experiment.py` to replay the original five-strategy

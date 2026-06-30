@@ -1,0 +1,31 @@
+{
+  "anchors": 200,
+  "cohorts": 5,
+  "date": "2026-06-30",
+  "db_path": "/Users/tbedor/.yaaml/yaaml.db",
+  "details_path": "experiments/recall/2026-06-30-segment-task-fit-5x5/details.jsonl",
+  "input_dir": "target/strict-kind-production",
+  "kind": "segment_task_fit_5x5",
+  "label": "strict-kind-production",
+  "manifest_path": "experiments/recall/2026-06-30-segment-task-fit-5x5/manifest.json",
+  "primary_metrics": [
+    "average_known_score",
+    "useful_known_selected",
+    "low_known_selected",
+    "wrong_context_low_selected",
+    "stale_task_low_selected",
+    "useful_capture_runs",
+    "missed_useful_empty_runs",
+    "average_selected_per_anchor"
+  ],
+  "report_path": "experiments/recall/2026-06-30-segment-task-fit-5x5/REPORT.md",
+  "strategies": [
+    "production_health_action",
+    "segment_context_rerank",
+    "task_fit_required",
+    "wrong_context_penalty",
+    "segment_evidence_gate",
+    "segment_context_top2"
+  ],
+  "summary_path": "experiments/recall/2026-06-30-segment-task-fit-5x5/summary.json"
+}

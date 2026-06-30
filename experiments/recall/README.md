@@ -147,6 +147,12 @@ budgeting, LLM-filter proxies, memory corpus quality, and eval feedback. The
 report is intended to compare useful recall against context volume, not just
 average recall score.
 
+Use `scripts/recall-segment-task-fit-5x5-experiment.py` for segment/task-fit
+selection experiments. It compares context/task/provenance proxies over saved
+recall candidates and adds wrong-context plus stale-task low-selection metrics.
+It does not test segment-aware candidate generation because it replays already
+retrieved candidates.
+
 Use `scripts/export-recall-training-data.py` to convert saved recall backtest
 artifacts into candidate-level JSONL for selection experiments. Use
 `scripts/recall-feature-model-experiment.py` to compare a small local feature

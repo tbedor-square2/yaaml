@@ -37,6 +37,73 @@ Decision:
    vector-search failures or excessive memory length.
 3. Empty recall should continue to be tracked as abstention, not as a low score.
 
+## 2026-06-30: Segment/Task-Fit Recall 5x5
+
+Source: `experiments/recall/2026-06-30-segment-task-fit-5x5/REPORT.md`
+
+Experiment:
+
+1. Added `scripts/recall-segment-task-fit-5x5-experiment.py`.
+2. Replayed 200 saved `target/strict-kind-production` anchors across five
+   deterministic cohorts.
+3. Compared five segment/task-fit variants against current production
+   health-action selection: context-weighted rerank, task-fit-required gating,
+   wrong-context penalty, segment-evidence gate, and context-weighted top-two.
+4. No embedding or LLM provider calls were made. Strategies operated over
+   already retrieved candidates, so this tested reranking/selection rather than
+   segment-aware candidate generation.
+5. Added segment-specific metrics: wrong-context low selections and stale-task
+   low selections, both derived from existing oracle rationales for low-scored
+   selected memories.
+
+Metrics:
+
+1. `production_health_action`: avg score 2.94, 74 useful selected, 77 low
+   selected, 32 wrong-context lows, 43 stale-task lows, 56 useful runs, 58 low
+   runs, 2.06 avg memories, 31 empty recalls, 3 missed-useful empties.
+2. `segment_context_rerank`: avg score 2.80, 63 useful selected, 75 low
+   selected, 37 wrong-context lows, 36 stale-task lows, 52 useful runs, 62 low
+   runs, 2.46 avg memories, 15 empty recalls, 2 missed-useful empties.
+3. `task_fit_required`: avg score 2.95, 72 useful selected, 75 low selected,
+   29 wrong-context lows, 42 stale-task lows, 54 useful runs, 57 low runs, 1.95
+   avg memories, 33 empty recalls, 3 missed-useful empties.
+4. `wrong_context_penalty`: avg score 2.90, 67 useful selected, 70 low
+   selected, 29 wrong-context lows, 40 stale-task lows, 52 useful runs, 59 low
+   runs, 1.80 avg memories, 38 empty recalls, 5 missed-useful empties.
+5. `segment_evidence_gate`: avg score 2.98, 72 useful selected, 73 low
+   selected, 28 wrong-context lows, 40 stale-task lows, 54 useful runs, 55 low
+   runs, 1.79 avg memories, 46 empty recalls, 6 missed-useful empties.
+6. `segment_context_top2`: avg score 2.96, 52 useful selected, 50 low selected,
+   21 wrong-context lows, 26 stale-task lows, 45 useful runs, 47 low runs, 1.78
+   avg memories, 15 empty recalls, 2 missed-useful empties.
+
+Lessons:
+
+1. `task_fit_required` was the best conservative segment-fit candidate: it
+   reduced wrong-context lows by 3 and average memory count by 0.12 without
+   increasing missed-useful empties, but it also lost 2 useful runs.
+2. `segment_evidence_gate` improved average score and reduced more lows, but
+   increased missed-useful empties from 3 to 6.
+3. `segment_context_top2` strongly reduced noise: -27 low selections, -11
+   wrong-context lows, -17 stale-task lows, and -0.28 avg memories. It also lost
+   too much useful recall: -22 useful selected and -11 useful runs.
+4. Naive context-weighted reranking was actively bad for wrong-context recall:
+   `segment_context_rerank` increased wrong-context lows from 32 to 37 and
+   increased low-selection runs from 58 to 62.
+5. Segment/task-fit selection is a precision lever over the existing candidate
+   set, but it does not solve candidate retrieval. The useful losses suggest
+   that better segment-aware candidate generation is likely more important than
+   more aggressive post-retrieval gates.
+
+Decision:
+
+1. Do not ship any of these variants directly.
+2. Keep `task_fit_required` as the conservative reranking/gating shape to
+   compare against future work.
+3. Next segment/task-fit experiment should change candidate generation using
+   compact segment summaries or segment keys before vector retrieval, then
+   replay against the same metrics.
+
 ## 2026-06-26: Broad Codex PreToolUse Hook Removed
 
 Sources:

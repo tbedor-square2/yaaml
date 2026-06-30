@@ -209,6 +209,9 @@ struct EvalMemoriesArgs {
     /// Only include eval runs with this id or newer.
     #[arg(long)]
     since_run: Option<i64>,
+    /// Only include eval runs at or after this timestamp or duration, e.g. unix:1782760000 or 24h.
+    #[arg(long)]
+    since: Option<String>,
     /// Maximum memories to show.
     #[arg(long, default_value_t = 25)]
     limit: usize,
@@ -2808,9 +2811,13 @@ fn eval_memories(args: EvalMemoriesArgs) -> anyhow::Result<()> {
     let mut db = Database::open(&db_path)
         .with_context(|| format!("failed to open {}", display(&db_path)))?;
     db.migrate().context("failed to migrate database")?;
+    let since_unix = args.since.as_deref().map(parse_since_unix).transpose()?;
     let runs = db
         .list_eval_runs_filtered(args.eval_limit, args.since_run)
-        .context("failed to list eval runs")?;
+        .context("failed to list eval runs")?
+        .into_iter()
+        .filter(|run| eval_run_in_since_window(run, since_unix))
+        .collect::<Vec<_>>();
     let diagnostics = build_eval_memory_diagnostics(&db, runs, args.sort, args.limit)?;
 
     if args.json {

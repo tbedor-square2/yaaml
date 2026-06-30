@@ -1727,6 +1727,32 @@ embedding_api_key_env = "YAAML_TEST_MISSING_OPENAI_KEY"
     assert_eq!(filtered_value["memories"][0]["memory_id"], mixed_memory_id);
     assert_eq!(filtered_value["memories"][0]["average_score"], 5.0);
 
+    let since_filtered = Command::new(binary)
+        .arg("eval")
+        .arg("memories")
+        .arg("--since")
+        .arg("unix:1780876806")
+        .arg("--json")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .output()
+        .unwrap();
+    assert!(
+        since_filtered.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&since_filtered.stderr)
+    );
+    let since_filtered_value: serde_json::Value =
+        serde_json::from_slice(&since_filtered.stdout).unwrap();
+    assert_eq!(since_filtered_value["eval_runs_considered"], 1);
+    assert_eq!(since_filtered_value["result_rows_considered"], 1);
+    assert_eq!(since_filtered_value["memories_considered"], 1);
+    assert_eq!(
+        since_filtered_value["memories"][0]["memory_id"],
+        mixed_memory_id
+    );
+    assert_eq!(since_filtered_value["memories"][0]["average_score"], 5.0);
+
     let low_sorted = Command::new(binary)
         .arg("eval")
         .arg("memories")

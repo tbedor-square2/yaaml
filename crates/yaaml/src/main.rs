@@ -4500,7 +4500,7 @@ fn refresh_missing_recall_file(
         },
     )?;
     if result.selected_memory_ids.is_empty() {
-        return Ok(None);
+        return Ok(Some(result.markdown));
     }
     let write = write_recall_file(recall_path, &result.markdown, &result.selected_memory_ids)
         .context("failed to write missing recall file")?;

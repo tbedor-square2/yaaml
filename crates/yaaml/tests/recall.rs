@@ -1541,6 +1541,97 @@ recall_llm_filter_enabled = false
 }
 
 #[test]
+fn bare_recall_reports_empty_on_demand_recall_without_writing_file() {
+    let tmp = TempDir::new().unwrap();
+    let home = tmp.path().join("home");
+    let project = tmp.path().join("project");
+    fs::create_dir_all(home.join(".yaaml")).unwrap();
+    fs::create_dir_all(&project).unwrap();
+    let db_path = home.join(".yaaml").join("yaaml.db");
+    let recall_dir = home.join(".yaaml").join("recall");
+    let server = fake_embedding_server();
+    fs::write(
+        home.join(".yaaml").join("config.toml"),
+        format!(
+            r#"
+db_path = "{}"
+recall_dir = "{}"
+embedding_base_url = "{}"
+recall_llm_filter_enabled = false
+"#,
+            db_path.display(),
+            recall_dir.display(),
+            server.base_url
+        ),
+    )
+    .unwrap();
+
+    let project_id = project.canonicalize().unwrap().display().to_string();
+    let (transcript_path, turn_ranges) = write_codex_transcript(
+        tmp.path(),
+        "session-empty-recall-file.jsonl",
+        "session-empty-recall-file",
+        &project,
+        &["agent should handle no recall results"],
+    );
+    let mut db = Database::open(&db_path).unwrap();
+    db.migrate().unwrap();
+    db.upsert_session(&SessionRecord {
+        id: "session-empty-recall-file".to_string(),
+        agent_type: AgentType::Codex,
+        project_id: project_id.clone(),
+        transcript_file_path: transcript_path.display().to_string(),
+        started_at: Some("2026-06-08T00:00:00Z".to_string()),
+        last_seen_at: Some("2026-06-08T00:00:03Z".to_string()),
+    })
+    .unwrap();
+    let (byte_start, byte_end) = turn_ranges[0];
+    db.insert_turn(&TurnRecord {
+        session_id: "session-empty-recall-file".to_string(),
+        turn_id: Some("turn-1".to_string()),
+        ordinal: 1,
+        byte_start,
+        byte_end,
+        observed_at: Some("2026-06-08T00:00:03Z".to_string()),
+        status: TurnStatus::Completed,
+        display_text: None,
+        cwd: Some(project_id),
+        context: Some(yaaml_core::infer_context_from_path(&project)),
+    })
+    .unwrap();
+
+    let binary = env!("CARGO_BIN_EXE_yaaml");
+    let output = Command::new(binary)
+        .arg("recall")
+        .current_dir(&project)
+        .env("HOME", &home)
+        .env("OPENAI_API_KEY", "test-key")
+        .env("CODEX_THREAD_ID", "session-empty-recall-file")
+        .output()
+        .unwrap();
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    server.join();
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("# YAAML Recall"));
+    assert!(stdout.contains("memory_count: 0"));
+    assert!(!stdout.contains("no recall file"));
+
+    let recall_path = session_recall_file_path(&recall_dir, "session-empty-recall-file");
+    assert!(!recall_path.exists());
+    let db = Database::open(&db_path).unwrap();
+    assert_eq!(
+        db.count_tasks_by_status(TASK_KIND_RECALL_EVAL, TaskStatus::Queued)
+            .unwrap(),
+        0
+    );
+}
+
+#[test]
 fn recall_query_falls_back_to_latest_project_session() {
     let tmp = TempDir::new().unwrap();
     let home = tmp.path().join("home");

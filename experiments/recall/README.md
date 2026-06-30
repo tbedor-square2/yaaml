@@ -48,6 +48,68 @@ Abstention metrics are tracked separately from score metrics:
 - `missed_useful_empty_runs`
 - `missed_useful_empty_rate`
 
+## 5x5 Worktree Loop
+
+Use `scripts/recall-5x5-worktree-metrics.py` for the agent-driven 5x5 loop:
+
+1. Generate 5 distinct implementation approaches for improving memory or recall
+   metrics.
+2. Implement each approach in its own worktree.
+3. Run the same recall backtest for baseline plus all candidate worktrees.
+4. Collate comparable metrics into `manifest.json`, `summary.json`, and
+   `REPORT.md`.
+5. Pick the most promising approach, then iterate on that approach 4 more times.
+
+Command shape:
+
+```bash
+python3 scripts/recall-5x5-worktree-metrics.py \
+  --baseline baseline=/Users/tbedor/Development/yaaml \
+  --candidate approach-a=/path/to/worktree-a \
+  --candidate approach-b=/path/to/worktree-b \
+  --candidate approach-c=/path/to/worktree-c \
+  --candidate approach-d=/path/to/worktree-d \
+  --candidate approach-e=/path/to/worktree-e \
+  --out-dir experiments/recall/$(date +%F)-5x5-round-1
+```
+
+Shareable prompt:
+
+```text
+Run a YAAML 5x5 recall-improvement experiment.
+
+Goal:
+Improve YAAML memory/recall metrics using experimental worktrees, measured by
+the repository eval tooling. Do not optimize average score alone; optimize useful
+recall per context cost, with abstention tracked separately.
+
+Procedure:
+
+1. Inspect current recall metrics with `yaaml stats`, `yaaml eval summary`, and
+   recent low-score examples.
+2. Propose 5 materially different approaches to improve recall or memory
+   quality.
+3. Implement each approach in a separate worktree.
+4. Run `scripts/recall-5x5-worktree-metrics.py` with baseline plus the 5
+   candidate worktrees.
+5. Review the generated `REPORT.md`, choose the most promising approach, and
+   iterate on that approach 4 more times.
+
+Metrics to compare:
+
+1. average_known_score
+2. useful_known_selected
+3. low_known_selected
+4. useful_capture_runs
+5. low_selection_runs
+6. average_selected_per_anchor
+7. empty_recall_rate
+8. missed_useful_empty_rate
+
+Treat empty recall as abstention, not failure. Commit only the selected
+production change unless asked to preserve failed experiments.
+```
+
 Use `scripts/recall-5x5-experiment.py` to replay the original five-strategy
 exercise from a `scripts/backtest-recall-strategy.sh` output directory.
 

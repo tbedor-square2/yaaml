@@ -31,6 +31,14 @@ fn task_lifecycle_supports_running_completion_parking_and_requeue() {
 
     db.mark_task_running(complete_id, "2026-06-08T00:00:01Z")
         .unwrap();
+    let running_task = db
+        .list_tasks(Some("running"), 10)
+        .unwrap()
+        .into_iter()
+        .find(|task| task.id == complete_id)
+        .unwrap();
+    assert_eq!(running_task.next_run_at, None);
+    assert_eq!(running_task.last_error, None);
     assert_eq!(
         db.count_tasks_by_status("memory_formulation", TaskStatus::Running)
             .unwrap(),
@@ -43,6 +51,14 @@ fn task_lifecycle_supports_running_completion_parking_and_requeue() {
             .unwrap(),
         1
     );
+    let completed_task = db
+        .list_tasks(Some("completed"), 10)
+        .unwrap()
+        .into_iter()
+        .find(|task| task.id == complete_id)
+        .unwrap();
+    assert_eq!(completed_task.next_run_at, None);
+    assert_eq!(completed_task.last_error, None);
 
     db.park_task(parked_id, "missing provider key", "2026-06-08T00:00:03Z")
         .unwrap();
@@ -71,4 +87,44 @@ fn future_queued_tasks_are_not_returned_until_due() {
 
     assert!(db.next_queued_task(199).unwrap().is_none());
     assert!(db.next_queued_task(200).unwrap().is_some());
+}
+
+#[test]
+fn task_running_and_completed_transitions_clear_stale_retry_metadata() {
+    let mut db = Database::in_memory().unwrap();
+    db.migrate().unwrap();
+
+    let mut stale = task("recall_eval", 0);
+    stale.next_run_at = Some("unix:200".to_string());
+    stale.last_error = Some("waiting for subsequent turns before recall eval".to_string());
+    let task_id = db.enqueue_task(&stale).unwrap();
+
+    db.mark_task_running(task_id, "2026-06-08T00:00:01Z")
+        .unwrap();
+    let running_task = db
+        .list_tasks(Some("running"), 10)
+        .unwrap()
+        .into_iter()
+        .find(|task| task.id == task_id)
+        .unwrap();
+    assert_eq!(running_task.next_run_at, None);
+    assert_eq!(running_task.last_error, None);
+
+    db.reschedule_task(
+        task_id,
+        1,
+        "unix:300",
+        "temporary provider failure",
+        "2026-06-08T00:00:02Z",
+    )
+    .unwrap();
+    db.complete_task(task_id, "2026-06-08T00:00:03Z").unwrap();
+    let completed_task = db
+        .list_tasks(Some("completed"), 10)
+        .unwrap()
+        .into_iter()
+        .find(|task| task.id == task_id)
+        .unwrap();
+    assert_eq!(completed_task.next_run_at, None);
+    assert_eq!(completed_task.last_error, None);
 }

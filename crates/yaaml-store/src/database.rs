@@ -263,6 +263,9 @@ impl Database {
         if self.needs_stale_recall_eval_task_cleanup()? {
             self.delete_stale_recall_eval_tasks()?;
         }
+        if self.needs_running_or_completed_task_metadata_cleanup()? {
+            self.clear_running_or_completed_task_metadata()?;
+        }
         if self.needs_empty_recall_eval_score_backfill()? {
             self.backfill_empty_recall_eval_scores()?;
         }
@@ -406,6 +409,15 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
         )? > 0)
     }
 
+    fn needs_running_or_completed_task_metadata_cleanup(&self) -> Result<bool, DatabaseError> {
+        Ok(self.count(
+            "SELECT COUNT(*)
+             FROM tasks
+             WHERE status IN ('running', 'completed')
+               AND (next_run_at IS NOT NULL OR last_error IS NOT NULL)",
+        )? > 0)
+    }
+
     fn needs_empty_recall_eval_score_backfill(&self) -> Result<bool, DatabaseError> {
         Ok(self.count(
             "SELECT COUNT(*)
@@ -446,6 +458,18 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
             "DELETE FROM tasks
              WHERE kind = 'recall_eval'
                AND json_extract(payload_json, '$.recall_origin') IS NULL",
+            [],
+        )?;
+        Ok(())
+    }
+
+    fn clear_running_or_completed_task_metadata(&self) -> Result<(), DatabaseError> {
+        self.conn.execute(
+            "UPDATE tasks
+             SET next_run_at = NULL,
+                 last_error = NULL
+             WHERE status IN ('running', 'completed')
+               AND (next_run_at IS NOT NULL OR last_error IS NOT NULL)",
             [],
         )?;
         Ok(())
@@ -1774,6 +1798,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
         self.conn.execute(
             "UPDATE tasks
              SET status = 'running',
+                 next_run_at = NULL,
+                 last_error = NULL,
                  updated_at = ?1
              WHERE id = ?2",
             params![updated_at, task_id],
@@ -1785,6 +1811,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
         self.conn.execute(
             "UPDATE tasks
              SET status = 'completed',
+                 next_run_at = NULL,
+                 last_error = NULL,
                  updated_at = ?1
              WHERE id = ?2",
             params![updated_at, task_id],
@@ -2573,6 +2601,50 @@ mod tests {
         db.migrate().unwrap();
 
         db.conn.pragma_update(None, "query_only", "OFF").unwrap();
+    }
+
+    #[test]
+    fn migrate_clears_stale_running_and_completed_task_metadata() {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+
+        let task = |kind: &str, status: TaskStatus| TaskRecord {
+            id: None,
+            kind: kind.to_string(),
+            status,
+            priority: 0,
+            payload_json: "{}".to_string(),
+            attempts: 1,
+            max_attempts: 5,
+            next_run_at: Some("unix:200".to_string()),
+            last_error: Some("stale retry detail".to_string()),
+            created_at: "unix:100".to_string(),
+            updated_at: "unix:100".to_string(),
+        };
+
+        let running_id = db
+            .enqueue_task(&task("memory_formulation", TaskStatus::Running))
+            .unwrap();
+        let completed_id = db
+            .enqueue_task(&task("memory_consolidation", TaskStatus::Completed))
+            .unwrap();
+        let queued_id = db
+            .enqueue_task(&task("recall", TaskStatus::Queued))
+            .unwrap();
+
+        db.migrate().unwrap();
+
+        let tasks = db.list_tasks(None, 10).unwrap();
+        let running = tasks.iter().find(|task| task.id == running_id).unwrap();
+        let completed = tasks.iter().find(|task| task.id == completed_id).unwrap();
+        let queued = tasks.iter().find(|task| task.id == queued_id).unwrap();
+
+        assert_eq!(running.next_run_at, None);
+        assert_eq!(running.last_error, None);
+        assert_eq!(completed.next_run_at, None);
+        assert_eq!(completed.last_error, None);
+        assert_eq!(queued.next_run_at.as_deref(), Some("unix:200"));
+        assert_eq!(queued.last_error.as_deref(), Some("stale retry detail"));
     }
 
     #[test]

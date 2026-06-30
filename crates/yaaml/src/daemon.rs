@@ -575,7 +575,21 @@ fn attach_origin_segment_metadata(
     };
     memory.origin_segment_id = segment.id;
     memory.origin_segment_status = Some(segment.status);
+    if memory.scope == MemoryScope::Project {
+        merge_origin_segment_topic_keys(memory, &segment.task_keys);
+    }
     Ok(())
+}
+
+fn merge_origin_segment_topic_keys(memory: &mut MemoryRecord, segment_task_keys: &[String]) {
+    for key in segment_task_keys
+        .iter()
+        .filter(|key| key.starts_with("topic:"))
+    {
+        if !memory.task_keys.contains(key) {
+            memory.task_keys.push(key.clone());
+        }
+    }
 }
 
 fn run_memory_consolidation_task(
@@ -2350,5 +2364,120 @@ mod tests {
         assert!(prompt.contains("weak relevance"));
         assert!(prompt.contains("stale task state"));
         assert!(prompt.contains("not relevant"));
+    }
+
+    #[test]
+    fn origin_segment_metadata_adds_topic_keys_to_project_memory() {
+        let db = database_with_segment(vec![
+            "topic:task-state".to_string(),
+            "topic:segment".to_string(),
+            "pr:123".to_string(),
+            "path:src/lib.rs".to_string(),
+        ]);
+        let mut memory = memory_with_scope(
+            MemoryScope::Project,
+            MemoryKind::Lesson,
+            vec!["topic:segment".to_string(), "model:key".to_string()],
+        );
+
+        attach_origin_segment_metadata(&db, &mut memory, "session-1").unwrap();
+
+        assert_eq!(memory.origin_segment_id, Some(1));
+        assert_eq!(
+            memory.origin_segment_status,
+            Some(ConversationSegmentStatus::Active)
+        );
+        assert_eq!(
+            memory.task_keys,
+            vec![
+                "topic:segment".to_string(),
+                "model:key".to_string(),
+                "topic:task-state".to_string(),
+            ]
+        );
+    }
+
+    #[test]
+    fn origin_segment_metadata_does_not_add_topic_keys_to_global_memory() {
+        let db = database_with_segment(vec!["topic:preference".to_string()]);
+        let mut memory = memory_with_scope(
+            MemoryScope::Global,
+            MemoryKind::Preference,
+            vec!["model:key".to_string()],
+        );
+
+        attach_origin_segment_metadata(&db, &mut memory, "session-1").unwrap();
+
+        assert_eq!(memory.origin_segment_id, Some(1));
+        assert_eq!(
+            memory.origin_segment_status,
+            Some(ConversationSegmentStatus::Active)
+        );
+        assert_eq!(memory.task_keys, vec!["model:key".to_string()]);
+    }
+
+    fn database_with_segment(task_keys: Vec<String>) -> Database {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+        db.upsert_session(&yaaml_core::SessionRecord {
+            id: "session-1".to_string(),
+            agent_type: yaaml_core::AgentType::Codex,
+            project_id: "/tmp/project".to_string(),
+            transcript_file_path: "/tmp/session.jsonl".to_string(),
+            started_at: Some("unix:1".to_string()),
+            last_seen_at: Some("unix:1".to_string()),
+        })
+        .unwrap();
+        db.replace_conversation_segments_for_session(
+            "session-1",
+            &[yaaml_core::ConversationSegmentRecord {
+                id: None,
+                session_id: "session-1".to_string(),
+                start_turn_ordinal: 1,
+                end_turn_ordinal: 3,
+                summary: "Turns 1..=3 discuss YAAML recall segments.".to_string(),
+                task_keys,
+                context: None,
+                status: ConversationSegmentStatus::Active,
+                created_at: "unix:1".to_string(),
+                updated_at: "unix:1".to_string(),
+            }],
+        )
+        .unwrap();
+        db
+    }
+
+    fn memory_with_scope(
+        scope: MemoryScope,
+        kind: MemoryKind,
+        task_keys: Vec<String>,
+    ) -> MemoryRecord {
+        MemoryRecord {
+            id: None,
+            title: "Recall segment lesson".to_string(),
+            body: "Use segment topic keys as weak recall evidence.".to_string(),
+            scope,
+            kind,
+            task_keys,
+            source_turn_refs: vec![SourceTurnRef {
+                session_id: "session-1".to_string(),
+                ordinal: 2,
+                byte_start: 0,
+                byte_end: 10,
+            }],
+            created_at: "unix:1".to_string(),
+            updated_at: "unix:1".to_string(),
+            is_active: true,
+            session_id: Some("session-1".to_string()),
+            project_id: match scope {
+                MemoryScope::Project => Some("/tmp/project".to_string()),
+                MemoryScope::Global => None,
+            },
+            project_descriptor: None,
+            lineage_refs: Vec::new(),
+            origin_segment_id: None,
+            origin_segment_status: None,
+            validity: MemoryValidity::Durable,
+        }
     }
 }

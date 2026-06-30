@@ -1135,37 +1135,51 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
                 .filter(|source_ref| source_ref.session_id == session_id)
                 .map(|source_ref| source_ref.ordinal)
                 .max();
-            let origin_segment_id = match origin_ordinal {
-                Some(ordinal) => self
-                    .conversation_segment_for_turn(session_id, ordinal)?
-                    .and_then(|segment| segment.id),
+            let origin_segment = match origin_ordinal {
+                Some(ordinal) => self.conversation_segment_for_turn(session_id, ordinal)?,
                 None => None,
             };
+            let origin_segment_id = origin_segment.as_ref().and_then(|segment| segment.id);
             let validity = if memory.kind == MemoryKind::TaskState {
                 MemoryValidity::ValidWhileSegmentActive
             } else {
                 memory.validity
             };
+            let task_keys = if memory.scope == MemoryScope::Project {
+                merge_topic_task_keys(
+                    memory.task_keys.clone(),
+                    origin_segment
+                        .as_ref()
+                        .map(|segment| segment.task_keys.as_slice())
+                        .unwrap_or(&[]),
+                )
+            } else {
+                memory.task_keys.clone()
+            };
             let should_backfill_session_id =
                 memory.session_id.is_none() && origin_ordinal.is_some();
             if memory.origin_segment_id == origin_segment_id
                 && memory.validity == validity
+                && memory.task_keys == task_keys
                 && !should_backfill_session_id
             {
                 continue;
             }
+            let task_keys_json = serde_json::to_string(&task_keys)?;
             self.conn.execute(
                 "UPDATE memories
                  SET origin_segment_id = ?1,
                      validity = ?2,
                      updated_at = ?3,
-                     session_id = COALESCE(session_id, ?4)
-                 WHERE id = ?5",
+                     session_id = COALESCE(session_id, ?4),
+                     task_keys = ?5
+                 WHERE id = ?6",
                 params![
                     origin_segment_id,
                     validity.as_str(),
                     updated_at,
                     session_id,
+                    task_keys_json,
                     memory_id
                 ],
             )?;
@@ -2371,6 +2385,21 @@ fn read_session_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<SessionRecor
     })
 }
 
+fn merge_topic_task_keys(
+    mut memory_task_keys: Vec<String>,
+    segment_task_keys: &[String],
+) -> Vec<String> {
+    for key in segment_task_keys
+        .iter()
+        .filter(|key| key.starts_with("topic:"))
+    {
+        if !memory_task_keys.contains(key) {
+            memory_task_keys.push(key.clone());
+        }
+    }
+    memory_task_keys
+}
+
 fn read_eval_run_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<EvalRunRecord> {
     let turn_ordinal: Option<i64> = row.get(6)?;
     let injected: Option<i64> = row.get(12)?;
@@ -2878,7 +2907,7 @@ CREATE TABLE conversation_segments (
                 start_turn_ordinal: 1,
                 end_turn_ordinal: 3,
                 summary: "Turns 1..=3 discuss PR work.".to_string(),
-                task_keys: vec!["pr:123".to_string()],
+                task_keys: vec!["pr:123".to_string(), "topic:review".to_string()],
                 context: None,
                 status: ConversationSegmentStatus::Active,
                 created_at: "unix:1".to_string(),
@@ -2932,6 +2961,76 @@ CREATE TABLE conversation_segments (
             Some(ConversationSegmentStatus::Active)
         );
         assert_eq!(memory.validity, MemoryValidity::ValidWhileSegmentActive);
+        assert_eq!(
+            memory.task_keys,
+            vec!["pr:123".to_string(), "topic:review".to_string()]
+        );
+    }
+
+    #[test]
+    fn refresh_memory_segment_metadata_does_not_add_topic_keys_to_global_memory() {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+        db.upsert_session(&SessionRecord {
+            id: "session-1".to_string(),
+            agent_type: yaaml_core::AgentType::Codex,
+            project_id: "/tmp/project".to_string(),
+            transcript_file_path: "/tmp/session.jsonl".to_string(),
+            started_at: None,
+            last_seen_at: None,
+        })
+        .unwrap();
+        db.replace_conversation_segments_for_session(
+            "session-1",
+            &[ConversationSegmentRecord {
+                id: None,
+                session_id: "session-1".to_string(),
+                start_turn_ordinal: 1,
+                end_turn_ordinal: 3,
+                summary: "Turns 1..=3 discuss preference work.".to_string(),
+                task_keys: vec!["topic:preference".to_string()],
+                context: None,
+                status: ConversationSegmentStatus::Active,
+                created_at: "unix:1".to_string(),
+                updated_at: "unix:1".to_string(),
+            }],
+        )
+        .unwrap();
+        let memory_id = db
+            .insert_memory(&MemoryRecord {
+                id: None,
+                title: "Global style preference".to_string(),
+                body: "Prefer concise status summaries.".to_string(),
+                scope: MemoryScope::Global,
+                kind: MemoryKind::Preference,
+                task_keys: vec!["model:key".to_string()],
+                source_turn_refs: vec![SourceTurnRef {
+                    session_id: "session-1".to_string(),
+                    ordinal: 2,
+                    byte_start: 10,
+                    byte_end: 20,
+                }],
+                created_at: "unix:2".to_string(),
+                updated_at: "unix:2".to_string(),
+                is_active: true,
+                session_id: None,
+                project_id: None,
+                project_descriptor: None,
+                lineage_refs: Vec::new(),
+                origin_segment_id: None,
+                origin_segment_status: None,
+                validity: MemoryValidity::Durable,
+            })
+            .unwrap();
+
+        assert_eq!(
+            db.refresh_memory_segment_metadata_for_session("session-1", "unix:3")
+                .unwrap(),
+            1
+        );
+        let memory = db.list_memories_by_ids(&[memory_id]).unwrap().remove(0);
+
+        assert_eq!(memory.task_keys, vec!["model:key".to_string()]);
     }
 
     #[test]

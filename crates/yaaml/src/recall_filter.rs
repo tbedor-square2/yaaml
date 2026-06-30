@@ -269,7 +269,15 @@ fn has_task_match(candidate: &RecallCandidate) -> bool {
         .filter_reasons
         .iter()
         .any(|reason| reason == "keep:strong_task_key_match")
-        || !candidate.rank.matched_task_keys.is_empty()
+        || candidate
+            .rank
+            .matched_task_keys
+            .iter()
+            .any(|key| is_specific_task_match_key(key))
+}
+
+fn is_specific_task_match_key(key: &str) -> bool {
+    !key.starts_with("topic:") && !key.starts_with("tool:")
 }
 
 fn has_positive_health_signal(candidate: &RecallCandidate) -> bool {
@@ -733,6 +741,26 @@ mod tests {
             .into_iter()
             .map(|candidate| candidate.memory_id)
             .collect::<Vec<_>>();
+
+        assert!(selected.is_empty());
+    }
+
+    #[test]
+    fn strict_kind_diverse_selection_does_not_treat_topic_only_match_as_task_match() {
+        let mut candidates = vec![candidate_with_score(1, 1.20), candidate_with_score(2, 1.10)];
+        candidates[0]
+            .rank
+            .matched_task_keys
+            .push("topic:segment".to_string());
+        candidates[1]
+            .rank
+            .matched_task_keys
+            .push("topic:task-state".to_string());
+        let mut memories = vec![memory(1, "body"), memory(2, "body")];
+        memories[0].kind = MemoryKind::Workflow;
+        memories[1].kind = MemoryKind::Lesson;
+
+        let selected = strict_kind_diverse_top_fallback_selection(&candidates, &memories, 3);
 
         assert!(selected.is_empty());
     }

@@ -5,6 +5,59 @@ experiments. Keep generated run artifacts under `experiments/recall/<date>-...`
 and summarize the decision-level result here so later experiments do not have
 to rediscover the same tradeoffs.
 
+## 2026-07-01: Remove Hardcoded Topic Classifiers
+
+Sources:
+
+1. `target/recall-backtests/no-hardcoded-topics/no-hardcoded-topics.summary.json`
+2. `target/recall-backtests/no-hardcoded-topics-eval-library/no-hardcoded-topics-eval-library.details.jsonl`
+3. `just quality`
+
+Experiment:
+
+1. Removed the static phrase-to-topic table from core context inference.
+2. Removed hardcoded broad/high-signal tag denylists and named topic gates for
+   branch-management, test-fix, and access-blocker contexts.
+3. Stopped generating new `tool:*` task keys from command names. Legacy
+   `tool:*` keys can still exist in old memories and historical eval fixtures,
+   but command names no longer act as active recall identity keys.
+4. Replaced phrase topics with mechanical generic labels from identifiers,
+   acronyms, long lowercase terms, capitalized phrases, repo URLs, and local
+   development paths.
+5. Increased generic context-overlap weight so two independent generic labels
+   can still represent strong context after removing hand-tuned labels.
+
+Metrics:
+
+1. `just quality` passed, including formatting, typecheck, strict clippy, full
+   tests, and coverage. Final line coverage was 90.62%.
+2. Fixed-anchor backtest over 16 anchors selected 7 memories, averaged 0.44
+   selected memories per anchor, and returned 9 empty recalls. The selected
+   memories were newer than the old oracle rows, so known-score coverage was 0.
+3. Partial eval-library backtest processed 29 of 50 anchors before stopping on
+   an anchor with no historical recall text. It selected 12 memories, averaged
+   0.41 selected memories per anchor, and returned 18 empty recalls.
+4. In the partial eval-library run, 2 selected memories had known oracle scores:
+   both were useful, with average known score 4.5 and 0 low known selections.
+5. The same partial run had 10 oracle-useful anchors, 2 useful-capture runs,
+   and 6 missed-useful empty recalls.
+
+Lessons:
+
+1. Removing hardcoded topic classes improves precision on the small known-score
+   subset but substantially increases abstention.
+2. The current generic extractor is acceptable as a product-safe fallback, but
+   it is not a full replacement for learned/oracle segment topics.
+3. The next recall-quality step should focus on learned segment labels or
+   oracle-generated segment summaries, not restoring fixed topic vocabularies.
+
+Decision:
+
+1. Keep core free of company/project-specific topic phrase tables and denylist
+   classifiers.
+2. Treat the increased missed-useful abstention rate as expected until YAAML has
+   learned segment/topic labels that are not hardcoded into the binary.
+
 ## 2026-06-30: Current Runtime Recall Snapshot
 
 Sources:

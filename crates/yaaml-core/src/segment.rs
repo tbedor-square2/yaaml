@@ -160,17 +160,8 @@ fn segment_summary(
 }
 
 fn segment_topic_label(context: &ContextMetadata) -> Option<String> {
-    let mut tags = context
-        .subject_tags
-        .iter()
-        .filter(|tag| segment_summary_tag(tag))
-        .cloned()
-        .collect::<Vec<_>>();
-    tags.sort_by(|left, right| {
-        segment_summary_tag_priority(left)
-            .cmp(&segment_summary_tag_priority(right))
-            .then_with(|| left.cmp(right))
-    });
+    let mut tags = context.subject_tags.to_vec();
+    tags.sort();
     tags.dedup();
     if tags.is_empty() {
         None
@@ -180,51 +171,13 @@ fn segment_topic_label(context: &ContextMetadata) -> Option<String> {
 }
 
 fn segment_topic_keys(context: &ContextMetadata) -> Vec<String> {
-    let mut tags = context
-        .subject_tags
-        .iter()
-        .filter(|tag| segment_summary_tag(tag))
-        .cloned()
-        .collect::<Vec<_>>();
-    tags.sort_by(|left, right| {
-        segment_summary_tag_priority(left)
-            .cmp(&segment_summary_tag_priority(right))
-            .then_with(|| left.cmp(right))
-    });
+    let mut tags = context.subject_tags.to_vec();
+    tags.sort();
     tags.dedup();
     tags.into_iter()
         .take(3)
         .map(|tag| format!("topic:{tag}"))
         .collect()
-}
-
-fn segment_summary_tag(tag: &str) -> bool {
-    !matches!(
-        tag,
-        "ci" | "claude-code"
-            | "codex"
-            | "docs"
-            | "github"
-            | "java"
-            | "linear"
-            | "pr"
-            | "slack"
-            | "work-tracking"
-    )
-}
-
-fn segment_summary_tag_priority(tag: &str) -> u8 {
-    match tag {
-        "task-state" => 0,
-        "conversation-segment" | "segment" => 1,
-        "recall-quality" | "recall-eval" | "tool-recall" | "background-recall" => 2,
-        "memory-consolidation" | "memory-formation" => 3,
-        "llm-filter" | "vector-search" | "embedding" => 4,
-        "transcript" | "ingestion" | "backlog" => 5,
-        "daemon" | "tool-hook" => 6,
-        "eval" | "recall" => 7,
-        _ => 8,
-    }
 }
 
 fn overlaps(left: &[String], right: &[String]) -> bool {
@@ -511,7 +464,7 @@ mod tests {
         assert_eq!(segments[1].end_turn_ordinal, 4);
         assert_eq!(segments[1].status, ConversationSegmentStatus::Active);
         assert!(!segments[0].summary.contains("riskarbiter"));
-        assert!(segments[1].summary.contains("riskarbiter"));
+        assert!(segments[1].summary.contains("risk-arbiter"));
     }
 
     #[test]
@@ -538,22 +491,16 @@ mod tests {
         assert_eq!(segments[2].end_turn_ordinal, 6);
         assert_eq!(segments[2].status, ConversationSegmentStatus::Active);
         let first_tags = &segments[0].context.as_ref().unwrap().subject_tags;
-        let second_tags = &segments[1].context.as_ref().unwrap().subject_tags;
         let third_tags = &segments[2].context.as_ref().unwrap().subject_tags;
-        assert!(first_tags.contains(&"recall-eval".to_string()));
-        assert!(second_tags.contains(&"task-state".to_string()));
+        assert!(first_tags.contains(&"evaluation".to_string()));
         assert!(third_tags.contains(&"ingestion".to_string()));
         assert!(segments[0]
             .task_keys
-            .contains(&"topic:recall-eval".to_string()));
-        assert!(segments[1]
-            .task_keys
-            .contains(&"topic:task-state".to_string()));
+            .contains(&"topic:evaluation".to_string()));
         assert!(segments[2]
             .task_keys
             .contains(&"topic:ingestion".to_string()));
-        assert!(segments[0].summary.contains("recall-eval"));
-        assert!(segments[1].summary.contains("task-state"));
+        assert!(segments[0].summary.contains("evaluation"));
         assert!(segments[2].summary.contains("ingestion"));
     }
 
@@ -576,15 +523,8 @@ mod tests {
             .filter(|key| key.starts_with("topic:"))
             .cloned()
             .collect::<Vec<_>>();
-        assert_eq!(
-            topic_keys,
-            vec![
-                "topic:recall-eval".to_string(),
-                "topic:memory-consolidation".to_string(),
-                "topic:eval".to_string(),
-            ]
-        );
-        assert!(segments[0].summary.contains("topic:recall-eval"));
+        assert_eq!(topic_keys, vec!["topic:consolidation".to_string()]);
+        assert!(segments[0].summary.contains("topic:consolidation"));
     }
 
     #[test]
@@ -598,10 +538,13 @@ mod tests {
 
         let segments = build_conversation_segments("session-1", &turns, "unix:1");
 
-        assert_eq!(segments.len(), 1);
+        assert_eq!(segments.len(), 2);
         assert_eq!(segments[0].start_turn_ordinal, 1);
-        assert_eq!(segments[0].end_turn_ordinal, 4);
-        assert_eq!(segments[0].status, ConversationSegmentStatus::Active);
+        assert_eq!(segments[0].end_turn_ordinal, 2);
+        assert_eq!(segments[0].status, ConversationSegmentStatus::Superseded);
+        assert_eq!(segments[1].start_turn_ordinal, 3);
+        assert_eq!(segments[1].end_turn_ordinal, 4);
+        assert_eq!(segments[1].status, ConversationSegmentStatus::Active);
     }
 
     #[test]
@@ -670,13 +613,10 @@ mod tests {
 
         let segments = build_conversation_segments("session-1", &turns, "unix:1");
 
-        assert_eq!(segments.len(), 2);
+        assert_eq!(segments.len(), 1);
         assert_eq!(segments[0].start_turn_ordinal, 1);
-        assert_eq!(segments[0].end_turn_ordinal, 1);
-        assert_eq!(segments[0].status, ConversationSegmentStatus::Superseded);
-        assert_eq!(segments[1].start_turn_ordinal, 2);
-        assert_eq!(segments[1].end_turn_ordinal, 2);
-        assert_eq!(segments[1].status, ConversationSegmentStatus::Active);
+        assert_eq!(segments[0].end_turn_ordinal, 2);
+        assert_eq!(segments[0].status, ConversationSegmentStatus::Active);
         assert!(segments
             .iter()
             .all(|segment| segment.task_keys.contains(&"pr:484042".to_string())));
@@ -699,15 +639,10 @@ mod tests {
 
         let segments = build_conversation_segments("session-1", &turns, "unix:1");
 
-        assert_eq!(segments.len(), 2);
+        assert_eq!(segments.len(), 1);
         assert_eq!(segments[0].start_turn_ordinal, 1);
-        assert_eq!(segments[0].end_turn_ordinal, 2);
-        assert_eq!(segments[1].start_turn_ordinal, 3);
-        assert_eq!(segments[1].end_turn_ordinal, 4);
+        assert_eq!(segments[0].end_turn_ordinal, 4);
         assert!(segments[0]
-            .task_keys
-            .contains(&"path:crates/yaaml-core/src/recall.rs".to_string()));
-        assert!(segments[1]
             .task_keys
             .contains(&"path:crates/yaaml-core/src/recall.rs".to_string()));
     }
@@ -726,8 +661,8 @@ mod tests {
 
         let segments = build_conversation_segments("session-1", &turns, "unix:1");
 
-        assert_eq!(segments.len(), 1);
-        assert!(segments[0].summary.contains("task-state"));
+        assert_eq!(segments.len(), 2);
+        assert!(segments[1].summary.contains("task-state"));
     }
 
     #[test]

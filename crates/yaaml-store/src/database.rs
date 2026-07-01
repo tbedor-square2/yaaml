@@ -3748,7 +3748,10 @@ WHERE session_id = 'session-1';
             .unwrap()
             .unwrap();
 
-        assert_eq!(context.work_area.as_deref(), Some("sad-sack-signals"));
+        assert_eq!(context.work_area, None);
+        assert!(context
+            .subject_tags
+            .contains(&"sad-sack-signals".to_string()));
         assert!(context
             .subject_tags
             .contains(&"forge-signalsmith".to_string()));

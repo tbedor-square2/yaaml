@@ -355,9 +355,6 @@ fn recall_filter_decision(
         && query_has_task_identity
         && has_recall_match_task_key(&memory.task_keys)
         && candidate.rank.matched_task_keys.is_empty();
-    let access_blocker_context_mismatch = context_has_access_blocker(query_context)
-        && !context_has_access_blocker(&memory_context)
-        && !weak_task_key_match;
     let high_signal_context_mismatch =
         high_signal_recall_context_mismatch(query_context, &memory_context);
     let explicit_user_preference = explicit_user_preference_memory(memory);
@@ -432,17 +429,6 @@ fn recall_filter_decision(
             }
         }
         MemoryKind::TaskCheckpoint => {
-            if task_state_identity_key_match
-                && inactive_origin_segment(memory)
-                && phase_bridge_only_broad_tracking_match(candidate)
-                && broad_tracking_phase_mismatch(query_context, &memory_context)
-            {
-                reasons.push("drop:task_checkpoint_phase_mismatch".to_string());
-                return RecallFilterDecision {
-                    keep: false,
-                    reasons,
-                };
-            }
             if task_state_identity_key_match {
                 reasons.push("keep:task_checkpoint_identity_key_match".to_string());
                 return RecallFilterDecision {
@@ -463,13 +449,6 @@ fn recall_filter_decision(
             }
         }
         MemoryKind::ProjectFact => {
-            if access_blocker_context_mismatch {
-                reasons.push("drop:access_blocker_context_mismatch".to_string());
-                return RecallFilterDecision {
-                    keep: false,
-                    reasons,
-                };
-            }
             if transient_plan_without_identity {
                 reasons.push("drop:transient_plan_without_identity_key".to_string());
                 return RecallFilterDecision {
@@ -500,19 +479,6 @@ fn recall_filter_decision(
                 && high_signal_context_mismatch
             {
                 reasons.push("drop:project_fact_high_signal_context_mismatch".to_string());
-                return RecallFilterDecision {
-                    keep: false,
-                    reasons,
-                };
-            }
-            if same_project
-                && inactive_origin_segment(memory)
-                && candidate.rank.matched_task_keys.is_empty()
-                && context_has_branch_management(query_context)
-            {
-                reasons.push(
-                    "drop:inactive_project_fact_branch_context_without_task_match".to_string(),
-                );
                 return RecallFilterDecision {
                     keep: false,
                     reasons,
@@ -587,13 +553,6 @@ fn recall_filter_decision(
             }
         }
         MemoryKind::Preference | MemoryKind::Lesson | MemoryKind::Workflow => {
-            if access_blocker_context_mismatch {
-                reasons.push("drop:access_blocker_context_mismatch".to_string());
-                return RecallFilterDecision {
-                    keep: false,
-                    reasons,
-                };
-            }
             if transient_plan_without_identity {
                 reasons.push("drop:transient_plan_without_identity_key".to_string());
                 return RecallFilterDecision {
@@ -680,25 +639,9 @@ fn recall_filter_decision(
                     reasons,
                 };
             } else if same_project
-                && memory.kind == MemoryKind::Workflow
-                && candidate.rank.matched_task_keys.is_empty()
-                && memory_has_only_tool_task_keys(memory)
-                && !has_exact_tool_task_key_overlap(query_task_keys, memory)
-                && !has_proven_useful_health_signal(candidate)
-                && context_gated_durable
-            {
-                reasons.push("drop:same_project_tool_workflow_without_tool_match".to_string());
-                return RecallFilterDecision {
-                    keep: false,
-                    reasons,
-                };
-            } else if same_project
                 && inactive_origin_segment(memory)
                 && candidate.rank.matched_task_keys.is_empty()
                 && candidate.rank.context_score < 0.42
-                && !(memory.kind == MemoryKind::Workflow
-                    && memory_has_only_tool_task_keys(memory)
-                    && has_exact_tool_task_key_overlap(query_task_keys, memory))
                 && context_gated_durable
             {
                 reasons.push("drop:inactive_origin_durable_weak_context".to_string());
@@ -763,14 +706,6 @@ fn has_unmatched_topical_query_context(
     !query_tags.is_empty() && !same_known_work_area && query_tags.is_disjoint(&memory_tags)
 }
 
-fn has_proven_useful_health_signal(candidate: &RecallCandidate) -> bool {
-    candidate
-        .rank
-        .penalties
-        .iter()
-        .any(|penalty| penalty.contains(":proven_useful:"))
-}
-
 fn topical_high_signal_recall_context_tags(context: &ContextMetadata) -> HashSet<String> {
     let repo_name = context
         .repo_id
@@ -798,21 +733,8 @@ fn is_weak_recall_query_context(
             .any(|tag| is_high_signal_recall_context_tag(tag))
 }
 
-fn is_high_signal_recall_context_tag(tag: &str) -> bool {
-    !matches!(
-        tag,
-        "linear"
-            | "work-tracking"
-            | "github"
-            | "pr"
-            | "ci"
-            | "docs"
-            | "slack"
-            | "java"
-            | "codex"
-            | "claude-code"
-            | "tool-hook"
-    )
+fn is_high_signal_recall_context_tag(_tag: &str) -> bool {
+    true
 }
 
 fn inactive_origin_segment(memory: &MemoryRecord) -> bool {
@@ -820,56 +742,8 @@ fn inactive_origin_segment(memory: &MemoryRecord) -> bool {
         && memory.origin_segment_status != Some(ConversationSegmentStatus::Active)
 }
 
-fn context_has_branch_management(context: &ContextMetadata) -> bool {
-    context
-        .subject_tags
-        .iter()
-        .any(|tag| tag == "branch-management" || tag == "pr-management")
-}
-
-fn context_has_test_fix(context: &ContextMetadata) -> bool {
-    context.subject_tags.iter().any(|tag| tag == "test-fix")
-}
-
-fn broad_tracking_phase_mismatch(query: &ContextMetadata, memory: &ContextMetadata) -> bool {
-    (context_has_branch_management(query) && !context_has_branch_management(memory))
-        || (context_has_test_fix(query) && !context_has_test_fix(memory))
-}
-
-fn phase_bridge_only_broad_tracking_match(candidate: &RecallCandidate) -> bool {
-    let matched_recall_keys = candidate
-        .rank
-        .matched_task_keys
-        .iter()
-        .filter(|key| is_recall_match_task_key(key))
-        .collect::<Vec<_>>();
-    !matched_recall_keys.is_empty()
-        && matched_recall_keys
-            .iter()
-            .all(|key| is_broad_tracking_identity_key(key))
-}
-
 fn is_broad_tracking_identity_key(key: &str) -> bool {
     key.starts_with("pr:") || key.starts_with("ticket:") || key.starts_with("task:")
-}
-
-fn memory_has_only_tool_task_keys(memory: &MemoryRecord) -> bool {
-    !memory.task_keys.is_empty()
-        && memory
-            .task_keys
-            .iter()
-            .all(|key| key.to_ascii_lowercase().starts_with("tool:"))
-}
-
-fn has_exact_tool_task_key_overlap(query_task_keys: &[String], memory: &MemoryRecord) -> bool {
-    query_task_keys.iter().any(|query_key| {
-        let query_key = query_key.to_ascii_lowercase();
-        query_key.starts_with("tool:")
-            && memory
-                .task_keys
-                .iter()
-                .any(|memory_key| memory_key.to_ascii_lowercase() == query_key)
-    })
 }
 
 fn specific_recall_task_key_match(candidate: &RecallCandidate) -> bool {
@@ -931,9 +805,6 @@ pub fn extract_task_keys(text: &str) -> Vec<String> {
             if let Some(next) = tokens.get(index + 1).and_then(|next| branch_key(next)) {
                 push_unique(&mut keys, next);
             }
-        }
-        if let Some(tool) = tool_key(&lower) {
-            push_unique(&mut keys, tool);
         }
         if keys.len() >= 48 {
             break;
@@ -1125,13 +996,6 @@ fn explicit_user_preference_memory(memory: &MemoryRecord) -> bool {
     ]
     .iter()
     .any(|needle| text.contains(needle))
-}
-
-fn context_has_access_blocker(context: &ContextMetadata) -> bool {
-    context
-        .subject_tags
-        .iter()
-        .any(|tag| matches!(tag.as_str(), "auth" | "cloudflare-access" | "warp" | "vpn"))
 }
 
 pub fn is_transient_plan_memory(memory: &MemoryRecord) -> bool {
@@ -1543,15 +1407,6 @@ fn branch_key(token: &str) -> Option<String> {
         return None;
     }
     Some(format!("branch:{}", token.to_ascii_lowercase()))
-}
-
-fn tool_key(token: &str) -> Option<String> {
-    match token {
-        "yaaml" | "gt" | "bazel" | "bin/bazel" | "sq" | "cargo" | "just" | "gh" => {
-            Some(format!("tool:{token}"))
-        }
-        _ => None,
-    }
 }
 
 fn numeric_token(token: &str) -> Option<String> {
@@ -2167,7 +2022,7 @@ mod tests {
     }
 
     #[test]
-    fn task_key_extraction_finds_pr_ticket_path_and_tool_keys() {
+    fn task_key_extraction_finds_pr_ticket_and_path_keys() {
         let keys = extract_task_keys(
             "PR 481245 updates riskarbiter/src/main/java/Foo.java:42:public and //riskarbiter/src/test:unit for MLP-4400; run yaaml recall",
         );
@@ -2177,7 +2032,7 @@ mod tests {
         assert!(keys.contains(&"path:riskarbiter/src/main/java/foo.java".to_string()));
         assert!(keys.contains(&"target://riskarbiter/src/test:unit".to_string()));
         assert!(!keys.contains(&"path://riskarbiter/src/test:unit".to_string()));
-        assert!(keys.contains(&"tool:yaaml".to_string()));
+        assert!(!keys.iter().any(|key| key.starts_with("tool:")));
     }
 
     #[test]
@@ -3090,11 +2945,11 @@ Datadog is blocked by a Cloudflare Access redirect.
             5,
         );
 
-        assert!(selected.is_empty());
+        assert_eq!(selected.len(), 1);
         assert!(debug[0]
             .rank
             .filter_reasons
-            .contains(&"drop:task_checkpoint_phase_mismatch".to_string()));
+            .contains(&"keep:task_checkpoint_identity_key_match".to_string()));
     }
 
     #[test]
@@ -3139,11 +2994,11 @@ Datadog is blocked by a Cloudflare Access redirect.
             5,
         );
 
-        assert!(selected.is_empty());
+        assert_eq!(selected.len(), 1);
         assert!(debug[0]
             .rank
             .filter_reasons
-            .contains(&"drop:task_checkpoint_phase_mismatch".to_string()));
+            .contains(&"keep:task_checkpoint_identity_key_match".to_string()));
     }
 
     #[test]
@@ -3326,11 +3181,11 @@ Datadog is blocked by a Cloudflare Access redirect.
         let (selected, debug) =
             select_recall_candidates(ranked, &memories, current_project, &query_context, &[], 5);
 
-        assert!(selected.is_empty());
+        assert_eq!(selected.len(), 1);
         assert!(debug[0]
             .rank
             .filter_reasons
-            .contains(&"drop:access_blocker_context_mismatch".to_string()));
+            .contains(&"keep:same_project_durable".to_string()));
     }
 
     #[test]
@@ -3520,7 +3375,9 @@ Datadog is blocked by a Cloudflare Access redirect.
         assert!(debug[0]
             .rank
             .filter_reasons
-            .contains(&"drop:stale_task_state_semantic_context_only".to_string()));
+            .iter()
+            .any(|reason| reason.starts_with("drop:task_state")
+                || reason == "drop:stale_task_state_semantic_context_only"));
     }
 
     #[test]
@@ -3693,14 +3550,10 @@ Datadog is blocked by a Cloudflare Access redirect.
             },
         );
 
-        let (selected, debug) =
+        let (selected, _debug) =
             select_recall_candidates(ranked, &memories, current_project, &query_context, &[], 5);
 
         assert!(selected.is_empty());
-        assert!(debug[0]
-            .rank
-            .filter_reasons
-            .contains(&"drop:inactive_project_fact_branch_context_without_task_match".to_string()));
     }
 
     #[test]
@@ -3738,14 +3591,10 @@ Datadog is blocked by a Cloudflare Access redirect.
             },
         );
 
-        let (selected, debug) =
+        let (selected, _debug) =
             select_recall_candidates(ranked, &memories, current_project, &query_context, &[], 5);
 
         assert!(selected.is_empty());
-        assert!(debug[0]
-            .rank
-            .filter_reasons
-            .contains(&"drop:inactive_project_fact_branch_context_without_task_match".to_string()));
     }
 
     #[test]
@@ -3834,11 +3683,11 @@ Datadog is blocked by a Cloudflare Access redirect.
         let (selected, debug) =
             select_recall_candidates(ranked, &memories, current_project, &query_context, &[], 5);
 
-        assert_eq!(selected.len(), 1, "{:?}", debug[0].rank.filter_reasons);
+        assert!(selected.is_empty(), "{:?}", debug[0].rank.filter_reasons);
         assert!(debug[0]
             .rank
             .filter_reasons
-            .contains(&"keep:project_fact_context".to_string()));
+            .contains(&"drop:same_project_fact_weak_context".to_string()));
     }
 
     #[test]
@@ -4818,11 +4667,11 @@ Datadog is blocked by a Cloudflare Access redirect.
         let (selected, debug) =
             select_recall_candidates(ranked, &memories, current_project, &query_context, &[], 5);
 
-        assert!(selected.is_empty());
+        assert_eq!(selected.len(), 1);
         assert!(debug[0]
             .rank
             .filter_reasons
-            .contains(&"drop:same_project_weak_context".to_string()));
+            .contains(&"keep:same_project_durable".to_string()));
     }
 
     #[test]
@@ -4865,11 +4714,11 @@ Datadog is blocked by a Cloudflare Access redirect.
         let (selected, debug) =
             select_recall_candidates(ranked, &memories, current_project, &query_context, &[], 5);
 
-        assert!(selected.is_empty());
+        assert_eq!(selected.len(), 1);
         assert!(debug[0]
             .rank
             .filter_reasons
-            .contains(&"drop:same_project_weak_context".to_string()));
+            .contains(&"keep:same_project_durable".to_string()));
     }
 
     #[test]
@@ -4914,7 +4763,7 @@ Datadog is blocked by a Cloudflare Access redirect.
     }
 
     #[test]
-    fn same_project_tool_only_workflow_needs_tool_match() {
+    fn same_project_legacy_tool_only_workflow_uses_generic_context() {
         let current_project = "/Users/tbedor/Development/java";
         let hits = vec![VectorHit {
             memory_id: 1,
@@ -4951,15 +4800,11 @@ Datadog is blocked by a Cloudflare Access redirect.
         let (selected, debug) =
             select_recall_candidates(ranked, &memories, current_project, &query_context, &[], 5);
 
-        assert!(selected.is_empty());
-        assert!(
-            debug[0]
-                .rank
-                .filter_reasons
-                .contains(&"drop:same_project_tool_workflow_without_tool_match".to_string()),
-            "{:?}",
-            debug[0].rank.filter_reasons
-        );
+        assert_eq!(selected.len(), 1, "{:?}", debug[0].rank.filter_reasons);
+        assert!(debug[0]
+            .rank
+            .filter_reasons
+            .contains(&"keep:same_project_durable".to_string()));
     }
 
     #[test]
@@ -5307,9 +5152,9 @@ Datadog is blocked by a Cloudflare Access redirect.
 
         assert_eq!(
             active.iter().map(|turn| turn.ordinal).collect::<Vec<_>>(),
-            vec![3]
+            vec![1, 2, 3]
         );
-        assert!(!query.contains("failed test"));
+        assert!(query.contains("failed test"));
         assert!(query.contains("PR into master"));
     }
 
@@ -5331,9 +5176,9 @@ Datadog is blocked by a Cloudflare Access redirect.
 
         assert_eq!(
             active.iter().map(|turn| turn.ordinal).collect::<Vec<_>>(),
-            vec![2]
+            vec![1, 2]
         );
-        assert!(!query.contains("has a failed test, fix"));
+        assert!(query.contains("has a failed test, fix"));
         assert!(query.contains("PR into master"));
     }
 

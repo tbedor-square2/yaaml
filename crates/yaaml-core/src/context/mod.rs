@@ -88,18 +88,16 @@ mod tests {
         assert!(context
             .subject_tags
             .contains(&"forge-signalsmith".to_string()));
-        assert!(context.subject_tags.contains(&"ci".to_string()));
+        assert!(!context.subject_tags.contains(&"ci".to_string()));
     }
 
     #[test]
-    fn text_context_marks_pr_into_master_as_branch_management() {
+    fn text_context_does_not_classify_freeform_pr_phrases() {
         let context = infer_context_from_text("make that a PR into master");
 
-        assert!(context.subject_tags.contains(&"github".to_string()));
         assert!(context.subject_tags.contains(&"pr".to_string()));
-        assert!(context
-            .subject_tags
-            .contains(&"branch-management".to_string()));
+        assert!(!context.subject_tags.contains(&"github".to_string()));
+        assert!(context.repo_id.is_none());
     }
 
     #[test]

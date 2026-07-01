@@ -1,7 +1,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use crate::context::tags::{push_tag, KNOWN_PHRASES};
+use crate::context::tags::push_tag;
 use crate::{merge_contexts, ContextMetadata, MemoryRecord};
 
 pub fn infer_context_from_memory(memory: &MemoryRecord) -> ContextMetadata {
@@ -65,16 +65,8 @@ pub fn infer_context_from_path(path: &Path) -> ContextMetadata {
 
 pub fn infer_context_from_text(text: &str) -> ContextMetadata {
     let lower = text.to_ascii_lowercase();
-    let mut subject_tags = Vec::new();
+    let mut subject_tags = generic_subject_tags(text);
     let mut repo_id = first_github_repo(&lower);
-
-    for (needle, tags) in KNOWN_PHRASES {
-        if lower.contains(needle) {
-            for tag in *tags {
-                push_tag(&mut subject_tags, tag);
-            }
-        }
-    }
 
     for repo in development_path_repos(&lower) {
         push_tag(&mut subject_tags, &repo);
@@ -89,9 +81,7 @@ pub fn infer_context_from_text(text: &str) -> ContextMetadata {
         }
     }
 
-    repo_id = repo_id.or_else(|| inferred_repo_from_tags(&subject_tags));
-    let work_area = inferred_work_area(&subject_tags);
-    let activity_domain = infer_activity_domain(&lower, &subject_tags);
+    let activity_domain = repo_id.as_ref().map(|_| "code".to_string());
     let evidence = subject_tags
         .iter()
         .take(8)
@@ -102,7 +92,7 @@ pub fn infer_context_from_text(text: &str) -> ContextMetadata {
     ContextMetadata {
         repo_id,
         repo_root: None,
-        work_area,
+        work_area: None,
         activity_domain,
         subject_tags,
         classification_source: "text".to_string(),
@@ -111,51 +101,103 @@ pub fn infer_context_from_text(text: &str) -> ContextMetadata {
     .normalized()
 }
 
-fn infer_activity_domain(lower: &str, tags: &[String]) -> Option<String> {
-    let has_tag = |tag: &str| tags.iter().any(|candidate| candidate == tag);
-    if has_tag("linear")
-        || has_tag("work-tracking")
-        || lower.contains("ticket")
-        || lower.contains("milestone")
-    {
-        Some("work-tracking".to_string())
-    } else if has_tag("slack") {
-        Some("communications".to_string())
-    } else if has_tag("docs") || lower.contains("decision doc") {
-        Some("planning".to_string())
-    } else if has_tag("github") || has_tag("ci") || lower.contains("repo") {
-        Some("code".to_string())
-    } else {
-        None
+fn generic_subject_tags(text: &str) -> Vec<String> {
+    let mut tags = Vec::new();
+    let normalized_text = text
+        .lines()
+        .map(strip_transcript_role_prefix)
+        .collect::<Vec<_>>()
+        .join("\n");
+    for token in normalized_text.split_whitespace().map(trim_topic_token) {
+        if token.is_empty() {
+            continue;
+        }
+        if acronym_topic(token)
+            || (token.len() >= 3 && (identifier_like_topic(token) || long_word_topic(token)))
+        {
+            push_tag(&mut tags, token);
+        }
     }
+    for phrase in capitalized_topic_phrases(&normalized_text) {
+        push_tag(&mut tags, &phrase);
+    }
+    tags
 }
 
-fn inferred_repo_from_tags(tags: &[String]) -> Option<String> {
-    if tags.iter().any(|tag| tag == "forge-signalsmith") {
-        Some("squareup/forge-signalsmith".to_string())
-    } else if tags.iter().any(|tag| tag == "forge-cash-risk-ml") {
-        Some("squareup/forge-cash-risk-ml".to_string())
-    } else if tags.iter().any(|tag| tag == "aida-docs") {
-        Some("aida-docs".to_string())
-    } else if tags.iter().any(|tag| tag == "yaaml") {
-        Some("yaaml".to_string())
-    } else if tags.iter().any(|tag| tag == "elroy") {
-        Some("elroy".to_string())
-    } else if tags.iter().any(|tag| tag == "model-debugger") {
-        Some("model-debugger".to_string())
-    } else {
-        None
+fn strip_transcript_role_prefix(line: &str) -> &str {
+    let trimmed = line.trim_start();
+    for prefix in ["user:", "assistant:", "system:", "tool:"] {
+        if trimmed
+            .get(..prefix.len())
+            .is_some_and(|candidate| candidate.eq_ignore_ascii_case(prefix))
+        {
+            return trimmed[prefix.len()..].trim_start();
+        }
     }
+    line
 }
 
-fn inferred_work_area(tags: &[String]) -> Option<String> {
-    if tags.iter().any(|tag| tag == "riskarbiter") {
-        Some("riskarbiter".to_string())
-    } else if tags.iter().any(|tag| tag == "sss") {
-        Some("sad-sack-signals".to_string())
-    } else {
-        None
+fn trim_topic_token(token: &str) -> &str {
+    token.trim_matches(|ch: char| {
+        !(ch.is_ascii_alphanumeric() || ch == '-' || ch == '_' || ch == '.' || ch == '/')
+    })
+}
+
+fn identifier_like_topic(token: &str) -> bool {
+    let has_separator = token.contains('-') || token.contains('_');
+    let has_letter = token.chars().any(|ch| ch.is_ascii_alphabetic());
+    let is_not_path = !token.contains('/');
+    has_separator && has_letter && is_not_path
+}
+
+fn acronym_topic(token: &str) -> bool {
+    let letters = token
+        .chars()
+        .filter(|ch| ch.is_ascii_alphabetic())
+        .collect::<Vec<_>>();
+    (2..=10).contains(&letters.len())
+        && letters.iter().all(|ch| ch.is_ascii_uppercase())
+        && token
+            .chars()
+            .all(|ch| ch.is_ascii_alphanumeric() || ch == '-' || ch == '_')
+}
+
+fn long_word_topic(token: &str) -> bool {
+    token.len() >= 9 && token.chars().all(|ch| ch.is_ascii_lowercase())
+}
+
+fn capitalized_topic_phrases(text: &str) -> Vec<String> {
+    let mut phrases = Vec::new();
+    let mut current = Vec::new();
+    for token in text.split_whitespace().map(trim_topic_token) {
+        if title_word(token) {
+            current.push(token.to_ascii_lowercase());
+            if current.len() == 4 {
+                phrases.push(current.join("-"));
+                current.clear();
+            }
+        } else {
+            push_capitalized_phrase(&mut phrases, &mut current);
+        }
     }
+    push_capitalized_phrase(&mut phrases, &mut current);
+    phrases
+}
+
+fn title_word(token: &str) -> bool {
+    if token.len() < 3 || !token.chars().all(|ch| ch.is_ascii_alphabetic()) {
+        return false;
+    }
+    let mut chars = token.chars();
+    chars.next().is_some_and(|ch| ch.is_ascii_uppercase())
+        && chars.all(|ch| ch.is_ascii_lowercase())
+}
+
+fn push_capitalized_phrase(phrases: &mut Vec<String>, current: &mut Vec<String>) {
+    if current.len() >= 2 {
+        phrases.push(current.join("-"));
+    }
+    current.clear();
 }
 
 fn first_github_repo(lower: &str) -> Option<String> {

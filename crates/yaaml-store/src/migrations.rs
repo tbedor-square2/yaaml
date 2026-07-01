@@ -1,4 +1,4 @@
-pub const EXPECTED_SCHEMA_VERSION: i64 = 7;
+pub const EXPECTED_SCHEMA_VERSION: i64 = 8;
 
 pub const MIGRATIONS: &[&str] = &[
     r#"
@@ -177,5 +177,38 @@ UPDATE schema_version SET version = 6;
 ALTER TABLE memories ADD COLUMN superseded_by_memory_id INTEGER;
 
 UPDATE schema_version SET version = 7;
+"#,
+    r#"
+ALTER TABLE conversation_segments ADD COLUMN label_status TEXT NOT NULL DEFAULT 'pending';
+ALTER TABLE conversation_segments ADD COLUMN labeled_at TEXT;
+
+CREATE TABLE IF NOT EXISTS segment_labels (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    normalized_label TEXT NOT NULL UNIQUE,
+    label TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    segment_count INTEGER NOT NULL DEFAULT 0,
+    session_count INTEGER NOT NULL DEFAULT 0,
+    project_count INTEGER NOT NULL DEFAULT 0,
+    merged_into_label_id INTEGER,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY(merged_into_label_id) REFERENCES segment_labels(id)
+);
+
+CREATE TABLE IF NOT EXISTS conversation_segment_labels (
+    segment_id INTEGER NOT NULL,
+    label_id INTEGER NOT NULL,
+    evidence_json TEXT NOT NULL DEFAULT '[]',
+    created_at TEXT NOT NULL,
+    PRIMARY KEY(segment_id, label_id),
+    FOREIGN KEY(segment_id) REFERENCES conversation_segments(id),
+    FOREIGN KEY(label_id) REFERENCES segment_labels(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_conversation_segment_labels_label
+    ON conversation_segment_labels(label_id, segment_id);
+
+UPDATE schema_version SET version = 8;
 "#,
 ];

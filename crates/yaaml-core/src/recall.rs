@@ -1007,7 +1007,7 @@ pub fn is_transient_plan_memory(memory: &MemoryRecord) -> bool {
 
 fn is_recall_match_task_key(key: &str) -> bool {
     key.split_once(':')
-        .map(|(prefix, _)| !matches!(prefix, "tool" | "topic"))
+        .map(|(prefix, _)| !matches!(prefix, "label" | "tool" | "topic"))
         .unwrap_or(true)
 }
 
@@ -2304,6 +2304,86 @@ Datadog is blocked by a Cloudflare Access redirect.
             .rank
             .penalties
             .contains(&"same_project_no_task_key_overlap".to_string()));
+    }
+
+    #[test]
+    fn segment_label_overlap_is_weak_recall_evidence() {
+        let current_project = "/Users/tbedor/Development/yaaml";
+        let hits = vec![
+            VectorHit {
+                memory_id: 1,
+                similarity: 0.82,
+            },
+            VectorHit {
+                memory_id: 2,
+                similarity: 0.82,
+            },
+        ];
+        let memories = vec![
+            memory(
+                1,
+                "Recall label experiment",
+                MemoryKind::Lesson,
+                Some("/Users/tbedor/Development/other"),
+                vec!["label:recall-quality".to_string()],
+            ),
+            memory(
+                2,
+                "Different label experiment",
+                MemoryKind::Lesson,
+                Some("/Users/tbedor/Development/other"),
+                vec!["label:unrelated-workstream".to_string()],
+            ),
+        ];
+
+        let ranked = rank_recall_candidates(
+            &hits,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &["label:recall-quality".to_string()],
+            RecallRankingOptions {
+                project_tiebreaker: true,
+                project_score_bonus: 0.05,
+            },
+        );
+
+        assert_eq!(ranked[0].memory_id, 1);
+        assert_eq!(
+            ranked[0].rank.matched_task_keys,
+            vec!["label:recall-quality".to_string()]
+        );
+        assert!(ranked[0].rank.task_key_bonus > 0.0);
+        let (selected, debug) = select_recall_candidates(
+            ranked,
+            &memories,
+            current_project,
+            &ContextMetadata::default(),
+            &["label:recall-quality".to_string()],
+            2,
+        );
+
+        assert_eq!(
+            selected
+                .iter()
+                .map(|candidate| candidate.memory_id)
+                .collect::<Vec<_>>(),
+            vec![1]
+        );
+        assert!(debug
+            .iter()
+            .find(|candidate| candidate.memory_id == 1)
+            .unwrap()
+            .rank
+            .filter_reasons
+            .contains(&"keep:weak_task_key_semantic_durable".to_string()));
+        assert!(debug
+            .iter()
+            .find(|candidate| candidate.memory_id == 2)
+            .unwrap()
+            .rank
+            .filter_reasons
+            .contains(&"drop:cross_project_weak_context".to_string()));
     }
 
     #[test]

@@ -5,6 +5,66 @@ experiments. Keep generated run artifacts under `experiments/recall/<date>-...`
 and summarize the decision-level result here so later experiments do not have
 to rediscover the same tradeoffs.
 
+## 2026-07-01: Persisted Segment Labels Initial Backtest
+
+Sources:
+
+1. `target/recall-backtests/segment-labels-before-41/segment-labels-before-41.summary.json`
+2. `target/recall-backtests/segment-labels-after-81/segment-labels-after-81.summary.json`
+3. `target/recall-backtests/segment-labels-anchors/anchors-41.tsv`
+
+Experiment:
+
+1. Added explicit persisted segment labels through `segment_labels` and
+   `conversation_segment_labels`.
+2. Added label status on `conversation_segments` so oracle abstention
+   (`labels: []`) is persisted and not requeued forever.
+3. Materialized labels into segment and memory task keys as `label:<normalized>`
+   weak recall evidence, not hard task identity.
+4. Changed segment-label backfill queueing to newest-first so bounded batches
+   cover current recall/eval work before old backlog.
+5. Ran a bounded label backfill batch. It was stopped after 81 stable segments
+   were labeled, leaving 60 distinct labels and 185 segment-label links.
+
+Metrics:
+
+1. Baseline over 41 fixed eval-library anchors: 20 selected memories, 0.49
+   selected per anchor, 5 known selected, 15 unknown selected, average known
+   score 4.6, 5 useful known, 0 low known, 5 useful-capture runs, 23 empty
+   recalls.
+2. After 81 labeled stable segments: 21 selected memories, 0.51 selected per
+   anchor, 5 known selected, 16 unknown selected, average known score 4.6, 5
+   useful known, 0 low known, 5 useful-capture runs, 22 empty recalls.
+3. Only one anchor changed: run 3298 moved from empty recall to memory 3255.
+   That memory was unknown to the historical oracle rows, while the anchor did
+   have a known useful memory available.
+4. For run 3298, labels added weak key overlap
+   `label:square-console-recently-visited-resource-table-ui` and
+   `label:pr-review-and-screenshot-management`, raising the selected memory's
+   task-key bonus from 0.12 to 0.24 and allowing it to survive strict-kind
+   selection.
+
+Lessons:
+
+1. The label plumbing works end-to-end: persisted labels are visible in segment
+   listing, materialized into segment/memory task keys, and can change recall
+   selection.
+2. A small recent-only backfill is not enough to prove a recall-quality lift.
+   Most anchors were unchanged because their relevant query/source segments
+   were still unlabeled.
+3. The initial effect was precision-neutral on known scores: no new known low
+   selections, but also no additional known useful capture.
+4. Label generation quality needs monitoring. Some labels are useful
+   workstream/task labels, while raw mechanical topic keys remain noisy.
+
+Decision:
+
+1. Keep persisted labels as weak recall evidence.
+2. Continue with denser backfill and/or targeted anchor-session labeling before
+   drawing stronger conclusions about recall-quality impact.
+3. Do not promote labels to hard task identity until they have broader
+   backtest support.
+
 ## 2026-07-01: Remove Hardcoded Topic Classifiers
 
 Sources:

@@ -87,6 +87,42 @@ pub struct ConversationSegmentRecord {
     pub updated_at: String,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SegmentLabelRecord {
+    pub id: Option<i64>,
+    pub normalized_label: String,
+    pub label: String,
+    pub kind: String,
+    pub segment_count: u64,
+    pub session_count: u64,
+    pub project_count: u64,
+    pub merged_into_label_id: Option<i64>,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SegmentLabelDraft {
+    pub label: String,
+    #[serde(default)]
+    pub normalized_label: String,
+    #[serde(default)]
+    pub kind: String,
+    #[serde(default)]
+    pub evidence: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ConversationSegmentLabelRecord {
+    pub segment_id: i64,
+    pub label_id: i64,
+    pub normalized_label: String,
+    pub label: String,
+    pub kind: String,
+    pub evidence: Vec<String>,
+    pub created_at: String,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum MemoryScope {
     Project,

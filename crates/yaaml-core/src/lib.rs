@@ -7,6 +7,7 @@ pub mod model;
 pub mod paths;
 pub mod recall;
 pub mod segment;
+pub mod segment_label;
 pub mod status;
 
 pub use config::{Config, ConfigPaths};
@@ -24,9 +25,10 @@ pub use memory::{
     MemoryDraft, MemoryError,
 };
 pub use model::{
-    AgentType, ConversationSegmentRecord, ConversationSegmentStatus, EmbeddingRecord, MemoryKind,
-    MemoryRecord, MemoryScope, MemoryValidity, SessionRecord, SourceTurnRef, TaskRecord,
-    TaskStatus, TurnRecord, TurnStatus,
+    AgentType, ConversationSegmentLabelRecord, ConversationSegmentRecord,
+    ConversationSegmentStatus, EmbeddingRecord, MemoryKind, MemoryRecord, MemoryScope,
+    MemoryValidity, SegmentLabelDraft, SegmentLabelRecord, SessionRecord, SourceTurnRef,
+    TaskRecord, TaskStatus, TurnRecord, TurnStatus,
 };
 pub use recall::{
     active_segment_recall_turns, apply_project_bonus, build_active_segment_recall_query,
@@ -39,3 +41,7 @@ pub use recall::{
     VectorIndex,
 };
 pub use segment::build_conversation_segments;
+pub use segment_label::{
+    normalize_segment_label, parse_segment_label_response, sanitize_segment_label_drafts,
+    segment_label_task_key, SegmentLabelError,
+};

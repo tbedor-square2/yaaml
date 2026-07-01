@@ -18,11 +18,12 @@ use yaaml_core::{
     active_segment_recall_turns, build_active_segment_recall_query, build_conversation_segments,
     build_recall_query, derive_project_descriptor, embedded_text_hash, embedding_text,
     find_consolidation_clusters, merge_task_keys, parse_eval_judge_response,
-    parse_formulation_response, rank_recall_candidates, recall_file_path, render_recall_markdown,
-    segment_task_keys, session_recall_file_path, write_recall_file, ClusterMemory, Config,
-    ConversationSegmentStatus, EmbeddingRecord, MemoryKind, MemoryRecord, MemoryScope,
-    MemoryValidity, RecallMemory, RecallRankingOptions, SourceTurnRef, TaskRecord, TaskStatus,
-    TurnRecord, VectorIndex,
+    parse_formulation_response, parse_segment_label_response, rank_recall_candidates,
+    recall_file_path, render_recall_markdown, segment_task_keys, session_recall_file_path,
+    write_recall_file, ClusterMemory, Config, ConversationSegmentRecord, ConversationSegmentStatus,
+    EmbeddingRecord, MemoryKind, MemoryRecord, MemoryScope, MemoryValidity, RecallMemory,
+    RecallRankingOptions, SegmentLabelRecord, SourceTurnRef, TaskRecord, TaskStatus, TurnRecord,
+    VectorIndex,
 };
 use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
@@ -44,6 +45,7 @@ pub const TASK_KIND_MEMORY_FORMULATION: &str = "memory_formulation";
 pub const TASK_KIND_MEMORY_CONSOLIDATION: &str = "memory_consolidation";
 pub const TASK_KIND_RECALL: &str = "recall";
 pub const TASK_KIND_RECALL_EVAL: &str = "recall_eval";
+pub const TASK_KIND_SEGMENT_LABELING: &str = "segment_labeling";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct MemoryFormulationTaskPayload {
@@ -60,6 +62,11 @@ struct MemoryFormulationTaskPayload {
 struct MemoryConsolidationTaskPayload {
     #[serde(default)]
     reason: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct SegmentLabelingTaskPayload {
+    segment_id: i64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -251,6 +258,8 @@ pub fn refresh_conversation_segments_for_session(
         .context("failed to remove placeholder task keys from memories")?;
     db.deactivate_stale_task_state_memories(&unix_timestamp())
         .context("failed to deactivate stale task-state memories")?;
+    queue_segment_labeling_tasks(db, config, 20)
+        .context("failed to queue segment labeling tasks")?;
     Ok(written)
 }
 
@@ -394,6 +403,9 @@ pub fn run_queued_tasks(db: &Database, config: &Config, limit: usize) -> anyhow:
                     run_recall_task(db, config, &task).map(|()| TaskRunOutcome::Complete)
                 }
                 TASK_KIND_RECALL_EVAL => run_recall_eval_task(db, config, &task),
+                TASK_KIND_SEGMENT_LABELING => {
+                    run_segment_labeling_task(db, config, &task).map(|()| TaskRunOutcome::Complete)
+                }
                 _ => Ok(TaskRunOutcome::Complete),
             };
         match result {
@@ -420,6 +432,41 @@ pub fn run_queued_tasks(db: &Database, config: &Config, limit: usize) -> anyhow:
                     &unix_timestamp(),
                 )
                 .context("failed to park task")?;
+            }
+        }
+    }
+    Ok(completed)
+}
+
+pub fn run_queued_segment_label_tasks(
+    db: &Database,
+    config: &Config,
+    limit: usize,
+) -> anyhow::Result<usize> {
+    let mut completed = 0;
+    for _ in 0..limit {
+        let Some(task) = db
+            .next_queued_task_by_kind(TASK_KIND_SEGMENT_LABELING, unix_timestamp_seconds())
+            .context("failed to fetch queued segment label task")?
+        else {
+            break;
+        };
+        let task_id = task.id.context("queued segment label task missing id")?;
+        db.mark_task_running(task_id, &unix_timestamp())
+            .context("failed to mark segment label task running")?;
+        match run_segment_labeling_task(db, config, &task) {
+            Ok(()) => {
+                db.complete_task(task_id, &unix_timestamp())
+                    .context("failed to complete segment label task")?;
+                completed += 1;
+            }
+            Err(error) => {
+                db.park_task(
+                    task_id,
+                    &format_error_chain(error.as_ref()),
+                    &unix_timestamp(),
+                )
+                .context("failed to park segment label task")?;
             }
         }
     }
@@ -576,20 +623,75 @@ fn attach_origin_segment_metadata(
     memory.origin_segment_id = segment.id;
     memory.origin_segment_status = Some(segment.status);
     if memory.scope == MemoryScope::Project {
-        merge_origin_segment_topic_keys(memory, &segment.task_keys);
+        merge_origin_segment_context_keys(memory, &segment.task_keys);
     }
     Ok(())
 }
 
-fn merge_origin_segment_topic_keys(memory: &mut MemoryRecord, segment_task_keys: &[String]) {
+fn merge_origin_segment_context_keys(memory: &mut MemoryRecord, segment_task_keys: &[String]) {
     for key in segment_task_keys
         .iter()
-        .filter(|key| key.starts_with("topic:"))
+        .filter(|key| key.starts_with("topic:") || key.starts_with("label:"))
     {
         if !memory.task_keys.contains(key) {
             memory.task_keys.push(key.clone());
         }
     }
+}
+
+fn run_segment_labeling_task(
+    db: &Database,
+    config: &Config,
+    task: &TaskRecord,
+) -> anyhow::Result<()> {
+    let payload: SegmentLabelingTaskPayload = serde_json::from_str(&task.payload_json)
+        .context("failed to parse segment label payload")?;
+    let Some(segment) = db
+        .conversation_segment_by_id(payload.segment_id)
+        .context("failed to load segment for labeling")?
+    else {
+        return Ok(());
+    };
+    if segment.status == ConversationSegmentStatus::Active {
+        return Ok(());
+    }
+    if !db
+        .labels_for_segment(payload.segment_id)
+        .context("failed to load existing segment labels")?
+        .is_empty()
+    {
+        return Ok(());
+    }
+    let turns = db
+        .completed_turns_for_session_range(
+            &segment.session_id,
+            segment.start_turn_ordinal,
+            segment.end_turn_ordinal.saturating_add(1),
+        )
+        .context("failed to load segment turns for labeling")?;
+    let turns = hydrate_turns(db, &turns).context("failed to hydrate segment label turns")?;
+    if turns.is_empty() {
+        db.replace_labels_for_segment(payload.segment_id, &[], &unix_timestamp())
+            .context("failed to mark segment unlabeled")?;
+        return Ok(());
+    }
+    let existing_labels = db
+        .list_segment_label_candidates(40)
+        .context("failed to load segment label candidates")?;
+    let prompt = segment_label_prompt(config, &segment, &turns, &existing_labels);
+    let judge_client = JudgeClient::from_config(config, false)
+        .context("segment label oracle provider is unavailable")?;
+    let value = judge_client
+        .structured_json(segment_label_system_prompt(), &prompt)
+        .context("failed to classify segment labels")?;
+    let labels = parse_segment_label_response(&value, 3)
+        .context("failed to parse segment label response")?;
+    let now = unix_timestamp();
+    db.replace_labels_for_segment(payload.segment_id, &labels, &now)
+        .context("failed to persist segment labels")?;
+    db.refresh_memory_segment_metadata_for_session(&segment.session_id, &now)
+        .context("failed to refresh memory metadata after segment labeling")?;
+    Ok(())
 }
 
 fn run_memory_consolidation_task(
@@ -1422,6 +1524,19 @@ fn consolidation_system_prompt() -> &'static str {
     )
 }
 
+fn segment_label_system_prompt() -> &'static str {
+    concat!(
+        "Label one coding-agent conversation segment for future memory recall. ",
+        "Return only JSON shaped as {\"labels\":[{\"label\":\"...\",\"kind\":\"topic|workstream|project|task|preference|tool|other\",\"evidence\":[\"...\"]}]}. ",
+        "Prefer reusing an existing label when it accurately describes the segment. ",
+        "Create a new label only when no existing label fits. ",
+        "Use one to three short labels; return {\"labels\":[]} when the segment has no coherent durable topic. ",
+        "Labels should describe what is being worked on or learned, not transient narration, commands, or generic actions. ",
+        "Evidence must be short phrases copied or paraphrased from the segment. ",
+        "Do not invent project names, ticket names, tools, or outcomes not present in the segment."
+    )
+}
+
 fn recall_eval_system_prompt() -> &'static str {
     concat!(
         "Rate whether recalled context helped an AI coding agent after it was incorporated into the conversation. ",
@@ -1434,6 +1549,60 @@ fn recall_eval_system_prompt() -> &'static str {
         "1: recalled context was not relevant. ",
         "For scores 1 or 2, name the main failure mode in the rationale when possible: stale task state, outdated or superseded guidance, wrong context, noisy metadata, too generic, or too long."
     )
+}
+
+fn segment_label_prompt(
+    config: &Config,
+    segment: &ConversationSegmentRecord,
+    turns: &[TurnRecord],
+    existing_labels: &[SegmentLabelRecord],
+) -> String {
+    let mut prompt = format!(
+        "Segment: id={} session={} turns={}..={} status={}\nSummary: {}\nTask keys: {}\n\n",
+        segment.id.unwrap_or_default(),
+        segment.session_id,
+        segment.start_turn_ordinal,
+        segment.end_turn_ordinal,
+        segment.status.as_str(),
+        segment.summary,
+        if segment.task_keys.is_empty() {
+            "none".to_string()
+        } else {
+            segment.task_keys.join(", ")
+        }
+    );
+    if existing_labels.is_empty() {
+        prompt.push_str("Existing labels: none\n\n");
+    } else {
+        prompt.push_str("Existing labels available for reuse:\n");
+        for label in existing_labels.iter().take(40) {
+            prompt.push_str(&format!(
+                "- {} ({}, segments={}, sessions={}, projects={})\n",
+                label.label,
+                label.kind,
+                label.segment_count,
+                label.session_count,
+                label.project_count
+            ));
+        }
+        prompt.push('\n');
+    }
+    prompt.push_str("Segment turns:\n");
+    let max_prompt_chars = config.max_formulation_tokens.saturating_mul(2).min(24_000);
+    for turn in turns {
+        if prompt.chars().count() >= max_prompt_chars {
+            prompt.push_str("\n[additional turns omitted due to prompt budget]\n");
+            break;
+        }
+        let remaining = max_prompt_chars.saturating_sub(prompt.chars().count());
+        let text = formulation_turn_text(
+            turn.display_text.as_deref().unwrap_or(""),
+            remaining.min(3_000),
+            config.tool_call_truncation_chars,
+        );
+        prompt.push_str(&format!("\nTurn {}:\n{}\n", turn.ordinal, text));
+    }
+    prompt
 }
 
 fn formulation_prompt(
@@ -1805,6 +1974,52 @@ fn enqueue_memory_formulation_task(
         .context("failed to enqueue formulation task")
 }
 
+pub fn queue_segment_labeling_tasks(
+    db: &Database,
+    config: &Config,
+    limit: usize,
+) -> anyhow::Result<u64> {
+    db.clear_tasks_for_missing_segments(TASK_KIND_SEGMENT_LABELING)
+        .context("failed to clear stale segment label tasks")?;
+    if JudgeClient::from_config(config, false).is_none() {
+        return Ok(0);
+    }
+    let segments = db
+        .unlabeled_stable_conversation_segments(limit)
+        .context("failed to load unlabeled conversation segments")?;
+    let mut queued = 0_u64;
+    for segment in segments {
+        let Some(segment_id) = segment.id else {
+            continue;
+        };
+        let payload_json = serde_json::to_string(&SegmentLabelingTaskPayload { segment_id })
+            .context("failed to serialize segment label task payload")?;
+        if db
+            .task_payload_exists(TASK_KIND_SEGMENT_LABELING, &payload_json)
+            .context("failed to check existing segment label task")?
+        {
+            continue;
+        }
+        let now = unix_timestamp();
+        db.enqueue_task(&TaskRecord {
+            id: None,
+            kind: TASK_KIND_SEGMENT_LABELING.to_string(),
+            status: TaskStatus::Queued,
+            priority: -10,
+            payload_json,
+            attempts: 0,
+            max_attempts: 5,
+            next_run_at: None,
+            last_error: None,
+            created_at: now.clone(),
+            updated_at: now,
+        })
+        .context("failed to enqueue segment label task")?;
+        queued += 1;
+    }
+    Ok(queued)
+}
+
 fn source_turn_refs_for_turns(turns: &[yaaml_core::TurnRecord]) -> Vec<SourceTurnRef> {
     turns
         .iter()
@@ -1861,6 +2076,8 @@ pub fn expire_idle_conversation_segments(db: &Database, config: &Config) -> anyh
             .context("failed to remove placeholder task keys from memories")?;
         db.deactivate_stale_task_state_memories(&now)
             .context("failed to deactivate stale task-state memories")?;
+        queue_segment_labeling_tasks(db, config, 20)
+            .context("failed to queue abandoned segment labels")?;
     }
     Ok(expired)
 }
@@ -2368,9 +2585,21 @@ mod tests {
     }
 
     #[test]
-    fn origin_segment_metadata_adds_topic_keys_to_project_memory() {
+    fn segment_label_system_prompt_allows_reuse_and_abstention() {
+        let prompt = segment_label_system_prompt();
+
+        assert!(prompt.contains("\"labels\""));
+        assert!(prompt.contains("Prefer reusing an existing label"));
+        assert!(prompt.contains("Create a new label only"));
+        assert!(prompt.contains("{\"labels\":[]}"));
+        assert!(prompt.contains("Do not invent project names"));
+    }
+
+    #[test]
+    fn origin_segment_metadata_adds_context_keys_to_project_memory() {
         let db = database_with_segment(vec![
             "topic:task-state".to_string(),
+            "label:recall-quality".to_string(),
             "topic:segment".to_string(),
             "pr:123".to_string(),
             "path:src/lib.rs".to_string(),
@@ -2394,6 +2623,7 @@ mod tests {
                 "topic:segment".to_string(),
                 "model:key".to_string(),
                 "topic:task-state".to_string(),
+                "label:recall-quality".to_string(),
             ]
         );
     }

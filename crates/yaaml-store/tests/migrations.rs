@@ -1,5 +1,6 @@
 use std::collections::BTreeSet;
 
+use yaaml_store::migrations::EXPECTED_SCHEMA_VERSION;
 use yaaml_store::Database;
 
 #[test]
@@ -9,7 +10,7 @@ fn migration_creates_expected_tables_and_is_idempotent() {
     db.migrate().unwrap();
     db.migrate().unwrap();
 
-    assert_eq!(db.schema_version().unwrap(), 7);
+    assert_eq!(db.schema_version().unwrap(), EXPECTED_SCHEMA_VERSION);
     let tables = db
         .table_names()
         .unwrap()
@@ -18,6 +19,7 @@ fn migration_creates_expected_tables_and_is_idempotent() {
     for expected in [
         "backlog_progress",
         "context_metadata",
+        "conversation_segment_labels",
         "conversation_segments",
         "embeddings",
         "eval_results",
@@ -25,6 +27,7 @@ fn migration_creates_expected_tables_and_is_idempotent() {
         "file_cursors",
         "memories",
         "schema_version",
+        "segment_labels",
         "sessions",
         "tasks",
         "turns",
@@ -56,6 +59,13 @@ fn migration_creates_expected_tables_and_is_idempotent() {
         assert!(
             memory_columns.contains(&expected.to_string()),
             "missing memories column {expected}"
+        );
+    }
+    let segment_columns = db.column_names("conversation_segments").unwrap();
+    for expected in ["label_status", "labeled_at"] {
+        assert!(
+            segment_columns.contains(&expected.to_string()),
+            "missing conversation_segments column {expected}"
         );
     }
 }

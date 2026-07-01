@@ -26,9 +26,9 @@ use yaaml_core::{
     merge_task_keys, parse_eval_judge_response, parse_memory_ids, rank_recall_candidates,
     recall_file_path, render_recall_markdown, segment_task_keys, session_recall_file_path,
     write_recall_file, ClusterMemory, Config, ConfigPaths, ContextMetadata,
-    ConversationSegmentRecord, EmbeddingRecord, MemoryKind, MemoryRecord, MemoryScope,
-    MemoryValidity, RecallMemory, RecallRankDetails, RecallRankingOptions, RecallWrite,
-    SessionRecord, TurnRecord, VectorIndex,
+    ConversationSegmentLabelRecord, ConversationSegmentRecord, EmbeddingRecord, MemoryKind,
+    MemoryRecord, MemoryScope, MemoryValidity, RecallMemory, RecallRankDetails,
+    RecallRankingOptions, RecallWrite, SessionRecord, TurnRecord, VectorIndex,
 };
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
 use yaaml_llm::ReqwestTransport;
@@ -311,6 +311,8 @@ struct SegmentsArgs {
 enum SegmentsCommand {
     /// Rebuild deterministic segment metadata from stored transcript cursors.
     Backfill(SegmentsBackfillArgs),
+    /// Queue oracle labels for stable conversation segments.
+    Label(SegmentsLabelArgs),
     /// List stored conversation segments.
     List(SegmentsListArgs),
 }
@@ -323,6 +325,19 @@ struct SegmentsBackfillArgs {
     /// Maximum sessions to process. Omit or set 0 for all matching sessions.
     #[arg(long, default_value_t = 0)]
     limit: usize,
+    /// Emit machine-readable JSON.
+    #[arg(long)]
+    json: bool,
+}
+
+#[derive(Debug, Parser)]
+struct SegmentsLabelArgs {
+    /// Maximum unlabeled stable segments to queue.
+    #[arg(long, default_value_t = 50)]
+    limit: usize,
+    /// Run queued segment label tasks after enqueueing.
+    #[arg(long)]
+    run: bool,
     /// Emit machine-readable JSON.
     #[arg(long)]
     json: bool,
@@ -893,6 +908,7 @@ fn memories(args: MemoriesArgs) -> anyhow::Result<()> {
 fn segments(args: SegmentsArgs) -> anyhow::Result<()> {
     match args.command {
         SegmentsCommand::Backfill(args) => segments_backfill(args),
+        SegmentsCommand::Label(args) => segments_label(args),
         SegmentsCommand::List(args) => segments_list(args),
     }
 }
@@ -910,6 +926,12 @@ struct SegmentsBackfillFailure {
     session_id: String,
     transcript_file_path: String,
     error: String,
+}
+
+#[derive(Debug, Serialize)]
+struct SegmentsLabelOutput {
+    queued_tasks: u64,
+    completed_tasks: usize,
 }
 
 fn segments_backfill(args: SegmentsBackfillArgs) -> anyhow::Result<()> {
@@ -984,26 +1006,85 @@ fn segments_backfill(args: SegmentsBackfillArgs) -> anyhow::Result<()> {
     Ok(())
 }
 
+fn segments_label(args: SegmentsLabelArgs) -> anyhow::Result<()> {
+    let (config, db) = open_database_for_cwd()?;
+    let queued_tasks = yaaml::daemon::queue_segment_labeling_tasks(&db, &config, args.limit)
+        .context("failed to queue segment label tasks")?;
+    let completed_tasks = if args.run {
+        yaaml::daemon::run_queued_segment_label_tasks(&db, &config, args.limit)
+            .context("failed to run segment label tasks")?
+    } else {
+        0
+    };
+    let output = SegmentsLabelOutput {
+        queued_tasks,
+        completed_tasks,
+    };
+    if args.json {
+        println!("{}", serde_json::to_string_pretty(&output)?);
+    } else {
+        println!("YAAML segment labels");
+        println!("  queued tasks: {}", output.queued_tasks);
+        println!("  completed tasks: {}", output.completed_tasks);
+    }
+    Ok(())
+}
+
 fn segments_list(args: SegmentsListArgs) -> anyhow::Result<()> {
     let (_config, db) = open_database_for_cwd()?;
     let segments = db
         .list_conversation_segments(args.session.as_deref(), args.limit)
         .context("failed to list conversation segments")?;
+    let mut entries = Vec::new();
+    for segment in segments {
+        let segment_id = segment.id.unwrap_or_default();
+        let labels = if segment_id == 0 {
+            Vec::new()
+        } else {
+            db.labels_for_segment(segment_id)
+                .context("failed to load segment labels")?
+        };
+        let (label_status, labeled_at) = if segment_id == 0 {
+            (None, None)
+        } else {
+            db.label_status_for_segment(segment_id)
+                .context("failed to load segment label status")?
+                .map_or((None, None), |(status, labeled_at)| {
+                    (Some(status), labeled_at)
+                })
+        };
+        entries.push(SegmentListEntry {
+            segment,
+            label_status,
+            labeled_at,
+            labels,
+        });
+    }
     if args.json {
-        println!("{}", serde_json::to_string_pretty(&segments)?);
+        println!("{}", serde_json::to_string_pretty(&entries)?);
     } else {
-        print_segments(&segments);
+        print_segments(&entries);
     }
     Ok(())
 }
 
-fn print_segments(segments: &[ConversationSegmentRecord]) {
+#[derive(Debug, Serialize)]
+struct SegmentListEntry {
+    #[serde(flatten)]
+    segment: ConversationSegmentRecord,
+    label_status: Option<String>,
+    labeled_at: Option<String>,
+    labels: Vec<ConversationSegmentLabelRecord>,
+}
+
+fn print_segments(segments: &[SegmentListEntry]) {
     println!("Conversation segments");
     if segments.is_empty() {
         println!("  none");
         return;
     }
-    for (index, segment) in segments.iter().enumerate() {
+    for (index, entry) in segments.iter().enumerate() {
+        let segment = &entry.segment;
         let keys = if segment.task_keys.is_empty() {
             "-".to_string()
         } else {
@@ -1016,14 +1097,24 @@ fn print_segments(segments: &[ConversationSegmentRecord]) {
                 .join(", ")
         };
         println!(
-            "  {}. session={} turns={}..={} status={} keys={}",
+            "  {}. session={} turns={}..={} status={} label_status={} keys={}",
             index + 1,
             segment.session_id,
             segment.start_turn_ordinal,
             segment.end_turn_ordinal,
             segment.status.as_str(),
+            entry.label_status.as_deref().unwrap_or("unknown"),
             keys
         );
+        if !entry.labels.is_empty() {
+            let labels = entry
+                .labels
+                .iter()
+                .map(|label| format!("{} ({})", label.label, label.kind))
+                .collect::<Vec<_>>()
+                .join(", ");
+            println!("     labels: {labels}");
+        }
         println!("     {}", segment.summary);
     }
 }

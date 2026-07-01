@@ -1715,7 +1715,12 @@ fn queued_memory_task_parks_when_provider_is_unavailable() {
     .unwrap();
     let mut db = Database::in_memory().unwrap();
     db.migrate().unwrap();
-    ingest_codex_file(&db, &transcript).unwrap();
+    let config = Config {
+        summary_api_key_env: "YAAML_TEST_MISSING_ANTHROPIC_KEY".to_string(),
+        eval_judge_api_key_env: "YAAML_TEST_MISSING_ANTHROPIC_KEY".to_string(),
+        ..Config::default()
+    };
+    ingest_codex_file_with_config(&db, &config, &transcript).unwrap();
     db.enqueue_task(&yaaml_core::TaskRecord {
         id: None,
         kind: TASK_KIND_MEMORY_FORMULATION.to_string(),
@@ -1730,11 +1735,6 @@ fn queued_memory_task_parks_when_provider_is_unavailable() {
         updated_at: "2026-06-08T00:00:00Z".to_string(),
     })
     .unwrap();
-    let config = Config {
-        summary_api_key_env: "YAAML_TEST_MISSING_ANTHROPIC_KEY".to_string(),
-        ..Config::default()
-    };
-
     assert_eq!(run_queued_tasks(&db, &config, 1).unwrap(), 0);
     let status = db.status().unwrap();
 

@@ -277,7 +277,7 @@ fn has_task_match(candidate: &RecallCandidate) -> bool {
 }
 
 fn is_specific_task_match_key(key: &str) -> bool {
-    !key.starts_with("topic:") && !key.starts_with("tool:")
+    !key.starts_with("label:") && !key.starts_with("topic:") && !key.starts_with("tool:")
 }
 
 fn has_positive_health_signal(candidate: &RecallCandidate) -> bool {

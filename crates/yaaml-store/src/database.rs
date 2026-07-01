@@ -9,9 +9,10 @@ use thiserror::Error;
 use yaaml_core::status::{BacklogStatus, Status, TaskFailure, WorkerStatus};
 use yaaml_core::{
     extract_task_keys, infer_context_from_memory, infer_context_from_path, is_placeholder_task_key,
-    ContextMetadata, ConversationSegmentRecord, ConversationSegmentStatus, EmbeddingRecord,
-    MemoryKind, MemoryRecord, MemoryScope, MemoryValidity, SessionRecord, SourceTurnRef,
-    TaskRecord, TaskStatus, TurnRecord,
+    segment_label_task_key, ContextMetadata, ConversationSegmentLabelRecord,
+    ConversationSegmentRecord, ConversationSegmentStatus, EmbeddingRecord, MemoryKind,
+    MemoryRecord, MemoryScope, MemoryValidity, SegmentLabelDraft, SegmentLabelRecord,
+    SessionRecord, SourceTurnRef, TaskRecord, TaskStatus, TurnRecord,
 };
 
 use crate::migrations::{EXPECTED_SCHEMA_VERSION, MIGRATIONS};
@@ -257,6 +258,18 @@ impl Database {
         )?;
         self.drop_legacy_segment_events_table()?;
         self.ensure_conversation_segments_table()?;
+        self.ensure_column(
+            "conversation_segments",
+            "label_status",
+            "ALTER TABLE conversation_segments ADD COLUMN label_status TEXT NOT NULL DEFAULT 'pending'",
+        )?;
+        self.ensure_column(
+            "conversation_segments",
+            "labeled_at",
+            "ALTER TABLE conversation_segments ADD COLUMN labeled_at TEXT",
+        )?;
+        self.ensure_segment_label_tables()?;
+        self.backfill_segment_label_status()?;
         if self.needs_eval_run_metadata_backfill()? {
             self.backfill_eval_run_metadata()?;
         }
@@ -330,6 +343,8 @@ CREATE TABLE IF NOT EXISTS conversation_segments (
     task_keys TEXT NOT NULL DEFAULT '[]',
     context_json TEXT,
     status TEXT NOT NULL DEFAULT 'active',
+    label_status TEXT NOT NULL DEFAULT 'pending',
+    labeled_at TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     FOREIGN KEY(session_id) REFERENCES sessions(id)
@@ -370,6 +385,88 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
         self.conn
             .execute_batch("DROP TABLE IF EXISTS segment_events;")?;
         Ok(())
+    }
+
+    fn ensure_segment_label_tables(&self) -> Result<(), DatabaseError> {
+        let tables = self.table_names()?;
+        if tables.iter().any(|table| table == "segment_labels")
+            && tables
+                .iter()
+                .any(|table| table == "conversation_segment_labels")
+            && self.index_exists("idx_conversation_segment_labels_label")?
+        {
+            return Ok(());
+        }
+        self.conn.execute_batch(
+            r#"
+CREATE TABLE IF NOT EXISTS segment_labels (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    normalized_label TEXT NOT NULL UNIQUE,
+    label TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    segment_count INTEGER NOT NULL DEFAULT 0,
+    session_count INTEGER NOT NULL DEFAULT 0,
+    project_count INTEGER NOT NULL DEFAULT 0,
+    merged_into_label_id INTEGER,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY(merged_into_label_id) REFERENCES segment_labels(id)
+);
+
+CREATE TABLE IF NOT EXISTS conversation_segment_labels (
+    segment_id INTEGER NOT NULL,
+    label_id INTEGER NOT NULL,
+    evidence_json TEXT NOT NULL DEFAULT '[]',
+    created_at TEXT NOT NULL,
+    PRIMARY KEY(segment_id, label_id),
+    FOREIGN KEY(segment_id) REFERENCES conversation_segments(id),
+    FOREIGN KEY(label_id) REFERENCES segment_labels(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_conversation_segment_labels_label
+    ON conversation_segment_labels(label_id, segment_id);
+"#,
+        )?;
+        Ok(())
+    }
+
+    fn backfill_segment_label_status(&self) -> Result<(), DatabaseError> {
+        if !self.needs_segment_label_status_backfill()? {
+            return Ok(());
+        }
+        self.conn.execute(
+            "UPDATE conversation_segments
+             SET label_status = 'labeled',
+                 labeled_at = COALESCE(labeled_at, updated_at)
+             WHERE label_status = 'pending'
+               AND EXISTS (
+                   SELECT 1
+                   FROM conversation_segment_labels labels
+                   WHERE labels.segment_id = conversation_segments.id
+               )",
+            [],
+        )?;
+        Ok(())
+    }
+
+    fn needs_segment_label_status_backfill(&self) -> Result<bool, DatabaseError> {
+        self.conn
+            .query_row(
+                "SELECT EXISTS (
+                    SELECT 1
+                    FROM conversation_segments
+                    WHERE label_status = 'pending'
+                      AND EXISTS (
+                          SELECT 1
+                          FROM conversation_segment_labels labels
+                          WHERE labels.segment_id = conversation_segments.id
+                      )
+                 )",
+                [],
+                |row| row.get::<_, i64>(0),
+            )
+            .map(|exists| exists != 0)
+            .map_err(DatabaseError::from)
     }
 
     fn ensure_column(
@@ -1180,7 +1277,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
                 memory.validity
             };
             let task_keys = if memory.scope == MemoryScope::Project {
-                merge_topic_task_keys(
+                merge_segment_context_task_keys(
                     memory.task_keys.clone(),
                     origin_segment
                         .as_ref()
@@ -1471,10 +1568,24 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
         session_id: &str,
         segments: &[ConversationSegmentRecord],
     ) -> Result<u64, DatabaseError> {
+        let removed_label_ids = self.label_ids_for_session_segments(session_id)?;
+        self.conn.execute(
+            "DELETE FROM conversation_segment_labels
+             WHERE segment_id IN (
+                 SELECT id FROM conversation_segments WHERE session_id = ?1
+             )",
+            params![session_id],
+        )?;
         self.conn.execute(
             "DELETE FROM conversation_segments WHERE session_id = ?1",
             params![session_id],
         )?;
+        let replacement_updated_at = segments
+            .iter()
+            .map(|segment| segment.updated_at.as_str())
+            .next()
+            .unwrap_or("rebuild");
+        self.refresh_segment_label_stats(&removed_label_ids, replacement_updated_at)?;
         let mut inserted = 0_u64;
         for segment in segments {
             let task_keys = serde_json::to_string(&segment.task_keys)?;
@@ -1503,6 +1614,23 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
             inserted += 1;
         }
         Ok(inserted)
+    }
+
+    pub fn conversation_segment_by_id(
+        &self,
+        segment_id: i64,
+    ) -> Result<Option<ConversationSegmentRecord>, DatabaseError> {
+        self.conn
+            .query_row(
+                "SELECT id, session_id, start_turn_ordinal, end_turn_ordinal, summary,
+                        task_keys, context_json, status, created_at, updated_at
+                 FROM conversation_segments
+                 WHERE id = ?1",
+                params![segment_id],
+                read_conversation_segment,
+            )
+            .optional()
+            .map_err(DatabaseError::from)
     }
 
     pub fn abandon_active_conversation_segments_for_session(
@@ -1577,6 +1705,228 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
             )
             .optional()
             .map_err(DatabaseError::from)
+    }
+
+    pub fn unlabeled_stable_conversation_segments(
+        &self,
+        limit: usize,
+    ) -> Result<Vec<ConversationSegmentRecord>, DatabaseError> {
+        let mut stmt = self.conn.prepare(
+            "SELECT id, session_id, start_turn_ordinal, end_turn_ordinal, summary,
+                    task_keys, context_json, status, created_at, updated_at
+             FROM conversation_segments
+             WHERE status != 'active'
+               AND label_status = 'pending'
+               AND NOT EXISTS (
+                   SELECT 1
+                   FROM conversation_segment_labels labels
+                   WHERE labels.segment_id = conversation_segments.id
+               )
+             ORDER BY updated_at DESC, id DESC
+             LIMIT ?1",
+        )?;
+        let rows = stmt.query_map(params![u64_to_i64(limit as u64)], read_conversation_segment)?;
+        let mut segments = Vec::new();
+        for row in rows {
+            segments.push(row?);
+        }
+        Ok(segments)
+    }
+
+    pub fn list_segment_label_candidates(
+        &self,
+        limit: usize,
+    ) -> Result<Vec<SegmentLabelRecord>, DatabaseError> {
+        let mut stmt = self.conn.prepare(
+            "SELECT id, normalized_label, label, kind, segment_count, session_count,
+                    project_count, merged_into_label_id, created_at, updated_at
+             FROM segment_labels
+             WHERE merged_into_label_id IS NULL
+             ORDER BY segment_count DESC, updated_at DESC, id ASC
+             LIMIT ?1",
+        )?;
+        let rows = stmt.query_map(params![u64_to_i64(limit as u64)], read_segment_label_record)?;
+        let mut labels = Vec::new();
+        for row in rows {
+            labels.push(row?);
+        }
+        Ok(labels)
+    }
+
+    pub fn labels_for_segment(
+        &self,
+        segment_id: i64,
+    ) -> Result<Vec<ConversationSegmentLabelRecord>, DatabaseError> {
+        let mut stmt = self.conn.prepare(
+            "SELECT links.segment_id, labels.id, labels.normalized_label, labels.label,
+                    labels.kind, links.evidence_json, links.created_at
+             FROM conversation_segment_labels links
+             JOIN segment_labels labels ON labels.id = links.label_id
+             WHERE links.segment_id = ?1
+               AND labels.merged_into_label_id IS NULL
+             ORDER BY labels.segment_count DESC, labels.label",
+        )?;
+        let rows = stmt.query_map(params![segment_id], read_conversation_segment_label_record)?;
+        let mut labels = Vec::new();
+        for row in rows {
+            labels.push(row?);
+        }
+        Ok(labels)
+    }
+
+    pub fn label_status_for_segment(
+        &self,
+        segment_id: i64,
+    ) -> Result<Option<(String, Option<String>)>, DatabaseError> {
+        self.conn
+            .query_row(
+                "SELECT label_status, labeled_at
+                 FROM conversation_segments
+                 WHERE id = ?1",
+                params![segment_id],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .optional()
+            .map_err(DatabaseError::from)
+    }
+
+    pub fn replace_labels_for_segment(
+        &self,
+        segment_id: i64,
+        labels: &[SegmentLabelDraft],
+        updated_at: &str,
+    ) -> Result<u64, DatabaseError> {
+        let previous_label_ids = self.label_ids_for_segment(segment_id)?;
+        self.conn.execute(
+            "DELETE FROM conversation_segment_labels WHERE segment_id = ?1",
+            params![segment_id],
+        )?;
+        let mut affected_label_ids = previous_label_ids;
+        for label in labels {
+            self.conn.execute(
+                "INSERT INTO segment_labels (
+                    normalized_label, label, kind, segment_count, session_count, project_count,
+                    created_at, updated_at
+                 ) VALUES (?1, ?2, ?3, 0, 0, 0, ?4, ?4)
+                 ON CONFLICT(normalized_label) DO UPDATE SET
+                    updated_at = excluded.updated_at",
+                params![label.normalized_label, label.label, label.kind, updated_at,],
+            )?;
+            let label_id: i64 = self.conn.query_row(
+                "SELECT id FROM segment_labels WHERE normalized_label = ?1",
+                params![label.normalized_label],
+                |row| row.get(0),
+            )?;
+            let evidence_json = serde_json::to_string(&label.evidence)?;
+            self.conn.execute(
+                "INSERT INTO conversation_segment_labels (
+                    segment_id, label_id, evidence_json, created_at
+                 ) VALUES (?1, ?2, ?3, ?4)
+                 ON CONFLICT(segment_id, label_id) DO UPDATE SET
+                    evidence_json = excluded.evidence_json",
+                params![segment_id, label_id, evidence_json, updated_at],
+            )?;
+            if !affected_label_ids.contains(&label_id) {
+                affected_label_ids.push(label_id);
+            }
+        }
+        self.materialize_segment_label_task_keys(segment_id, labels, updated_at)?;
+        self.refresh_segment_label_stats(&affected_label_ids, updated_at)?;
+        Ok(labels.len() as u64)
+    }
+
+    fn label_ids_for_segment(&self, segment_id: i64) -> Result<Vec<i64>, DatabaseError> {
+        let mut stmt = self
+            .conn
+            .prepare("SELECT label_id FROM conversation_segment_labels WHERE segment_id = ?1")?;
+        let rows = stmt.query_map(params![segment_id], |row| row.get(0))?;
+        let mut label_ids = Vec::new();
+        for row in rows {
+            label_ids.push(row?);
+        }
+        Ok(label_ids)
+    }
+
+    fn label_ids_for_session_segments(&self, session_id: &str) -> Result<Vec<i64>, DatabaseError> {
+        let mut stmt = self.conn.prepare(
+            "SELECT DISTINCT links.label_id
+             FROM conversation_segment_labels links
+             JOIN conversation_segments segments ON segments.id = links.segment_id
+             WHERE segments.session_id = ?1",
+        )?;
+        let rows = stmt.query_map(params![session_id], |row| row.get(0))?;
+        let mut label_ids = Vec::new();
+        for row in rows {
+            label_ids.push(row?);
+        }
+        Ok(label_ids)
+    }
+
+    fn materialize_segment_label_task_keys(
+        &self,
+        segment_id: i64,
+        labels: &[SegmentLabelDraft],
+        updated_at: &str,
+    ) -> Result<(), DatabaseError> {
+        let Some(segment) = self.conversation_segment_by_id(segment_id)? else {
+            return Ok(());
+        };
+        let mut task_keys = segment
+            .task_keys
+            .into_iter()
+            .filter(|key| !key.starts_with("label:"))
+            .collect::<Vec<_>>();
+        for label in labels {
+            let key = segment_label_task_key(&label.normalized_label);
+            if !task_keys.contains(&key) {
+                task_keys.push(key);
+            }
+        }
+        let task_keys_json = serde_json::to_string(&task_keys)?;
+        self.conn.execute(
+            "UPDATE conversation_segments
+             SET task_keys = ?1,
+                 label_status = 'labeled',
+                 labeled_at = ?2,
+                 updated_at = ?2
+             WHERE id = ?3",
+            params![task_keys_json, updated_at, segment_id],
+        )?;
+        Ok(())
+    }
+
+    fn refresh_segment_label_stats(
+        &self,
+        label_ids: &[i64],
+        updated_at: &str,
+    ) -> Result<(), DatabaseError> {
+        for label_id in label_ids {
+            self.conn.execute(
+                "UPDATE segment_labels
+                 SET segment_count = (
+                         SELECT COUNT(DISTINCT links.segment_id)
+                         FROM conversation_segment_labels links
+                         WHERE links.label_id = segment_labels.id
+                     ),
+                     session_count = (
+                         SELECT COUNT(DISTINCT segments.session_id)
+                         FROM conversation_segment_labels links
+                         JOIN conversation_segments segments ON segments.id = links.segment_id
+                         WHERE links.label_id = segment_labels.id
+                     ),
+                     project_count = (
+                         SELECT COUNT(DISTINCT sessions.project_id)
+                         FROM conversation_segment_labels links
+                         JOIN conversation_segments segments ON segments.id = links.segment_id
+                         JOIN sessions ON sessions.id = segments.session_id
+                         WHERE links.label_id = segment_labels.id
+                     ),
+                     updated_at = ?1
+                 WHERE id = ?2",
+                params![updated_at, label_id],
+            )?;
+        }
+        Ok(())
     }
 
     pub fn upsert_embedding(&self, embedding: &EmbeddingRecord) -> Result<(), DatabaseError> {
@@ -1712,6 +2062,32 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
                  ORDER BY priority DESC, id ASC
                  LIMIT 1",
                 params![now_seconds],
+                read_task_record,
+            )
+            .optional()
+            .map_err(DatabaseError::from)
+    }
+
+    pub fn next_queued_task_by_kind(
+        &self,
+        kind: &str,
+        now_seconds: i64,
+    ) -> Result<Option<TaskRecord>, DatabaseError> {
+        self.conn
+            .query_row(
+                "SELECT id, kind, status, priority, payload_json, attempts, max_attempts,
+                        next_run_at, last_error, created_at, updated_at
+                 FROM tasks
+                 WHERE kind = ?1
+                   AND status = 'queued'
+                   AND (
+                       next_run_at IS NULL
+                       OR next_run_at NOT LIKE 'unix:%'
+                       OR CAST(substr(next_run_at, 6) AS INTEGER) <= ?2
+                   )
+                 ORDER BY priority DESC, id ASC
+                 LIMIT 1",
+                params![kind, now_seconds],
                 read_task_record,
             )
             .optional()
@@ -1977,6 +2353,22 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
             let sql = format!("DELETE FROM tasks WHERE {status_clause}");
             self.conn.execute(&sql, params![now])?
         };
+        Ok(deleted as u64)
+    }
+
+    pub fn clear_tasks_for_missing_segments(&self, kind: &str) -> Result<u64, DatabaseError> {
+        let deleted = self.conn.execute(
+            "DELETE FROM tasks
+             WHERE kind = ?1
+               AND status != 'completed'
+               AND json_extract(payload_json, '$.segment_id') IS NOT NULL
+               AND NOT EXISTS (
+                   SELECT 1
+                   FROM conversation_segments
+                   WHERE conversation_segments.id = CAST(json_extract(tasks.payload_json, '$.segment_id') AS INTEGER)
+               )",
+            params![kind],
+        )?;
         Ok(deleted as u64)
     }
 
@@ -2447,13 +2839,13 @@ fn read_session_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<SessionRecor
     })
 }
 
-fn merge_topic_task_keys(
+fn merge_segment_context_task_keys(
     mut memory_task_keys: Vec<String>,
     segment_task_keys: &[String],
 ) -> Vec<String> {
     for key in segment_task_keys
         .iter()
-        .filter(|key| key.starts_with("topic:"))
+        .filter(|key| key.starts_with("topic:") || key.starts_with("label:"))
     {
         if !memory_task_keys.contains(key) {
             memory_task_keys.push(key.clone());
@@ -2563,6 +2955,37 @@ fn read_conversation_segment(
     })
 }
 
+fn read_segment_label_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<SegmentLabelRecord> {
+    Ok(SegmentLabelRecord {
+        id: row.get(0)?,
+        normalized_label: row.get(1)?,
+        label: row.get(2)?,
+        kind: row.get(3)?,
+        segment_count: i64_to_u64(row.get(4)?),
+        session_count: i64_to_u64(row.get(5)?),
+        project_count: i64_to_u64(row.get(6)?),
+        merged_into_label_id: row.get(7)?,
+        created_at: row.get(8)?,
+        updated_at: row.get(9)?,
+    })
+}
+
+fn read_conversation_segment_label_record(
+    row: &rusqlite::Row<'_>,
+) -> rusqlite::Result<ConversationSegmentLabelRecord> {
+    let evidence_json: String = row.get(5)?;
+    let evidence = serde_json::from_str(&evidence_json).map_err(json_decode_error)?;
+    Ok(ConversationSegmentLabelRecord {
+        segment_id: row.get(0)?,
+        label_id: row.get(1)?,
+        normalized_label: row.get(2)?,
+        label: row.get(3)?,
+        kind: row.get(4)?,
+        evidence,
+        created_at: row.get(6)?,
+    })
+}
+
 fn read_memory_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<MemoryRecord> {
     let scope: String = row.get(3)?;
     let memory_kind: String = row.get(4)?;
@@ -2667,6 +3090,7 @@ mod tests {
         let tables = db.table_names().unwrap();
         for expected in [
             "backlog_progress",
+            "conversation_segment_labels",
             "conversation_segments",
             "embeddings",
             "eval_results",
@@ -2674,6 +3098,7 @@ mod tests {
             "file_cursors",
             "memories",
             "schema_version",
+            "segment_labels",
             "sessions",
             "tasks",
             "turns",
@@ -2774,6 +3199,153 @@ CREATE TABLE conversation_segments (
         assert!(columns.contains(&"context_json".to_string()));
         assert!(!columns.contains(&"start_ordinal".to_string()));
         assert!(!columns.contains(&"topic_descriptor".to_string()));
+    }
+
+    #[test]
+    fn segment_labels_roundtrip_materialize_keys_and_cleanup_on_rebuild() {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+        db.upsert_session(&SessionRecord {
+            id: "session-1".to_string(),
+            agent_type: yaaml_core::AgentType::Codex,
+            project_id: "/tmp/project".to_string(),
+            transcript_file_path: "/tmp/session.jsonl".to_string(),
+            started_at: Some("unix:1".to_string()),
+            last_seen_at: Some("unix:2".to_string()),
+        })
+        .unwrap();
+        db.replace_conversation_segments_for_session(
+            "session-1",
+            &[ConversationSegmentRecord {
+                id: None,
+                session_id: "session-1".to_string(),
+                start_turn_ordinal: 0,
+                end_turn_ordinal: 3,
+                summary: "Recall quality tuning".to_string(),
+                task_keys: vec!["topic:recall".to_string()],
+                context: None,
+                status: ConversationSegmentStatus::Completed,
+                created_at: "unix:2".to_string(),
+                updated_at: "unix:2".to_string(),
+            }],
+        )
+        .unwrap();
+        let segment = db
+            .list_conversation_segments(Some("session-1"), 10)
+            .unwrap()[0]
+            .clone();
+        let segment_id = segment.id.unwrap();
+
+        db.replace_labels_for_segment(
+            segment_id,
+            &[SegmentLabelDraft {
+                label: "Recall Quality".to_string(),
+                normalized_label: "recall-quality".to_string(),
+                kind: "workstream".to_string(),
+                evidence: vec!["evaluating recall output".to_string()],
+            }],
+            "unix:3",
+        )
+        .unwrap();
+
+        let labels = db.labels_for_segment(segment_id).unwrap();
+        assert_eq!(labels.len(), 1);
+        assert_eq!(labels[0].normalized_label, "recall-quality");
+        assert_eq!(
+            labels[0].evidence,
+            vec!["evaluating recall output".to_string()]
+        );
+        let candidates = db.list_segment_label_candidates(10).unwrap();
+        assert_eq!(candidates[0].segment_count, 1);
+        assert_eq!(candidates[0].session_count, 1);
+        assert_eq!(candidates[0].project_count, 1);
+        let segment = db.conversation_segment_by_id(segment_id).unwrap().unwrap();
+        assert!(segment
+            .task_keys
+            .contains(&"label:recall-quality".to_string()));
+        assert_eq!(
+            db.unlabeled_stable_conversation_segments(10).unwrap().len(),
+            0
+        );
+        db.enqueue_task(&TaskRecord {
+            id: None,
+            kind: "segment_labeling".to_string(),
+            status: TaskStatus::Queued,
+            priority: 0,
+            payload_json: serde_json::json!({ "segment_id": segment_id }).to_string(),
+            attempts: 0,
+            max_attempts: 5,
+            next_run_at: None,
+            last_error: None,
+            created_at: "unix:3".to_string(),
+            updated_at: "unix:3".to_string(),
+        })
+        .unwrap();
+
+        db.replace_conversation_segments_for_session("session-1", &[])
+            .unwrap();
+        assert_eq!(
+            db.clear_tasks_for_missing_segments("segment_labeling")
+                .unwrap(),
+            1
+        );
+
+        assert!(db.labels_for_segment(segment_id).unwrap().is_empty());
+        let candidates = db.list_segment_label_candidates(10).unwrap();
+        assert_eq!(candidates[0].segment_count, 0);
+        assert_eq!(
+            db.unlabeled_stable_conversation_segments(10).unwrap().len(),
+            0
+        );
+    }
+
+    #[test]
+    fn empty_segment_label_decision_is_not_requeued() {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+        db.upsert_session(&SessionRecord {
+            id: "session-1".to_string(),
+            agent_type: yaaml_core::AgentType::Codex,
+            project_id: "/tmp/project".to_string(),
+            transcript_file_path: "/tmp/session.jsonl".to_string(),
+            started_at: Some("unix:1".to_string()),
+            last_seen_at: Some("unix:2".to_string()),
+        })
+        .unwrap();
+        db.replace_conversation_segments_for_session(
+            "session-1",
+            &[ConversationSegmentRecord {
+                id: None,
+                session_id: "session-1".to_string(),
+                start_turn_ordinal: 0,
+                end_turn_ordinal: 1,
+                summary: "No durable topic".to_string(),
+                task_keys: Vec::new(),
+                context: None,
+                status: ConversationSegmentStatus::Completed,
+                created_at: "unix:2".to_string(),
+                updated_at: "unix:2".to_string(),
+            }],
+        )
+        .unwrap();
+        let segment_id = db
+            .list_conversation_segments(Some("session-1"), 10)
+            .unwrap()[0]
+            .id
+            .unwrap();
+
+        assert_eq!(
+            db.unlabeled_stable_conversation_segments(10).unwrap().len(),
+            1
+        );
+        db.replace_labels_for_segment(segment_id, &[], "unix:3")
+            .unwrap();
+
+        assert!(db.labels_for_segment(segment_id).unwrap().is_empty());
+        assert_eq!(
+            db.unlabeled_stable_conversation_segments(10).unwrap().len(),
+            0
+        );
     }
 
     #[test]

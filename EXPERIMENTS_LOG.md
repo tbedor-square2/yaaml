@@ -33,7 +33,8 @@ How to use this backlog:
 The concrete next action is always the lowest incomplete item here:
 
 1. Anchor library and holdout refresh (Phase 0.1)
-2. Bootstrap CI tooling in the experiment runners (Phase 0.2)
+2. ~~Bootstrap CI tooling in the experiment runners (Phase 0.2)~~ done
+   2026-07-06 for the worktree runner
 3. Pool-recall ceiling oracle (Phase 0.3)
 4. Judge calibration set (Phase 0.4)
 5. Re-validate shipped pre-CI decisions (Phase 0.5)
@@ -55,21 +56,21 @@ an item is complete when its artifacts are committed.
    ~100-anchor holdout never used during iteration. Known-score coverage on
    old libraries has decayed to near zero for some backtests, making deltas
    unreadable. Follow the "Phase 0 Runbook: Anchor Libraries" section of
-   `experiments/recall/README.md`; includes writing
-   `scripts/build-anchor-library.py` for the split/stratification/coverage
-   steps. Blocks everything below.
+   `experiments/recall/README.md`; `scripts/build-anchor-library.py` performs
+   the split/stratification/coverage steps. Blocks everything below.
    *Done when*: screening + holdout TSVs and manifest committed under
    `experiments/recall/anchor-libraries/`, known-score coverage ≥30% reported
    for both sets, zero anchor overlap between sets.
-2. **Bootstrap CI tooling** (added 2026-07-06). The methodology requires
-   paired bootstrap 95% CIs, but `recall-5x5-worktree-metrics.py` and the
-   other experiment runners emit point deltas only, so no experiment can
-   currently satisfy it. Add shared CI computation (resample anchors, ≥2000
-   resamples) to the runner metrics path.
-   *Done when*: `summary.json` includes `delta_ci_95` per strategy and
-   primary metric (shape specified in the README), and generated `REPORT.md`
-   labels each delta `confirmed`, `no detectable effect`, or `needs larger
-   sample`.
+2. **Bootstrap CI tooling** (added 2026-07-06; done 2026-07-06 for the
+   worktree runner). Shared paired-bootstrap implementation in
+   `scripts/recall_experiment_stats.py` (anchors paired on `run_id`,
+   deterministic seed, 2000 resamples); `recall-5x5-worktree-metrics.py` now
+   emits `delta_ci_95` and `delta_verdicts` in `summary.json` and a
+   Significance section in `REPORT.md` labeling each delta `confirmed`,
+   `no detectable effect`, or `needs larger sample`.
+   *Residual*: the older standalone `recall-*-experiment.py` replay scripts
+   still emit point deltas only; import the shared helper into any of them
+   before using their output for a decision.
 3. **Pool-recall ceiling oracle** (added 2026-07-02). For every anchor with a
    known-useful memory, measure whether that memory appears in the
    16-candidate pool at all. Cheap (replays saved anchors, no strategy

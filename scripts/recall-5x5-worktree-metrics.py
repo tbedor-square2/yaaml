@@ -21,11 +21,28 @@ import json
 import os
 import re
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from recall_experiment_stats import paired_bootstrap_deltas
+
 
 Row = dict[str, Any]
+
+PRIMARY_METRICS = [
+    "average_known_score",
+    "useful_known_selected",
+    "low_known_selected",
+    "useful_capture_runs",
+    "low_selection_runs",
+    "average_selected_per_anchor",
+    "empty_recall_runs",
+    "missed_useful_empty_runs",
+    "clean_abstention_runs",
+]
 
 
 def parse_named_path(value: str) -> tuple[str, Path]:
@@ -141,24 +158,22 @@ def metric_summary(label: str, out_dir: Path) -> Row:
 
 
 def add_deltas(summary: Row, baseline: Row) -> Row:
-    delta_keys = [
-        "average_known_score",
-        "useful_known_selected",
-        "low_known_selected",
-        "useful_capture_runs",
-        "low_selection_runs",
-        "average_selected_per_anchor",
-        "empty_recall_runs",
-        "missed_useful_empty_runs",
-        "clean_abstention_runs",
-    ]
     summary["delta_vs_baseline"] = {
         key: (
             None
             if summary.get(key) is None or baseline.get(key) is None
             else summary[key] - baseline[key]
         )
-        for key in delta_keys
+        for key in PRIMARY_METRICS
+    }
+    baseline_rows = read_jsonl(Path(baseline["details_path"]))
+    candidate_rows = read_jsonl(Path(summary["details_path"]))
+    bootstrap = paired_bootstrap_deltas(baseline_rows, candidate_rows, PRIMARY_METRICS)
+    summary["delta_ci_95"] = {
+        metric: result["ci_95"] for metric, result in bootstrap.items()
+    }
+    summary["delta_verdicts"] = {
+        metric: result["verdict"] for metric, result in bootstrap.items()
     }
     return summary
 
@@ -255,10 +270,46 @@ def write_report(path: Path, manifest: Row, summaries: list[Row]) -> None:
                 missed=format_delta(delta["missed_useful_empty_runs"], digits=0),
             )
         )
+    lines.extend([
+        "",
+        "## Significance",
+        "",
+        "Paired bootstrap over anchors, 2000 resamples, 95% CI on each delta.",
+        "Verdicts: `confirmed` (CI excludes zero), `no detectable effect`",
+        "(CI includes zero within the decision-relevant band), `needs larger",
+        "sample` (CI includes zero but a decision-relevant effect cannot be",
+        "ruled out).",
+        "",
+        "| Strategy | Metric | Delta | 95% CI | Verdict |",
+        "| --- | --- | ---: | ---: | --- |",
+    ])
+    for summary in candidate_summaries:
+        deltas = summary["delta_vs_baseline"]
+        cis = summary["delta_ci_95"]
+        verdicts = summary["delta_verdicts"]
+        for metric in deltas:
+            ci = cis.get(metric)
+            ci_text = (
+                "n/a" if ci is None else f"[{format_delta(ci[0])}, {format_delta(ci[1])}]"
+            )
+            lines.append(
+                "| {strategy} | {metric} | {delta} | {ci} | {verdict} |".format(
+                    strategy=summary["strategy"],
+                    metric=metric,
+                    delta=format_delta(deltas[metric]),
+                    ci=ci_text,
+                    verdict=verdicts.get(metric, "no data"),
+                )
+            )
     lines.extend(["", "## Recommendation", ""])
     if best is None:
         lines.append("No candidate preserved useful-run coverage within the missed-useful budget.")
     else:
+        confirmed = [
+            metric
+            for metric, verdict in best["delta_verdicts"].items()
+            if verdict == "confirmed"
+        ]
         lines.append(
             "Most promising candidate: `{}`. It preserved useful-run coverage while producing {} low selected memories and {:.2f} average memories per anchor.".format(
                 best["strategy"],
@@ -266,6 +317,17 @@ def write_report(path: Path, manifest: Row, summaries: list[Row]) -> None:
                 best["average_selected_per_anchor"] or 0.0,
             )
         )
+        if confirmed:
+            lines.append(
+                "Confirmed deltas (CI excludes zero): {}.".format(
+                    ", ".join(f"`{metric}`" for metric in confirmed)
+                )
+            )
+        else:
+            lines.append(
+                "No delta is confirmed by its confidence interval; treat this "
+                "as no detectable effect and do not iterate on it as a win."
+            )
     lines.extend([
         "",
         "## Artifacts",

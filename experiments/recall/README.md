@@ -72,13 +72,14 @@ Decision rules:
 Past experiments made calls on ±2-useful deltas over 200 anchors; treat those
 historical readouts as directional, not confirmed.
 
-**Tooling status**: the experiment runners
-(`recall-5x5-worktree-metrics.py` and the other `recall-*-experiment.py`
-scripts) currently emit point deltas only. Adding bootstrap CI output is
-Phase 0 tooling work (see the backlog in `../../EXPERIMENTS_LOG.md`); until
-it lands, no experiment can satisfy this section, so no technique experiment
-should run. When implemented, `summary.json` must include per-strategy CI
-fields shaped like:
+**Tooling status**: the shared implementation lives in
+`scripts/recall_experiment_stats.py` (paired bootstrap over anchors keyed by
+`run_id`, deterministic seed, verdict classification).
+`recall-5x5-worktree-metrics.py` emits CI fields and report verdicts; the
+older standalone `recall-*-experiment.py` replay scripts still emit point
+deltas only and must import the shared helper before their results are used
+for decisions. `summary.json` must include per-strategy CI fields shaped
+like:
 
 ```json
 "delta_ci_95": {
@@ -143,17 +144,20 @@ BACKTEST_ANCHOR_LIMIT=300 \
 BACKTEST_OUT_DIR=target/anchor-refresh-$(date +%Y-%m) \
 scripts/backtest-recall-strategy.sh . anchor-refresh
 
-# 2. Split the pool into screening and holdout. Shuffle deterministically,
-#    stratify so each set keeps a proportional share of anchors with known
-#    oracle labels, and verify zero overlap on (session_id, turn_ordinal).
+# 2. Split the pool into screening and holdout: deterministic shuffle,
+#    stratified so each set keeps a proportional share of anchors with
+#    known oracle labels, zero overlap, coverage reported in the manifest.
+python3 scripts/build-anchor-library.py \
+  --input-dir target/anchor-refresh-$(date +%Y-%m) \
+  --label $(date +%Y-%m) \
+  --screening 200 --holdout 100
 
 # 3. Commit both TSVs and the manifest under
 #    experiments/recall/anchor-libraries/.
 ```
 
-(Step 2 has no dedicated script yet; writing
-`scripts/build-anchor-library.py` to do the split, stratification, overlap
-check, and coverage report is part of the Phase 0 refresh task.)
+The builder refuses to overwrite existing library files and warns when a
+set's known-score coverage falls below the 30% done-criteria threshold.
 
 All subsequent screening runs must pass the frozen file explicitly:
 

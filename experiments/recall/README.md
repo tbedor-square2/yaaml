@@ -72,6 +72,27 @@ Decision rules:
 Past experiments made calls on ±2-useful deltas over 200 anchors; treat those
 historical readouts as directional, not confirmed.
 
+**Tooling status**: the experiment runners
+(`recall-5x5-worktree-metrics.py` and the other `recall-*-experiment.py`
+scripts) currently emit point deltas only. Adding bootstrap CI output is
+Phase 0 tooling work (see the backlog in `../../EXPERIMENTS_LOG.md`); until
+it lands, no experiment can satisfy this section, so no technique experiment
+should run. When implemented, `summary.json` must include per-strategy CI
+fields shaped like:
+
+```json
+"delta_ci_95": {
+  "useful_capture_runs": [-3, 5],
+  "low_known_selected": [-12, -2],
+  "average_known_score": [-0.04, 0.18]
+}
+```
+
+and `REPORT.md` must label each primary-metric delta as `confirmed`
+(CI excludes zero), `no detectable effect` (CI includes zero), or
+`needs larger sample` (CI includes zero but is wide enough that a real effect
+of decision-relevant size cannot be ruled out).
+
 ### 5. Retrieval ceiling check
 
 Before any reranking/selection experiment, know the pool ceiling: for anchors
@@ -92,6 +113,63 @@ unknown.
 Treat empty recall as abstention, not failure. Track abstention metrics
 separately from score metrics, and always report missed-useful empties —
 strict strategies can inflate average score by over-abstaining.
+
+## Phase 0 Runbook: Anchor Libraries
+
+Frozen anchor libraries are the substrate for every backtest. Canonical
+layout:
+
+- `experiments/recall/anchor-libraries/<YYYY-MM>-screening.tsv` (~200 anchors)
+- `experiments/recall/anchor-libraries/<YYYY-MM>-holdout.tsv` (~100 anchors)
+- `experiments/recall/anchor-libraries/<YYYY-MM>-manifest.json` (generation
+  date, database snapshot info, selection query parameters, known-score
+  coverage for each set)
+
+Anchor TSV schema (tab-separated, no header — the format
+`scripts/backtest-recall-strategy.sh` consumes):
+
+```text
+run_id <TAB> session_id <TAB> turn_ordinal <TAB> case_label
+```
+
+Build procedure:
+
+```bash
+# 1. Generate a fresh anchor pool from the eval library (newest-first,
+#    leakage-filtered). This runs the production replay once and writes
+#    anchors.tsv plus oracle/recall artifacts.
+BACKTEST_ANCHOR_SOURCE=eval-library \
+BACKTEST_ANCHOR_LIMIT=300 \
+BACKTEST_OUT_DIR=target/anchor-refresh-$(date +%Y-%m) \
+scripts/backtest-recall-strategy.sh . anchor-refresh
+
+# 2. Split the pool into screening and holdout. Shuffle deterministically,
+#    stratify so each set keeps a proportional share of anchors with known
+#    oracle labels, and verify zero overlap on (session_id, turn_ordinal).
+
+# 3. Commit both TSVs and the manifest under
+#    experiments/recall/anchor-libraries/.
+```
+
+(Step 2 has no dedicated script yet; writing
+`scripts/build-anchor-library.py` to do the split, stratification, overlap
+check, and coverage report is part of the Phase 0 refresh task.)
+
+All subsequent screening runs must pass the frozen file explicitly:
+
+```bash
+BACKTEST_ANCHORS_FILE=experiments/recall/anchor-libraries/<YYYY-MM>-screening.tsv \
+BACKTEST_OUT_DIR=target/recall-backtests/<experiment-label> \
+scripts/backtest-recall-strategy.sh . <experiment-label>
+```
+
+Never regenerate anchors dynamically inside an experiment (that silently
+changes the sample). The holdout file is only ever passed for a final
+ship/no-ship confirmation.
+
+Done criteria for a refresh: screening and holdout TSVs plus manifest
+committed; known-score coverage reported for both sets and ≥30% of anchors
+carrying oracle labels; zero anchor overlap between the sets.
 
 ## Metrics
 
@@ -115,6 +193,38 @@ Abstention metrics, tracked separately:
 The overall objective is useful recall per context token: prefer policies
 that reduce low-scoring injected memories without sharply increasing
 missed-useful abstentions.
+
+### Memory-Write Experiment Metrics
+
+The metrics above are recall-selection metrics; they replay retrieval over a
+fixed corpus. Experiments that change what gets *written* — formulation
+prompts, activation conditions, consolidation policy, rewrite-vs-suppression,
+formation-miss mining — need a different contract, because saved-candidate
+replay cannot measure them. For memory-write experiments report:
+
+- **Source faithfulness**: does the memory accurately reflect its source
+  turns (judged against the transcript, not the query)?
+- **Durability classification**: was transient task state written as durable
+  (or vice versa)? Kind and scope classification accuracy against a labeled
+  sample.
+- **Specificity/actionability**: judged 1–5 on whether the memory is concrete
+  enough to act on, using the same judge-calibration discipline as recall
+  scores.
+- **False-positive creation rate**: memories written that no later turn ever
+  makes useful.
+- **Missed-creation rate**: repeated corrections/mistakes in later transcripts
+  with no corresponding memory (the formation-miss denominator).
+- **Downstream recall usefulness**: after enough forward exposure, the
+  standard recall metrics segmented by memory cohort (written under the new
+  policy vs. old).
+- **Corpus lifecycle impact**: memory count, consolidation rate, supersession
+  rate, and dedup rate — a write policy that doubles corpus size changes
+  retrieval behavior even if per-memory quality is flat.
+
+Memory-write experiments are forward experiments by default: they need new
+formulation runs and time for eval evidence to accumulate. State the exposure
+window in the report and do not compare cohorts with materially different
+exposure.
 
 ## Artifact Requirements
 

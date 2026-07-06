@@ -28,35 +28,77 @@ How to use this backlog:
    metrics, lessons, decision). The decision record is the durable artifact;
    the backlog entry is disposable.
 
+### Next Run
+
+The concrete next action is always the lowest incomplete item here:
+
+1. Anchor library and holdout refresh (Phase 0.1)
+2. Bootstrap CI tooling in the experiment runners (Phase 0.2)
+3. Pool-recall ceiling oracle (Phase 0.3)
+4. Judge calibration set (Phase 0.4)
+5. Re-validate shipped pre-CI decisions (Phase 0.5)
+6. Hybrid candidate generation (first technique experiment)
+
+Do not start technique experiments until Phase 0 is complete, even though the
+technique backlog is listed with expected-value ordering.
+
 ### Phase 0: Validation Infrastructure (run first, in order)
 
 These are prerequisites, not experiments that can "win." They exist because
-the methodology in `experiments/recall/README.md` requires artifacts that do
-not exist yet, and because several shipped decisions predate the
-confidence-interval and holdout rules.
+the methodology in `experiments/recall/README.md` requires artifacts and
+tooling that do not exist yet, and because several shipped decisions predate
+the confidence-interval and holdout rules. Each item lists its done criteria;
+an item is complete when its artifacts are committed.
 
 1. **Anchor library and holdout refresh** (added 2026-07-02). Rebuild the
    screening library with current-corpus oracle coverage, and carve out a
    ~100-anchor holdout never used during iteration. Known-score coverage on
    old libraries has decayed to near zero for some backtests, making deltas
-   unreadable. Blocks everything below.
-2. **Pool-recall ceiling oracle** (added 2026-07-02). For every anchor with a
+   unreadable. Follow the "Phase 0 Runbook: Anchor Libraries" section of
+   `experiments/recall/README.md`; includes writing
+   `scripts/build-anchor-library.py` for the split/stratification/coverage
+   steps. Blocks everything below.
+   *Done when*: screening + holdout TSVs and manifest committed under
+   `experiments/recall/anchor-libraries/`, known-score coverage ≥30% reported
+   for both sets, zero anchor overlap between sets.
+2. **Bootstrap CI tooling** (added 2026-07-06). The methodology requires
+   paired bootstrap 95% CIs, but `recall-5x5-worktree-metrics.py` and the
+   other experiment runners emit point deltas only, so no experiment can
+   currently satisfy it. Add shared CI computation (resample anchors, ≥2000
+   resamples) to the runner metrics path.
+   *Done when*: `summary.json` includes `delta_ci_95` per strategy and
+   primary metric (shape specified in the README), and generated `REPORT.md`
+   labels each delta `confirmed`, `no detectable effect`, or `needs larger
+   sample`.
+3. **Pool-recall ceiling oracle** (added 2026-07-02). For every anchor with a
    known-useful memory, measure whether that memory appears in the
    16-candidate pool at all. Cheap (replays saved anchors, no strategy
    variants) and determines whether future effort belongs in candidate
    generation or selection.
-3. **Judge calibration set** (added 2026-07-02). Hand-label ~100 recall runs
+   *Done when*: a report under `experiments/recall/<date>-pool-recall-oracle/`
+   states `oracle_useful_anchors`, `known_useful_in_pool`,
+   `pool_recall_rate`, and the split of misses into `missing_due_to_retrieval`
+   (useful memory absent from pool) vs `missing_due_to_selection` (in pool,
+   not selected), with a decision record naming which side future effort
+   targets.
+4. **Judge calibration set** (added 2026-07-02). Hand-label ~100 recall runs
    once, measure judge agreement, and re-measure whenever the judge model or
    prompt changes. De-risks every downstream experiment; currently all tuning
    fits an uncalibrated judge.
-4. **Re-validate shipped pre-CI decisions** (added 2026-07-03). One replay
+   *Done when*: the labeled set is committed (or its location recorded), and
+   a report states exact score agreement, within-1 agreement, useful/low
+   binary agreement, and Cohen's kappa, with a decision record on whether the
+   current judge model/prompt is acceptable for tuning.
+5. **Re-validate shipped pre-CI decisions** (added 2026-07-03). One replay
    run on the refreshed library confirming two decisions made before the
    confidence-interval methodology existed: `health_action_rerank` (large
    deltas, probably real, but load-bearing in production and never
    CI-confirmed) and recall-query cleaning (showed a small useful-recall
    regression on the frozen library — 65 vs 69 useful known — and shipped
    anyway; weakest shipped decision in this log). Saved-candidate replay, no
-   provider calls. Outcome: keep, tune, or revert each.
+   provider calls. Requires items 1 and 2.
+   *Done when*: a decision record states keep/tune/revert for each of the two
+   decisions, with CI-labeled deltas on the refreshed screening library.
 
 ### Technique Backlog (blocked on Phase 0)
 
@@ -80,12 +122,14 @@ Ordered roughly by expected value.
    touching X", "not applicable once PR merged") stored as structured
    metadata, matched at recall time. Attacks stale-task and wrong-context
    lows at the source instead of at ranking. Requires new formulation output
-   and forward evaluation; not replayable from saved candidates.
+   and forward evaluation; not replayable from saved candidates. Use the
+   memory-write experiment metrics in `experiments/recall/README.md`.
 4. **Formation-miss mining** (added 2026-07-02). Scan transcripts for
    repeated corrections or mistakes across sessions on the same topic where
    no memory was ever formed. Gives a denominator for memory-creation
    quality; all current metrics only measure retrieval over the corpus that
-   happens to exist. Diagnostic, not a strategy comparison.
+   happens to exist. Diagnostic, not a strategy comparison. Use the
+   memory-write experiment metrics in `experiments/recall/README.md`.
 5. **Wider-retrieval counterfactual for empty recalls** (added 2026-07-02).
    On empty recalls, run a diagnostic wide retrieval (pool 64, lower
    similarity threshold) and judge that set, upgrading missed-useful

@@ -23,22 +23,32 @@ How to use this backlog:
    listed order; technique items should not run until Phase 0 is complete,
    because their results are not readable without a refreshed anchor library,
    a known pool ceiling, and a calibrated judge.
-3. **Retiring an item**: when an experiment is run, delete the backlog entry
-   and add a dated decision-record entry below (date, sources, experiment,
-   metrics, lessons, decision). The decision record is the durable artifact;
-   the backlog entry is disposable.
+3. **Retiring an item**: follow the "When an item is addressed" policy below.
+
+### When an Item Is Addressed
+
+- **Phase 0 prerequisite completed**: keep it in the Phase 0 list, prefix it
+  with "DONE YYYY-MM-DD", keep any residual notes inline, and add a decision
+  record only if it produced experiment evidence (tooling work does not need
+  one).
+- **Technique experiment completed**: delete the backlog entry and add a
+  dated decision record (date, sources, experiment, metrics, lessons,
+  decision). The decision record is the durable artifact; the backlog entry
+  is disposable.
+- **Idea invalidated without a run**: delete the entry and add a one-line
+  dated "Rejected without run" decision record stating the reason, so the
+  idea is not re-proposed.
+- **Forward/memory-write experiment completed**: same as a technique
+  experiment, and the run directory must satisfy the forward-experiment
+  artifact contract in `experiments/recall/README.md` (exposure window and
+  cohort definitions in the manifest).
 
 ### Next Run
 
-The concrete next action is always the lowest incomplete item here:
-
-1. Anchor library and holdout refresh (Phase 0.1)
-2. ~~Bootstrap CI tooling in the experiment runners (Phase 0.2)~~ done
-   2026-07-06 for the worktree runner
-3. Pool-recall ceiling oracle (Phase 0.3)
-4. Judge calibration set (Phase 0.4)
-5. Re-validate shipped pre-CI decisions (Phase 0.5)
-6. Hybrid candidate generation (first technique experiment)
+The next action is always the lowest Phase 0 item not marked DONE; once
+Phase 0 is complete, it is the first technique-backlog entry. The Phase 0
+list below is canonical — this section intentionally names no items so there
+is only one place to update.
 
 Do not start technique experiments until Phase 0 is complete, even though the
 technique backlog is listed with expected-value ordering.
@@ -61,8 +71,8 @@ an item is complete when its artifacts are committed.
    *Done when*: screening + holdout TSVs and manifest committed under
    `experiments/recall/anchor-libraries/`, known-score coverage ≥30% reported
    for both sets, zero anchor overlap between sets.
-2. **Bootstrap CI tooling** (added 2026-07-06; done 2026-07-06 for the
-   worktree runner). Shared paired-bootstrap implementation in
+2. DONE 2026-07-06 — **Bootstrap CI tooling** (added 2026-07-06). Shared
+   paired-bootstrap implementation in
    `scripts/recall_experiment_stats.py` (anchors paired on `run_id`,
    deterministic seed, 2000 resamples); `recall-5x5-worktree-metrics.py` now
    emits `delta_ci_95` and `delta_verdicts` in `summary.json` and a

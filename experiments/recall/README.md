@@ -232,6 +232,8 @@ exposure.
 
 ## Artifact Requirements
 
+### Replay (recall-selection) experiments
+
 Each experiment directory should contain:
 
 - `manifest.json`: run metadata, input paths, baseline label, strategy names,
@@ -243,9 +245,28 @@ Each experiment directory should contain:
 - `REPORT.md`: human-readable readout generated from the structured files,
   including known-score coverage and CI-based conclusions.
 
+### Forward (memory-write) experiments
+
+Forward experiments have no anchor replay, so the per-anchor `details.jsonl`
+is replaced by per-memory cohort data. Minimum artifact set:
+
+- `manifest.json`: run metadata plus, required for forward experiments, the
+  exposure window (start/end timestamps for each cohort) and the cohort
+  definitions (what policy or config distinguishes new-policy memories from
+  the comparison cohort, and how membership is determined).
+- `cohorts.jsonl`: one row per memory with cohort assignment, creation
+  metadata, and the memory-write metrics that apply (faithfulness,
+  classification, downstream eval outcomes as they accumulate).
+- `REPORT.md`: readout against the memory-write metric contract above,
+  stating the exposure window and explicitly flagging any cohort-exposure
+  imbalance. `summary.json` is optional; when cohorts are compared
+  statistically, include it with the same CI fields as replay experiments.
+
+### In both cases
+
 After every experiment, append a decision-record entry to
-`../../EXPERIMENTS_LOG.md`: date, sources, experiment, metrics, lessons,
-decision.
+`../../EXPERIMENTS_LOG.md` following its "When an item is addressed" policy:
+date, sources, experiment, metrics, lessons, decision.
 
 ## 5x5 Worktree Loop
 

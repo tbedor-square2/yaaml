@@ -2,6 +2,8 @@
 
 This roadmap tracks likely next work after the Rust MVP. `REQUIREMENTS.md` remains the product contract; this file is for forward-looking priorities and sequencing.
 
+Scope note: this file holds product direction. Anything experiment-sized — a change with a hypothesis and a recall/memory metric it should move — belongs in the experiment backlog in `EXPERIMENTS_LOG.md`, run under the methodology in `experiments/recall/README.md`. The "Recall Quality" and "Memory Quality" sections below describe direction; the backlog is the authoritative list of what to run next.
+
 ## Current Baseline
 
 - Rust CLI and daemon.

@@ -1,12 +1,24 @@
 # Recall Experiments
 
 Recall experiments are stored as timestamped directories so strategy results
-can be compared over time. Cross-experiment lessons, decisions, and the
-proposed experiment backlog are summarized in `../../EXPERIMENTS_LOG.md`.
+can be compared over time.
 
 This file is the methodology contract. Every recall/memory experiment should
 follow the sampling, significance, and holdout rules below before its result
 is treated as a decision input.
+
+## Where Experiment Work Is Tracked
+
+- `../../EXPERIMENTS_LOG.md` — the experiment backlog (Phase 0 validation
+  infrastructure plus the technique backlog) and dated decision records.
+  New experiment ideas are appended to the backlog with a hypothesis, target
+  metric, and measurement mode; completed experiments delete their backlog
+  entry and add a decision record. See the "How to use this backlog" rules at
+  the top of that file.
+- `experiments/recall/<date>-<name>/` — per-run artifacts (`manifest.json`,
+  `summary.json`, `details.jsonl`, `REPORT.md`).
+- `../../ROADMAP.md` — product direction only; experiment-sized ideas go to
+  the backlog, not the roadmap.
 
 ## Methodology
 

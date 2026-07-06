@@ -6,56 +6,102 @@ and summarize the decision-level result here so later experiments do not have
 to rediscover the same tradeoffs. Methodology (sampling, significance,
 holdout, and replay-vs-rerun rules) lives in `experiments/recall/README.md`.
 
-## Proposed Experiment Backlog (2026-07-02)
+## Experiment Backlog
 
-Ordered roughly by expected value. Remove entries when they are run and
-replaced by a dated decision record below.
+This is the single backlog for recall/memory experiments. `ROADMAP.md` holds
+product direction; anything experiment-sized (has a hypothesis and a metric)
+belongs here, not there.
 
-1. **Pool-recall ceiling oracle.** For every anchor with a known-useful
-   memory, measure whether that memory appears in the 16-candidate pool at
-   all. Cheap (replays saved anchors, no strategy variants) and determines
-   whether future effort belongs in candidate generation or selection. Run
-   this before any further rerank experiments.
-2. **Hybrid candidate generation.** Retrieve with a union of channels:
-   recent-turns embedding (current), active-segment summary/label embedding,
-   and exact lexical match on identity task keys (PR ids, branch names, file
-   paths) with guaranteed pool inclusion. Identity keys are the strongest
-   ranking signal but currently only help memories vector search already
-   surfaced. Replay through existing production selection, same metrics.
-3. **Judge calibration set.** Hand-label ~100 recall runs once, measure
-   judge agreement, and re-measure whenever the judge model or prompt
-   changes. De-risks every downstream experiment; currently all tuning fits
-   an uncalibrated judge.
-4. **Learned weight calibration.** Keep the existing ranking features but fit
-   the weights with logistic regression plus isotonic calibration on current
-   oracle labels, producing calibrated P(useful). Replaces hand-tuned
-   constants and turns abstention thresholds into an expected-value-vs-
-   context-cost decision. Follow-up to the 2026-06-23 feature-model result.
-5. **Formation-time activation conditions.** Have formulation emit explicit
-   recall triggers and anti-triggers ("recall when touching X", "not
-   applicable once PR merged") stored as structured metadata, matched at
-   recall time. Attacks stale-task and wrong-context lows at the source
-   instead of at ranking.
-6. **Formation-miss mining.** Scan transcripts for repeated corrections or
-   mistakes across sessions on the same topic where no memory was ever
-   formed. Gives a denominator for memory-creation quality; all current
-   metrics only measure retrieval over the corpus that happens to exist.
-7. **Wider-retrieval counterfactual for empty recalls.** On empty recalls,
-   run a diagnostic wide retrieval (pool 64, lower similarity threshold) and
-   judge that set, upgrading missed-useful abstention into a true
-   retrieval-recall metric instead of one blind to memories outside the pool.
-8. **LLM scoring rerank of the top ~8.** Revisit LLM reranking as a scoring
-   pass (not the binary filter that failed on 2026-06-17), with query,
-   candidate, and segment summary in the prompt. Backtest offline before any
-   runtime change.
-9. **Session-level context dedup.** Skip or demote recall when the memory's
-   content is already visibly in the agent context (recalled earlier this
-   session, or the agent read the file the memory describes). Targets the
-   context-sensitive placement failures noted in the 2026-06-30 snapshot.
-10. **Anchor library and holdout refresh.** Rebuild the screening library
-    with current-corpus oracle coverage, and carve out a ~100-anchor holdout
-    never used during iteration. Known-score coverage on old libraries has
-    decayed to near zero for some backtests, making deltas unreadable.
+How to use this backlog:
+
+1. **Adding an idea**: append it to the appropriate section below with a
+   short hypothesis, the metric it should move, and how it would be measured
+   (replay saved candidates vs. rerun retrieval vs. full corpus — see
+   `experiments/recall/README.md`). Date the addition.
+2. **Running an item**: follow the methodology in
+   `experiments/recall/README.md`. Phase 0 items are prerequisites and run in
+   listed order; technique items should not run until Phase 0 is complete,
+   because their results are not readable without a refreshed anchor library,
+   a known pool ceiling, and a calibrated judge.
+3. **Retiring an item**: when an experiment is run, delete the backlog entry
+   and add a dated decision-record entry below (date, sources, experiment,
+   metrics, lessons, decision). The decision record is the durable artifact;
+   the backlog entry is disposable.
+
+### Phase 0: Validation Infrastructure (run first, in order)
+
+These are prerequisites, not experiments that can "win." They exist because
+the methodology in `experiments/recall/README.md` requires artifacts that do
+not exist yet, and because several shipped decisions predate the
+confidence-interval and holdout rules.
+
+1. **Anchor library and holdout refresh** (added 2026-07-02). Rebuild the
+   screening library with current-corpus oracle coverage, and carve out a
+   ~100-anchor holdout never used during iteration. Known-score coverage on
+   old libraries has decayed to near zero for some backtests, making deltas
+   unreadable. Blocks everything below.
+2. **Pool-recall ceiling oracle** (added 2026-07-02). For every anchor with a
+   known-useful memory, measure whether that memory appears in the
+   16-candidate pool at all. Cheap (replays saved anchors, no strategy
+   variants) and determines whether future effort belongs in candidate
+   generation or selection.
+3. **Judge calibration set** (added 2026-07-02). Hand-label ~100 recall runs
+   once, measure judge agreement, and re-measure whenever the judge model or
+   prompt changes. De-risks every downstream experiment; currently all tuning
+   fits an uncalibrated judge.
+4. **Re-validate shipped pre-CI decisions** (added 2026-07-03). One replay
+   run on the refreshed library confirming two decisions made before the
+   confidence-interval methodology existed: `health_action_rerank` (large
+   deltas, probably real, but load-bearing in production and never
+   CI-confirmed) and recall-query cleaning (showed a small useful-recall
+   regression on the frozen library — 65 vs 69 useful known — and shipped
+   anyway; weakest shipped decision in this log). Saved-candidate replay, no
+   provider calls. Outcome: keep, tune, or revert each.
+
+### Technique Backlog (blocked on Phase 0)
+
+Ordered roughly by expected value.
+
+1. **Hybrid candidate generation** (added 2026-07-02). Retrieve with a union
+   of channels: recent-turns embedding (current), active-segment
+   summary/label embedding, and exact lexical match on identity task keys
+   (PR ids, branch names, file paths) with guaranteed pool inclusion.
+   Identity keys are the strongest ranking signal but currently only help
+   memories vector search already surfaced. Requires rerunning retrieval;
+   replay through existing production selection, same metrics.
+2. **Learned weight calibration** (added 2026-07-02). Keep the existing
+   ranking features but fit the weights with logistic regression plus
+   isotonic calibration on current oracle labels, producing calibrated
+   P(useful). Replaces hand-tuned constants and turns abstention thresholds
+   into an expected-value-vs-context-cost decision. Follow-up to the
+   2026-06-23 feature-model result. Saved-candidate replay.
+3. **Formation-time activation conditions** (added 2026-07-02). Have
+   formulation emit explicit recall triggers and anti-triggers ("recall when
+   touching X", "not applicable once PR merged") stored as structured
+   metadata, matched at recall time. Attacks stale-task and wrong-context
+   lows at the source instead of at ranking. Requires new formulation output
+   and forward evaluation; not replayable from saved candidates.
+4. **Formation-miss mining** (added 2026-07-02). Scan transcripts for
+   repeated corrections or mistakes across sessions on the same topic where
+   no memory was ever formed. Gives a denominator for memory-creation
+   quality; all current metrics only measure retrieval over the corpus that
+   happens to exist. Diagnostic, not a strategy comparison.
+5. **Wider-retrieval counterfactual for empty recalls** (added 2026-07-02).
+   On empty recalls, run a diagnostic wide retrieval (pool 64, lower
+   similarity threshold) and judge that set, upgrading missed-useful
+   abstention into a true retrieval-recall metric instead of one blind to
+   memories outside the pool. Requires rerunning retrieval for empty-recall
+   anchors only.
+6. **LLM scoring rerank of the top ~8** (added 2026-07-02). Revisit LLM
+   reranking as a scoring pass (not the binary filter that failed on
+   2026-06-17), with query, candidate, and segment summary in the prompt.
+   Backtest offline before any runtime change. Saved-candidate replay plus
+   judge-model calls.
+7. **Session-level context dedup** (added 2026-07-02). Skip or demote recall
+   when the memory's content is already visibly in the agent context
+   (recalled earlier this session, or the agent read the file the memory
+   describes). Targets the context-sensitive placement failures noted in the
+   2026-06-30 snapshot. Saved-candidate replay with session-history features.
 
 ## 2026-07-01: Persisted Segment Labels Initial Backtest
 

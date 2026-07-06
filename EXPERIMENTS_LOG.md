@@ -37,10 +37,10 @@ How to use this backlog:
   with "DONE YYYY-MM-DD", keep any residual notes inline, and add a decision
   record only if it produced experiment evidence (tooling work does not need
   one).
-- **Technique experiment completed**: delete the backlog entry and add a
-  dated decision record (date, sources, experiment, metrics, lessons,
-  decision). The decision record is the durable artifact; the backlog entry
-  is disposable.
+- **Backlog experiment or diagnostic completed**: delete the backlog entry
+  and add a dated decision record (date, sources, experiment, metrics or the
+  answered question, lessons, decision). The decision record is the durable
+  artifact; the backlog entry is disposable.
 - **Idea invalidated without a run**: delete the entry and add a one-line
   dated "Rejected without run" decision record stating the reason, so the
   idea is not re-proposed.

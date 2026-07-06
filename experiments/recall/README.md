@@ -256,7 +256,13 @@ is replaced by per-memory cohort data. Minimum artifact set:
   the comparison cohort, and how membership is determined).
 - `cohorts.jsonl`: one row per memory with cohort assignment, creation
   metadata, and the memory-write metrics that apply (faithfulness,
-  classification, downstream eval outcomes as they accumulate).
+  classification, downstream eval outcomes as they accumulate). For
+  diagnostic experiments whose unit of evidence is not an existing memory —
+  formation-miss mining, where the evidence is a repeated correction with no
+  memory formed — use `cases.jsonl` instead: one row per observed case
+  (missed opportunity, transcript refs, whether a memory should have
+  existed), with the same expectation that rows are the raw material for the
+  report's metrics.
 - `REPORT.md`: readout against the memory-write metric contract above,
   stating the exposure window and explicitly flagging any cohort-exposure
   imbalance. `summary.json` is optional; when cohorts are compared

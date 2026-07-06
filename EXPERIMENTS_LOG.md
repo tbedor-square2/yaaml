@@ -61,6 +61,10 @@ tooling that do not exist yet, and because several shipped decisions predate
 the confidence-interval and holdout rules. Each item lists its done criteria;
 an item is complete when its artifacts are committed.
 
+Out-of-order completion is allowed when an item has no dependency on the
+items before it (item 2, pure tooling, was completed before item 1 this
+way); the next action is always the lowest incomplete item.
+
 1. **Anchor library and holdout refresh** (added 2026-07-02). Rebuild the
    screening library with current-corpus oracle coverage, and carve out a
    ~100-anchor holdout never used during iteration. Known-score coverage on

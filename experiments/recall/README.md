@@ -7,14 +7,38 @@ This file is the methodology contract. Every recall/memory experiment should
 follow the sampling, significance, and holdout rules below before its result
 is treated as a decision input.
 
+## Scope and Flexibility
+
+The contract governs *decision inputs*, not exploration. Rules of thumb:
+
+- **Exploration is cheap and unrestricted.** Prototyping a strategy, eyeballing
+  a handful of anchors, mining transcripts, or running a quick diagnostic
+  needs no anchor library, CI, or holdout. The rules bind at the moment a
+  result is used to ship, revert, or kill an idea.
+- **The 5x5 worktree loop is one harness, not the only one.** Single-candidate
+  experiments, diagnostics with a report as the deliverable, forward
+  memory-write experiments, and novel harness shapes are all valid — the
+  invariants are paired comparison against a named baseline, CI-labeled
+  deltas, abstention tracked separately, and a decision record.
+- **The primary metrics are a floor, not a ceiling.** Experiments may add
+  metrics (context-token cost, latency, wrong-context lows, anything the
+  hypothesis needs). Changing the primary set itself is a methodology change
+  and gets its own decision record.
+- **Metrics are not the only ship rationale.** A change may ship despite
+  neutral metrics for product-safety, privacy, or maintainability reasons
+  (precedent: removing hardcoded topic classifiers shipped with worse
+  abstention). The decision record must then say explicitly that the metric
+  case was neutral and name the non-metric rationale — what is not allowed is
+  presenting a neutral result as a metric win.
+
 ## Where Experiment Work Is Tracked
 
 - `../../EXPERIMENTS_LOG.md` — the experiment backlog (Phase 0 validation
   infrastructure plus the technique backlog) and dated decision records.
   New experiment ideas are appended to the backlog with a hypothesis, target
-  metric, and measurement mode; completed experiments delete their backlog
-  entry and add a decision record. See the "How to use this backlog" rules at
-  the top of that file.
+  metric, and measurement mode; addressed items follow that file's "When an
+  item is addressed" policy (completed Phase 0 prerequisites stay listed with
+  a DONE date; completed experiments are replaced by decision records).
 - `experiments/recall/<date>-<name>/` — per-run artifacts (`manifest.json`,
   `summary.json`, `details.jsonl`, `REPORT.md`).
 - `../../ROADMAP.md` — product direction only; experiment-sized ideas go to
@@ -92,7 +116,10 @@ like:
 and `REPORT.md` must label each primary-metric delta as `confirmed`
 (CI excludes zero), `no detectable effect` (CI includes zero), or
 `needs larger sample` (CI includes zero but is wide enough that a real effect
-of decision-relevant size cannot be ruled out).
+of decision-relevant size cannot be ruled out). The per-metric
+decision-relevant effect sizes live in `DECISION_RELEVANT_EFFECT` in
+`scripts/recall_experiment_stats.py`; they are judgment calls, and revising
+them is allowed with a decision record explaining the change.
 
 ### 5. Retrieval ceiling check
 
@@ -302,6 +329,7 @@ python3 scripts/recall-5x5-worktree-metrics.py \
   --candidate approach-c=/path/to/worktree-c \
   --candidate approach-d=/path/to/worktree-d \
   --candidate approach-e=/path/to/worktree-e \
+  --anchors-file experiments/recall/anchor-libraries/<YYYY-MM>-screening.tsv \
   --out-dir experiments/recall/$(date +%F)-5x5-round-1
 ```
 

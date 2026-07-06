@@ -17,12 +17,18 @@ How to use this backlog:
 1. **Adding an idea**: append it to the appropriate section below with a
    short hypothesis, the metric it should move, and how it would be measured
    (replay saved candidates vs. rerun retrieval vs. full corpus — see
-   `experiments/recall/README.md`). Date the addition.
+   `experiments/recall/README.md`). Date the addition. Diagnostic or
+   exploratory items are equally valid backlog entries: their "metric" may be
+   the question they answer (for example "what fraction of misses are
+   retrieval misses?"), with a report as the deliverable.
 2. **Running an item**: follow the methodology in
-   `experiments/recall/README.md`. Phase 0 items are prerequisites and run in
-   listed order; technique items should not run until Phase 0 is complete,
-   because their results are not readable without a refreshed anchor library,
-   a known pool ceiling, and a calibrated judge.
+   `experiments/recall/README.md`. Phase 0 gates *decisions*, not
+   exploration: prototyping, diagnostics, and idea-scouting may run at any
+   time, and diagnostics that do not depend on Phase 0 artifacts (for
+   example formation-miss mining, which only reads transcripts) may complete
+   early. What Phase 0 blocks is treating a technique result as a ship/no-ship
+   decision input — those need the refreshed anchor library, CI tooling, a
+   known pool ceiling, and a calibrated judge to be readable.
 3. **Retiring an item**: follow the "When an item is addressed" policy below.
 
 ### When an Item Is Addressed
@@ -50,8 +56,9 @@ Phase 0 is complete, it is the first technique-backlog entry. The Phase 0
 list below is canonical — this section intentionally names no items so there
 is only one place to update.
 
-Do not start technique experiments until Phase 0 is complete, even though the
-technique backlog is listed with expected-value ordering.
+No technique result becomes a ship/no-ship decision until Phase 0 is
+complete; exploration and Phase-0-independent diagnostics may run earlier
+(see "Running an item" above).
 
 ### Phase 0: Validation Infrastructure (run first, in order)
 
@@ -115,9 +122,12 @@ way); the next action is always the lowest incomplete item.
    *Done when*: a decision record states keep/tune/revert for each of the two
    decisions, with CI-labeled deltas on the refreshed screening library.
 
-### Technique Backlog (blocked on Phase 0)
+### Technique Backlog (decisions blocked on Phase 0)
 
-Ordered roughly by expected value.
+Ordered roughly by expected value. This list is a starting point, not a
+boundary — materially different ideas that fit the intake rules are welcome
+additions, and the 5x5 loop's "propose 5 materially different approaches"
+step is expected to generate candidates not listed here.
 
 1. **Hybrid candidate generation** (added 2026-07-02). Retrieve with a union
    of channels: recent-turns embedding (current), active-segment

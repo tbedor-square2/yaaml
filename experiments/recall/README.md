@@ -16,10 +16,15 @@ The contract governs *decision inputs*, not exploration. Rules of thumb:
   needs no anchor library, CI, or holdout. The rules bind at the moment a
   result is used to ship, revert, or kill an idea.
 - **The 5x5 worktree loop is one harness, not the only one.** Single-candidate
-  experiments, diagnostics with a report as the deliverable, forward
-  memory-write experiments, and novel harness shapes are all valid — the
-  invariants are paired comparison against a named baseline, CI-labeled
-  deltas, abstention tracked separately, and a decision record.
+  experiments, forward memory-write experiments, and novel harness shapes are
+  all valid. For *comparative* experiments (anything claiming one policy beats
+  another) the invariants are paired comparison against a named baseline,
+  CI-labeled deltas, abstention tracked separately, and a decision record.
+  *Diagnostics* — experiments that answer a question rather than compare
+  policies, like formation-miss mining or the pool-recall oracle — need only
+  a stated question, the raw cases behind the answer, a report, and a
+  decision record; paired deltas and CIs apply only if they make comparative
+  claims.
 - **The primary metrics are a floor, not a ceiling.** Experiments may add
   metrics (context-token cost, latency, wrong-context lows, anything the
   hypothesis needs). Changing the primary set itself is a methodology change
@@ -39,8 +44,9 @@ The contract governs *decision inputs*, not exploration. Rules of thumb:
   metric, and measurement mode; addressed items follow that file's "When an
   item is addressed" policy (completed Phase 0 prerequisites stay listed with
   a DONE date; completed experiments are replaced by decision records).
-- `experiments/recall/<date>-<name>/` — per-run artifacts (`manifest.json`,
-  `summary.json`, `details.jsonl`, `REPORT.md`).
+- `experiments/recall/<date>-<name>/` — per-run artifacts. The artifact shape
+  depends on the experiment type (replay, forward, or diagnostic); see
+  "Artifact Requirements" below.
 - `../../ROADMAP.md` — product direction only; experiment-sized ideas go to
   the backlog, not the roadmap.
 
@@ -283,19 +289,27 @@ is replaced by per-memory cohort data. Minimum artifact set:
   the comparison cohort, and how membership is determined).
 - `cohorts.jsonl`: one row per memory with cohort assignment, creation
   metadata, and the memory-write metrics that apply (faithfulness,
-  classification, downstream eval outcomes as they accumulate). For
-  diagnostic experiments whose unit of evidence is not an existing memory —
-  formation-miss mining, where the evidence is a repeated correction with no
-  memory formed — use `cases.jsonl` instead: one row per observed case
-  (missed opportunity, transcript refs, whether a memory should have
-  existed), with the same expectation that rows are the raw material for the
-  report's metrics.
+  classification, downstream eval outcomes as they accumulate).
 - `REPORT.md`: readout against the memory-write metric contract above,
   stating the exposure window and explicitly flagging any cohort-exposure
   imbalance. `summary.json` is optional; when cohorts are compared
   statistically, include it with the same CI fields as replay experiments.
 
-### In both cases
+### Diagnostic experiments
+
+Diagnostics answer a question rather than compare policies (formation-miss
+mining, the pool-recall oracle). Minimum artifact set:
+
+- `manifest.json`: the question, input data paths, and how cases were
+  gathered.
+- `cases.jsonl`: one row per observed case — the raw evidence behind the
+  answer (for formation-miss mining: missed opportunity, transcript refs,
+  whether a memory should have existed).
+- `REPORT.md`: the answer, with the counts/rates derived from the case rows.
+  Paired deltas and CI fields apply only if the report makes a comparative
+  claim.
+
+### In all cases
 
 After every experiment, append a decision-record entry to
 `../../EXPERIMENTS_LOG.md` following its "When an item is addressed" policy:

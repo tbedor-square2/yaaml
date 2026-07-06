@@ -330,33 +330,30 @@ and the `EXPERIMENTS_LOG.md` entry on the primary branch.
 
 ## Script Inventory
 
-- `scripts/backtest-recall-strategy.sh`: build a frozen anchor library and
-  replay the production recall path over it.
+Live tooling:
+
+- `scripts/backtest-recall-strategy.sh`: replay the production recall path
+  over an anchor set (fixed, eval-library, or `BACKTEST_ANCHORS_FILE`).
+- `scripts/build-anchor-library.py`: split a backtest anchor pool into
+  frozen screening/holdout libraries (Phase 0 runbook above).
+- `scripts/recall_experiment_stats.py`: shared paired-bootstrap CI and
+  verdict classification; import it from any new experiment runner.
 - `scripts/recall-5x5-worktree-metrics.py`: agent-driven 5x5 loop over
-  baseline plus candidate worktrees.
-- `scripts/recall-5x5-experiment.py`: replay the original five-strategy
-  exercise from a `backtest-recall-strategy.sh` output directory.
-- `scripts/recall-10x10-experiment.py`: ten strategy variants over ten
-  deterministic cohorts, with cohort stability reporting.
-- `scripts/recall-health-10x10-experiment.py`: failure-mode-specific recall
-  policies using frozen ranking/oracle inputs plus memory health diagnostics.
-- `scripts/recall-candidate-5x5-experiment.py`: candidate-family comparison
-  (pool sizing, dynamic count, query-signal proxies, hybrid-generation
-  proxies, lifecycle suppression, abstention gates). Query-signal and
-  hybrid-generation families replay already retrieved candidates; they do not
-  measure candidates a fresh retrieval pass would newly find.
-- `scripts/recall-techniques-5x5-experiment.py`: broader technique inventory
-  across candidate generation, hard gating, reranking, selection budgeting,
-  LLM-filter proxies, corpus quality, and eval feedback.
-- `scripts/recall-segment-task-fit-5x5-experiment.py`: segment/task-fit
-  selection proxies with wrong-context and stale-task low-selection metrics.
-  Replays already retrieved candidates only.
-- `scripts/recall-cluster-rerank.py`: eval-context cluster rerank backtest.
+  baseline plus candidate worktrees, with CI output.
 - `scripts/export-recall-training-data.py`: convert saved backtest artifacts
   into candidate-level JSONL for selection experiments.
 - `scripts/recall-feature-model-experiment.py`: compare a small local feature
-  model against production and heuristic selectors before considering any
-  fine-tuned text model.
+  model against production and heuristic selectors; kept for the learned
+  weight calibration backlog item. Emits point deltas only — wire in
+  `recall_experiment_stats` before using its output for a decision.
+
+One-shot replay harnesses for concluded experiments (the 5x5/10x10,
+candidate, techniques, health, segment-task-fit, cluster-rerank, and
+tool-cooldown scripts) have been deleted; their results live in the dated
+decision records in `../../EXPERIMENTS_LOG.md` and the scripts remain in git
+history if a readout ever needs re-deriving. New experiments should build on
+the live tooling above rather than reviving them, since none of the deleted
+scripts met the confidence-interval methodology.
 
 ## Historical Notes
 

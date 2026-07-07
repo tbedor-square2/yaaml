@@ -14,8 +14,9 @@ use yaaml::llm_judge::JudgeClient;
 use yaaml::memory_health::{apply_health_action_rerank, build_memory_health_summaries};
 use yaaml::recall_filter::{
     effective_recall_selection_limit, select_recall_candidates_with_llm_filter,
-    suppress_recently_recalled_candidates, suppress_source_overlapping_candidates,
-    RecallFilterRequest, RecallFilterTelemetry,
+    source_overlap_gate_client, suppress_recently_recalled_candidates,
+    suppress_source_overlapping_candidates_gated, RecallFilterRequest, RecallFilterTelemetry,
+    SourceOverlapGate,
 };
 use yaaml::turn_hydration::{context_from_turns, hydrate_turns};
 use yaaml_core::{
@@ -5086,12 +5087,21 @@ fn recall_from_embedding(
             current_segment_id,
         },
     );
-    filter_result.selected = suppress_source_overlapping_candidates(
+    let gate_client = source_overlap_gate_client(config);
+    let (selected_after_overlap, gate_outcome) = suppress_source_overlapping_candidates_gated(
         filter_result.selected,
         &mut filter_result.debug_candidates,
         &memories,
         request.query_turns,
+        gate_client.as_ref().map(|client| SourceOverlapGate {
+            client,
+            query_text: request.query_text,
+        }),
     );
+    filter_result.selected = selected_after_overlap;
+    filter_result.telemetry.source_overlap_gate_attempted = gate_outcome.attempted;
+    filter_result.telemetry.source_overlap_gate_restored = gate_outcome.restored;
+    filter_result.telemetry.source_overlap_gate_errors = gate_outcome.errors;
     let cooldown_since = request.apply_cooldown.then_some(()).and_then(|()| {
         request.session_id.zip(cooldown_since_unix(
             &request.query_timestamp,

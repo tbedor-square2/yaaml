@@ -152,6 +152,16 @@ step is expected to generate candidates not listed here.
    then forward production evals as the independent confirmation (the
    offline gate and adjustment share an instrument). Track added latency and
    provider cost per recall alongside the recall metrics.
+   SETUP 2026-07-07: implemented behind `YAAML_EXPERIMENT_SOURCE_OVERLAP_GATE`
+   in `suppress_source_overlapping_candidates_gated`
+   (`crates/yaaml/src/recall_filter.rs`), wired into both the daemon and CLI
+   recall paths. The gate scores only selected candidates that would be
+   dropped solely for source overlap (restore at adjudicator score >= 4,
+   errors fall back to dropping), annotates
+   `keep:source_overlap_incremental_gate` in debug rankings, and reports
+   `source_overlap_gate_attempted/restored/errors` in filter telemetry.
+   Still pending: enable the flag on the local service, then judge forward
+   production evals for gate-restored selections before default-on.
 2. **Lineage-aware retrieval for superseded useful memories** (added
    2026-07-07). Diagnostic first: 98 of 104 raw pool-oracle retrieval misses
    were oracle-useful memories that are now inactive. Question: do their

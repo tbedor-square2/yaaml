@@ -37,8 +37,9 @@ use yaaml_transcript::discovery::discover_codex_backlog;
 use crate::llm_judge::JudgeClient;
 use crate::memory_health::{apply_health_action_rerank, build_memory_health_summaries};
 use crate::recall_filter::{
-    select_recall_candidates_with_llm_filter, suppress_recently_recalled_candidates,
-    suppress_source_overlapping_candidates, RecallFilterRequest, RecallFilterTelemetry,
+    select_recall_candidates_with_llm_filter, source_overlap_gate_client,
+    suppress_recently_recalled_candidates, suppress_source_overlapping_candidates_gated,
+    RecallFilterRequest, RecallFilterTelemetry, SourceOverlapGate,
 };
 use crate::turn_hydration::{context_from_turns, hydrate_turns};
 
@@ -2323,12 +2324,21 @@ pub fn refresh_recall_with_embedding(
             current_segment_id,
         },
     );
-    filter_result.selected = suppress_source_overlapping_candidates(
+    let gate_client = source_overlap_gate_client(config);
+    let (selected_after_overlap, gate_outcome) = suppress_source_overlapping_candidates_gated(
         filter_result.selected,
         &mut filter_result.debug_candidates,
         &memories,
         recall_turns,
+        gate_client.as_ref().map(|client| SourceOverlapGate {
+            client,
+            query_text: &query_text,
+        }),
     );
+    filter_result.selected = selected_after_overlap;
+    filter_result.telemetry.source_overlap_gate_attempted = gate_outcome.attempted;
+    filter_result.telemetry.source_overlap_gate_restored = gate_outcome.restored;
+    filter_result.telemetry.source_overlap_gate_errors = gate_outcome.errors;
     let recent_memory_ids = recent_turns
         .last()
         .map(|turn| &turn.session_id)

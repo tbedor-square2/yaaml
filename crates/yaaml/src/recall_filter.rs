@@ -28,6 +28,12 @@ pub struct RecallFilterTelemetry {
     pub llm_attempted: bool,
     pub llm_applied: bool,
     pub llm_error: Option<String>,
+    #[serde(default)]
+    pub source_overlap_gate_attempted: usize,
+    #[serde(default)]
+    pub source_overlap_gate_restored: usize,
+    #[serde(default)]
+    pub source_overlap_gate_errors: usize,
 }
 
 #[derive(Debug, Clone)]
@@ -82,6 +88,9 @@ pub fn select_recall_candidates_with_llm_filter(
         llm_attempted: false,
         llm_applied: false,
         llm_error: None,
+        source_overlap_gate_attempted: 0,
+        source_overlap_gate_restored: 0,
+        source_overlap_gate_errors: 0,
     };
 
     let Some(client) = recall_filter_client(config) else {
@@ -179,12 +188,58 @@ pub fn suppress_source_overlapping_candidates(
     memories: &[MemoryRecord],
     query_turns: &[TurnRecord],
 ) -> Vec<RecallCandidate> {
+    suppress_source_overlapping_candidates_gated(
+        selected,
+        debug_candidates,
+        memories,
+        query_turns,
+        None,
+    )
+    .0
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct SourceOverlapGateOutcome {
+    pub attempted: usize,
+    pub restored: usize,
+    pub errors: usize,
+}
+
+pub struct SourceOverlapGate<'a> {
+    pub client: &'a JudgeClient,
+    pub query_text: &'a str,
+}
+
+/// Minimum redundancy-aware adjudicator score for a source-overlap candidate
+/// to be restored. Offline-validated on the 2026-07 screening and holdout
+/// libraries; see the 2026-07-07 "Adjudicator-Gated Source-Overlap
+/// Restoration" decision record in EXPERIMENTS_LOG.md.
+const SOURCE_OVERLAP_GATE_MIN_SCORE: i64 = 4;
+
+pub fn source_overlap_gate_enabled() -> bool {
+    env::var("YAAML_EXPERIMENT_SOURCE_OVERLAP_GATE")
+        .map(|value| matches!(value.as_str(), "1" | "true" | "TRUE" | "yes" | "on"))
+        .unwrap_or(false)
+}
+
+pub fn source_overlap_gate_client(config: &Config) -> Option<JudgeClient> {
+    JudgeClient::from_config(config, !source_overlap_gate_enabled())
+}
+
+pub fn suppress_source_overlapping_candidates_gated(
+    selected: Vec<RecallCandidate>,
+    debug_candidates: &mut [RecallCandidate],
+    memories: &[MemoryRecord],
+    query_turns: &[TurnRecord],
+    gate: Option<SourceOverlapGate<'_>>,
+) -> (Vec<RecallCandidate>, SourceOverlapGateOutcome) {
+    let mut outcome = SourceOverlapGateOutcome::default();
     let query_turn_keys = query_turns
         .iter()
         .map(|turn| (turn.session_id.clone(), turn.ordinal))
         .collect::<HashSet<_>>();
     if query_turn_keys.is_empty() {
-        return selected;
+        return (selected, outcome);
     }
     let suppressed = memories
         .iter()
@@ -196,20 +251,103 @@ pub fn suppress_source_overlapping_candidates(
         .filter_map(|memory| memory.id)
         .collect::<HashSet<_>>();
     if suppressed.is_empty() {
-        return selected;
+        return (selected, outcome);
     }
+
+    let mut restored = HashSet::new();
+    if let Some(gate) = gate {
+        for candidate in selected
+            .iter()
+            .filter(|candidate| suppressed.contains(&candidate.memory_id))
+        {
+            let Some(memory) = memories
+                .iter()
+                .find(|memory| memory.id == Some(candidate.memory_id))
+            else {
+                continue;
+            };
+            outcome.attempted += 1;
+            match score_source_overlap_candidate(gate.client, gate.query_text, memory) {
+                Ok(score) if score >= SOURCE_OVERLAP_GATE_MIN_SCORE => {
+                    outcome.restored += 1;
+                    restored.insert(candidate.memory_id);
+                }
+                Ok(_) => {}
+                Err(_) => {
+                    // Conservative fallback: an unscorable candidate stays
+                    // dropped, matching the ungated behavior.
+                    outcome.errors += 1;
+                }
+            }
+        }
+    }
+
     for candidate in debug_candidates {
-        if suppressed.contains(&candidate.memory_id) {
+        if restored.contains(&candidate.memory_id) {
+            candidate
+                .rank
+                .filter_reasons
+                .push("keep:source_overlap_incremental_gate".to_string());
+        } else if suppressed.contains(&candidate.memory_id) {
             candidate
                 .rank
                 .filter_reasons
                 .push("drop:source_turn_already_in_query".to_string());
         }
     }
-    selected
+    let kept = selected
         .into_iter()
-        .filter(|candidate| !suppressed.contains(&candidate.memory_id))
-        .collect()
+        .filter(|candidate| {
+            !suppressed.contains(&candidate.memory_id) || restored.contains(&candidate.memory_id)
+        })
+        .collect();
+    (kept, outcome)
+}
+
+fn score_source_overlap_candidate(
+    client: &JudgeClient,
+    query_text: &str,
+    memory: &MemoryRecord,
+) -> Result<i64, yaaml_llm::ProviderError> {
+    let value = client.structured_json(
+        source_overlap_gate_system_prompt(),
+        &source_overlap_gate_prompt(query_text, memory),
+    )?;
+    Ok(parse_gate_score(&value).unwrap_or(0))
+}
+
+fn source_overlap_gate_system_prompt() -> &'static str {
+    "You are an independent evaluator scoring memory recall quality. Apply the rubric to the query and stored memory only. IMPORTANT: score for INCREMENTAL value. If the memory's content is already visible, verbatim or near-verbatim, in the current query/context text, it adds nothing and must score 1 or 2 (redundant), even if topically relevant. Return JSON only."
+}
+
+fn source_overlap_gate_prompt(query_text: &str, memory: &MemoryRecord) -> String {
+    format!(
+        "Score whether this stored memory would be useful context for answering the current turn.\n\n\
+         Return only JSON with this exact shape:\n\
+         {{\"score\": <integer 1-5>, \"rationale\": \"<one short sentence>\"}}\n\n\
+         Rubric:\n\
+         - 5: directly useful and actionable for the current turn.\n\
+         - 4: useful context with minor gaps or extra filtering needed.\n\
+         - 3: mixed or marginal; some relevance but not clearly worth recall.\n\
+         - 2: weak, stale, or mostly irrelevant.\n\
+         - 1: distracting, wrong-context, or actively harmful.\n\n\
+         Current turn / recall query:\n```text\n{}\n```\n\n\
+         Stored memory title:\n```text\n{}\n```\n\n\
+         Stored memory body:\n```text\n{}\n```",
+        truncate_chars(query_text, 4_000),
+        truncate_chars(&memory.title, 500),
+        truncate_chars(&memory.body, 4_000),
+    )
+}
+
+fn parse_gate_score(value: &Value) -> Option<i64> {
+    let score = value.get("score")?;
+    let parsed = match score {
+        Value::Number(number) => number.as_i64(),
+        Value::String(text) => text.trim().parse::<i64>().ok(),
+        _ => None,
+    }?;
+    (1..=5).contains(&parsed).then_some(parsed)
 }
 
 fn strict_kind_diverse_top_fallback_selection(
@@ -968,6 +1106,79 @@ mod tests {
             .rank
             .filter_reasons
             .contains(&"drop:source_turn_already_in_query".to_string()));
+    }
+
+    #[test]
+    fn parses_gate_scores_from_numbers_and_strings() {
+        assert_eq!(parse_gate_score(&json!({"score": 4})), Some(4));
+        assert_eq!(parse_gate_score(&json!({"score": "5"})), Some(5));
+        assert_eq!(parse_gate_score(&json!({"score": " 2 "})), Some(2));
+        assert_eq!(parse_gate_score(&json!({"score": 0})), None);
+        assert_eq!(parse_gate_score(&json!({"score": 6})), None);
+        assert_eq!(parse_gate_score(&json!({"score": "high"})), None);
+        assert_eq!(parse_gate_score(&json!({"rationale": "no score"})), None);
+    }
+
+    #[test]
+    fn gated_suppression_without_gate_matches_ungated_behavior() {
+        let selected = vec![candidate(1), candidate(2)];
+        let mut debug_candidates = vec![candidate(1), candidate(2)];
+        let mut memories = vec![memory(1, "body"), memory(2, "body")];
+        memories[0].source_turn_refs = vec![yaaml_core::SourceTurnRef {
+            session_id: "session-1".to_string(),
+            ordinal: 7,
+            byte_start: 0,
+            byte_end: 1,
+        }];
+        let query_turns = vec![TurnRecord {
+            session_id: "session-1".to_string(),
+            turn_id: Some("turn-7".to_string()),
+            ordinal: 7,
+            byte_start: 0,
+            byte_end: 1,
+            observed_at: Some("unix:7".to_string()),
+            status: yaaml_core::TurnStatus::Completed,
+            display_text: Some("turn text".to_string()),
+            cwd: None,
+            context: None,
+        }];
+
+        let (kept, outcome) = suppress_source_overlapping_candidates_gated(
+            selected,
+            &mut debug_candidates,
+            &memories,
+            &query_turns,
+            None,
+        );
+
+        assert_eq!(
+            kept.into_iter()
+                .map(|candidate| candidate.memory_id)
+                .collect::<Vec<_>>(),
+            vec![2]
+        );
+        assert_eq!(outcome, SourceOverlapGateOutcome::default());
+        assert!(debug_candidates[0]
+            .rank
+            .filter_reasons
+            .contains(&"drop:source_turn_already_in_query".to_string()));
+    }
+
+    #[test]
+    fn source_overlap_gate_is_disabled_without_env_flag() {
+        env::remove_var("YAAML_EXPERIMENT_SOURCE_OVERLAP_GATE");
+        assert!(!source_overlap_gate_enabled());
+        assert!(source_overlap_gate_client(&Config::default()).is_none());
+    }
+
+    #[test]
+    fn source_overlap_gate_prompt_demands_incremental_value() {
+        let memory = memory(1, &"body ".repeat(2_000));
+        let prompt = source_overlap_gate_prompt("current turn text", &memory);
+
+        assert!(prompt.contains("current turn text"));
+        assert!(prompt.chars().count() < 10_000);
+        assert!(source_overlap_gate_system_prompt().contains("INCREMENTAL value"));
     }
 
     #[test]

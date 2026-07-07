@@ -139,21 +139,19 @@ boundary — materially different ideas that fit the intake rules are welcome
 additions, and the 5x5 loop's "propose 5 materially different approaches"
 step is expected to generate candidates not listed here.
 
-1. **Selection/health-rerank tuning on dense labels** (added 2026-07-07).
-   Hypothesis: over-abstention, not retrieval, is the binding failure —
-   pre-CI revalidation confirmed `health_action_rerank` adds +34
-   missed-useful empties, and the active-only pool oracle shows 19 of 28
-   active useful memories in the pool but unselected. Sweep health-rerank
-   abstention penalties and the strict-kind selection thresholds
-   (0.75/0.90/1.50) via the 5x5 worktree loop against the dense oracle
-   (`BACKTEST_ORACLE_DIR=experiments/recall/oracle-labels/2026-07/dense-oracles`).
-   Target metric: confirmed useful-capture gain without a confirmed
-   low-selection increase. Saved-candidate replay. Fold in a re-evaluation
-   of the cached LLM-rerank scores
-   (`experiments/recall/2026-07-07-llm-scoring-rerank/llm_scores.jsonl`) at
-   fixed thresholds 2-3 as one comparison arm — under sparse labels it kept
-   useful capture flat while cutting missed-useful empties from 42 to 2 at
-   3x context volume, which dense labels can now adjudicate.
+1. **Incremental-value source-overlap gate** (added 2026-07-07). The
+   selection-tuning replay showed the entire selection-side useful gap is
+   the `drop:source_turn_already_in_query` suppression, and the redundancy
+   check showed ~44% of the memories it drops are genuinely incremental
+   (not visible in the query) while ~56% are redundant. Hypothesis:
+   replacing the blanket provenance-based drop with a content-overlap
+   condition (drop only when the memory body is substantially visible in
+   the query text, e.g. token-containment above a threshold) recovers the
+   incremental half without injecting the redundant half. Replayable from
+   saved candidates: the drop reason and both texts are available offline.
+   Target metric: confirmed useful-capture gain vs `replay_default` with
+   the redundancy-aware re-score applied to differing selections (raw dense
+   labels are redundancy-blind for exactly this class).
 2. **Lineage-aware retrieval for superseded useful memories** (added
    2026-07-07). Diagnostic first: 98 of 104 raw pool-oracle retrieval misses
    were oracle-useful memories that are now inactive. Question: do their
@@ -189,6 +187,68 @@ step is expected to generate candidates not listed here.
    only queued recall-eval task selects memories 3277 and 3309, neither of
    which has activation-condition metadata, so it will not advance this
    forward experiment.
+
+## 2026-07-07: Selection Tuning on Dense Labels
+
+Sources:
+
+1. `scripts/selection-tuning-experiment.py`
+2. `experiments/recall/2026-07-07-selection-tuning/REPORT.md`
+3. `experiments/recall/2026-07-07-selection-tuning-holdout/REPORT.md`
+4. `experiments/recall/2026-07-07-source-overlap-redundancy-check/REPORT.md`
+
+Experiment:
+
+1. Replayed saved production candidate rankings through parameterized
+   strict-kind selection variants (abstention threshold 0.75 -> 0.55/0.40,
+   second-slot threshold 0.90 -> 0.75, negative health-rerank deltas scaled
+   by 0.5, combinations), a source-overlap arm, and a cached-LLM-score arm,
+   against the dense oracle. Default-parameter replay reproduced production
+   selections on 100% of anchors after excluding candidates with any
+   `drop:` filter reason.
+2. Confirmed the winning arm on the holdout, then re-scored its restored
+   selections with a redundancy-aware adjudicator variant.
+
+Metrics:
+
+1. Every threshold/health arm was byte-identical to the default replay:
+   zero delta on all metrics. The strict-kind thresholds and health-rerank
+   deltas never bind on these pools; abstention comes from the hard filter,
+   not from score thresholds.
+2. `allow_source_overlap` (ignore `drop:source_turn_already_in_query`):
+   screening +40 useful capture runs (CI +29 to +52), missed-useful empties
+   -47 (CI -60 to -35), low selections +8 (CI +3 to +14), +0.26 avg
+   memories. Holdout confirmed: +21 useful capture runs (CI +13 to +29),
+   missed-useful empties -24 (CI -33 to -16), low selections +3 (CI 0 to
+   +7, not confirmed).
+3. Redundancy check on the 82 restored selections: 70 were dense-useful but
+   only 31 (44.3%) stayed useful under an incremental-value instruction; 39
+   were demoted as already visible in the query.
+4. `llm_t2` (cached LLM scores, threshold 2) was slightly worse than
+   production on the anchor-refresh pools; retired.
+
+Lessons:
+
+1. The over-abstention diagnosis was right but the mechanism was wrong:
+   production's missed-useful empties come almost entirely from the
+   source-overlap hard drop, not from selection thresholds or health-rerank
+   penalties. Threshold tuning is a dead end on current pools.
+2. The dense oracle is redundancy-blind: it credits memories whose content
+   is already visible in the query. Any experiment touching
+   source-overlap/dedup behavior must re-score differing selections with a
+   redundancy-aware adjudicator before trusting dense-label deltas.
+3. About half the suppressed-then-restored memories are genuinely
+   incremental — a real, holdout-confirmed win pool behind a smarter gate.
+
+Decision:
+
+1. Do not ship blanket removal of the source-overlap drop; roughly half of
+   what it restores is redundant context.
+2. Retire threshold/health-scale tuning and the cached-LLM-score arm as no
+   detectable effect / worse.
+3. Queue the incremental-value source-overlap gate as the top technique
+   item: content-overlap-conditional dropping, evaluated with
+   redundancy-aware re-scoring.
 
 ## 2026-07-07: Dense Oracle Labels
 

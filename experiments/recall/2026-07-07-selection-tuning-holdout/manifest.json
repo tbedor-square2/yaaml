@@ -1,0 +1,820 @@
+{
+  "anchors_file": "experiments/recall/anchor-libraries/2026-07-holdout.tsv",
+  "date": "2026-07-07",
+  "decision": "Promising on screening: `allow_source_overlap`, `overlap_plus_soft` improved useful-capture runs with a CI excluding zero. Confirm the best arm on the holdout before shipping, and weigh the confirmed low-selection and context-volume costs.",
+  "deltas": {
+    "abstain_040": {
+      "average_known_score": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "average_selected_per_anchor": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "clean_abstention_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "empty_recall_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "low_known_selected": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "low_selection_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "missed_useful_empty_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "useful_capture_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "useful_known_selected": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      }
+    },
+    "abstain_055": {
+      "average_known_score": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "average_selected_per_anchor": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "clean_abstention_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "empty_recall_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "low_known_selected": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "low_selection_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "missed_useful_empty_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "useful_capture_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "useful_known_selected": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      }
+    },
+    "allow_source_overlap": {
+      "average_known_score": {
+        "ci_95": [
+          0.13404159132007232,
+          0.6024525316455698
+        ],
+        "point_delta": 0.36324324324324353,
+        "verdict": "confirmed"
+      },
+      "average_selected_per_anchor": {
+        "ci_95": [
+          0.21999999999999997,
+          0.41000000000000003
+        ],
+        "point_delta": 0.30999999999999994,
+        "verdict": "confirmed"
+      },
+      "clean_abstention_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "empty_recall_runs": {
+        "ci_95": [
+          -33.0,
+          -16.0
+        ],
+        "point_delta": -24.0,
+        "verdict": "confirmed"
+      },
+      "low_known_selected": {
+        "ci_95": [
+          1.0,
+          8.0
+        ],
+        "point_delta": 4.0,
+        "verdict": "confirmed"
+      },
+      "low_selection_runs": {
+        "ci_95": [
+          0.0,
+          7.0
+        ],
+        "point_delta": 3.0,
+        "verdict": "needs larger sample"
+      },
+      "missed_useful_empty_runs": {
+        "ci_95": [
+          -33.0,
+          -16.0
+        ],
+        "point_delta": -24.0,
+        "verdict": "confirmed"
+      },
+      "useful_capture_runs": {
+        "ci_95": [
+          13.0,
+          29.0
+        ],
+        "point_delta": 21.0,
+        "verdict": "confirmed"
+      },
+      "useful_known_selected": {
+        "ci_95": [
+          18.0,
+          37.0
+        ],
+        "point_delta": 27.0,
+        "verdict": "confirmed"
+      }
+    },
+    "combo_soft": {
+      "average_known_score": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "average_selected_per_anchor": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "clean_abstention_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "empty_recall_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "low_known_selected": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "low_selection_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "missed_useful_empty_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "useful_capture_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "useful_known_selected": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      }
+    },
+    "health_neg_half": {
+      "average_known_score": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "average_selected_per_anchor": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "clean_abstention_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "empty_recall_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "low_known_selected": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "low_selection_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "missed_useful_empty_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "useful_capture_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "useful_known_selected": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      }
+    },
+    "overlap_plus_soft": {
+      "average_known_score": {
+        "ci_95": [
+          0.13404159132007232,
+          0.6024525316455698
+        ],
+        "point_delta": 0.36324324324324353,
+        "verdict": "confirmed"
+      },
+      "average_selected_per_anchor": {
+        "ci_95": [
+          0.21999999999999997,
+          0.41000000000000003
+        ],
+        "point_delta": 0.30999999999999994,
+        "verdict": "confirmed"
+      },
+      "clean_abstention_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "empty_recall_runs": {
+        "ci_95": [
+          -33.0,
+          -16.0
+        ],
+        "point_delta": -24.0,
+        "verdict": "confirmed"
+      },
+      "low_known_selected": {
+        "ci_95": [
+          1.0,
+          8.0
+        ],
+        "point_delta": 4.0,
+        "verdict": "confirmed"
+      },
+      "low_selection_runs": {
+        "ci_95": [
+          0.0,
+          7.0
+        ],
+        "point_delta": 3.0,
+        "verdict": "needs larger sample"
+      },
+      "missed_useful_empty_runs": {
+        "ci_95": [
+          -33.0,
+          -16.0
+        ],
+        "point_delta": -24.0,
+        "verdict": "confirmed"
+      },
+      "useful_capture_runs": {
+        "ci_95": [
+          13.0,
+          29.0
+        ],
+        "point_delta": 21.0,
+        "verdict": "confirmed"
+      },
+      "useful_known_selected": {
+        "ci_95": [
+          18.0,
+          37.0
+        ],
+        "point_delta": 27.0,
+        "verdict": "confirmed"
+      }
+    },
+    "replay_default_vs_production": {
+      "average_known_score": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "average_selected_per_anchor": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "clean_abstention_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "empty_recall_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "low_known_selected": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "low_selection_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "missed_useful_empty_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "useful_capture_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "useful_known_selected": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      }
+    },
+    "second_075": {
+      "average_known_score": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "average_selected_per_anchor": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "clean_abstention_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "empty_recall_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "low_known_selected": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "low_selection_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "missed_useful_empty_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "useful_capture_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "useful_known_selected": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      }
+    }
+  },
+  "input_dir": "target/anchor-refresh-2026-07",
+  "kind": "selection_tuning_dense_labels",
+  "llm_coverage": null,
+  "oracle_dir": "experiments/recall/oracle-labels/2026-07/dense-oracles",
+  "oracle_kind": "dense_adjudicator",
+  "replay_agreement_rate": 1.0,
+  "selection_limit": 2,
+  "strategy_label": "anchor-refresh",
+  "summaries": [
+    {
+      "anchors": 100,
+      "average_known_score": 3.38,
+      "average_selected_per_anchor": 0.53,
+      "clean_abstention_runs": 2.0,
+      "empty_recall_runs": 50.0,
+      "known_selected_memories": 53,
+      "low_known_selected": 22.0,
+      "low_selection_runs": 21.0,
+      "missed_useful_empty_runs": 48.0,
+      "oracle_useful_runs": 92,
+      "selected_memories": 53,
+      "strategy": "production",
+      "unknown_selected_memories": 0,
+      "useful_capture_runs": 29.0,
+      "useful_known_selected": 31.0
+    },
+    {
+      "anchors": 100,
+      "average_known_score": 3.38,
+      "average_selected_per_anchor": 0.53,
+      "clean_abstention_runs": 2.0,
+      "empty_recall_runs": 50.0,
+      "known_selected_memories": 53,
+      "low_known_selected": 22.0,
+      "low_selection_runs": 21.0,
+      "missed_useful_empty_runs": 48.0,
+      "oracle_useful_runs": 92,
+      "selected_memories": 53,
+      "strategy": "replay_default",
+      "unknown_selected_memories": 0,
+      "useful_capture_runs": 29.0,
+      "useful_known_selected": 31.0
+    },
+    {
+      "anchors": 100,
+      "average_known_score": 3.38,
+      "average_selected_per_anchor": 0.53,
+      "clean_abstention_runs": 2.0,
+      "empty_recall_runs": 50.0,
+      "known_selected_memories": 53,
+      "low_known_selected": 22.0,
+      "low_selection_runs": 21.0,
+      "missed_useful_empty_runs": 48.0,
+      "oracle_useful_runs": 92,
+      "selected_memories": 53,
+      "strategy": "abstain_055",
+      "unknown_selected_memories": 0,
+      "useful_capture_runs": 29.0,
+      "useful_known_selected": 31.0
+    },
+    {
+      "anchors": 100,
+      "average_known_score": 3.38,
+      "average_selected_per_anchor": 0.53,
+      "clean_abstention_runs": 2.0,
+      "empty_recall_runs": 50.0,
+      "known_selected_memories": 53,
+      "low_known_selected": 22.0,
+      "low_selection_runs": 21.0,
+      "missed_useful_empty_runs": 48.0,
+      "oracle_useful_runs": 92,
+      "selected_memories": 53,
+      "strategy": "abstain_040",
+      "unknown_selected_memories": 0,
+      "useful_capture_runs": 29.0,
+      "useful_known_selected": 31.0
+    },
+    {
+      "anchors": 100,
+      "average_known_score": 3.38,
+      "average_selected_per_anchor": 0.53,
+      "clean_abstention_runs": 2.0,
+      "empty_recall_runs": 50.0,
+      "known_selected_memories": 53,
+      "low_known_selected": 22.0,
+      "low_selection_runs": 21.0,
+      "missed_useful_empty_runs": 48.0,
+      "oracle_useful_runs": 92,
+      "selected_memories": 53,
+      "strategy": "second_075",
+      "unknown_selected_memories": 0,
+      "useful_capture_runs": 29.0,
+      "useful_known_selected": 31.0
+    },
+    {
+      "anchors": 100,
+      "average_known_score": 3.38,
+      "average_selected_per_anchor": 0.53,
+      "clean_abstention_runs": 2.0,
+      "empty_recall_runs": 50.0,
+      "known_selected_memories": 53,
+      "low_known_selected": 22.0,
+      "low_selection_runs": 21.0,
+      "missed_useful_empty_runs": 48.0,
+      "oracle_useful_runs": 92,
+      "selected_memories": 53,
+      "strategy": "health_neg_half",
+      "unknown_selected_memories": 0,
+      "useful_capture_runs": 29.0,
+      "useful_known_selected": 31.0
+    },
+    {
+      "anchors": 100,
+      "average_known_score": 3.38,
+      "average_selected_per_anchor": 0.53,
+      "clean_abstention_runs": 2.0,
+      "empty_recall_runs": 50.0,
+      "known_selected_memories": 53,
+      "low_known_selected": 22.0,
+      "low_selection_runs": 21.0,
+      "missed_useful_empty_runs": 48.0,
+      "oracle_useful_runs": 92,
+      "selected_memories": 53,
+      "strategy": "combo_soft",
+      "unknown_selected_memories": 0,
+      "useful_capture_runs": 29.0,
+      "useful_known_selected": 31.0
+    },
+    {
+      "anchors": 100,
+      "average_known_score": 3.7432432432432434,
+      "average_selected_per_anchor": 0.84,
+      "clean_abstention_runs": 2.0,
+      "empty_recall_runs": 26.0,
+      "known_selected_memories": 84,
+      "low_known_selected": 26.0,
+      "low_selection_runs": 24.0,
+      "missed_useful_empty_runs": 24.0,
+      "oracle_useful_runs": 92,
+      "selected_memories": 84,
+      "strategy": "allow_source_overlap",
+      "unknown_selected_memories": 0,
+      "useful_capture_runs": 50.0,
+      "useful_known_selected": 58.0
+    },
+    {
+      "anchors": 100,
+      "average_known_score": 3.7432432432432434,
+      "average_selected_per_anchor": 0.84,
+      "clean_abstention_runs": 2.0,
+      "empty_recall_runs": 26.0,
+      "known_selected_memories": 84,
+      "low_known_selected": 26.0,
+      "low_selection_runs": 24.0,
+      "missed_useful_empty_runs": 24.0,
+      "oracle_useful_runs": 92,
+      "selected_memories": 84,
+      "strategy": "overlap_plus_soft",
+      "unknown_selected_memories": 0,
+      "useful_capture_runs": 50.0,
+      "useful_known_selected": 58.0
+    }
+  ],
+  "variants": {
+    "abstain_040": {
+      "abstain": 0.4,
+      "allow_source_overlap": false,
+      "health_neg_scale": 1.0,
+      "risky": 1.5,
+      "second": 0.9
+    },
+    "abstain_055": {
+      "abstain": 0.55,
+      "allow_source_overlap": false,
+      "health_neg_scale": 1.0,
+      "risky": 1.5,
+      "second": 0.9
+    },
+    "allow_source_overlap": {
+      "abstain": 0.75,
+      "allow_source_overlap": true,
+      "health_neg_scale": 1.0,
+      "risky": 1.5,
+      "second": 0.9
+    },
+    "combo_soft": {
+      "abstain": 0.55,
+      "allow_source_overlap": false,
+      "health_neg_scale": 0.5,
+      "risky": 1.5,
+      "second": 0.75
+    },
+    "health_neg_half": {
+      "abstain": 0.75,
+      "allow_source_overlap": false,
+      "health_neg_scale": 0.5,
+      "risky": 1.5,
+      "second": 0.9
+    },
+    "overlap_plus_soft": {
+      "abstain": 0.55,
+      "allow_source_overlap": true,
+      "health_neg_scale": 0.5,
+      "risky": 1.5,
+      "second": 0.75
+    },
+    "replay_default": {
+      "abstain": 0.75,
+      "allow_source_overlap": false,
+      "health_neg_scale": 1.0,
+      "risky": 1.5,
+      "second": 0.9
+    },
+    "second_075": {
+      "abstain": 0.75,
+      "allow_source_overlap": false,
+      "health_neg_scale": 1.0,
+      "risky": 1.5,
+      "second": 0.75
+    }
+  }
+}

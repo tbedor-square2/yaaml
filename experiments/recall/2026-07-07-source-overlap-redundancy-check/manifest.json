@@ -1,0 +1,20 @@
+{
+  "date": "2026-07-07",
+  "kind": "diagnostic",
+  "question": "Are the useful-labeled selections restored by allow_source_overlap genuinely incremental, or does the dense adjudicator credit memories whose content is already visible in the query?",
+  "inputs": {
+    "screening_details": "experiments/recall/2026-07-07-selection-tuning/",
+    "holdout_details": "experiments/recall/2026-07-07-selection-tuning-holdout/",
+    "dense_oracle": "experiments/recall/oracle-labels/2026-07/dense-oracles",
+    "memory_db": "~/.yaaml/yaaml.db"
+  },
+  "method": "Re-scored every selection made by allow_source_overlap but not by replay_default (82 across screening+holdout) with the calibration adjudicator prompt plus an explicit incremental-value instruction: content already visible verbatim or near-verbatim in the query must score 1-2.",
+  "model": "claude-haiku-4-5-20251001",
+  "results": {
+    "restored_selections": 82,
+    "dense_useful": 70,
+    "still_useful_redundancy_aware": 31,
+    "demoted_to_low": 39,
+    "survival_rate": 0.443
+  }
+}

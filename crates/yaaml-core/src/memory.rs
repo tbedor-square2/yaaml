@@ -23,6 +23,8 @@ pub struct MemoryDraft {
     pub scope: MemoryScope,
     pub kind: MemoryKind,
     pub task_keys: Vec<String>,
+    pub activation_triggers: Vec<String>,
+    pub activation_anti_triggers: Vec<String>,
     pub project_descriptor: String,
     pub refine_memory_id: Option<i64>,
 }
@@ -63,7 +65,7 @@ impl MemoryDraft {
 enum FormulationResponse {
     Envelope { memories: Vec<FormulatedMemory> },
     Many(Vec<FormulatedMemory>),
-    One(FormulatedMemory),
+    One(Box<FormulatedMemory>),
 }
 
 #[derive(Debug, Deserialize)]
@@ -73,6 +75,10 @@ struct FormulatedMemory {
     scope: Option<String>,
     kind: Option<String>,
     task_keys: Option<Vec<String>>,
+    activation_triggers: Option<Vec<String>>,
+    recall_triggers: Option<Vec<String>>,
+    activation_anti_triggers: Option<Vec<String>>,
+    anti_triggers: Option<Vec<String>>,
     project_descriptor: Option<String>,
     refine_memory_id: Option<i64>,
     existing_memory_id: Option<i64>,
@@ -88,7 +94,7 @@ pub fn parse_formulation_response(
     let memories = match parsed {
         FormulationResponse::Envelope { memories } => memories,
         FormulationResponse::Many(memories) => memories,
-        FormulationResponse::One(memory) => vec![memory],
+        FormulationResponse::One(memory) => vec![*memory],
     };
 
     memories
@@ -124,6 +130,18 @@ pub fn parse_formulation_response(
                 scope,
                 kind,
                 task_keys,
+                activation_triggers: sanitize_activation_conditions(
+                    memory
+                        .activation_triggers
+                        .or(memory.recall_triggers)
+                        .unwrap_or_default(),
+                ),
+                activation_anti_triggers: sanitize_activation_conditions(
+                    memory
+                        .activation_anti_triggers
+                        .or(memory.anti_triggers)
+                        .unwrap_or_default(),
+                ),
                 project_descriptor,
                 refine_memory_id: memory.refine_memory_id.or(memory.existing_memory_id),
             })
@@ -158,6 +176,21 @@ fn normalize_task_key(key: &str) -> Option<String> {
     } else {
         Some(key)
     }
+}
+
+fn sanitize_activation_conditions(values: Vec<String>) -> Vec<String> {
+    let mut conditions = Vec::new();
+    for value in values {
+        let condition = truncate_chars(value.trim(), 160);
+        if condition.is_empty() || conditions.contains(&condition) {
+            continue;
+        }
+        conditions.push(condition);
+        if conditions.len() >= 8 {
+            break;
+        }
+    }
+    conditions
 }
 
 pub fn embedded_text_hash(text: &str) -> String {
@@ -339,6 +372,39 @@ version = "0.1.0"
 
         assert_eq!(memories[0].refine_memory_id, Some(42));
         assert_eq!(memories[1].refine_memory_id, Some(43));
+    }
+
+    #[test]
+    fn parses_activation_conditions_with_aliases_and_limits() {
+        let memories = parse_formulation_response(
+            &json!({
+                "memories": [{
+                    "title": "Rollout flags",
+                    "body": "Recall for rollout flag defaults.",
+                    "recall_triggers": [
+                        "editing rollout flag defaults",
+                        "editing rollout flag defaults",
+                        "reviewing riskarbiter rollout PRs"
+                    ],
+                    "anti_triggers": ["after the rollout PR is merged"]
+                }]
+            }),
+            "java",
+            100,
+        )
+        .unwrap();
+
+        assert_eq!(
+            memories[0].activation_triggers,
+            vec![
+                "editing rollout flag defaults".to_string(),
+                "reviewing riskarbiter rollout PRs".to_string()
+            ]
+        );
+        assert_eq!(
+            memories[0].activation_anti_triggers,
+            vec!["after the rollout PR is merged".to_string()]
+        );
     }
 
     #[test]

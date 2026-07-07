@@ -1,4 +1,4 @@
-pub const EXPECTED_SCHEMA_VERSION: i64 = 8;
+pub const EXPECTED_SCHEMA_VERSION: i64 = 9;
 
 pub const MIGRATIONS: &[&str] = &[
     r#"
@@ -210,5 +210,16 @@ CREATE INDEX IF NOT EXISTS idx_conversation_segment_labels_label
     ON conversation_segment_labels(label_id, segment_id);
 
 UPDATE schema_version SET version = 8;
+"#,
+    r#"
+CREATE TABLE IF NOT EXISTS memory_activation_conditions (
+    memory_id INTEGER PRIMARY KEY NOT NULL,
+    activation_triggers_json TEXT NOT NULL DEFAULT '[]',
+    activation_anti_triggers_json TEXT NOT NULL DEFAULT '[]',
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY(memory_id) REFERENCES memories(id)
+);
+
+UPDATE schema_version SET version = 9;
 "#,
 ];

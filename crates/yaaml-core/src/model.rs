@@ -207,6 +207,14 @@ pub struct MemoryRecord {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MemoryActivationConditions {
+    pub memory_id: i64,
+    pub activation_triggers: Vec<String>,
+    pub activation_anti_triggers: Vec<String>,
+    pub updated_at: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EmbeddingRecord {
     pub memory_id: i64,
     pub embedding_model: String,

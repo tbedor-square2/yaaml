@@ -26,13 +26,22 @@ def oracle_scores(path: Path) -> dict[int, int]:
     return scores
 
 
+def eligible_for_filter_pool(candidate: Row) -> bool:
+    return any(
+        reason.startswith("keep:") and reason != "keep:strict_kind_diverse"
+        for reason in candidate.get("filter_reasons") or []
+    )
+
+
 def candidate_features(candidate: Row, rank_index: int, selected_ids: set[int], label: int | None) -> Row:
     rank = candidate.get("rank") or {}
     memory_id = int(candidate["memory_id"])
+    filter_reasons = candidate.get("filter_reasons") or []
     return {
         "memory_id": memory_id,
         "rank_index": rank_index,
         "production_selected": memory_id in selected_ids,
+        "eligible_filter_pool": eligible_for_filter_pool(candidate),
         "score": float(candidate.get("score") or 0.0),
         "similarity": float(candidate.get("similarity") or 0.0),
         "vector_score": float(rank.get("vector_score") or candidate.get("similarity") or 0.0),
@@ -41,7 +50,10 @@ def candidate_features(candidate: Row, rank_index: int, selected_ids: set[int], 
         "task_key_bonus": float(rank.get("task_key_bonus") or 0.0),
         "global_durable_bonus": float(rank.get("global_durable_bonus") or 0.0),
         "matched_task_key_count": len(rank.get("matched_task_keys") or []),
-        "filter_reason_count": len(rank.get("filter_reasons") or candidate.get("filter_reasons") or []),
+        "filter_reason_count": len(rank.get("filter_reasons") or filter_reasons),
+        "filter_reasons": filter_reasons,
+        "matched_task_keys": rank.get("matched_task_keys") or [],
+        "penalties": rank.get("penalties") or [],
         "memory_kind": candidate.get("memory_kind") or "unknown",
         "label_score": label,
         "label_useful": None if label is None else label >= 4,

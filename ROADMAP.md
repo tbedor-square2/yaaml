@@ -9,23 +9,15 @@ Scope note: this file holds product direction. Anything experiment-sized — a c
 - Rust CLI and daemon.
 - SQLite-backed memory, embeddings, tasks, status, recall evals, and backlog progress.
 - Codex transcript ingestion from `~/.codex/sessions`.
+- Claude Code transcript ingestion from `~/.claude/projects/<encoded-path>/`, ignoring `subagents/` transcripts by default and parsing tool-use loops into completed turns.
 - Session-aware recall files under `~/.yaaml/recall`.
 - Installed Codex and Claude skills for recall and manual remember workflows.
 - macOS LaunchAgent service management.
 - Manual `yaaml remember` for durable user preferences and problem-solving lessons.
+- Task queue inspection, retry, and clearing through `yaaml tasks`.
+- Formation-time activation-condition metadata is implemented in memory formulation and recall ranking; the forward experiment remains open until enough downstream recall evals accumulate.
 
 ## Near-Term
-
-### Claude Code Support
-
-Add first-class Claude Code transcript ingestion.
-
-- Discover Claude Code JSONL transcripts under `~/.claude/projects/<encoded-path>/`.
-- Ignore `subagents/` transcripts by default.
-- Parse Claude user, assistant, tool-use, and tool-result events into complete turn pairs.
-- Derive project identity from transcript `cwd` metadata.
-- Reuse the same memory formulation, recall, and eval pipeline as Codex.
-- Add fixtures covering multi-step tool-use loops and text-only final assistant messages.
 
 ### Agent-Native Memory Import
 
@@ -39,12 +31,10 @@ Make YAAML recall a superset of agent-native memories.
 - Classify imported memories as project or global rather than importing everything globally.
 - Avoid writing back to Codex native memory files; import into YAAML only.
 
-### Parked Job Recovery
+### Provider Recovery Polish
 
-Improve provider failure recovery.
+Improve provider failure recovery beyond the existing `yaaml tasks` commands.
 
-- Add `yaaml jobs list`.
-- Add `yaaml jobs retry --parked` for parked jobs after API keys or provider config are fixed.
 - Show provider key source and launchd/systemd environment freshness without exposing secrets.
 - Consider a service restart helper that reloads login-shell provider env on macOS.
 
@@ -86,13 +76,13 @@ Avoid repeatedly surfacing the same memory while it is likely already in the age
 - Keep cooldowns context-budget oriented: the goal is not fewer recalls for its own sake, but fewer repeated memories that add little incremental value.
 - Revisit command-chain awareness for adjacent verification steps where the same memory may remain useful across repeated commands.
 
-### Future Direction: Tool Activation Metadata
+### Future Direction: Activation Metadata Signals
 
 Use deterministic tool and command signals when they can narrow recall without adding another lossy classifier.
 
-- Let memory creation optionally attach activation metadata such as tool name, command regex, repo, task key, or PR key.
-- At runtime, prefer signals already present in transcripts, segment metadata, and explicit recall queries before vector ranking within the narrowed candidate set.
-- Keep this optional and evidence-driven; file watching and normal session recall should remain the primary path.
+- Continue evaluating formation-time activation triggers and anti-triggers under the forward experiment in `EXPERIMENTS_LOG.md`.
+- Prefer signals already present in transcripts, segment metadata, and explicit recall queries before adding new runtime hook surfaces.
+- Keep activation metadata evidence-driven; file watching and normal session recall should remain the primary path.
 - Avoid broad semantic labels such as `situation:pr-comment` until evals show they improve useful recall per context token.
 - Do not reintroduce broad pre-tool hooks without a separate experiment, deterministic activation rules, and metrics that segment hook recall from ordinary session recall.
 

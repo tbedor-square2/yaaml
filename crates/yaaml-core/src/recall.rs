@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
@@ -7,8 +7,8 @@ use serde::Serialize;
 
 use crate::paths::project_hash;
 use crate::{
-    context_score, infer_context_from_text, ContextMetadata, ConversationSegmentStatus, MemoryKind,
-    MemoryRecord, MemoryScope, TurnRecord,
+    context_score, infer_context_from_text, ContextMetadata, ConversationSegmentStatus,
+    MemoryActivationConditions, MemoryKind, MemoryRecord, MemoryScope, TurnRecord,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -114,11 +114,98 @@ pub fn apply_project_bonus(
     candidates
 }
 
+pub fn apply_activation_condition_adjustments(
+    mut candidates: Vec<RecallCandidate>,
+    activation_conditions: &BTreeMap<i64, MemoryActivationConditions>,
+    query_text: &str,
+) -> Vec<RecallCandidate> {
+    let query_tokens = activation_condition_tokens(query_text);
+    if query_tokens.is_empty() || activation_conditions.is_empty() {
+        return candidates;
+    }
+    for candidate in &mut candidates {
+        let Some(conditions) = activation_conditions.get(&candidate.memory_id) else {
+            continue;
+        };
+        if let Some(trigger) =
+            first_matching_activation_condition(&conditions.activation_triggers, &query_tokens)
+        {
+            candidate.score += 0.16;
+            let marker = format!("activation:{}", activation_condition_marker(trigger));
+            if !candidate.rank.matched_task_keys.contains(&marker) {
+                candidate.rank.matched_task_keys.push(marker);
+            }
+        }
+        if let Some(anti_trigger) =
+            first_matching_activation_condition(&conditions.activation_anti_triggers, &query_tokens)
+        {
+            candidate.score -= 0.30;
+            candidate.rank.penalties.push(format!(
+                "activation_anti_trigger_match:{}",
+                activation_condition_marker(anti_trigger)
+            ));
+        }
+    }
+    candidates.sort_by(|left, right| {
+        right
+            .score
+            .partial_cmp(&left.score)
+            .unwrap_or(std::cmp::Ordering::Equal)
+            .then_with(|| left.memory_id.cmp(&right.memory_id))
+    });
+    candidates
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct RecallRankingOptions {
     pub project_tiebreaker: bool,
     pub project_score_bonus: f32,
 }
+
+fn first_matching_activation_condition<'a>(
+    conditions: &'a [String],
+    query_tokens: &HashSet<String>,
+) -> Option<&'a str> {
+    conditions
+        .iter()
+        .map(String::as_str)
+        .find(|condition| activation_condition_matches(condition, query_tokens))
+}
+
+fn activation_condition_matches(condition: &str, query_tokens: &HashSet<String>) -> bool {
+    let condition_tokens = activation_condition_tokens(condition);
+    if condition_tokens.is_empty() {
+        return false;
+    }
+    let matched = condition_tokens
+        .iter()
+        .filter(|token| query_tokens.contains(*token))
+        .count();
+    matched >= condition_tokens.len().min(3)
+}
+
+fn activation_condition_tokens(text: &str) -> HashSet<String> {
+    text.split(|ch: char| !ch.is_ascii_alphanumeric() && ch != '_' && ch != '-' && ch != '/')
+        .map(|token| token.trim().to_ascii_lowercase())
+        .filter(|token| token.len() >= 3)
+        .filter(|token| !ACTIVATION_CONDITION_STOPWORDS.contains(&token.as_str()))
+        .collect()
+}
+
+fn activation_condition_marker(condition: &str) -> String {
+    condition
+        .chars()
+        .take(80)
+        .collect::<String>()
+        .replace(char::is_whitespace, "_")
+        .to_ascii_lowercase()
+}
+
+const ACTIVATION_CONDITION_STOPWORDS: &[&str] = &[
+    "about", "after", "again", "and", "are", "before", "but", "can", "code", "current", "for",
+    "from", "have", "into", "just", "memory", "not", "only", "recall", "should", "that", "the",
+    "then", "this", "touching", "use", "when", "with", "work",
+];
 
 pub fn rank_recall_candidates(
     hits: &[VectorHit],
@@ -1442,23 +1529,26 @@ pub fn build_recall_query(
 ) -> String {
     let mut query = String::new();
     let mut suppressed_block: Option<&'static str> = None;
+    let disable_query_cleaning = std::env::var_os("YAAML_DISABLE_RECALL_QUERY_CLEANING").is_some();
     for turn in turns {
         let Some(display_text) = &turn.display_text else {
             continue;
         };
         for line in display_text.lines() {
-            if let Some(end_tag) = suppressed_block {
-                if line.trim_start().starts_with(end_tag) {
-                    suppressed_block = None;
+            if !disable_query_cleaning {
+                if let Some(end_tag) = suppressed_block {
+                    if line.trim_start().starts_with(end_tag) {
+                        suppressed_block = None;
+                    }
+                    continue;
                 }
-                continue;
-            }
-            if let Some(end_tag) = recall_query_suppressed_block_end(line) {
-                suppressed_block = Some(end_tag);
-                continue;
-            }
-            if recall_query_suppressed_line(line) {
-                continue;
+                if let Some(end_tag) = recall_query_suppressed_block_end(line) {
+                    suppressed_block = Some(end_tag);
+                    continue;
+                }
+                if recall_query_suppressed_line(line) {
+                    continue;
+                }
             }
             if line.trim_start().starts_with("tool output:") {
                 continue;
@@ -1998,6 +2088,66 @@ mod tests {
         );
 
         assert_eq!(candidates[0].score, 0.95);
+    }
+
+    #[test]
+    fn activation_conditions_adjust_candidate_scores() {
+        let candidates = vec![
+            RecallCandidate {
+                memory_id: 1,
+                similarity: 0.7,
+                score: 0.7,
+                project_id: Some("/tmp/java".to_string()),
+                rank: empty_rank(),
+            },
+            RecallCandidate {
+                memory_id: 2,
+                similarity: 0.71,
+                score: 0.71,
+                project_id: Some("/tmp/java".to_string()),
+                rank: empty_rank(),
+            },
+        ];
+        let mut conditions = std::collections::BTreeMap::new();
+        conditions.insert(
+            1,
+            MemoryActivationConditions {
+                memory_id: 1,
+                activation_triggers: vec!["editing rollout flag defaults".to_string()],
+                activation_anti_triggers: vec![],
+                updated_at: "unix:1".to_string(),
+            },
+        );
+        conditions.insert(
+            2,
+            MemoryActivationConditions {
+                memory_id: 2,
+                activation_triggers: vec![],
+                activation_anti_triggers: vec!["after rollout PR merged".to_string()],
+                updated_at: "unix:1".to_string(),
+            },
+        );
+
+        let adjusted = apply_activation_condition_adjustments(
+            candidates,
+            &conditions,
+            "user: edit the rollout flag defaults; the rollout PR merged yesterday",
+        );
+
+        assert_eq!(adjusted[0].memory_id, 1);
+        assert!(adjusted[0]
+            .rank
+            .matched_task_keys
+            .iter()
+            .any(|key| key.starts_with("activation:")));
+        assert!(adjusted
+            .iter()
+            .find(|candidate| candidate.memory_id == 2)
+            .unwrap()
+            .rank
+            .penalties
+            .iter()
+            .any(|penalty| penalty.starts_with("activation_anti_trigger_match:")));
     }
 
     #[test]
@@ -5426,6 +5576,33 @@ Datadog is blocked by a Cloudflare Access redirect; debug WARP authentication."#
         let query = build_recall_query(&[turn], 2_000, 80);
 
         assert_eq!(query, "user: fix recall\nassistant: done");
+    }
+
+    #[test]
+    fn recall_query_cleaning_can_be_disabled_for_experiments() {
+        std::env::set_var("YAAML_DISABLE_RECALL_QUERY_CLEANING", "1");
+        let turn = TurnRecord {
+            session_id: "session-1".to_string(),
+            turn_id: Some("turn-1".to_string()),
+            ordinal: 0,
+            byte_start: 0,
+            byte_end: 1,
+            observed_at: None,
+            status: TurnStatus::Completed,
+            display_text: Some(
+                "user: fix recall\n<environment_context>\n<cwd>/tmp/wrong</cwd>\n</environment_context>\nWorking (15s - esc to interrupt)\ntool output: noisy\nassistant: done".to_string(),
+            ),
+            cwd: None,
+            context: None,
+        };
+
+        let query = build_recall_query(&[turn], 2_000, 80);
+        std::env::remove_var("YAAML_DISABLE_RECALL_QUERY_CLEANING");
+
+        assert!(query.contains("<environment_context>"));
+        assert!(query.contains("Working (15s - esc to interrupt)"));
+        assert!(query.contains("assistant: done"));
+        assert!(!query.contains("tool output:"));
     }
 
     #[test]

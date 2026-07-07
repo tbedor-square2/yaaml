@@ -15,15 +15,16 @@ use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use yaaml_core::{
-    active_segment_recall_turns, build_active_segment_recall_query, build_conversation_segments,
-    build_recall_query, derive_project_descriptor, embedded_text_hash, embedding_text,
-    find_consolidation_clusters, merge_task_keys, parse_eval_judge_response,
-    parse_formulation_response, parse_segment_label_response, rank_recall_candidates,
-    recall_file_path, render_recall_markdown, segment_task_keys, session_recall_file_path,
-    write_recall_file, ClusterMemory, Config, ConversationSegmentRecord, ConversationSegmentStatus,
-    EmbeddingRecord, MemoryKind, MemoryRecord, MemoryScope, MemoryValidity, RecallMemory,
-    RecallRankingOptions, SegmentLabelRecord, SourceTurnRef, TaskRecord, TaskStatus, TurnRecord,
-    VectorIndex,
+    active_segment_recall_turns, apply_activation_condition_adjustments,
+    build_active_segment_recall_query, build_conversation_segments, build_recall_query,
+    derive_project_descriptor, embedded_text_hash, embedding_text, find_consolidation_clusters,
+    merge_task_keys, parse_eval_judge_response, parse_formulation_response,
+    parse_segment_label_response, rank_recall_candidates, recall_file_path, render_recall_markdown,
+    segment_task_keys, session_recall_file_path, write_recall_file, ClusterMemory, Config,
+    ConversationSegmentRecord, ConversationSegmentStatus, EmbeddingRecord,
+    MemoryActivationConditions, MemoryKind, MemoryRecord, MemoryScope, MemoryValidity,
+    RecallMemory, RecallRankingOptions, SegmentLabelRecord, SourceTurnRef, TaskRecord, TaskStatus,
+    TurnRecord, VectorIndex,
 };
 use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
@@ -554,6 +555,8 @@ fn run_memory_formulation_task(
     let now = unix_timestamp();
     for draft in drafts {
         let refine_memory_id = draft.refine_memory_id;
+        let activation_triggers = draft.activation_triggers.clone();
+        let activation_anti_triggers = draft.activation_anti_triggers.clone();
         let mut memory = draft.into_record(
             source_turn_refs.clone(),
             now.clone(),
@@ -584,6 +587,13 @@ fn run_memory_formulation_task(
             db.insert_memory(&memory)
                 .context("failed to insert memory")?
         };
+        db.replace_memory_activation_conditions(&MemoryActivationConditions {
+            memory_id,
+            activation_triggers,
+            activation_anti_triggers,
+            updated_at: now.clone(),
+        })
+        .context("failed to persist memory activation conditions")?;
         db.upsert_embedding(&EmbeddingRecord {
             memory_id,
             embedding_model: config.embedding_model.clone(),
@@ -1495,7 +1505,7 @@ fn valid_refinement_target(
 fn formulation_system_prompt() -> &'static str {
     concat!(
         "Create concise durable memories from coding-agent transcript turns. ",
-        "Return only JSON shaped as {\"memories\":[{\"title\":\"...\",\"body\":\"...\",\"scope\":\"project\"|\"global\",\"kind\":\"preference\"|\"lesson\"|\"workflow\"|\"project_fact\"|\"task_checkpoint\"|\"task_state\",\"task_keys\":[\"type:value\"],\"project_descriptor\":\"...\",\"refine_memory_id\":123|null}]}. ",
+        "Return only JSON shaped as {\"memories\":[{\"title\":\"...\",\"body\":\"...\",\"scope\":\"project\"|\"global\",\"kind\":\"preference\"|\"lesson\"|\"workflow\"|\"project_fact\"|\"task_checkpoint\"|\"task_state\",\"task_keys\":[\"type:value\"],\"activation_triggers\":[\"...\"],\"activation_anti_triggers\":[\"...\"],\"project_descriptor\":\"...\",\"refine_memory_id\":123|null}]}. ",
         "Return {\"memories\":[]} when the turns contain only ordinary progress updates, one-off command output, transient narration, or no durable lesson. ",
         "Prefer zero or one small, granular memory per batch; create multiple memories only when the turns contain distinct durable lessons or preferences. ",
         "If new turns correct, extend, or make more specific one of the provided existing candidate memories, return a full replacement memory and set refine_memory_id to that candidate id. ",
@@ -1503,6 +1513,9 @@ fn formulation_system_prompt() -> &'static str {
         "Do not refine a candidate unless the replacement preserves still-true durable details from the existing memory. ",
         "Focus memories on insights gained while solving the problem and on redirection provided by the user. ",
         "Always capture repeated user corrections, preferences, and process guidance as their own concise memories, including coding style preferences such as functional vs imperative style. ",
+        "For every memory, include zero to four activation_triggers: short concrete conditions where the memory should be recalled, such as editing a named path, reviewing a named PR, touching a named subsystem, using a named tool, or seeing a specific user preference. ",
+        "Include activation_anti_triggers only for concrete conditions where recall would likely be stale or wrong, such as after a named PR is merged, after a branch is deleted, or when a different subsystem/path is being edited. ",
+        "Do not put generic words like coding, tests, repo, remember, or future work into activation_triggers. ",
         "Use project scope when the preference is tied to the current project or language; use global scope only for durable cross-project user preferences or agent workflow patterns. ",
         "Use task_state only for segment-specific or short-lived state that should expire when the current conversation topic moves on: local status facts, proposed fixes, implementation order, unresolved next steps, open questions, blockers, and follow-up work. ",
         "Use task_checkpoint for resumable PR, ticket, branch, or explicitly named task state that should return only when that same identity is mentioned again; include only strong task keys copied from the transcript, and do not invent placeholder keys. ",
@@ -2284,6 +2297,15 @@ pub fn refresh_recall_with_embedding(
         .iter()
         .map(|candidate| candidate.memory_id)
         .collect::<Vec<_>>();
+    let activation_conditions = db
+        .activation_conditions_for_memories(&candidate_ids)
+        .context("failed to load recall activation conditions")?;
+    let candidates =
+        apply_activation_condition_adjustments(candidates, &activation_conditions, &query_text);
+    let candidate_ids = candidates
+        .iter()
+        .map(|candidate| candidate.memory_id)
+        .collect::<Vec<_>>();
     let eval_history = db
         .eval_history_for_memories(&candidate_ids)
         .context("failed to load recall candidate eval history")?;
@@ -2561,6 +2583,8 @@ mod tests {
         let prompt = formulation_system_prompt();
 
         assert!(prompt.contains("refine_memory_id"));
+        assert!(prompt.contains("activation_triggers"));
+        assert!(prompt.contains("activation_anti_triggers"));
         assert!(prompt.contains("full replacement memory"));
         assert!(prompt.contains("insights gained while solving the problem"));
         assert!(prompt.contains("redirection provided by the user"));

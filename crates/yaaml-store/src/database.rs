@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -10,9 +10,10 @@ use yaaml_core::status::{BacklogStatus, Status, TaskFailure, WorkerStatus};
 use yaaml_core::{
     extract_task_keys, infer_context_from_memory, infer_context_from_path, is_placeholder_task_key,
     segment_label_task_key, ContextMetadata, ConversationSegmentLabelRecord,
-    ConversationSegmentRecord, ConversationSegmentStatus, EmbeddingRecord, MemoryKind,
-    MemoryRecord, MemoryScope, MemoryValidity, SegmentLabelDraft, SegmentLabelRecord,
-    SessionRecord, SourceTurnRef, TaskRecord, TaskStatus, TurnRecord,
+    ConversationSegmentRecord, ConversationSegmentStatus, EmbeddingRecord,
+    MemoryActivationConditions, MemoryKind, MemoryRecord, MemoryScope, MemoryValidity,
+    SegmentLabelDraft, SegmentLabelRecord, SessionRecord, SourceTurnRef, TaskRecord, TaskStatus,
+    TurnRecord,
 };
 
 use crate::migrations::{EXPECTED_SCHEMA_VERSION, MIGRATIONS};
@@ -258,6 +259,7 @@ impl Database {
         )?;
         self.drop_legacy_segment_events_table()?;
         self.ensure_conversation_segments_table()?;
+        self.ensure_memory_activation_conditions_table()?;
         self.ensure_column(
             "conversation_segments",
             "label_status",
@@ -354,6 +356,28 @@ CREATE INDEX IF NOT EXISTS idx_conversation_segments_session
     ON conversation_segments(session_id, start_turn_ordinal);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_conversation_segments_range_unique
     ON conversation_segments(session_id, start_turn_ordinal, end_turn_ordinal);
+"#,
+        )?;
+        Ok(())
+    }
+
+    fn ensure_memory_activation_conditions_table(&self) -> Result<(), DatabaseError> {
+        if self
+            .table_names()?
+            .iter()
+            .any(|table| table == "memory_activation_conditions")
+        {
+            return Ok(());
+        }
+        self.conn.execute_batch(
+            r#"
+CREATE TABLE IF NOT EXISTS memory_activation_conditions (
+    memory_id INTEGER PRIMARY KEY NOT NULL,
+    activation_triggers_json TEXT NOT NULL DEFAULT '[]',
+    activation_anti_triggers_json TEXT NOT NULL DEFAULT '[]',
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY(memory_id) REFERENCES memories(id)
+);
 "#,
         )?;
         Ok(())
@@ -1183,6 +1207,63 @@ CREATE INDEX IF NOT EXISTS idx_conversation_segment_labels_label
             &memory.updated_at,
         )?;
         Ok(memory_id)
+    }
+
+    pub fn replace_memory_activation_conditions(
+        &self,
+        conditions: &MemoryActivationConditions,
+    ) -> Result<(), DatabaseError> {
+        if conditions.activation_triggers.is_empty()
+            && conditions.activation_anti_triggers.is_empty()
+        {
+            self.conn.execute(
+                "DELETE FROM memory_activation_conditions WHERE memory_id = ?1",
+                params![conditions.memory_id],
+            )?;
+            return Ok(());
+        }
+        let triggers = serde_json::to_string(&conditions.activation_triggers)?;
+        let anti_triggers = serde_json::to_string(&conditions.activation_anti_triggers)?;
+        self.conn.execute(
+            "INSERT INTO memory_activation_conditions (
+                memory_id, activation_triggers_json, activation_anti_triggers_json, updated_at
+             ) VALUES (?1, ?2, ?3, ?4)
+             ON CONFLICT(memory_id) DO UPDATE SET
+                activation_triggers_json = excluded.activation_triggers_json,
+                activation_anti_triggers_json = excluded.activation_anti_triggers_json,
+                updated_at = excluded.updated_at",
+            params![
+                conditions.memory_id,
+                triggers,
+                anti_triggers,
+                conditions.updated_at,
+            ],
+        )?;
+        Ok(())
+    }
+
+    pub fn activation_conditions_for_memories(
+        &self,
+        memory_ids: &[i64],
+    ) -> Result<BTreeMap<i64, MemoryActivationConditions>, DatabaseError> {
+        let mut conditions = BTreeMap::new();
+        for memory_id in memory_ids {
+            let row = self
+                .conn
+                .query_row(
+                    "SELECT memory_id, activation_triggers_json,
+                            activation_anti_triggers_json, updated_at
+                     FROM memory_activation_conditions
+                     WHERE memory_id = ?1",
+                    params![memory_id],
+                    read_memory_activation_conditions,
+                )
+                .optional()?;
+            if let Some(row) = row {
+                conditions.insert(row.memory_id, row);
+            }
+        }
+        Ok(conditions)
     }
 
     pub fn upsert_context_metadata(
@@ -3044,6 +3125,20 @@ fn read_memory_record(row: &rusqlite::Row<'_>) -> rusqlite::Result<MemoryRecord>
     })
 }
 
+fn read_memory_activation_conditions(
+    row: &rusqlite::Row<'_>,
+) -> rusqlite::Result<MemoryActivationConditions> {
+    let triggers_json: String = row.get(1)?;
+    let anti_triggers_json: String = row.get(2)?;
+    Ok(MemoryActivationConditions {
+        memory_id: row.get(0)?,
+        activation_triggers: serde_json::from_str(&triggers_json).map_err(json_decode_error)?,
+        activation_anti_triggers: serde_json::from_str(&anti_triggers_json)
+            .map_err(json_decode_error)?,
+        updated_at: row.get(3)?,
+    })
+}
+
 fn parse_conversation_segment_status(status: &str) -> ConversationSegmentStatus {
     match status {
         "superseded" => ConversationSegmentStatus::Superseded,
@@ -3097,6 +3192,7 @@ mod tests {
             "eval_runs",
             "file_cursors",
             "memories",
+            "memory_activation_conditions",
             "schema_version",
             "segment_labels",
             "sessions",
@@ -4256,6 +4352,68 @@ WHERE session_id = 'session-1';
             memories[0].task_keys,
             vec!["pr:481245".to_string(), "tool:yaaml".to_string()]
         );
+    }
+
+    #[test]
+    fn memory_activation_conditions_roundtrip_and_clear() {
+        let mut db = Database::in_memory().unwrap();
+        db.migrate().unwrap();
+        let memory_id = db
+            .insert_memory(&MemoryRecord {
+                id: None,
+                title: "Activation memory".to_string(),
+                body: "Recall when editing rollout flags.".to_string(),
+                scope: MemoryScope::Project,
+                kind: MemoryKind::Workflow,
+                task_keys: vec![],
+                source_turn_refs: vec![],
+                created_at: "unix:1".to_string(),
+                updated_at: "unix:1".to_string(),
+                is_active: true,
+                session_id: None,
+                project_id: Some("/tmp/java".to_string()),
+                project_descriptor: Some("java".to_string()),
+                lineage_refs: vec![],
+                origin_segment_id: None,
+                origin_segment_status: None,
+                validity: MemoryValidity::Durable,
+                superseded_by_memory_id: None,
+            })
+            .unwrap();
+
+        db.replace_memory_activation_conditions(&MemoryActivationConditions {
+            memory_id,
+            activation_triggers: vec!["editing rollout flags".to_string()],
+            activation_anti_triggers: vec!["after PR merged".to_string()],
+            updated_at: "unix:2".to_string(),
+        })
+        .unwrap();
+
+        let conditions = db
+            .activation_conditions_for_memories(&[memory_id])
+            .unwrap()
+            .remove(&memory_id)
+            .unwrap();
+        assert_eq!(
+            conditions.activation_triggers,
+            vec!["editing rollout flags".to_string()]
+        );
+        assert_eq!(
+            conditions.activation_anti_triggers,
+            vec!["after PR merged".to_string()]
+        );
+
+        db.replace_memory_activation_conditions(&MemoryActivationConditions {
+            memory_id,
+            activation_triggers: vec![],
+            activation_anti_triggers: vec![],
+            updated_at: "unix:3".to_string(),
+        })
+        .unwrap();
+        assert!(db
+            .activation_conditions_for_memories(&[memory_id])
+            .unwrap()
+            .is_empty());
     }
 
     #[test]

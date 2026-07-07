@@ -9,6 +9,7 @@ anchor_source="${BACKTEST_ANCHOR_SOURCE:-fixed}"
 anchor_limit="${BACKTEST_ANCHOR_LIMIT:-200}"
 db_path="${BACKTEST_DB:-$HOME/.yaaml/yaaml.db}"
 exclude_context_embedded="${BACKTEST_EXCLUDE_CONTEXT_EMBEDDED:-1}"
+anchor_origins="${BACKTEST_ANCHOR_ORIGINS:-session_background,tool_pre_use}"
 anchors_file="${BACKTEST_ANCHORS_FILE:-}"
 mkdir -p "$out_dir"
 
@@ -37,6 +38,16 @@ elif [[ "$anchor_source" == "eval-library" ]]; then
       WHERE er.eval_run_id = r.id
     )"
   fi
+  origin_values="$(
+    printf '%s\n' "$anchor_origins" |
+      tr ',' '\n' |
+      sed -e "s/^[[:space:]]*//" -e "s/[[:space:]]*$//" |
+      awk 'NF { gsub("'"'"'", "'"'"''"'"'"); printf "%s'\''%s'\''", sep, $0; sep=", " }'
+  )"
+  if [[ -z "$origin_values" ]]; then
+    echo "BACKTEST_ANCHOR_ORIGINS must include at least one recall origin" >&2
+    exit 1
+  fi
   sqlite3 -separator $'\t' "$db_path" "
     WITH eligible AS (
       SELECT
@@ -47,6 +58,14 @@ elif [[ "$anchor_source" == "eval-library" ]]; then
       WHERE r.completed_at IS NOT NULL
         AND json_extract(r.config_json, '$.session_id') IS NOT NULL
         AND json_extract(r.config_json, '$.turn_ordinal') IS NOT NULL
+        AND r.recall_origin IN ($origin_values)
+        AND EXISTS (
+          SELECT 1
+          FROM turns t
+          WHERE t.session_id = json_extract(r.config_json, '$.session_id')
+            AND t.status = 'completed'
+            AND t.ordinal <= CAST(json_extract(r.config_json, '$.turn_ordinal') AS INTEGER)
+        )
         $leakage_clause
     ),
     latest_per_anchor AS (
@@ -118,9 +137,16 @@ while IFS=$'\t' read -r run_id session_id turn_ordinal case_label; do
   run_with_retry "$oracle_bin" eval show "$run_id" --json >"$oracle_file" 2>"$oracle_file.stderr"
   fi
 
-  run_with_retry bash -c \
+  if ! run_with_retry bash -c \
     'cd "$1" && "$2" recall --session "$3" --turn "$4" --json --debug-ranking' \
-    bash "$repo" "$recall_bin" "$session_id" "$turn_ordinal" >"$recall_file" 2>"$recall_file.stderr"
+    bash "$repo" "$recall_bin" "$session_id" "$turn_ordinal" >"$recall_file" 2>"$recall_file.stderr"; then
+    if grep -q "has no recall text" "$recall_file.stderr"; then
+      printf '{"selected_memory_ids":[],"filter_telemetry":null,"empty_recall_reason":"no_recall_text"}\n' >"$recall_file"
+    else
+      echo "recall command failed for run $run_id; see $recall_file.stderr" >&2
+      exit 1
+    fi
+  fi
 
   if ! jq -e type "$recall_file" >/dev/null; then
     echo "recall command did not emit valid JSON for run $run_id; see $recall_file.stderr" >&2

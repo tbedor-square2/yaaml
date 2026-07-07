@@ -137,10 +137,13 @@ generation experiment instead of another rerank variant.
 
 ### 6. Judge validity
 
-All scores come from the LLM judge. Maintain a small hand-labeled calibration
-set (~100 recall runs) and report judge agreement when the judge model or
-prompt changes. Do not tune ranking against a judge whose agreement is
-unknown.
+All scores come from the LLM judge. Maintain a small adjudicated calibration
+set (~100 recall candidates) and report agreement when the judge model or
+prompt changes. The default adjudicator is an independent LLM pass that sees
+only the query, memory, and rubric — not the production judge score or
+rationale. This validates judge-vs-adjudicator agreement for tuning
+discipline, not human ground truth. Do not tune ranking against a judge whose
+agreement is unknown.
 
 ### 7. Abstention accounting
 
@@ -262,6 +265,21 @@ Memory-write experiments are forward experiments by default: they need new
 formulation runs and time for eval evidence to accumulate. State the exposure
 window in the report and do not compare cohorts with materially different
 exposure.
+
+For formation-time activation-condition experiments, cohort membership is
+defined by rows in `memory_activation_conditions`: new-policy memories have
+non-empty `activation_triggers_json` or `activation_anti_triggers_json`.
+Reports should include condition coverage rate, trigger/anti-trigger examples,
+and downstream recall usefulness for memories written after the policy became
+active. While the cohort is still maturing, also report pending recall-eval
+tasks that already selected activation-condition memories, separating tasks
+that have later completed turns from tasks still waiting for future context.
+
+Use `scripts/activation-condition-forward-report.py --policy-start <timestamp>`
+to generate the forward-readiness artifact set for this experiment. The report
+is read-only against the database; run any normal YAAML CLI command first if
+the local database still needs the schema migration that creates
+`memory_activation_conditions`.
 
 ## Artifact Requirements
 
@@ -411,10 +429,20 @@ Live tooling:
   baseline plus candidate worktrees, with CI output.
 - `scripts/export-recall-training-data.py`: convert saved backtest artifacts
   into candidate-level JSONL for selection experiments.
-- `scripts/recall-feature-model-experiment.py`: compare a small local feature
-  model against production and heuristic selectors; kept for the learned
-  weight calibration backlog item. Emits point deltas only — wire in
-  `recall_experiment_stats` before using its output for a decision.
+- `scripts/recall-feature-model-experiment.py`: run the learned weight
+  calibration backlog item as a saved-candidate replay with logistic scoring,
+  isotonic calibration, threshold tuning, per-anchor details, paired
+  bootstrap CIs, and a report.
+- `scripts/llm-rerank-recall-candidates.py`: run a saved-candidate LLM
+  scoring rerank over cached recall candidates, with resumable score caching,
+  fold-tuned thresholds, paired bootstrap CIs, and a report.
+- `scripts/formation-miss-mining.py`: scan indexed transcript files for
+  repeated correction-like user turns across sessions, group possible
+  missed-formation clusters, check apparent active-memory coverage, and write
+  diagnostic artifacts.
+- `scripts/session-context-dedup-experiment.py`: replay saved selections with
+  a session/context visibility suppression policy, emit paired bootstrap CIs,
+  and write drop diagnostics for context-dedup analysis.
 
 One-shot replay harnesses for concluded experiments (the 5x5/10x10,
 candidate, techniques, health, segment-task-fit, cluster-rerank, and

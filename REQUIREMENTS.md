@@ -15,7 +15,7 @@ YAAML is a local, file-first memory layer for coding agents. It watches native a
 1. YAAML watches agent transcript roots:
    - Codex: `~/.codex/sessions/YYYY/MM/DD/rollout-<timestamp>-<uuid>.jsonl`
    - Claude Code: `~/.claude/projects/<encoded-path>/<session-id>.jsonl`
-2. Codex support is the primary implemented path. Claude Code support is a stated integration target and may lag Codex behavior.
+2. Codex and Claude Code transcript ingestion are implemented. Codex remains the most exercised integration path; any remaining Claude parity gaps should be tracked as roadmap work.
 3. Each session maps to one transcript file. The session record stores agent type, session id, project id, transcript path, start time, and last-seen time.
 4. The daemon tracks file cursors by byte offset so restart and backlog ingestion can resume without reprocessing complete files.
 5. Stored turn metadata includes session id, turn id or ordinal, byte range, observed timestamp, completion status, optional display text, optional cwd, and optional inferred context metadata.
@@ -31,7 +31,7 @@ YAAML is a local, file-first memory layer for coding agents. It watches native a
    - reusable workflow constraints
    - project facts that are not obvious from checked-in files
 4. The formulation model may refine an existing memory instead of creating a new one by returning `refine_memory_id` or `existing_memory_id`.
-5. The memory schema stores: title, body, scope, kind, task keys, source turn refs, created/updated timestamps, active flag, session id, project id, project descriptor, and lineage refs.
+5. The memory schema stores: title, body, scope, kind, task keys, activation triggers and anti-triggers, source turn refs, created/updated timestamps, active flag, session id, project id, project descriptor, and lineage refs.
 6. Memory kinds are:
    - `preference`
    - `lesson`
@@ -76,6 +76,7 @@ YAAML is a local, file-first memory layer for coding agents. It watches native a
    - explicit context score
    - bounded same-project bonus
    - task-key bonus
+   - activation-trigger and anti-trigger metadata when present
    - global durable-memory bonus
    - penalties for task-state memories without task-key overlap
    - memory-health reranking from prior evals
@@ -239,7 +240,7 @@ The main quality tradeoff metrics are:
 
 ## Deferred Work
 
-1. Full Claude Code parity.
+1. Remaining Claude Code parity gaps beyond transcript ingestion.
 2. Agent-native memory ingestion so YAAML recall can become a superset of Codex/Claude native memories.
 3. Dynamic conversation segments that are decoupled from session id and cwd.
 4. Tool-triggered recall experiments using deterministic activation signals rather than a default broad Codex PreToolUse hook.

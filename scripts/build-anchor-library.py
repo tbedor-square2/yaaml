@@ -27,6 +27,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import os
 import random
 import re
 import sys
@@ -128,6 +129,65 @@ def coverage(anchors: list[dict[str, Any]]) -> float:
     return sum(1 for anchor in anchors if anchor["has_known_labels"]) / len(anchors)
 
 
+def load_backtest_summary(input_dir: Path) -> dict[str, Any] | None:
+    summaries = sorted(input_dir.glob("*.summary.json"))
+    if not summaries:
+        return None
+    if len(summaries) > 1:
+        raise SystemExit(
+            f"expected at most one *.summary.json in {input_dir}, found {len(summaries)}"
+        )
+    try:
+        return json.loads(summaries[0].read_text())
+    except json.JSONDecodeError as exc:
+        raise SystemExit(f"failed to parse backtest summary {summaries[0]}: {exc}") from exc
+
+
+def database_snapshot() -> dict[str, Any]:
+    db_path = Path(os.environ.get("BACKTEST_DB", "~/.yaaml/yaaml.db")).expanduser()
+    snapshot: dict[str, Any] = {"path": str(db_path)}
+    try:
+        stat = db_path.stat()
+    except FileNotFoundError:
+        snapshot["exists"] = False
+        return snapshot
+    snapshot.update(
+        {
+            "exists": True,
+            "size_bytes": stat.st_size,
+            "modified_at": dt.datetime.fromtimestamp(
+                stat.st_mtime,
+                tz=dt.timezone.utc,
+            ).isoformat(),
+        }
+    )
+    return snapshot
+
+
+def selection_query_parameters(summary: dict[str, Any] | None, pool_size: int) -> dict[str, Any]:
+    anchor_origins = [
+        origin.strip()
+        for origin in os.environ.get(
+            "BACKTEST_ANCHOR_ORIGINS",
+            "session_background,tool_pre_use",
+        ).split(",")
+        if origin.strip()
+    ]
+    return {
+        "anchor_source": (summary or {}).get("anchor_source", "unknown"),
+        "anchor_limit": os.environ.get("BACKTEST_ANCHOR_LIMIT", str(pool_size)),
+        "exclude_context_embedded": os.environ.get(
+            "BACKTEST_EXCLUDE_CONTEXT_EMBEDDED",
+            "1",
+        )
+        == "1",
+        "recall_origins": anchor_origins,
+        "requires_completed_turn_at_or_before_anchor": True,
+        "dedupe": "latest_per_session_turn",
+        "order": "run_id DESC",
+    }
+
+
 def write_tsv(path: Path, anchors: list[dict[str, Any]]) -> None:
     lines = [
         f"{a['run_id']}\t{a['session_id']}\t{a['turn_ordinal']}\t{a['case_label']}"
@@ -154,6 +214,7 @@ def main() -> None:
     input_dir = args.input_dir.expanduser().resolve()
     anchors = read_anchors(input_dir / "anchors.tsv")
     annotate_oracle(anchors, input_dir)
+    summary = load_backtest_summary(input_dir)
 
     screening, holdout = stratified_split(anchors, args.screening, args.holdout, args.seed)
 
@@ -180,6 +241,18 @@ def main() -> None:
         "generated_by": "scripts/build-anchor-library.py",
         "seed": args.seed,
         "input_dir": str(input_dir),
+        "database_snapshot": database_snapshot(),
+        "selection_query_parameters": selection_query_parameters(summary, len(anchors)),
+        "backtest_summary": None
+        if summary is None
+        else {
+            "strategy": summary.get("strategy"),
+            "anchor_source": summary.get("anchor_source"),
+            "anchors": summary.get("anchors"),
+            "selected_memories": summary.get("selected_memories"),
+            "empty_recall_runs": summary.get("empty_recall_runs"),
+            "oracle_useful_runs": summary.get("oracle_useful_runs"),
+        },
         "pool_anchors": len(anchors),
         "pool_known_score_coverage": coverage(anchors),
         "screening": {

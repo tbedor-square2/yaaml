@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, env};
 
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -10,6 +10,7 @@ use yaaml_core::{
 use crate::llm_judge::JudgeClient;
 
 pub const RECALL_DYNAMIC_SELECTION_LIMIT: usize = 2;
+const WIDE_RECALL_FILTER_CANDIDATE_LIMIT: usize = 64;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RecallFilterTelemetry {
@@ -52,9 +53,12 @@ pub fn select_recall_candidates_with_llm_filter(
     request: RecallFilterRequest<'_>,
 ) -> RecallFilterResult {
     let selection_limit = effective_recall_selection_limit(config);
-    let filter_limit = config
+    let mut filter_limit = config
         .recall_llm_filter_candidate_limit
         .max(selection_limit);
+    if wide_recall_enabled() {
+        filter_limit = filter_limit.max(WIDE_RECALL_FILTER_CANDIDATE_LIMIT);
+    }
     let (filter_pool, mut debug_candidates) = select_recall_candidates_for_segment(
         candidates,
         memories,
@@ -124,6 +128,12 @@ pub fn select_recall_candidates_with_llm_filter(
             }
         }
     }
+}
+
+fn wide_recall_enabled() -> bool {
+    env::var("YAAML_EXPERIMENT_WIDE_RECALL")
+        .map(|value| matches!(value.as_str(), "1" | "true" | "TRUE" | "yes" | "on"))
+        .unwrap_or(false)
 }
 
 pub fn effective_recall_selection_limit(config: &Config) -> usize {

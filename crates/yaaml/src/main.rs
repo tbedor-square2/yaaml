@@ -19,16 +19,16 @@ use yaaml::recall_filter::{
 };
 use yaaml::turn_hydration::{context_from_turns, hydrate_turns};
 use yaaml_core::{
-    active_segment_recall_turns, context_score, counterfactual_citation_score,
-    derive_project_descriptor, embedded_text_hash, embedding_text, extract_task_keys,
-    find_consolidation_clusters, infer_context_from_memory, infer_context_from_path,
-    infer_context_from_text, infer_memory_kind, is_transient_plan_memory, merge_contexts,
-    merge_task_keys, parse_eval_judge_response, parse_memory_ids, rank_recall_candidates,
-    recall_file_path, render_recall_markdown, segment_task_keys, session_recall_file_path,
-    write_recall_file, ClusterMemory, Config, ConfigPaths, ContextMetadata,
-    ConversationSegmentLabelRecord, ConversationSegmentRecord, EmbeddingRecord, MemoryKind,
-    MemoryRecord, MemoryScope, MemoryValidity, RecallMemory, RecallRankDetails,
-    RecallRankingOptions, RecallWrite, SessionRecord, TurnRecord, VectorIndex,
+    active_segment_recall_turns, apply_activation_condition_adjustments, context_score,
+    counterfactual_citation_score, derive_project_descriptor, embedded_text_hash, embedding_text,
+    extract_task_keys, find_consolidation_clusters, infer_context_from_memory,
+    infer_context_from_path, infer_context_from_text, infer_memory_kind, is_transient_plan_memory,
+    merge_contexts, merge_task_keys, parse_eval_judge_response, parse_memory_ids,
+    rank_recall_candidates, recall_file_path, render_recall_markdown, segment_task_keys,
+    session_recall_file_path, write_recall_file, ClusterMemory, Config, ConfigPaths,
+    ContextMetadata, ConversationSegmentLabelRecord, ConversationSegmentRecord, EmbeddingRecord,
+    MemoryKind, MemoryRecord, MemoryScope, MemoryValidity, RecallMemory, RecallRankDetails,
+    RecallRankingOptions, RecallWrite, SessionRecord, TurnRecord, VectorHit, VectorIndex,
 };
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
 use yaaml_llm::ReqwestTransport;
@@ -2550,11 +2550,19 @@ fn production_recall_eval_candidates(
     let Ok(query_embedding) = embedding_client.embed(&query) else {
         return Ok(None);
     };
+    let additional_query_embeddings = experimental_recall_query_embeddings(
+        db,
+        embedding_client,
+        &query,
+        Some(turn.session_id.as_str()),
+        Some(turn.ordinal),
+    )?;
     let recall_result = recall_from_embedding(
         db,
         config,
         RecallEmbeddingRequest {
             query_embedding: &query_embedding,
+            additional_query_embeddings: &additional_query_embeddings,
             project_id: &session.project_id,
             session_id: Some(turn.session_id.as_str()),
             turn_ordinal: Some(turn.ordinal),
@@ -2621,7 +2629,7 @@ fn judge_empty_replay_abstention(
         ));
     };
     let prompt = eval_abstention_prompt(&later_turns);
-    match client.structured_json(eval_judge_system_prompt(), &prompt) {
+    match client.structured_json(eval_abstention_judge_system_prompt(), &prompt) {
         Ok(value) => {
             let outcome = parse_eval_judge_response(&value);
             Ok((
@@ -4254,7 +4262,7 @@ fn judge_eval_candidate(
         return ("unjudged".to_string(), retrieval_metadata);
     };
     let prompt = eval_judge_prompt(turn, candidate, citation_score);
-    match client.structured_json(eval_judge_system_prompt(), &prompt) {
+    match client.structured_json(eval_candidate_judge_system_prompt(), &prompt) {
         Ok(value) => {
             let outcome = parse_eval_judge_response(&value);
             (
@@ -4272,7 +4280,7 @@ fn judge_eval_candidate(
     }
 }
 
-fn eval_judge_system_prompt() -> &'static str {
+fn eval_abstention_judge_system_prompt() -> &'static str {
     concat!(
         "Rate whether recalled context helped an AI coding agent after it was incorporated into the conversation. ",
         "Return only JSON with fields score and rationale. score must be a string from \"1\" to \"5\". ",
@@ -4285,15 +4293,47 @@ fn eval_judge_system_prompt() -> &'static str {
     )
 }
 
-fn eval_judge_prompt(turn: &TurnRecord, candidate: &EvalCandidate, citation_score: &str) -> String {
+fn eval_candidate_judge_system_prompt() -> &'static str {
+    concat!(
+        "You are scoring memory recall quality for an AI coding agent before context injection. ",
+        "Decide whether the stored memory would be useful context for the current turn. ",
+        "Use only the current turn, memory, and rubric. ",
+        "Return only JSON with fields score and rationale. score must be a string from \"1\" to \"5\"."
+    )
+}
+
+fn eval_judge_prompt(
+    turn: &TurnRecord,
+    candidate: &EvalCandidate,
+    _citation_score: &str,
+) -> String {
     format!(
-        "Replay turn:\n{}\n\nMemory title:\n{}\n\nMemory body:\n{}\n\nRetrieval rank: {}\nRetrieval score: {:.4}\nCounterfactual citation signal: {}\n\nReturn JSON.",
+        concat!(
+            "Score whether this stored memory would be useful context for answering the current turn.\n\n",
+            "Return only JSON with this exact shape:\n",
+            "{{\"score\": \"<integer 1-5>\", \"rationale\": \"<one short sentence>\"}}\n\n",
+            "Rubric:\n",
+            "- 5: directly useful and actionable for the current turn.\n",
+            "- 4: useful context with minor gaps or extra filtering needed.\n",
+            "- 3: mixed or marginal; some relevance but not clearly worth recall.\n",
+            "- 2: weak, stale, or mostly irrelevant.\n",
+            "- 1: distracting, wrong-context, or actively harmful.\n\n",
+            "Current turn:\n",
+            "```text\n",
+            "{}\n",
+            "```\n\n",
+            "Stored memory title:\n",
+            "```text\n",
+            "{}\n",
+            "```\n\n",
+            "Stored memory body:\n",
+            "```text\n",
+            "{}\n",
+            "```\n"
+        ),
         truncate_eval_text(turn.display_text.as_deref().unwrap_or(""), 4_000),
         truncate_eval_text(&candidate.memory.title, 500),
-        truncate_eval_text(&candidate.memory.body, 4_000),
-        candidate.rank,
-        candidate.retrieval_score,
-        citation_score
+        truncate_eval_text(&candidate.memory.body, 4_000)
     )
 }
 
@@ -4391,7 +4431,6 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
     let query_embedding = embedding_client
         .embed(&query)
         .context("failed to embed recall query")?;
-    let now = unix_timestamp();
     let project_id = project_id_path.display().to_string();
     let recall_origin = args
         .origin
@@ -4402,11 +4441,20 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
         other => other.to_string(),
     };
     let anchor = recall_anchor_from_args_or_current(&db, &project_id, &args)?;
+    let additional_query_embeddings = experimental_recall_query_embeddings(
+        &db,
+        &embedding_client,
+        &query,
+        anchor.as_ref().map(|anchor| anchor.session_id.as_str()),
+        anchor.as_ref().and_then(|anchor| anchor.turn_ordinal),
+    )?;
+    let now = unix_timestamp();
     let recall_result = recall_from_embedding(
         &db,
         &config,
         RecallEmbeddingRequest {
             query_embedding: &query_embedding,
+            additional_query_embeddings: &additional_query_embeddings,
             project_id: &project_id,
             session_id: anchor.as_ref().map(|anchor| anchor.session_id.as_str()),
             turn_ordinal: anchor.as_ref().and_then(|anchor| anchor.turn_ordinal),
@@ -4582,6 +4630,13 @@ fn refresh_missing_recall_file(
     let query_embedding = embedding_client
         .embed(&query)
         .context("failed to embed missing recall query")?;
+    let additional_query_embeddings = experimental_recall_query_embeddings(
+        db,
+        &embedding_client,
+        &query,
+        Some(&session.id),
+        Some(turn_ordinal),
+    )?;
     let now = unix_timestamp();
     let query_context = context_from_turns(
         recall_turns,
@@ -4601,6 +4656,7 @@ fn refresh_missing_recall_file(
         config,
         RecallEmbeddingRequest {
             query_embedding: &query_embedding,
+            additional_query_embeddings: &additional_query_embeddings,
             project_id: &session.project_id,
             session_id: Some(&session.id),
             turn_ordinal: Some(turn_ordinal),
@@ -4837,6 +4893,13 @@ fn recall_for_historical_turn(
     let query_embedding = embedding_client
         .embed(&query)
         .context("failed to embed historical recall query")?;
+    let additional_query_embeddings = experimental_recall_query_embeddings(
+        db,
+        &embedding_client,
+        &query,
+        Some(session_id),
+        Some(turn_ordinal),
+    )?;
     let now = unix_timestamp();
     let query_context = context_from_turns(
         recall_turns,
@@ -4856,6 +4919,7 @@ fn recall_for_historical_turn(
         config,
         RecallEmbeddingRequest {
             query_embedding: &query_embedding,
+            additional_query_embeddings: &additional_query_embeddings,
             project_id: &session.project_id,
             session_id: Some(session_id),
             turn_ordinal: Some(turn_ordinal),
@@ -4895,6 +4959,7 @@ fn recall_for_historical_turn(
 
 struct RecallEmbeddingRequest<'a> {
     query_embedding: &'a [f32],
+    additional_query_embeddings: &'a [Vec<f32>],
     project_id: &'a str,
     session_id: Option<&'a str>,
     turn_ordinal: Option<u64>,
@@ -4906,6 +4971,9 @@ struct RecallEmbeddingRequest<'a> {
     apply_cooldown: bool,
 }
 
+const WIDE_RECALL_CANDIDATE_POOL: usize = 64;
+const WIDE_RECALL_SIMILARITY_THRESHOLD: f32 = 0.20;
+
 fn recall_from_embedding(
     db: &Database,
     config: &Config,
@@ -4916,17 +4984,14 @@ fn recall_from_embedding(
         config.embedding_model.clone(),
         request.query_timestamp.clone(),
     );
-    let hits = index
+    let (recall_candidate_pool, recall_similarity_threshold) = recall_search_parameters(config);
+    let mut hits = index
         .search(
             request.query_embedding,
-            config.recall_candidate_pool,
-            config.recall_similarity_threshold,
+            recall_candidate_pool,
+            recall_similarity_threshold,
         )
         .context("failed to search vector index")?;
-    let hit_ids = hits.iter().map(|hit| hit.memory_id).collect::<Vec<_>>();
-    let memories = db
-        .list_active_memories_by_ids(&hit_ids)
-        .context("failed to load matching memories")?;
     let query_context = request.query_context.unwrap_or_else(|| {
         let mut query_context = infer_context_from_path(Path::new(request.project_id));
         merge_contexts(
@@ -4941,6 +5006,42 @@ fn recall_from_embedding(
         request.session_id,
         request.turn_ordinal,
     )?;
+    if hybrid_recall_enabled() {
+        for embedding in request.additional_query_embeddings {
+            let extra_hits = index
+                .search(
+                    embedding,
+                    recall_candidate_pool,
+                    recall_similarity_threshold,
+                )
+                .context("failed to search hybrid recall vector index")?;
+            merge_recall_hits(&mut hits, extra_hits);
+        }
+        let active_memories = db
+            .list_memories()
+            .context("failed to load active memories for hybrid recall")?
+            .into_iter()
+            .filter(|memory| memory.is_active)
+            .collect::<Vec<_>>();
+        for memory in &active_memories {
+            if let Some(memory_id) = memory.id {
+                let memory_identity_keys = hybrid_memory_identity_keys(memory);
+                if hybrid_identity_key_match(&query_task_keys, &memory_identity_keys) {
+                    upsert_recall_hit(
+                        &mut hits,
+                        VectorHit {
+                            memory_id,
+                            similarity: hybrid_identity_similarity(recall_similarity_threshold),
+                        },
+                    );
+                }
+            }
+        }
+    }
+    let hit_ids = hits.iter().map(|hit| hit.memory_id).collect::<Vec<_>>();
+    let memories = db
+        .list_active_memories_by_ids(&hit_ids)
+        .context("failed to load matching memories")?;
     let candidates = rank_recall_candidates(
         &hits,
         &memories,
@@ -4951,6 +5052,18 @@ fn recall_from_embedding(
             project_tiebreaker: config.recall_project_tiebreaker,
             project_score_bonus: config.recall_project_score_bonus,
         },
+    );
+    let candidate_ids = candidates
+        .iter()
+        .map(|candidate| candidate.memory_id)
+        .collect::<Vec<_>>();
+    let activation_conditions = db
+        .activation_conditions_for_memories(&candidate_ids)
+        .context("failed to load recall activation conditions")?;
+    let candidates = apply_activation_condition_adjustments(
+        candidates,
+        &activation_conditions,
+        request.query_text,
     );
     let candidate_ids = candidates
         .iter()
@@ -5062,6 +5175,190 @@ fn recall_from_embedding(
         filter_telemetry: filter_result.telemetry,
         markdown,
     })
+}
+
+fn recall_search_parameters(config: &Config) -> (usize, f32) {
+    if wide_recall_enabled() {
+        (
+            config.recall_candidate_pool.max(WIDE_RECALL_CANDIDATE_POOL),
+            config
+                .recall_similarity_threshold
+                .min(WIDE_RECALL_SIMILARITY_THRESHOLD),
+        )
+    } else {
+        (
+            config.recall_candidate_pool,
+            config.recall_similarity_threshold,
+        )
+    }
+}
+
+fn hybrid_recall_enabled() -> bool {
+    experiment_flag_enabled("YAAML_EXPERIMENT_HYBRID_RECALL")
+}
+
+fn wide_recall_enabled() -> bool {
+    experiment_flag_enabled("YAAML_EXPERIMENT_WIDE_RECALL")
+}
+
+fn experiment_flag_enabled(name: &str) -> bool {
+    env::var(name)
+        .map(|value| matches!(value.as_str(), "1" | "true" | "TRUE" | "yes" | "on"))
+        .unwrap_or(false)
+}
+
+fn experimental_recall_query_embeddings(
+    db: &Database,
+    embedding_client: &OpenAiEmbeddingClient<ReqwestTransport>,
+    query_text: &str,
+    session_id: Option<&str>,
+    turn_ordinal: Option<u64>,
+) -> anyhow::Result<Vec<Vec<f32>>> {
+    if !hybrid_recall_enabled() && !wide_recall_enabled() {
+        return Ok(Vec::new());
+    }
+    let Some((session_id, turn_ordinal)) = session_id.zip(turn_ordinal) else {
+        return Ok(Vec::new());
+    };
+    let Some(segment) = db
+        .conversation_segment_for_turn(session_id, turn_ordinal)
+        .context("failed to load conversation segment for hybrid recall")?
+    else {
+        return Ok(Vec::new());
+    };
+    let mut texts = Vec::new();
+    if hybrid_recall_enabled() {
+        texts.extend(hybrid_segment_embedding_text(query_text, &segment));
+    }
+    if wide_recall_enabled() {
+        texts.extend(wide_recall_query_texts(query_text, &segment));
+    }
+    let mut embeddings = Vec::new();
+    for text in texts {
+        embeddings.push(
+            embedding_client
+                .embed(&text)
+                .context("failed to embed experimental recall query")?,
+        );
+    }
+    Ok(embeddings)
+}
+
+fn hybrid_segment_embedding_text(
+    query_text: &str,
+    segment: &ConversationSegmentRecord,
+) -> Option<String> {
+    let mut parts = Vec::new();
+    let summary = segment.summary.trim();
+    if !summary.is_empty() {
+        parts.push(format!("Active segment summary:\n{summary}"));
+    }
+    if !segment.task_keys.is_empty() {
+        parts.push(format!(
+            "Active segment task keys:\n{}",
+            segment.task_keys.join("\n")
+        ));
+    }
+    if parts.is_empty() {
+        return None;
+    }
+    parts.push(format!(
+        "Current recall query excerpt:\n{}",
+        truncate_eval_text(query_text, 2_000)
+    ));
+    Some(parts.join("\n\n"))
+}
+
+fn wide_recall_query_texts(query_text: &str, segment: &ConversationSegmentRecord) -> Vec<String> {
+    let mut texts = Vec::new();
+    let summary = segment.summary.trim();
+    if !summary.is_empty() {
+        texts.push(format!("Active segment summary:\n{summary}"));
+    }
+    let identity_keys = wide_recall_identity_keys(query_text, segment);
+    if !identity_keys.is_empty() {
+        texts.push(format!(
+            "Active identity keys:\n{}",
+            identity_keys.join("\n")
+        ));
+    }
+    texts
+}
+
+fn wide_recall_identity_keys(query_text: &str, segment: &ConversationSegmentRecord) -> Vec<String> {
+    merge_task_keys(&segment_task_keys(query_text), &segment.task_keys)
+        .into_iter()
+        .filter(|key| is_hybrid_identity_key(key))
+        .collect()
+}
+
+fn merge_recall_hits(hits: &mut Vec<VectorHit>, extra_hits: Vec<VectorHit>) {
+    for hit in extra_hits {
+        upsert_recall_hit(hits, hit);
+    }
+}
+
+fn upsert_recall_hit(hits: &mut Vec<VectorHit>, hit: VectorHit) {
+    if let Some(existing) = hits
+        .iter_mut()
+        .find(|existing| existing.memory_id == hit.memory_id)
+    {
+        existing.similarity = existing.similarity.max(hit.similarity);
+    } else {
+        hits.push(hit);
+    }
+    hits.sort_by(|left, right| {
+        right
+            .similarity
+            .partial_cmp(&left.similarity)
+            .unwrap_or(std::cmp::Ordering::Equal)
+            .then_with(|| left.memory_id.cmp(&right.memory_id))
+    });
+}
+
+fn hybrid_identity_similarity(similarity_threshold: f32) -> f32 {
+    similarity_threshold.max(0.62)
+}
+
+fn hybrid_identity_key_match(query_task_keys: &[String], memory_task_keys: &[String]) -> bool {
+    query_task_keys.iter().any(|query_key| {
+        is_hybrid_identity_key(query_key)
+            && memory_task_keys.iter().any(|memory_key| {
+                is_hybrid_identity_key(memory_key) && memory_key.eq_ignore_ascii_case(query_key)
+            })
+    })
+}
+
+fn hybrid_memory_identity_keys(memory: &MemoryRecord) -> Vec<String> {
+    merge_task_keys(
+        &memory.task_keys,
+        &extract_task_keys(&format!("{}\n{}", memory.title, memory.body)),
+    )
+    .into_iter()
+    .filter(|key| is_hybrid_identity_key(key))
+    .collect()
+}
+
+fn is_hybrid_identity_key(key: &str) -> bool {
+    matches!(
+        key.to_ascii_lowercase()
+            .split_once(':')
+            .map(|(prefix, _)| prefix),
+        Some(
+            "branch"
+                | "flag"
+                | "generator"
+                | "metric"
+                | "path"
+                | "pr"
+                | "sentry"
+                | "signal"
+                | "target"
+                | "task"
+                | "ticket"
+                | "trigger"
+        )
+    )
 }
 
 fn recall_query_metadata(
@@ -5457,6 +5754,121 @@ mod tests {
         assert!(!cached_memory_requires_recall_refresh(&active));
         assert!(cached_memory_requires_recall_refresh(&inactive));
         assert!(cached_memory_requires_recall_refresh(&superseded));
+    }
+
+    #[test]
+    fn hybrid_identity_key_match_requires_exact_identity_overlap() {
+        assert!(hybrid_identity_key_match(
+            &["pr:481245".to_string(), "topic:recall".to_string()],
+            &["PR:481245".to_string()]
+        ));
+        assert!(hybrid_identity_key_match(
+            &["path:crates/yaaml/src/main.rs".to_string()],
+            &["path:crates/yaaml/src/main.rs".to_string()]
+        ));
+        assert!(!hybrid_identity_key_match(
+            &["topic:recall".to_string(), "tool:yaaml".to_string()],
+            &["topic:recall".to_string(), "tool:yaaml".to_string()]
+        ));
+        assert!(!hybrid_identity_key_match(
+            &["pr:481245".to_string()],
+            &["pr:481246".to_string()]
+        ));
+    }
+
+    #[test]
+    fn hybrid_segment_embedding_text_uses_summary_and_task_keys() {
+        let segment = ConversationSegmentRecord {
+            id: Some(1),
+            session_id: "session-1".to_string(),
+            start_turn_ordinal: 1,
+            end_turn_ordinal: 2,
+            summary: "Tune recall candidate generation.".to_string(),
+            task_keys: vec!["pr:481245".to_string(), "path:crates/yaaml".to_string()],
+            context: None,
+            status: yaaml_core::ConversationSegmentStatus::Active,
+            created_at: "unix:1".to_string(),
+            updated_at: "unix:1".to_string(),
+        };
+
+        let text = hybrid_segment_embedding_text("current recall query", &segment).unwrap();
+
+        assert!(text.contains("Tune recall candidate generation."));
+        assert!(text.contains("pr:481245"));
+        assert!(text.contains("current recall query"));
+    }
+
+    #[test]
+    fn wide_recall_query_texts_split_summary_and_identity_keys() {
+        let segment = ConversationSegmentRecord {
+            id: Some(1),
+            session_id: "session-1".to_string(),
+            start_turn_ordinal: 1,
+            end_turn_ordinal: 2,
+            summary: "Tune recall candidate generation.".to_string(),
+            task_keys: vec![
+                "topic:recall".to_string(),
+                "pr:481245".to_string(),
+                "path:crates/yaaml/src/main.rs".to_string(),
+            ],
+            context: None,
+            status: yaaml_core::ConversationSegmentStatus::Active,
+            created_at: "unix:1".to_string(),
+            updated_at: "unix:1".to_string(),
+        };
+
+        let texts = wide_recall_query_texts("continue branch recall-wide", &segment);
+
+        assert_eq!(texts.len(), 2);
+        assert!(texts[0].contains("Tune recall candidate generation."));
+        assert!(texts[1].contains("branch:recall-wide"));
+        assert!(texts[1].contains("pr:481245"));
+        assert!(texts[1].contains("path:crates/yaaml/src/main.rs"));
+        assert!(!texts[1].contains("topic:recall"));
+    }
+
+    #[test]
+    fn hybrid_memory_identity_keys_extracts_title_body_keys() {
+        let memory = cache_test_memory(MemoryKind::TaskCheckpoint, None, None);
+        let memory = MemoryRecord {
+            title: "PR 481245 follow-up".to_string(),
+            body: "Continue on branch recall-hybrid in crates/yaaml/src/main.rs".to_string(),
+            task_keys: vec!["topic:recall".to_string()],
+            ..memory
+        };
+
+        let keys = hybrid_memory_identity_keys(&memory);
+
+        assert!(keys.contains(&"pr:481245".to_string()));
+        assert!(keys.contains(&"branch:recall-hybrid".to_string()));
+        assert!(!keys.contains(&"topic:recall".to_string()));
+    }
+
+    #[test]
+    fn upsert_recall_hit_keeps_highest_similarity() {
+        let mut hits = vec![VectorHit {
+            memory_id: 2,
+            similarity: 0.4,
+        }];
+
+        upsert_recall_hit(
+            &mut hits,
+            VectorHit {
+                memory_id: 1,
+                similarity: 0.9,
+            },
+        );
+        upsert_recall_hit(
+            &mut hits,
+            VectorHit {
+                memory_id: 2,
+                similarity: 0.7,
+            },
+        );
+
+        assert_eq!(hits[0].memory_id, 1);
+        assert_eq!(hits[1].memory_id, 2);
+        assert_eq!(hits[1].similarity, 0.7);
     }
 
     #[test]

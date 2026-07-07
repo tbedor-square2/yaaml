@@ -1,0 +1,414 @@
+{
+  "anchors_file": "experiments/recall/anchor-libraries/2026-07-screening.tsv",
+  "date": "2026-07-07",
+  "decision": "Gated restoration is promising: adjusted useful-capture CI excludes zero without a confirmed low-selection increase. Next step is a runtime implementation behind an env flag (async daemon-side adjudicator call for source-overlap-dropped candidates) with forward production evals as the independent confirmation, given the shared-instrument caveat.",
+  "deltas": {
+    "allow_source_overlap_adjusted": {
+      "average_known_score": {
+        "ci_95": [
+          -0.6669580419580421,
+          -0.27986111111111134
+        ],
+        "point_delta": -0.4644403215831785,
+        "verdict": "confirmed"
+      },
+      "average_selected_per_anchor": {
+        "ci_95": [
+          0.19000000000000006,
+          0.32000000000000006
+        ],
+        "point_delta": 0.255,
+        "verdict": "confirmed"
+      },
+      "clean_abstention_runs": {
+        "ci_95": [
+          -8.0,
+          -1.0
+        ],
+        "point_delta": -4.0,
+        "verdict": "confirmed"
+      },
+      "empty_recall_runs": {
+        "ci_95": [
+          -61.0,
+          -36.0
+        ],
+        "point_delta": -48.0,
+        "verdict": "confirmed"
+      },
+      "low_known_selected": {
+        "ci_95": [
+          24.0,
+          47.0
+        ],
+        "point_delta": 35.0,
+        "verdict": "confirmed"
+      },
+      "low_selection_runs": {
+        "ci_95": [
+          23.0,
+          45.0
+        ],
+        "point_delta": 34.0,
+        "verdict": "confirmed"
+      },
+      "missed_useful_empty_runs": {
+        "ci_95": [
+          -56.0,
+          -32.0
+        ],
+        "point_delta": -44.0,
+        "verdict": "confirmed"
+      },
+      "useful_capture_runs": {
+        "ci_95": [
+          7.0,
+          22.0
+        ],
+        "point_delta": 14.0,
+        "verdict": "confirmed"
+      },
+      "useful_known_selected": {
+        "ci_95": [
+          9.0,
+          24.0
+        ],
+        "point_delta": 16.0,
+        "verdict": "confirmed"
+      }
+    },
+    "allow_source_overlap_raw": {
+      "average_known_score": {
+        "ci_95": [
+          0.0938487881981036,
+          0.4042416966786715
+        ],
+        "point_delta": 0.2396413110698825,
+        "verdict": "confirmed"
+      },
+      "average_selected_per_anchor": {
+        "ci_95": [
+          0.19000000000000006,
+          0.32000000000000006
+        ],
+        "point_delta": 0.255,
+        "verdict": "confirmed"
+      },
+      "clean_abstention_runs": {
+        "ci_95": [
+          -3.0,
+          0.0
+        ],
+        "point_delta": -1.0,
+        "verdict": "no detectable effect"
+      },
+      "empty_recall_runs": {
+        "ci_95": [
+          -61.0,
+          -36.0
+        ],
+        "point_delta": -48.0,
+        "verdict": "confirmed"
+      },
+      "low_known_selected": {
+        "ci_95": [
+          3.0,
+          14.0
+        ],
+        "point_delta": 8.0,
+        "verdict": "confirmed"
+      },
+      "low_selection_runs": {
+        "ci_95": [
+          3.0,
+          14.0
+        ],
+        "point_delta": 8.0,
+        "verdict": "confirmed"
+      },
+      "missed_useful_empty_runs": {
+        "ci_95": [
+          -60.0,
+          -35.0
+        ],
+        "point_delta": -47.0,
+        "verdict": "confirmed"
+      },
+      "useful_capture_runs": {
+        "ci_95": [
+          29.0,
+          52.0
+        ],
+        "point_delta": 40.0,
+        "verdict": "confirmed"
+      },
+      "useful_known_selected": {
+        "ci_95": [
+          31.0,
+          56.0
+        ],
+        "point_delta": 43.0,
+        "verdict": "confirmed"
+      }
+    },
+    "gated_overlap_adjusted": {
+      "average_known_score": {
+        "ci_95": [
+          0.03643678160919572,
+          0.1695920303605316
+        ],
+        "point_delta": 0.09627245910431759,
+        "verdict": "confirmed"
+      },
+      "average_selected_per_anchor": {
+        "ci_95": [
+          0.04499999999999993,
+          0.12
+        ],
+        "point_delta": 0.07999999999999996,
+        "verdict": "confirmed"
+      },
+      "clean_abstention_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "empty_recall_runs": {
+        "ci_95": [
+          -22.0,
+          -7.0
+        ],
+        "point_delta": -14.0,
+        "verdict": "confirmed"
+      },
+      "low_known_selected": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "low_selection_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "missed_useful_empty_runs": {
+        "ci_95": [
+          -22.0,
+          -7.0
+        ],
+        "point_delta": -14.0,
+        "verdict": "confirmed"
+      },
+      "useful_capture_runs": {
+        "ci_95": [
+          7.0,
+          22.0
+        ],
+        "point_delta": 14.0,
+        "verdict": "confirmed"
+      },
+      "useful_known_selected": {
+        "ci_95": [
+          9.0,
+          24.0
+        ],
+        "point_delta": 16.0,
+        "verdict": "confirmed"
+      }
+    },
+    "gated_overlap_raw": {
+      "average_known_score": {
+        "ci_95": [
+          0.07680851063829763,
+          0.24593837535014007
+        ],
+        "point_delta": 0.1537945829981231,
+        "verdict": "confirmed"
+      },
+      "average_selected_per_anchor": {
+        "ci_95": [
+          0.04499999999999993,
+          0.12
+        ],
+        "point_delta": 0.07999999999999996,
+        "verdict": "confirmed"
+      },
+      "clean_abstention_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "empty_recall_runs": {
+        "ci_95": [
+          -22.0,
+          -7.0
+        ],
+        "point_delta": -14.0,
+        "verdict": "confirmed"
+      },
+      "low_known_selected": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "low_selection_runs": {
+        "ci_95": [
+          0.0,
+          0.0
+        ],
+        "point_delta": 0.0,
+        "verdict": "no detectable effect"
+      },
+      "missed_useful_empty_runs": {
+        "ci_95": [
+          -22.0,
+          -7.0
+        ],
+        "point_delta": -14.0,
+        "verdict": "confirmed"
+      },
+      "useful_capture_runs": {
+        "ci_95": [
+          7.0,
+          22.0
+        ],
+        "point_delta": 14.0,
+        "verdict": "confirmed"
+      },
+      "useful_known_selected": {
+        "ci_95": [
+          9.0,
+          24.0
+        ],
+        "point_delta": 16.0,
+        "verdict": "confirmed"
+      }
+    }
+  },
+  "gate_restored_selections": 16,
+  "gate_threshold": 4,
+  "input_dir": "target/anchor-refresh-2026-07",
+  "kind": "source_overlap_gate_simulation",
+  "oracle_dir": "experiments/recall/oracle-labels/2026-07/dense-oracles",
+  "redundancy_cases": "experiments/recall/2026-07-07-source-overlap-redundancy-check/cases.jsonl",
+  "selection_limit": 2,
+  "summaries": [
+    {
+      "anchors": 200,
+      "average_known_score": 3.6515151515151514,
+      "average_selected_per_anchor": 0.53,
+      "clean_abstention_runs": 8.0,
+      "empty_recall_runs": 101.0,
+      "known_selected_memories": 106,
+      "low_known_selected": 35.0,
+      "low_selection_runs": 33.0,
+      "missed_useful_empty_runs": 93.0,
+      "oracle_useful_runs": 189,
+      "selected_memories": 106,
+      "strategy": "replay_default_raw",
+      "unknown_selected_memories": 0,
+      "useful_capture_runs": 65.0,
+      "useful_known_selected": 70.0
+    },
+    {
+      "anchors": 200,
+      "average_known_score": 3.891156462585034,
+      "average_selected_per_anchor": 0.785,
+      "clean_abstention_runs": 7.0,
+      "empty_recall_runs": 53.0,
+      "known_selected_memories": 157,
+      "low_known_selected": 43.0,
+      "low_selection_runs": 41.0,
+      "missed_useful_empty_runs": 46.0,
+      "oracle_useful_runs": 189,
+      "selected_memories": 157,
+      "strategy": "allow_source_overlap_raw",
+      "unknown_selected_memories": 0,
+      "useful_capture_runs": 105.0,
+      "useful_known_selected": 113.0
+    },
+    {
+      "anchors": 200,
+      "average_known_score": 3.8053097345132745,
+      "average_selected_per_anchor": 0.61,
+      "clean_abstention_runs": 8.0,
+      "empty_recall_runs": 87.0,
+      "known_selected_memories": 122,
+      "low_known_selected": 35.0,
+      "low_selection_runs": 33.0,
+      "missed_useful_empty_runs": 79.0,
+      "oracle_useful_runs": 189,
+      "selected_memories": 122,
+      "strategy": "gated_overlap_raw",
+      "unknown_selected_memories": 0,
+      "useful_capture_runs": 79.0,
+      "useful_known_selected": 86.0
+    },
+    {
+      "anchors": 200,
+      "average_known_score": 3.6515151515151514,
+      "average_selected_per_anchor": 0.53,
+      "clean_abstention_runs": 11.0,
+      "empty_recall_runs": 101.0,
+      "known_selected_memories": 106,
+      "low_known_selected": 35.0,
+      "low_selection_runs": 33.0,
+      "missed_useful_empty_runs": 90.0,
+      "oracle_useful_runs": 186,
+      "selected_memories": 106,
+      "strategy": "replay_default_adjusted",
+      "unknown_selected_memories": 0,
+      "useful_capture_runs": 65.0,
+      "useful_known_selected": 70.0
+    },
+    {
+      "anchors": 200,
+      "average_known_score": 3.187074829931973,
+      "average_selected_per_anchor": 0.785,
+      "clean_abstention_runs": 7.0,
+      "empty_recall_runs": 53.0,
+      "known_selected_memories": 157,
+      "low_known_selected": 70.0,
+      "low_selection_runs": 67.0,
+      "missed_useful_empty_runs": 46.0,
+      "oracle_useful_runs": 186,
+      "selected_memories": 157,
+      "strategy": "allow_source_overlap_adjusted",
+      "unknown_selected_memories": 0,
+      "useful_capture_runs": 79.0,
+      "useful_known_selected": 86.0
+    },
+    {
+      "anchors": 200,
+      "average_known_score": 3.747787610619469,
+      "average_selected_per_anchor": 0.61,
+      "clean_abstention_runs": 11.0,
+      "empty_recall_runs": 87.0,
+      "known_selected_memories": 122,
+      "low_known_selected": 35.0,
+      "low_selection_runs": 33.0,
+      "missed_useful_empty_runs": 76.0,
+      "oracle_useful_runs": 186,
+      "selected_memories": 122,
+      "strategy": "gated_overlap_adjusted",
+      "unknown_selected_memories": 0,
+      "useful_capture_runs": 79.0,
+      "useful_known_selected": 86.0
+    }
+  ]
+}

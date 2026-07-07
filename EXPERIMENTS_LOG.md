@@ -139,19 +139,19 @@ boundary — materially different ideas that fit the intake rules are welcome
 additions, and the 5x5 loop's "propose 5 materially different approaches"
 step is expected to generate candidates not listed here.
 
-1. **Incremental-value source-overlap gate** (added 2026-07-07). The
-   selection-tuning replay showed the entire selection-side useful gap is
-   the `drop:source_turn_already_in_query` suppression, and the redundancy
-   check showed ~44% of the memories it drops are genuinely incremental
-   (not visible in the query) while ~56% are redundant. Hypothesis:
-   replacing the blanket provenance-based drop with a content-overlap
-   condition (drop only when the memory body is substantially visible in
-   the query text, e.g. token-containment above a threshold) recovers the
-   incremental half without injecting the redundant half. Replayable from
-   saved candidates: the drop reason and both texts are available offline.
-   Target metric: confirmed useful-capture gain vs `replay_default` with
-   the redundancy-aware re-score applied to differing selections (raw dense
-   labels are redundancy-blind for exactly this class).
+1. **Runtime adjudicator gate for source-overlap candidates** (added
+   2026-07-07). Implement the offline-validated gate in the daemon recall
+   path behind an env flag: when the recall filter would drop a candidate
+   solely for `drop:source_turn_already_in_query`, score it with the
+   redundancy-aware adjudicator prompt (async, ~1-3 calls per recall) and
+   restore it when the score is >= 4. Offline simulation was confirmed on
+   screening (+14 useful capture runs, CI +7 to +22) and holdout (+9, CI +4
+   to +15) with zero added low selections under both the raw dense and
+   redundancy-adjusted oracles — see the 2026-07-07 "Adjudicator-Gated
+   Source-Overlap Restoration" decision record. Ship path: env-flag rollout,
+   then forward production evals as the independent confirmation (the
+   offline gate and adjustment share an instrument). Track added latency and
+   provider cost per recall alongside the recall metrics.
 2. **Lineage-aware retrieval for superseded useful memories** (added
    2026-07-07). Diagnostic first: 98 of 104 raw pool-oracle retrieval misses
    were oracle-useful memories that are now inactive. Question: do their
@@ -187,6 +187,58 @@ step is expected to generate candidates not listed here.
    only queued recall-eval task selects memories 3277 and 3309, neither of
    which has activation-condition metadata, so it will not advance this
    forward experiment.
+
+## 2026-07-07: Adjudicator-Gated Source-Overlap Restoration
+
+Sources:
+
+1. `scripts/source-overlap-gate-experiment.py`
+2. `experiments/recall/2026-07-07-source-overlap-gate/REPORT.md`
+3. `experiments/recall/2026-07-07-source-overlap-gate-holdout/REPORT.md`
+4. `experiments/recall/2026-07-07-source-overlap-redundancy-check/cases.jsonl`
+
+Experiment:
+
+1. Calibration first: token containment of memory body in query text does
+   not separate incremental from redundant restored selections (means 0.444
+   vs 0.481 on the 82 labeled cases; at containment 0.7 the gate keeps
+   30/31 incremental but still admits 45/51 redundant). The lexical-gate
+   hypothesis was rejected without a full run.
+2. Simulated the instrument that does discriminate: restore a
+   source-overlap-dropped candidate only when its cached redundancy-aware
+   adjudicator score is >= 4; unscored candidates stay dropped. Replayed
+   selection on screening and holdout, reporting deltas under both the raw
+   dense oracle and the redundancy-adjusted oracle.
+
+Metrics:
+
+1. Screening: +14 useful capture runs (95% CI +7 to +22, confirmed under
+   both oracles), 0 added low selections (exactly zero under both oracles),
+   missed-useful empties -14 (CI -22 to -7), +0.08 average memories.
+2. Holdout: +9 useful capture runs (CI +4 to +15), 0 added low selections,
+   missed-useful empties -9 (CI -15 to -4).
+3. Contrast under the adjusted oracle: blanket restoration drops to average
+   score 3.19 with 70 low selections, while the gated arm holds 3.75 with
+   35 — the gate harvests the incremental half and excludes the redundant
+   half.
+
+Lessons:
+
+1. Lexical containment is not a viable redundancy signal; redundancy here
+   is semantic (the query context already covers the memory's insight).
+2. The raw dense oracle and the redundancy-adjusted oracle agree on the
+   gated arm's deltas, which mitigates (but does not eliminate) the
+   shared-instrument concern — the gate uses the redundancy-aware prompt
+   while the raw dense oracle uses the plain calibrated adjudicator.
+3. The gate is cheap at runtime because recall is async: only candidates
+   dropped solely for source overlap need scoring, ~1-3 per recall.
+
+Decision:
+
+1. Reject the lexical-containment gate without a full experiment.
+2. Promote the adjudicator gate to a runtime implementation item behind an
+   env flag, with forward production evals as the independent confirmation
+   before default-on.
 
 ## 2026-07-07: Selection Tuning on Dense Labels
 

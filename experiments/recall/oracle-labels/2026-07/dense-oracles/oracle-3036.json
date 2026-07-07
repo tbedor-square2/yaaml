@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses rule correlation analysis and measurement approaches, but the current turn is specifically about optional rule failures for TD_11 with concrete metric data, making this architectural context largely irrelevant.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1580,
+      "memory_title": "Rule correlation analysis work in Risk systems"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a rule dependency graph collection strategy, which is completely unrelated to the current query about optional rule failures for TD_11.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1596,
+      "memory_title": "Rule dependency graph collection strategy for Riskarbiter"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about transitive Riskarbiter dependencies is stale context unrelated to the current query about optional rule failures for TD_11, which has already been resolved with specific metric data.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1598,
+      "memory_title": "Known limitation: incomplete transitive Riskarbiter dependencies"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses LaunchDarkly flag audit findings and stale rollout flags, which is unrelated to the current query about optional rule failures on TD_11 metric data.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1881,
+      "memory_title": "RiskArbiter LaunchDarkly audit findings: mux rollout flag stuck in partial state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Riskarbiter hyperdynamic rule validation bug unrelated to optional-rule failures, which is the current query topic.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1976,
+      "memory_title": "Riskarbiter CNP flow: entry-method-specific HD rule validation bug and fix"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes TD_11 flag rollout and parity metrics, but the current query specifically asks about optional-rule failures which have already been directly answered (zero failures confirmed via dashboard metrics and logs).",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2631,
+      "memory_title": "TD_11 payroll parity flag and current rollout status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses RiskArbiter dependency probing and feature-name wildcards, which is unrelated to the current query about optional rule failures on TD_11.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2667,
+      "memory_title": "RiskArbiter dependency probing: concrete feature names vs. broad wildcards, model-mediated folding"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses TD_11 mux cutover staging evidence and production risk assessment, but the current turn is specifically querying optional-rule failures on TD_11, which is a different metric/concern not addressed in the stored memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2791,
+      "memory_title": "Strong staging evidence for TD_11 Mux cutover; missing-signal fallback not observed; recommend percentage rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides directly relevant context about TD_11 optional-rule behavior and confirms baseline health, but the current query is asking about optional-rule failures in a different time window (post-flip around 23:09 UTC), requiring minor filtering to apply the historical baseline pattern.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2853,
+      "memory_title": "TD_11 risk assessment monitoring: isolated flagging blip is normal and ages out cleanly"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to TD_11 optional-rule failures query, but stored memory focuses on mux timeouts/missing signals rather than optional-rule failures specifically, requiring minor filtering to extract the relevant conclusion that optional-rule failures were clean.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2894,
+      "memory_title": "TD_11 Mux timeout/missing-signal failures during rollout monitoring"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about rule archival eligibility is unrelated to the current query about optional rule failures on TD_11.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3006,
+      "memory_title": "Rule archival eligibility: two-factor exemption via chaining + feature flag"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about rule archival date surfacing is completely unrelated to the current query about optional rule failures on TD_11.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3011,
+      "memory_title": "Risk Arbiter rule archival date surfacing: use min pending date per model_name in RuleSummary"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses pyriskarbiter library refactoring and PR #543 consolidation, which is completely unrelated to the current query about optional rule failures on TD_11 in production.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Risk Arbiter rule cleanup design decisions and implementation strategy, which is completely unrelated to the current query about optional rule failures for TD_11.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Risk Arbiter partition metadata and no-traffic rule cleanup workflows, but the current turn is specifically querying optional-rule failures for TD_11, which requires real-time metric data and is unrelated to the partition metadata enrichment or cleanup processes documented in the memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3151,
+      "memory_title": "Risk Arbiter no-traffic cleanup: partition metadata enrichment, evidence taxonomy, and execution status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes redundant-rules architecture and data pipelines, but the current turn is asking about optional rule failures for TD_11 in production metrics, which requires real-time monitoring data unrelated to rule deduplication systems.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3174,
+      "memory_title": "redundant-rules: Full architecture, data pipeline, and UI export"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about rule archival eligibility and feature flags is unrelated to the current query about optional rule failures on TD_11.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3191,
+      "memory_title": "MLP-4608: Rule archival eligibility via chaining metadata + feature flag exempt list"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns missing Slack channel configurations for trigger archival, which is completely unrelated to the current query about optional rule failures for TD_11.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3396,
+      "memory_title": "Production rule archival missing Slack channel audit result"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ed6df-0d7b-7210-b6eb-9da62527d7f1",
+    "source_run_id": 3036,
+    "turn_ordinal": 18
+  }
+}

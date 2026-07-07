@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes RiskArbiter's flag injection pattern, but the current turn is focused on CI failures (stale target references and SignalGenerator compile errors), making this architectural context largely irrelevant to the immediate problem.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1903,
+      "memory_title": "RiskArbiter flag injection: @Named + FeatureFlag<T> pattern"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses historical CI impact of a past PR decomposition, but the current turn is actively debugging live CI failures in PR 484042 with specific compile errors that need immediate fixing.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2030,
+      "memory_title": "PR #481245 (riskarbiter:lib decomposition) shows zero CI impact on recent significant code PRs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a strategy for avoiding slow local Bazel builds by using CI polling instead, but the current turn is already actively polling CI and analyzing actual failures\u2014the memory's guidance about *when* to switch to CI polling is no longer actionable since that decision has already been made and executed.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2536,
+      "memory_title": "Verify rebases and push via CI rather than local Bazel when test compile is slow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about PR #477833, but the current turn is polling CI for PR #484042\u2014different PRs with different failure contexts, making this memory stale and not actionable.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3065,
+      "memory_title": "PR #477833 tbedor/riskarbiter-trigger-traffic: rebased and pushed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different PR (#483601) with completed rebase and BUILD dep removals, while the current turn involves PR #484042 with active CI failures in riskarbiter and mixtape\u2014stale context with no actionable relevance.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory is about pyriskarbiter refactoring and PR #543 completion; current turn is actively debugging CI failures in Kochiku (riskarbiter and mixtape compile errors) and is completely unrelated to the stored context.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory is about a Homebrew formula PR migration, completely unrelated to the current turn's CI polling for PR 484042 with Kochiku/Intersect failures in riskarbiter and mixtape.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3157,
+      "memory_title": "homebrew-formulas PR #4844: sq-riskarbiter uvx wrapper migration\u2014mlds-core#545 blocker and publish workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about KUI PR #14118 backend/frontend sync is completely unrelated to the current turn's focus on polling CI for PR 484042 failures (riskarbiter and mixtape compile errors).",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3217,
+      "memory_title": "KUI PR #14118 backend/frontend sync verified; frontend safe to merge before backend deploy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory is about a KUI table alignment PR (#14133), completely unrelated to the current turn which concerns CI polling failures in riskarbiter and mixtape builds on PR 484042.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3226,
+      "memory_title": "KUI PR #14133 deep review and alignment patch complete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about PR #483601 with test harness refactoring, while the current turn is actively debugging CI failures in PR #484042 with unrelated compile errors in riskarbiter and mixtape\u2014different PRs, different failure domains.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3237,
+      "memory_title": "PR #483601: Reduce AbstractSuspicionThresholdTest dependency via explicit rule config harness"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory is about PR #14133 (KUI table headers), while current turn concerns PR #484042 (riskarbiter/mixtape compile failures)\u2014completely different PRs and contexts.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3241,
+      "memory_title": "KUI PR #14133 table header alignment: review addressed, CI green"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past SIGKILL environment failure on a different build, but the current turn shows actual compile failures (stale target references, missing SignalGenerator class) that are code defects, not environment issues.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3269,
+      "memory_title": "CI typecheck SIGKILL was environment failure, not code error"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a TypeScript typecheck SIGKILL issue on a different PR (13972), but the current turn involves Java/Bazel compile failures (riskarbiter and mixtape) on PR 484042, making it contextually irrelevant.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3307,
+      "memory_title": "Kochiku typecheck infrastructure: SIGKILL retry on PR 13972"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses TypeScript typecheck SIGKILL timeouts, but the current turn shows Java/Bazel compile failures (stale target references and missing SignalGenerator class), which are different failure modes and not transient infrastructure issues.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3314,
+      "memory_title": "Kochiku typecheck SIGKILL retry: infrastructure, not code"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses TypeScript typecheck infrastructure issues, but the current failures are Java compile errors (stale target references and missing SignalGenerator class), making this context mostly irrelevant.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3316,
+      "memory_title": "Kochiku typecheck retry: infrastructure SIGKILL not code diagnostic"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses TypeScript SIGKILL retries, but the current failures are Java compile errors (stale target references and missing SignalGenerator class), making this context stale and irrelevant.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3321,
+      "memory_title": "Kochiku typecheck SIGKILL retry pattern"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents related signal-generator cleanup work, including stale references and unused dependencies that directly explain the current CI failures (SignalGenerator references in Mixtape and riskarbiter), though it doesn't explicitly mention these specific failing targets.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ed6df-0d7b-7210-b6eb-9da62527d7f1",
+    "source_run_id": 3170,
+    "turn_ordinal": 160
+  }
+}

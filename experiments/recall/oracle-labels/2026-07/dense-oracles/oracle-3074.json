@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about LaunchDarkly flag state is contextually relevant to the TD_11 mux failures being investigated, as the partial rollout state could explain the mux parity checking exceptions, but requires filtering to determine if this specific flag is the root cause.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1881,
+      "memory_title": "RiskArbiter LaunchDarkly audit findings: mux rollout flag stuck in partial state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant baseline data on TD_11 payroll latency and timeout behavior, but the stored memory shows a healthy historical state while the current turn is investigating recent mux_fetch failures that may indicate a regression.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2632,
+      "memory_title": "Served TD_11 payroll evaluation: no timeout errors, p99 latency 4.3s under 10s caller timeout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides directly relevant baseline data on TD_11 Mux failures and staging evidence, but the current turn shows active investigation of new TD_11 Mux failures (5 recent errors from 01:30-01:33Z) that post-date the Turn 14 analysis, requiring fresh evaluation rather than relying on the stored recommendation.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2791,
+      "memory_title": "Strong staging evidence for TD_11 Mux cutover; missing-signal fallback not observed; recommend percentage rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant baseline context for TD_11 flagging rates and Mux failure patterns, but the stored memory predates the current poll's discovery of five recent TD_11 Mux failures (01:30-01:33Z) and requires filtering to distinguish stale vs. new failure signals.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2816,
+      "memory_title": "TD_11 payroll_run_update flagging rate post-Mux cutover: stable within expected band"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly explains the root cause of the TD_11 mux_fetch failures currently being investigated: timeout on MuxProviderService.GetFeatures with specific deadline and buffer details.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2820,
+      "memory_title": "Mux feature-fetch timeout causing DLQ backlog on TD_11 payroll_run_update"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly explains the TD_11 Mux failures currently being investigated\u2014identifying the root cause as Mux feature-fetch timeout and providing the specific flag and mitigation path needed.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2823,
+      "memory_title": "TD_11 payroll_run_update DLQ failure root cause: Mux feature-fetch timeout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant\u2014the stored memory explains the root cause of the `mux_fetch.fail` metric spike the assistant is currently investigating, identifying it as a Mux GetFeatures timeout on TD_11 controlled by a LaunchDarkly flag.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2824,
+      "memory_title": "TD_11 stale DLQ item root cause: Mux GetFeatures timeout on retry loop"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the TD_11 timeout control mechanism that the current turn is investigating, providing the exact LaunchDarkly flag name and remediation path needed to resolve the mux_fetch failures being diagnosed.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2827,
+      "memory_title": "RiskArbiter TD_11 timeout behavior: riskarbiter-mux-max-timeout-millis LaunchDarkly flag"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly actionable context: the stored memory identifies the root cause of TD_11 Mux failures (15s timeout vs. 17.7s\u201320.2s actual latency) and provides the exact flag configuration (`riskarbiter-mux-max-timeout-millis`) and recommended adjustment (25s) needed to resolve the current failures being diagnosed in the turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2839,
+      "memory_title": "TD_11 Mux timeout diagnosis and flag configuration"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly actionable context: the stored memory identifies the exact LaunchDarkly flag (riskarbiter-mux-max-timeout-millis) controlling TD_11's Mux timeout, showing current 15s fallthrough vs. available 25s variant, which directly explains the mux_fetch failures being investigated in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2844,
+      "memory_title": "LaunchDarkly timeout flag riskarbiter-mux-max-timeout-millis: TD_11 currently at fallthrough 15s, available 25s variant"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the TD_11 Mux cutover monitoring workflow, baseline metrics, safety checks, and window strategy that the current turn is actively executing and interpreting.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2845,
+      "memory_title": "TD_11 Mux cutover monitoring workflow: flagging rate, safety checks, and window strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current TD_11 poll investigation\u2014the stored memory provides critical context about Mux timeout configuration and latency ranges that directly explains the TD_11 Mux failures being diagnosed.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2846,
+      "memory_title": "TD_11 Mux timeout flag and Mixtape latency context"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides directly relevant baseline context for TD_11 flagging rates and safety metrics, but the current turn shows new Mux failures (5 in last 10m) and TD_11-specific errors that differ from the previously observed clean state, requiring careful filtering to determine if this represents a material change.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2853,
+      "memory_title": "TD_11 risk assessment monitoring: isolated flagging blip is normal and ages out cleanly"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the TD_11 Mux failures currently being investigated, providing the exact feature flag configuration and timeout values needed to resolve the observed 17.7s-20.2s failures.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2854,
+      "memory_title": "LaunchDarkly timeout flag for TD_11 rule: riskarbiter-mux-max-timeout-millis"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the TD_11 monitoring procedure, safety checks, and metric interpretation strategy that the current turn is actively executing.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2859,
+      "memory_title": "TD_11 monitoring: repeated polling procedure and stale metric interpretation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact monitoring procedure being executed in the current turn\u2014flagging rates, Mux failures, job errors, circuit breaker state, and trace inspection\u2014making it highly actionable context for validating the TD_11 poll methodology.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2863,
+      "memory_title": "TD_11 monitoring procedure: reusable Datadog query set for flagging trend verification"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the TD_11 monitoring poll procedure being executed in the current turn, including the exact query set, baseline comparison approach, and pass/fail criteria being applied.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2864,
+      "memory_title": "TD_11 monitoring poll procedure: reusable query set and baseline comparison"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact TD_11 Mux failures, root causes (timeouts and missing payroll hardlink signals), and monitoring context that the current turn is actively investigating and drilling into.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2894,
+      "memory_title": "TD_11 Mux timeout/missing-signal failures during rollout monitoring"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ed6df-0d7b-7210-b6eb-9da62527d7f1",
+    "source_run_id": 3074,
+    "turn_ordinal": 126
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses corpus reset safety and transcript preservation, but the current turn focuses on validating a checkpoint model, inspecting memory kind distribution, and building a new `memories list` command\u2014different concerns that don't require this reset context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1826,
+      "memory_title": "YAAML memory corpus reset is safe with transcript preservation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's focus on memory kind classification and audit strategy, though the stored memory emphasizes recall gating while the current turn is implementing a listing command for legacy memory inspection.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses memory quality evaluation and lifecycle states, but the current turn focuses on implementing a `memories list` command for auditing legacy memory kinds after a code change\u2014different problem domain with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses memory provenance tracking and consolidation lineage, which is tangentially related to memory management but does not directly address the current turn's focus on validating checkpoint models, auditing legacy memory kinds, or implementing the new `memories list` command.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2652,
+      "memory_title": "Memory provenance graph for consolidation tracking"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's focus on memory kind classification, legacy cleanup, and audit tooling, but describes a prior health-deactivation approach rather than the current `memories list` command being implemented.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2875,
+      "memory_title": "YAAML memory lifecycle and stale task-state cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a specific PR (#521) about lifecycle refactoring and BigQuery parameters, which is unrelated to the current turn's focus on memory checkpoint validation, legacy memory kind classification, and implementing a new `memories list` CLI command.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3044,
+      "memory_title": "forge-signalsmith PR #521: lifecycle refactor with BigQuery parameters follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes task-key extraction validation logic, but the current turn focuses on memory kind distribution auditing, legacy memory classification, and building a new `memories list` CLI command\u2014different concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3099,
+      "memory_title": "Reject placeholder task keys at extraction time (commit 076541d)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes task lifecycle metadata fixes unrelated to the current turn's focus on memory kind distribution, checkpoint validation, and building a new `memories list` CLI command.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3135,
+      "memory_title": "Task lifecycle metadata fixes: clear stale retry fields on transitions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed refactoring of pyriskarbiter CLI and library modules, which is unrelated to the current turn's focus on memory checkpoint validation, legacy memory kind classification, and adding a new `memories list` command.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory about Risk Arbiter rule cleanup and design decisions is completely unrelated to the current turn's focus on memory checkpoint validation, legacy memory kind classification, and implementing a `yaaml memories list` command.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a regression test for session recall cache invalidation, which is tangentially related to memory management but not directly relevant to the current turn's focus on validating checkpoint models, auditing legacy memory kinds, and implementing a new `memories list` command.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3189,
+      "memory_title": "Session recall cache must invalidate on inactive memory IDs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past experiment logs and lessons about recall quality, but the current turn is focused on implementing a new `memories list` CLI command and auditing legacy memory kinds\u2014distinct technical work with no direct overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses removing hardcoded phrases and tool-key extraction from YAAML recall, but the current turn focuses on validating a checkpoint model, inspecting memory kind distribution, and implementing a new `memories list` command\u2014different technical concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different system (Kgoose/Moneybot memory service with DynamoDB) unrelated to the current turn's focus on YAAML checkpoint models, memory kind classification, and CLI command implementation.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3325,
+      "memory_title": "kgoose-memory-store: Backend service for Kgoose/Moneybot persistent user memory"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR #14151 (UI label and tooltip changes) is completely unrelated to the current turn's focus on memory checkpoint validation, legacy memory kind classification, and CLI command implementation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns Riskarbiter mux helper renaming and signal-generator cleanup, which is completely unrelated to the current turn's focus on memory checkpoint validation, legacy memory kind classification, and implementing a `yaaml memories list` command.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past technical report on memory techniques for internal buy-in, but the current turn focuses on validating checkpoint models, auditing memory kind distribution, and implementing a new `memories list` CLI command\u2014different technical work with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3376,
+      "memory_title": "Memory techniques report: technical persuasion doc for internal eng buy-in"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3140,
+    "turn_ordinal": 329
+  }
+}

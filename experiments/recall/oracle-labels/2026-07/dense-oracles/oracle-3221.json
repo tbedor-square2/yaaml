@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the overall Rust TUI project context and completed features, which provides useful background for understanding the current turn's focus on TUI search filtering, but the specific implementation details of the search patch are not directly addressed in the memory.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1774,
+      "memory_title": "Node/Rust project (tbedor) active-thread goal: CLI agent dispatch, GitHub replies, run lifecycle, and notifications"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes bot-manager's architecture and current state, which is the exact system being modified in the current turn's TUI search filter implementation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2701,
+      "memory_title": "bot-manager: Rust CLI/TUI for ticket+PR+session organization"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents ticket progress for an unrelated project (MLP cycle tracking); the current turn is about TUI search filter implementation and testing, with no overlap in context or actionability.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2942,
+      "memory_title": "MLP Cycle 2: ticket progress mapping (week of 2026-06-22)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed PR rebase and deployment workflow, while the current turn is actively working on a TUI search filter implementation with code changes and tests\u2014entirely different contexts with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3065,
+      "memory_title": "PR #477833 tbedor/riskarbiter-trigger-traffic: rebased and pushed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed PR rebase and BUILD dependency work, while the current turn is actively implementing a TUI search filter patch\u2014entirely different contexts with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes TUI search behavior and session visibility filtering, which is directly relevant to the current turn's focus on patching the search filter to match session titles and repo labels, though it lacks specifics about the exact filter implementation being modified.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3207,
+      "memory_title": "bot-manager TUI: done-session visibility, active status overlay, search navigation, and new-session creation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns KUI PR #14133 table alignment fixes, which is completely unrelated to the current turn's focus on TUI session search filtering and code commits.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3226,
+      "memory_title": "KUI PR #14133 deep review and alignment patch complete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a PR about action-table to metadata-table migration in a KUI component, which is completely unrelated to the current turn's focus on TUI session search filtering and commit workflow.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3235,
+      "memory_title": "PR #13972 updated from action-table experiment to metadata-table production implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes D-key toggle and session refresh behaviors, which is tangential to the current turn's focus on patching the TUI search filter to match session title and repo label.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3236,
+      "memory_title": "D toggle and session refresh behaviors in bot-manager TUI"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a metadata table UI feature and PR #13972, but the current turn focuses on TUI search filtering logic and session visibility\u2014different features with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3239,
+      "memory_title": "Recently-visited metadata table won team feedback; update PR #13972 with new implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a UI table header alignment PR (#14133) and is completely unrelated to the current turn's focus on TUI session search filtering and code implementation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3241,
+      "memory_title": "KUI PR #14133 table header alignment: review addressed, CI green"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents TUI hotkey bindings and aliases, but the current turn focuses on patching the search filter logic to match session titles and repo labels\u2014a different subsystem with no overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3288,
+      "memory_title": "TUI hotkey audit: p/P split, removed o alias, documented all normal-mode bindings"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes session sorting behavior for done sessions, which is unrelated to the current turn's focus on TUI search filtering and matching session titles/repo labels.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3290,
+      "memory_title": "Recent done sessions sort by activity, old done sessions sink"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a tmux window management fix unrelated to the current turn's focus on TUI search filtering and session visibility logic.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3301,
+      "memory_title": "bot-manager tmux launcher fixed for re-entry into existing managed sessions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR #13972 feedback resolution is entirely unrelated to the current turn's focus on TUI search filtering, session visibility, and code commits.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3318,
+      "memory_title": "Recently visited resources PR feedback resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes UI label/tooltip updates for automated rule archival eligibility, which is completely unrelated to the current turn's focus on TUI session search filtering and code commits.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a PR about recently-visited resources and environment columns, which is unrelated to the current turn's focus on TUI search filtering, session visibility, and code formatting.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3384,
+      "memory_title": "PR #13972: recently-visited feature addresses prod/staging distinction, timestamp milliseconds, and KITT URL deduplication"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef013-6c3b-7220-86d0-6293caf814dc",
+    "source_run_id": 3221,
+    "turn_ordinal": 13
+  }
+}

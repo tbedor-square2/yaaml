@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses stats segmentation and metric breakdowns, but the current turn is focused on making segment backfill failures inspectable with detailed error reporting\u2014a different operational concern with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2478,
+      "memory_title": "Stats segmentation keeps legacy top-level metrics while adding origin/tool breakdowns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns PR #483111 for manual rule archival and change freeze handling, which is completely unrelated to the current turn's focus on segment backfill failure reporting and YAAML diagnostics.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes segment architecture and schema design, which is relevant context for understanding the segment backfill work being performed, but the current turn focuses on operational failure reporting rather than segment structure itself.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant architectural context on segment backfill design and oracle implementation, though the current turn focuses on the specific operational gap of making failure details inspectable rather than architectural patterns.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2692,
+      "memory_title": "Segment oracle architecture: tables, API, backfill design"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes schema changes and test impacts from an earlier phase, but the current turn is focused on making segment backfill failures inspectable with detailed error reporting\u2014a different operational concern that doesn't require schema context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2693,
+      "memory_title": "Segment oracle schema changes and test impacts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory is about Snowflake manifest cleanup and documentation gaps; current turn is about segment backfill failure reporting and YAAML CLI output\u2014completely different domains with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2705,
+      "memory_title": "Gap PR #11871: Snowflake Streamer manifest cleanup\u2014no runtime impact but doc gap"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses task-key extraction filtering, but the current turn focuses on implementing inspectable segment backfill failures and output structure changes, which are orthogonal concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2784,
+      "memory_title": "Segment task-key extraction: exclude code/command/tool output to prevent self-feedback"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a BigQuery parameter refactoring in a different codebase (forge-signalsmith PR #521), while the current turn focuses on YAAML segment backfill failure reporting\u2014completely unrelated domains with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3044,
+      "memory_title": "forge-signalsmith PR #521: lifecycle refactor with BigQuery parameters follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses segment identity extraction and filtering, but the current turn is focused on making segment backfill failures inspectable with detailed error reporting\u2014a different operational concern with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3098,
+      "memory_title": "Segment task-key extraction: filter tool output and prioritize identity keys"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns task lifecycle metadata cleanup in a different subsystem; the current turn focuses on segment backfill failure reporting and has no overlap with task retry field management.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3135,
+      "memory_title": "Task lifecycle metadata fixes: clear stale retry fields on transitions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns pyriskarbiter CLI refactoring and library extraction, while the current turn focuses on YAAML segment backfill failure reporting\u2014entirely different codebases and problems.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns deprecated signal inventory, Dumbo cleanup gates, and ownership classification\u2014entirely unrelated to the current turn's focus on segment backfill failure reporting and YAAML CLI output structure.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3181,
+      "memory_title": "Deprecated signal audit: inventory, mapping, backfill evidence, ownership classification, and Dumbo cleanup gates"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past experiment logs and lessons about recall quality, but the current turn is focused on implementing a concrete feature (segment backfill failure inspection) with no connection to experimental methodology or past metrics.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past segment/task-fit experiment with metrics, but the current turn is focused on implementing inspectable segment backfill failure reporting\u2014a concrete engineering task unrelated to the experimental tradeoff analysis.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Vertex infrastructure pain points and migration strategy, which is completely unrelated to the current turn's focus on YAAML segment backfill failure reporting and testing.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3276,
+      "memory_title": "Vertex pain motivating infrastructure migration: headless auth brittleness, expensive git/agent work, PR size limits, token expiry, slow Bazel, low throttle hiding capacity concerns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes backfill activity cutoff logic, but the current turn focuses on making segment backfill failures inspectable with detailed error reporting\u2014a different operational concern with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3328,
+      "memory_title": "Backfill activity cutoff only skips untracked old sessions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes session backfill cutoff logic, but the current turn focuses on making segment backfill failures inspectable with detailed error reporting\u2014a different operational concern with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3343,
+      "memory_title": "Session backfill cutoff only skips new untracked transcripts"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3039,
+    "turn_ordinal": 296
+  }
+}

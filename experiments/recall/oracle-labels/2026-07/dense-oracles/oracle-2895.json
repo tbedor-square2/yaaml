@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Python YAAML package architecture, but the current turn is focused on implementing automatic memory injection in a Rust workspace with daemon/transcript parsing\u2014a different codebase and language context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1678,
+      "memory_title": "YAAML: Yet Another Agent Memory Layer package"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the automatic memory injection design being implemented, but the stored memory describes the existing architecture rather than the specific thread/inject_items mechanism or transcript-snooping logic being added in this turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1679,
+      "memory_title": "YAAML design: file-backed recall as sidecar"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses skill invocation patterns, but the current turn is focused on implementing automatic memory injection in YAAML via worktree and transcript snooping\u2014a technical implementation task unrelated to skill discoverability rules.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1806,
+      "memory_title": "YAAML skill discoverability: explicit invocation rule, not passive conditional"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the daemon transcript parsing logic being explored, but describes past bug fixes rather than the current injection implementation task.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1811,
+      "memory_title": "Daemon ingestion bugs: incomplete turns and session identity"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a manual memory creation CLI command, but the current turn focuses on automatic memory injection via transcript snooping and daemon integration\u2014a different mechanism that doesn't require the remember skill.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1814,
+      "memory_title": "YAAML remember skill for manual memory creation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Marginally relevant\u2014addresses transcript handling and recall mechanics, but the current turn focuses on implementing automatic memory injection via thread/inject_items in a worktree, which requires architectural/code-level context rather than transcript lifecycle design.",
+      "judge_score": "3",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1818,
+      "memory_title": "Preference: incomplete transcript slices in live session context"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory discusses transcript preservation and corpus reset safety, but the current turn is focused on implementing automatic memory injection via thread/inject_items in a worktree\u2014a different technical task with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1826,
+      "memory_title": "YAAML memory corpus reset is safe with transcript preservation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the automatic memory injection implementation goal, but describes an existing PreToolUse hook rather than the thread/inject_items approach being planned in this turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2504,
+      "memory_title": "Codex PreToolUse hook for YAAML is live and working end-to-end"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a removed experiment (PreToolUse hook) with installation friction, but the current turn is about implementing automatic memory injection via thread/inject_items with transcript snooping\u2014a different mechanism that doesn't reuse the hook pattern.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2769,
+      "memory_title": "Codex PreToolUse hook removed due to installation friction and low quality scores"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses session cache invalidation for inactive memory IDs, which is tangentially related to memory injection but does not directly inform the current task of implementing automatic memory injection via thread/inject_items in a worktree.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3189,
+      "memory_title": "Session recall cache must invalidate on inactive memory IDs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory documents YAAML recall quality metrics but provides no actionable context for implementing automatic memory injection via thread/inject_items or worktree setup.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes a metrics/experiment workflow for YAAML, but current turn focuses on implementing automatic memory injection via thread/inject_items in a worktree\u2014different technical goal with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3198,
+      "memory_title": "YAAML 5x5 experiment workflow: orchestrated metrics runner and prompt"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past recall experiment metrics and lessons, but the current turn is about implementing automatic memory injection via thread/inject_items in a new worktree\u2014a forward-looking implementation task with different scope and focus.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses hardcoded phrase/topic removal in YAAML recall, but the current turn focuses on implementing automatic memory injection via thread/inject_items with transcript snooping\u2014a different architectural concern.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past corpus analysis and quality metrics, but the current turn is focused on implementing automatic memory injection via a specific technical mechanism (thread/inject_items) in a worktree, making the historical quality evidence tangential rather than actionable for this implementation task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past persuasion document about memory techniques, but the current turn is actively implementing automatic memory injection in a worktree\u2014a different technical task with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3376,
+      "memory_title": "Memory techniques report: technical persuasion doc for internal eng buy-in"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019efc9f-ff22-7d32-bdac-00301bac40a8",
+    "source_run_id": 2895,
+    "turn_ordinal": 7
+  }
+}

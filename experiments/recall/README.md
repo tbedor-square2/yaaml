@@ -211,6 +211,37 @@ Done criteria for a refresh: screening and holdout TSVs plus manifest
 committed; known-score coverage reported for both sets and ≥30% of anchors
 carrying oracle labels; zero anchor overlap between the sets.
 
+### Dense oracle labels
+
+Historical production-judge rows are sparse (a handful of useful-known
+selections per experiment arm) and weakly calibrated (2026-07 calibration:
+exact kappa 0.135), which made every 2026-07-06/07 technique experiment land
+"no detectable effect" on its shipping metrics. `scripts/densify-oracle-labels.py`
+rebuilds the oracle by scoring each anchor's saved candidate pool with the
+calibration adjudicator prompt (query + memory + rubric only — imported from
+`scripts/judge-calibration.py` so the instrument cannot drift) and writes
+per-run dense oracle files.
+
+Experiments consume the dense oracle by pointing the backtest at it:
+
+```bash
+BACKTEST_ORACLE_DIR=experiments/recall/oracle-labels/<label>/dense-oracles \
+BACKTEST_ANCHORS_FILE=experiments/recall/anchor-libraries/<label>-screening.tsv \
+scripts/backtest-recall-strategy.sh . <experiment-label>
+```
+
+Rules:
+
+- Use one oracle per experiment: never mix dense-adjudicator and historical
+  production-judge labels in the same comparison, and record which oracle a
+  report used in its manifest.
+- Dense labels cover the saved pools they were generated from. A strategy
+  that surfaces new memories needs a label top-up run against its own recall
+  artifacts before its unknowns are treated as unlabeled rather than unscored
+  (the cache is append-only, keyed by run/memory/model).
+- Dense labels are LLM adjudication, not human ground truth; their validity
+  rests on the judge-calibration study and inherits its circularity caveat.
+
 ## Metrics
 
 Primary metrics for recall experiments:
@@ -423,6 +454,9 @@ Live tooling:
   over an anchor set (fixed, eval-library, or `BACKTEST_ANCHORS_FILE`).
 - `scripts/build-anchor-library.py`: split a backtest anchor pool into
   frozen screening/holdout libraries (Phase 0 runbook above).
+- `scripts/densify-oracle-labels.py`: adjudicator-score saved candidate
+  pools into dense per-run oracle files ("Dense oracle labels" above);
+  consumed via `BACKTEST_ORACLE_DIR`.
 - `scripts/recall_experiment_stats.py`: shared paired-bootstrap CI and
   verdict classification; import it from any new experiment runner.
 - `scripts/recall-5x5-worktree-metrics.py`: agent-driven 5x5 loop over

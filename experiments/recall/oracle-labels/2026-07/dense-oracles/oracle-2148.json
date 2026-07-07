@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses reactivation conflict detection, but the current turn focuses on schema design (keeping metadata fields and unique constraints), making it tangentially related but not directly actionable for this discussion.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2320,
+      "memory_title": "Rule reactivation must check for same-name active replacements at execution time"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses future approval/objection state tracking for rule archival, but the current turn focuses on the immediate schema design decision about keeping metadata fields and `rule_config_id` for active-entry constraints, which is already resolved in the conversation.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2413,
+      "memory_title": "Future rule archival amendments: approval/objection state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed refactoring of MLP-4410 toward a single unscheduled job with dry_run flag, but the current turn discusses database schema design for rule archival metadata (model_name, ruleset_id, rule_config_id, active constraints), which is orthogonal to the job execution architecture.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2581,
+      "memory_title": "MLP-4410 refactored to single unscheduled manual job with dry_run flag; old PR closed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses predicate helpers and state contracts for candidate archival, but the current turn focuses on schema design decisions (metadata denormalization, unique constraints, rule_config_id), which are orthogonal concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2589,
+      "memory_title": "Rule archival refactoring: use predicate helpers for implicit state contracts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory covers method naming and lifecycle terms for the archival executor, but the current turn focuses on schema design (metadata denormalization, unique constraints, rule_config_id), which is orthogonal to the public API structure.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2593,
+      "memory_title": "Rule archival executor factoring: public method naming and lifecycle terms"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly captures the exact design decision and rationale being discussed in the current turn\u2014keeping metadata denormalized while adding rule_config_id as authoritative, with the specific unique constraint shape and validation logic.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2610,
+      "memory_title": "PendingRuleArchival: track exact rule_config_id for archival targeting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This stored memory directly captures the exact design decision and rationale the user is currently discussing\u2014keeping metadata denormalized while adding rule_config_id for authoritative targeting and active-row constraints.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2616,
+      "memory_title": "PendingRuleArchival: Add rule_config_id, keep metadata, use exact targeting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a local variable naming task (activePendingArchivalKeys) that is tangential to the current discussion about schema design, metadata denormalization, and unique constraints for rule archival rows.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2620,
+      "memory_title": "MLP-4410 local variable naming: activePendingArchivalKeys"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses class design for eligibility predicates, while the current turn focuses on database schema design for rule archival metadata and uniqueness constraints\u2014different architectural layers with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3001,
+      "memory_title": "Keep AutomatedRuleArchivalTriggerEligibility as its own class, not a method on calculator"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses surfacing archival dates in RuleSummary via a min-date aggregation, but the current turn focuses on schema design for the rule_archive table itself (metadata denormalization, unique constraints, and rule_config_id validation), which are orthogonal concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3011,
+      "memory_title": "Risk Arbiter rule archival date surfacing: use min pending date per model_name in RuleSummary"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses class design for eligibility logic, but the current turn focuses on database schema design (metadata denormalization, unique constraints, rule_config_id), making it contextually misaligned.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3018,
+      "memory_title": "AutomatedRuleArchivalTriggerEligibility helper class justification"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses UI presentation of archival dates, while the current turn focuses on database schema design (metadata denormalization, unique constraints, and rule_config_id validation logic), making it tangentially related but not actionable for this discussion.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3031,
+      "memory_title": "Rule archival state in KUI: min date per model_name, not repeated list"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses rule archival date surfacing and proto field design, which is related context for the current discussion about keeping metadata (`model_name`, `ruleset_id`) and `rule_config_id` for active-entry constraints, but requires filtering since it focuses on display/UX rather than the constraint schema being debated.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3123,
+      "memory_title": "Rule archival date surfacing: backend proto field + KUI table/filter display"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes rule archival eligibility logic and proto exposure, but the current turn discusses database schema design (metadata denormalization, unique constraints, rule_config_id), which are distinct concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3129,
+      "memory_title": "Rule archival eligibility: metadata-driven logic and proto exposure"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory covers related rule archival design decisions and implementation strategy, but the current turn focuses specifically on database schema constraints and metadata denormalization for active-entry uniqueness, which requires more granular schema-level context than the memory provides.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents the broader architecture and data pipeline but doesn't directly address the current discussion about keeping `model_name`/`ruleset_id` metadata alongside `rule_config_id` for active-entry constraints; however, it provides useful context on how `rule_config_id` and metadata are currently used in the system.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3174,
+      "memory_title": "redundant-rules: Full architecture, data pipeline, and UI export"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the archival metadata schema discussion, but focuses on frontend sync details rather than the core constraint/denormalization decision being debated in the current turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3221,
+      "memory_title": "Backend/frontend sync: RuleSummary archival dates (PR #484157 & #14118)"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef12b-5400-7f41-9c2c-7c82f7013391",
+    "source_run_id": 2148,
+    "turn_ordinal": 92
+  }
+}

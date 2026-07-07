@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses CI impact of a library decomposition PR, but the current turn is actively debugging a specific test failure in PR #484042 requiring immediate fix\u2014the historical analysis is stale and not actionable for the current debugging task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2030,
+      "memory_title": "PR #481245 (riskarbiter:lib decomposition) shows zero CI impact on recent significant code PRs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory instructs skipping CI verification and pushing without waiting, but the current turn explicitly requires fixing a failed test in the PR\u2014directly contradicting the stored preference.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2429,
+      "memory_title": "Commit and push without waiting for CI in rule-archival PR work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses optimization for slow local Bazel builds, but the current turn is actively debugging a specific test failure in PR #484042 where CI results are already being analyzed\u2014the advice to skip local testing is not actionable here since the failure has already been identified and requires code fixes.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2536,
+      "memory_title": "Verify rebases and push via CI rather than local Bazel when test compile is slow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past cleanup of MuxParityChecker, but the current turn is debugging a binding/config issue with EvaluateSignalGenerators in RiskArbiterApp\u2014different problem domain with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2924,
+      "memory_title": "MuxParityChecker became stale after generator migration; safe to delete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about a different PR (#477833) with a different focus (trigger-traffic rebasing), while the current turn addresses PR #484042 with a binding/config failure in RiskArbiter tests\u2014stale and wrong context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3065,
+      "memory_title": "PR #477833 tbedor/riskarbiter-trigger-traffic: rebased and pushed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different PR (#483601) with unrelated changes (rebase, BUILD deps); current turn involves PR #484042 with a binding/config issue in RiskArbiter that this memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes pyriskarbiter library refactoring and PR #543 completion, but the current turn involves debugging a failed test in a Java PR (#484042) with RiskArbiter binding issues\u2014different codebase, language, and problem domain with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a Homebrew formula migration for sq-riskarbiter, while the current turn is debugging a Java PR test failure in RiskArbiter's RuleEvaluationService binding\u2014completely different contexts and projects.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3157,
+      "memory_title": "homebrew-formulas PR #4844: sq-riskarbiter uvx wrapper migration\u2014mlds-core#545 blocker and publish workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about a KUI table alignment PR (#14133), completely unrelated to the current Java/RiskArbiter test failure in PR #484042.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3226,
+      "memory_title": "KUI PR #14133 deep review and alignment patch complete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different PR (#483601) focused on test harness refactoring, while the current turn addresses a binding/config issue in PR #484042 for RiskArbiter; minimal overlap in context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3237,
+      "memory_title": "PR #483601: Reduce AbstractSuspicionThresholdTest dependency via explicit rule config harness"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory is about KUI PR #14133 table header alignment; current turn is about fixing a failed test in squareup/java PR #484042 with RiskArbiter binding issues\u2014completely different repos and problems.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3241,
+      "memory_title": "KUI PR #14133 table header alignment: review addressed, CI green"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a typecheck SIGKILL environment failure on a different Kochiku build, but the current turn involves a binding/config failure in RiskArbiter tests, making it stale and contextually misaligned.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3269,
+      "memory_title": "CI typecheck SIGKILL was environment failure, not code error"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a TypeScript/Kochiku typecheck SIGKILL issue on PR 13972, but the current turn involves a Java PR (squareup/java) with a RiskArbiter binding configuration failure\u2014completely different project, language, and failure mode.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3307,
+      "memory_title": "Kochiku typecheck infrastructure: SIGKILL retry on PR 13972"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses Kochiku typecheck infrastructure issues, but the current turn involves a Java PR with a binding/config failure in RiskArbiter, making this context stale and irrelevant.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3314,
+      "memory_title": "Kochiku typecheck SIGKILL retry: infrastructure, not code"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses Kochiku typecheck failures with missing diagnostics, but the current turn involves a binding/config issue in RiskArbiter tests with clear failure diagnostics already identified, making this memory stale and not applicable.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3316,
+      "memory_title": "Kochiku typecheck retry: infrastructure SIGKILL not code diagnostic"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses Kochiku typecheck SIGKILL retries, but the current failure is a binding/config issue in RiskArbiter (missing handler for EvaluateSignalGenerators RPC), making this memory stale and irrelevant to the actual problem.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3321,
+      "memory_title": "Kochiku typecheck SIGKILL retry pattern"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents related RiskArbiter cleanup work including signal-generator removal and identifies the exact binding/stub issue now being debugged, but lacks specific details about the `EvaluateSignalGenerators` RPC handler that is the current failure.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ed6df-0d7b-7210-b6eb-9da62527d7f1",
+    "source_run_id": 3183,
+    "turn_ordinal": 163
+  }
+}

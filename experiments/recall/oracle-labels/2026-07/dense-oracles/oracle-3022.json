@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a different LaunchDarkly flag (mux rollout flag) and stale flags, but the current turn is asking about creating a specific new feature flag (`riskarbiter-pending-rule-archival-trigger-rollout-date`) with detailed specifications already provided by the assistant.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1881,
+      "memory_title": "RiskArbiter LaunchDarkly audit findings: mux rollout flag stuck in partial state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides useful context on the LD flag integration pattern and confirms the flag name, but the default value in memory ('2126-01-01') contradicts the current turn's finding (empty string ''), requiring filtering.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2371,
+      "memory_title": "LaunchDarkly flag integration pattern in Riskarbiter"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly confirms the critical default value (`\"\"`) for the feature flag being created, which is a key detail already established in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2380,
+      "memory_title": "riskarbiter pending rule archival flag default: empty string, not far-future date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory contains outdated information\u2014it states the default is `2126-01-01`, but the current turn confirms the actual default is an empty string `\"\"`, making this memory stale and potentially misleading.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2394,
+      "memory_title": "LaunchDarkly flag binding: riskarbiter-pending-rule-archival-trigger-rollout-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory contains outdated/incorrect default value (`2126-01-01`) that contradicts the current turn's verified finding that the default is an empty string `\"\"`; it provides the flag name but lacks critical details about string type, targeting format, and parsing behavior now established.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2400,
+      "memory_title": "Rule archival LaunchDarkly flag binding and default"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory contains the flag name and type (string flag), but the stored default value '2126-01-01' conflicts with the current turn's verified default of empty string `\"\"`, requiring filtering and correction.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2406,
+      "memory_title": "LD flag for rule archival trigger rollout dates with Jan 1, 2126 default"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory contains outdated/conflicting information (claims default is '2126-01-01' when current turn confirms it's empty string '\"\"'), making it stale and potentially misleading rather than actionable.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2412,
+      "memory_title": "LD rollout-date flag for rule archival: riskarbiter-pending-rule-archival-trigger-rollout-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory contains outdated information\u2014it states the default value is `2126-01-01`, but the current turn confirms the correct default is an empty string `\"\"`, making this memory stale and potentially misleading.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2430,
+      "memory_title": "LaunchDarkly feature flag for rule archival trigger rollout dates"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory contains the flag key and type, but contradicts the current turn's verified findings (default value is `\"\"` not `2126-01-01`), making it stale and potentially misleading.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2456,
+      "memory_title": "LD flag for archival rollout dates"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly answers the current query by providing the exact feature flag name, type, default value, and operational details needed to create the LaunchDarkly flag.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2484,
+      "memory_title": "Pending rule archival rollout flag: empty string for unset, not far-future date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes dry-run behavior of an existing command, but the current turn is asking for the feature flag specification itself (name, type, default value, targeting format), which has already been answered with concrete details in the turn.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2772,
+      "memory_title": "pending-archivals dry-run behavior: refreshes LD targeting, returns counts without side effects"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly answers the current query with the exact feature flag name, type, default value, targeting mechanism, and variation format needed to create it in LaunchDarkly.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2783,
+      "memory_title": "LaunchDarkly flag for rule archival rollout: riskarbiter-pending-rule-archival-trigger-rollout-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different feature flag (`riskarbiter-features-to-typecast`) unrelated to the current query about creating the `riskarbiter-pending-rule-archival-trigger-rollout-date` flag.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2944,
+      "memory_title": "riskarbiter-features-to-typecast flag is live in production"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a different feature flag design (string set for exempt trigger tokens) that is tangential to the current turn's focus on the specific `riskarbiter-pending-rule-archival-trigger-rollout-date` flag creation and its LaunchDarkly configuration.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2991,
+      "memory_title": "Feature flag design for archival eligibility: string set of trigger tokens"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a related but distinct feature flag (exclusion list) versus the current turn's flag (rollout-date trigger), so it provides useful context about the archival feature system but requires filtering to avoid confusion.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3010,
+      "memory_title": "Feature flag for rule archival exclusion list"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a different flag migration (exemption list) with a different flag key, while the current turn is about creating a new rollout-date string flag; minimal overlap in actionable details.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3339,
+      "memory_title": "LaunchDarkly flag migration: old string list to boolean trigger-keyed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly answers the current query by providing the exact feature flag name, type, default value, targeting strategy, and implementation details with code references.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3368,
+      "memory_title": "Riskarbiter archival rollout: staged feature flag and script"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef566-2195-7d72-a3ad-cfb9ad00f810",
+    "source_run_id": 3022,
+    "turn_ordinal": 37
+  }
+}

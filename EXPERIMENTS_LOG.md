@@ -120,6 +120,17 @@ way); the next action is always the lowest incomplete item.
    *Decision*: tune `health_action_rerank` for over-abstention; keep
    recall-query cleaning. Requires item 4 before either result is used as a
    ship/no-ship input beyond this Phase 0 audit.
+6. DONE 2026-07-07 — **Dense oracle labels** (added 2026-07-07). The
+   2026-07-06/07 technique sprint landed "no detectable effect" on every
+   shipping metric because only ~3-4 useful-known selections existed per arm.
+   `scripts/densify-oracle-labels.py` adjudicator-scored the full saved
+   candidate pools for screening + holdout (5,007 labels, 300 anchors, 299
+   with at least one label) into
+   `experiments/recall/oracle-labels/2026-07/dense-oracles`, consumed via
+   `BACKTEST_ORACLE_DIR`. See the 2026-07-07 decision record and the "Dense
+   oracle labels" section of `experiments/recall/README.md`.
+   *Residual*: strategies that surface memories outside the saved pools need
+   a label top-up run before their unknowns are readable.
 
 ### Technique Backlog (decisions blocked on Phase 0)
 
@@ -128,7 +139,32 @@ boundary — materially different ideas that fit the intake rules are welcome
 additions, and the 5x5 loop's "propose 5 materially different approaches"
 step is expected to generate candidates not listed here.
 
-1. **Formation-time activation conditions** (added 2026-07-02). Have
+1. **Selection/health-rerank tuning on dense labels** (added 2026-07-07).
+   Hypothesis: over-abstention, not retrieval, is the binding failure —
+   pre-CI revalidation confirmed `health_action_rerank` adds +34
+   missed-useful empties, and the active-only pool oracle shows 19 of 28
+   active useful memories in the pool but unselected. Sweep health-rerank
+   abstention penalties and the strict-kind selection thresholds
+   (0.75/0.90/1.50) via the 5x5 worktree loop against the dense oracle
+   (`BACKTEST_ORACLE_DIR=experiments/recall/oracle-labels/2026-07/dense-oracles`).
+   Target metric: confirmed useful-capture gain without a confirmed
+   low-selection increase. Saved-candidate replay. Fold in a re-evaluation
+   of the cached LLM-rerank scores
+   (`experiments/recall/2026-07-07-llm-scoring-rerank/llm_scores.jsonl`) at
+   fixed thresholds 2-3 as one comparison arm — under sparse labels it kept
+   useful capture flat while cutting missed-useful empties from 42 to 2 at
+   3x context volume, which dense labels can now adjudicate.
+2. **Lineage-aware retrieval for superseded useful memories** (added
+   2026-07-07). Diagnostic first: 98 of 104 raw pool-oracle retrieval misses
+   were oracle-useful memories that are now inactive. Question: do their
+   consolidated/refined successors carry the useful content, and do those
+   successors appear in (and get selected from) the pool? Walk
+   `superseded_by_memory_id`/lineage refs from the inactive-useful set and
+   report successor pool/selection rates. If successors are missing or
+   unranked, follow with a technique experiment: map inactive vector hits to
+   their active successor at retrieval time, or revisit consolidation
+   aggressiveness.
+3. **Formation-time activation conditions** (added 2026-07-02). Have
    formulation emit explicit recall triggers and anti-triggers ("recall when
    touching X", "not applicable once PR merged") stored as structured
    metadata, matched at recall time. Attacks stale-task and wrong-context
@@ -153,6 +189,55 @@ step is expected to generate candidates not listed here.
    only queued recall-eval task selects memories 3277 and 3309, neither of
    which has activation-condition metadata, so it will not advance this
    forward experiment.
+
+## 2026-07-07: Dense Oracle Labels
+
+Sources:
+
+1. `scripts/densify-oracle-labels.py`
+2. `experiments/recall/oracle-labels/2026-07/REPORT.md`
+3. `experiments/recall/oracle-labels/2026-07/labels.jsonl`
+4. `experiments/recall/oracle-labels/2026-07/dense-oracles/`
+
+Question:
+
+1. Can adjudicator-scored candidate pools replace the sparse, weakly
+   calibrated historical production-judge oracle and make useful-capture
+   deltas readable?
+
+Metrics:
+
+1. 5,007 labels across 300 anchors (200 screening + 100 holdout), top-16
+   saved pools plus production-selected and historical-oracle memory ids;
+   0 candidates missing from the memory database.
+2. 299 of 300 anchors have at least one label; 281 have a useful (>=4)
+   label. Score histogram: 1,083 ones, 2,084 twos, 32 threes, 1,018 fours,
+   790 fives.
+3. Production baseline recomputed under the dense oracle (saved selections,
+   no reruns): 106 selected memories, all 106 labeled (100% known-selected
+   coverage vs single digits before), 70 useful known selected, 35 low known
+   selected, 65 useful capture runs, 101 empty recalls, 93 missed-useful
+   empties out of 189 dense-oracle-useful anchors.
+
+Lessons:
+
+1. The power problem is solved: useful-known selections per arm went from
+   ~3-4 to ~70, so paired CIs on useful capture become readable.
+2. Production's dominant failure under the dense oracle is over-abstention
+   (93 of 101 empty recalls had a useful memory available), consistent with
+   the pre-CI revalidation finding on `health_action_rerank`.
+3. The adjudicator is decisive (almost no 3s), which sharpens useful/low
+   binary metrics but means borderline cases resolve to one side; the
+   labeling instrument is single-sourced from `judge-calibration.py` so it
+   cannot drift from the calibration study.
+
+Decision:
+
+1. Use `BACKTEST_ORACLE_DIR=experiments/recall/oracle-labels/2026-07/dense-oracles`
+   for all experiments on the 2026-07 libraries; never mix dense and
+   historical labels in one comparison.
+2. Run the selection/health-rerank tuning backlog item next against the
+   dense oracle.
 
 ## 2026-07-07: Activation Conditions Forward Readiness
 

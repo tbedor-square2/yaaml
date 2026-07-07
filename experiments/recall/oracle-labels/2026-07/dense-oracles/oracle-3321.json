@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a git branch/worktree pruning function, which is tangentially related to cleanup but not directly relevant to committing the clean-old-builds script that was just completed.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1753,
+      "memory_title": "Shell helper: prune_git to clean merged/closed branches and worktrees"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns PR #480432 code review feedback about inlining and unused dependencies, which is completely unrelated to the current turn's focus on committing a shell cleanup script with quality gate validation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2357,
+      "memory_title": "PR #480432 review feedback: inlining and unused dependency cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Bazel verification for Java worktrees is completely unrelated to committing a Cargo cleanup script in what appears to be a Rust project.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2379,
+      "memory_title": "Bazel verification for archival review RPC changes in java worktrees"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a user preference for a different project (java PR) that contradicts the current turn's workflow of running quality gates before committing.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2429,
+      "memory_title": "Commit and push without waiting for CI in rule-archival PR work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns completed PRs and LaunchDarkly rollout handling, which is entirely unrelated to committing a cleanup script and running quality checks.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about verifying config deletion across worktrees is unrelated to committing a cleanup script; it addresses a different task (deployment config removal) and would distract from the current workflow.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2527,
+      "memory_title": "Verify config unused before deletion; check both relevant worktrees"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about cleanup PR strategy for removing serving flags and generators is unrelated to the current task of committing a clean old builds script.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2901,
+      "memory_title": "Cleanup PR strategy: remove serving flag and generator in separate PRs to reduce rollback blast radius"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about a different PR (#477833) and unrelated workflow; the current turn is about committing a cleanup script with quality gate validation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3065,
+      "memory_title": "PR #477833 tbedor/riskarbiter-trigger-traffic: rebased and pushed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completely different PR (rebase/BUILD dep removals) with no relevance to committing a Cargo cleanup script.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about task lifecycle metadata fixes is unrelated to committing a build cleanup script and provides no actionable context for the current turn.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3135,
+      "memory_title": "Task lifecycle metadata fixes: clear stale retry fields on transitions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past refactoring project (PR #543) unrelated to the current task of committing a cleanup script; it provides no actionable context for the ongoing commit workflow.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about YAAML recall experiments and metrics is completely unrelated to committing a cleanup script and validating code quality.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the clean-old-builds script that was just committed, providing essential context about its purpose, behavior, and previous testing results.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3209,
+      "memory_title": "cargo-sweep wrapper script for yaaml build artifact cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly explains the repo's quality gate requirement that the assistant followed throughout this turn, validating the script and running `just quality` before committing.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3223,
+      "memory_title": "yaaml repo requires `just quality` gate before committing code"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completely different PR (#13972) about UI component changes, while the current turn is about committing a Cargo cleanup script with quality gate validation\u2014no contextual overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3235,
+      "memory_title": "PR #13972 updated from action-table experiment to metadata-table production implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Riskarbiter code analysis and Git worktrees is completely unrelated to committing a Cargo cleanup script in the current repository.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3363,
+      "memory_title": "Categorize Riskarbiter code script uses temporary sparse worktree for analysis"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about .editorconfig formatting is unrelated to committing a shell cleanup script and provides no actionable context for the current turn.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3398,
+      "memory_title": "Riskarbiter .editorconfig formatting settings finalized and applied"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3321,
+    "turn_ordinal": 424
+  }
+}

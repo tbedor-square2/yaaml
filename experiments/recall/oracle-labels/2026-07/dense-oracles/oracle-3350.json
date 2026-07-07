@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes manual git rebasing techniques for stacking PRs, but the current turn uses Graphite (a stacked PR tool) which handles this automatically, making the manual git instructions largely irrelevant to the ongoing workflow.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1754,
+      "memory_title": "GitHub PR rebasing: stack PRs by rebasing and retargeting base"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents code review preferences for a Java PR, but the current turn is about executing a formatting task on a stacked draft PR\u2014different concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1755,
+      "memory_title": "Java Risk Arbiter PR 480432: Review feedback patterns and code style preferences"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory covers relevant Graphite workflow practices (tracking, staging specific files, single commits) that align with the current turn's stacked PR approach, though the current turn shows more advanced execution details than the memory captures.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1898,
+      "memory_title": "Graphite stacked PR workflow: track branch and stage only affected files"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses rebase conflict resolution for overlapping improvements, but the current turn is about creating a stacked draft PR to run formatting on existing files\u2014a different workflow with no rebase or conflict resolution involved.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2003,
+      "memory_title": "Rebase draft PR branches with manual conflict resolution for overlapping improvements"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant Graphite workflow guidance for stacking branches and avoiding parent redrafts, which directly applies to the current turn's stacked PR creation, though the current turn already demonstrates correct execution of these principles.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2447,
+      "memory_title": "Graphite stack workflow: track parent before stacking child, restack from child worktree"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed MLP-4409/4410 PRs with backport details, but the current turn is about creating a new follow-on draft PR for formatting; the contexts are unrelated and the memory provides no actionable guidance for the current task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about MLP-4411 notification job implementation and is completely unrelated to the current turn's focus on creating a stacked draft PR to run code formatting with `just fmt`.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2486,
+      "memory_title": "MLP-4411 notification job implementation complete; draft PR ready without wiring scheduled sends"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about backporting changes between stacked PRs is tangentially related to the current stacked PR workflow but doesn't address the immediate task of creating a follow-on draft PR with formatting changes.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2492,
+      "memory_title": "Backport changes from child PRs to parent PRs to reduce reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses back-propagation discipline for stacked PRs, but the current turn is focused on executing a formatting task on a child branch with no indication that changes should be moved to parent PRs.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2495,
+      "memory_title": "Back-propagation discipline: evaluate each stacked PR for changes that reduce reviewer churn in parent PRs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different task (rule archival date PRs) unrelated to the current turn's focus on creating a stacked formatting PR with `just fmt --all`.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3034,
+      "memory_title": "Draft PRs to open: tbedor/riskarbiter-rule-summary-archival-date and tbedor/kui-rule-archival-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different PR (#477833 for trigger-traffic) and is stale context; the current turn focuses on creating a new stacked draft PR for formatting, which is unrelated to the rebased trigger-traffic PR.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3065,
+      "memory_title": "PR #477833 tbedor/riskarbiter-trigger-traffic: rebased and pushed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past rebase and BUILD dependency removal task, but the current turn is about creating a follow-on draft PR to run formatting on existing files\u2014different scope and context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed refactoring series (PR #543) for pyriskarbiter library consolidation, which is unrelated to the current turn's focus on creating a stacked follow-on draft PR to run code formatting (`just fmt`) on existing files.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a Homebrew formula PR for sq-riskarbiter migration, which is completely unrelated to the current turn's focus on creating a stacked draft PR to run code formatting (`just fmt`) on existing Java files in the squareup/java repository.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3157,
+      "memory_title": "homebrew-formulas PR #4844: sq-riskarbiter uvx wrapper migration\u2014mlds-core#545 blocker and publish workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the `just fmt` recipe that is being actively used in the current turn to format Java files, including the `--all` flag and exclusion behavior referenced in the conversation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3355,
+      "memory_title": "java fmt task: PR-touched or explicit-set Java formatting via google-java-format"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes past .editorconfig settings and a previous formatting PR, but the current turn is about creating a new follow-on draft PR with a fresh formatting run (684 files, different commit), making this historical context stale and not actionable.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3398,
+      "memory_title": "Riskarbiter .editorconfig formatting settings finalized and applied"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f23ad-7f57-7373-9829-cd921c397d84",
+    "source_run_id": 3350,
+    "turn_ordinal": 9
+  }
+}

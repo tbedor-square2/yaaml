@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the core problem of wrong-context memory surfacing, but the stored memory focuses on kind-aware filtering strategy while the current turn is executing specific diagnosis and patching of the health classifier logic.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes metric separation and classification schemes that are directly relevant to the current turn's discussion of health logic, wrong-context classification, and reranking decisions, though it lacks the specific implementation details being debugged.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2311,
+      "memory_title": "Recall and memory-corpus metrics separation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly applicable\u2014the stored memory identifies that bad memories are wrong-context or stale (not inherently invalid) and proposes lifecycle-state handling, which aligns precisely with the current turn's focus on fixing recall drift by distinguishing mixed-performance memories from wrong-context ones and adding context-sensitive classification modes.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the eval-health reranking work and identifies the same root causes (wrong-context, stale episodic, noisy task-keys) that the current turn is actively diagnosing and addressing with context_sensitive_wrong_context mode.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2327,
+      "memory_title": "Eval-based health reranking improves but is symptom-level"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past 5x5 experiment on candidate families, but the current turn is focused on fixing a specific recall drift problem (wrong-context memories being boosted) and implementing a new health classifier mode\u2014different scope and solution path.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2350,
+      "memory_title": "Recall candidate families 5x5 experiment: top signals identified"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a recall matching test plan with segment-aware hybrid approaches, which is directly relevant to the current turn's focus on recall drift and wrong-context failures, though it lacks the specific implementation details about health classifiers and context-sensitive modes being discussed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly explains the root cause of the recall drift problem being debugged in the current turn, providing the exact diagnosis that motivates the subsequent investigation of memory 2794 and the context-sensitive health classifier changes.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2758,
+      "memory_title": "Recall quality failures are segment/task-state drift, not memory quality"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's focus on memory health classification and wrong-context handling, but describes a completed implementation rather than the ongoing diagnostic work being discussed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2875,
+      "memory_title": "YAAML memory lifecycle and stale task-state cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes past deduplication fixes, but the current turn focuses on diagnosing and fixing wrong-context classification in health logic for mixed-performance memories\u2014a different problem domain with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant baseline metrics for the current turn's focus on recall drift, wrong-context failures, and health classifier tuning decisions.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a 5x5 experiment workflow and metrics runner setup, but the current turn focuses on diagnosing and fixing a specific recall drift problem (memory 2794, wrong-context classification, health logic thresholds), making this memory stale and contextually misaligned.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3198,
+      "memory_title": "YAAML 5x5 experiment workflow: orchestrated metrics runner and prompt"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents experimental findings and durable lessons about recall quality and health classification, which directly relates to the current turn's focus on diagnosing and fixing wrong-context memory surfacing and health classifier logic, though it lacks the specific current failure details being investigated.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant experimental evidence on segment/task-fit strategies and wrong-context tradeoffs, but requires filtering since the current turn focuses on health classifier logic and `context_sensitive_wrong_context` mode rather than segment-aware gating variants.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the same recall drift and context-sensitivity problem being debugged, providing prior experimental findings on task-fit gating and context-weighted ranking that inform the current approach of adding context-sensitive health modes.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses hardcoded phrase/task-key removal and structural classification, but the current turn focuses on recall drift, wrong-context diagnosis, and health classifier logic\u2014different technical problems with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly describes the exact recall drift problem being investigated\u2014wrong-context memories surfacing in wrong task segments within the same project\u2014and proposes the same solution (stricter task-based gating) the assistant is now implementing.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant corpus statistics and quality evidence that contextualizes the recall drift problem being debugged, but lacks the specific failure details and classifier logic changes currently being discussed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed persuasion document for budget approval, but the current turn focuses on debugging specific recall drift failures and implementing health classifier changes\u2014different technical concerns with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3376,
+      "memory_title": "Memory techniques report: technical persuasion doc for internal eng buy-in"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3168,
+    "turn_ordinal": 339
+  }
+}

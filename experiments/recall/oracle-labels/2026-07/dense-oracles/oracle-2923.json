@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes PR comment browsing and agent dispatch shortcuts, which is unrelated to the current turn's focus on Esc key behavior and vim-like navigation in search mode.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1778,
+      "memory_title": "tuicr PR comment browsing and agent dispatch shortcuts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory contains general development guidance for the square-console project, but the current turn is about a specific completed feature (Esc key behavior in vim-like mode) with no active questions or blockers requiring the stored guidance.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1792,
+      "memory_title": "Square-console CLAUDE.md guidance compliance"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Slack search API structure is completely unrelated to the current discussion about Esc key behavior and vim-like keybindings in the application.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1997,
+      "memory_title": "Slack search uses 'messages' result key, not 'results'; supports channel name directly"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about tmux for background processes is unrelated to the current turn about Vim-like Esc key behavior in a search interface.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2082,
+      "memory_title": "Use tmux for long-running background processes; nohup and detached tool execution are unreliable"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about TUI screenshots and iteration is unrelated to the current turn's focus on Esc key behavior and vim-like keybindings implementation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2677,
+      "memory_title": "User preference: TUI screenshots and iteration before stopping"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns CLI command organization for archival commands, which is completely unrelated to the current turn's focus on Vim-like Esc key behavior and search mode handling.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2754,
+      "memory_title": "CLI command organization: nest archival commands under 'rule' subcommand, not top-level 'archival'"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about KUI implementation location is unrelated to the current discussion about Esc key behavior and vim-like keybindings in what appears to be a different application.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3029,
+      "memory_title": "KUI: active implementation is in square-console, not java/knowledge-ui"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory about workflow filtering rules is unrelated to the current turn's discussion of Esc key behavior and vim-like keybindings.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3092,
+      "memory_title": "Same-project proven-useful workflow memories should bypass tool-key filter"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory about task-key extraction and filtering is unrelated to the current turn about Vim-like Esc behavior in search mode.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3098,
+      "memory_title": "Segment task-key extraction: filter tool output and prioritize identity keys"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory covers TUI features (done-session visibility, search navigation, new-session creation) but is unrelated to the current turn's focus on Esc key behavior and vim-like keybindings.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3207,
+      "memory_title": "bot-manager TUI: done-session visibility, active status overlay, search navigation, and new-session creation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about terminal iteration preferences is unrelated to the current turn's focus on Esc key behavior and vim-like keybindings implementation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3228,
+      "memory_title": "User preference: terminal iterations before stopping on TUI work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns D-key toggle behavior and session refresh in a TUI, which is entirely unrelated to the current turn's focus on Esc key behavior and vim-like keybindings.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3236,
+      "memory_title": "D toggle and session refresh behaviors in bot-manager TUI"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Prefect CLI output parsing is completely unrelated to the current discussion about Vim-like Esc key behavior in a terminal UI application.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3266,
+      "memory_title": "Prefect CLI output parsing pitfalls"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents hotkey bindings and mentions `q` as quit, which is directly relevant to the current turn's discussion of Esc behavior and vim-like keybindings, but it doesn't address the specific Esc-search interaction being implemented.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3288,
+      "memory_title": "TUI hotkey audit: p/P split, removed o alias, documented all normal-mode bindings"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about peek hotkeys (p/P) is unrelated to the current turn's focus on Esc behavior and vim-like search mode handling.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3292,
+      "memory_title": "TUI hotkey: p/P for peek splits, no PR key"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about closing tmux peek panes is unrelated to the current discussion about Esc key behavior and vim-like keybindings in the application.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3294,
+      "memory_title": "Close tmux peek panes with Ctrl-b x then y"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns YAAML recall architecture and hardcoded phrase taxonomy, which is completely unrelated to the current turn's discussion of Vim-like Esc key behavior in a search/UI context.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019efc9f-ff22-7d32-bdac-00301bac40a8",
+    "source_run_id": 2923,
+    "turn_ordinal": 66
+  }
+}

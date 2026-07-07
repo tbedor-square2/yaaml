@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a skill for PR/ticket review, which is unrelated to the current query about how `thread-title` is set in Codex.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1721,
+      "memory_title": "Codex skill creation: work-review-updates for PR and ticket review"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Rust TUI project (tuicr) for code review, which is unrelated to the current turn's focus on how `thread-title` is set in Codex CLI.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1774,
+      "memory_title": "Node/Rust project (tbedor) active-thread goal: CLI agent dispatch, GitHub replies, run lifecycle, and notifications"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes bot-manager's Rust implementation architecture but does not address how `thread-title` is set in Codex, which is the current turn's specific question.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2315,
+      "memory_title": "bot-manager Rust implementation strategy: cache-backed, testable CLI+TUI with credential-light integrations"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes bot-manager's architecture and features, but the current turn is specifically about how `thread-title` is set in Codex (a different tool), making this context stale and mostly irrelevant to the technical question being asked.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2322,
+      "memory_title": "bot-manager: Rust CLI/TUI for Linear tickets, GitHub PRs, agent sessions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about YAAML PreToolUse hooks is unrelated to the current query about how `thread-title` is set in Codex; it describes a different system component (memory recall infrastructure) rather than thread naming mechanics.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2504,
+      "memory_title": "Codex PreToolUse hook for YAAML is live and working end-to-end"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly answers the user's question about how `thread-title` is set by documenting the `thread/name/set` API method and confirming no CLI slash command exists.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2655,
+      "memory_title": "Codex app-server thread/name/set API for setting thread titles"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly answers the user's question about how thread-title is set by documenting the app-server `thread/name/set` method with implementation details.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2672,
+      "memory_title": "Codex thread title can be set via app-server JSON-RPC thread/name/set"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses background title-refresh worker behavior and warning suppression, which is tangentially related to thread-title but doesn't address the user's core question about how thread-title is set or configured.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2682,
+      "memory_title": "Background title worker should not emit noisy warnings; refresh policy should respect quiet periods and insufficient-context outcomes"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about session working directory handling is unrelated to the current query about how thread-title is set; it addresses a different session management concern.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2697,
+      "memory_title": "Session join uses stored working directory for tmux and Codex"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about CLI command organization for archival commands is completely unrelated to the current query about how `thread-title` is set in Codex.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2754,
+      "memory_title": "CLI command organization: nest archival commands under 'rule' subcommand, not top-level 'archival'"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes TUI session management features (done-session visibility, search navigation, new-session creation) which is completely unrelated to the current query about how `thread-title` is set in Codex.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3207,
+      "memory_title": "bot-manager TUI: done-session visibility, active status overlay, search navigation, and new-session creation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about transcript file processing caps is unrelated to the current query about how `thread-title` is set in Codex.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3229,
+      "memory_title": "Backlog transcript scan must process all files, not cap at 100"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes tmux workspace management for bot-manager, which is tangential infrastructure detail unrelated to the current query about how thread-title is set in Codex.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3278,
+      "memory_title": "Managed tmux workspace: global session with local attach windows"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a tmux launcher fix for bot-manager session re-entry, which is tangentially related to bot-manager but does not address the current query about how `thread-title` is set in Codex.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3301,
+      "memory_title": "bot-manager tmux launcher fixed for re-entry into existing managed sessions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about agent message prefixes is unrelated to the current query about how thread-title is set in Codex.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3303,
+      "memory_title": "Agent message prefix convention in bot-manager"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses tmux session management for bot-manager, but the current turn is specifically about how `thread-title` is set in Codex itself\u2014a different layer entirely that has already been thoroughly investigated in the conversation.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3327,
+      "memory_title": "Tmux session/window identity strategy for bot-manager"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about tmux session deduplication is unrelated to the current query about how `thread-title` is set in Codex; it addresses a different operational concern (session management) rather than thread metadata configuration.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3342,
+      "memory_title": "Tmux session deduplication strategy for bot-manager"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about TUI transcript rendering is unrelated to the current query about how `thread-title` is set in Codex; it addresses a different subsystem entirely.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3352,
+      "memory_title": "TUI live transcript preview rendering"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019efc9f-ff22-7d32-bdac-00301bac40a8",
+    "source_run_id": 2272,
+    "turn_ordinal": 2
+  }
+}

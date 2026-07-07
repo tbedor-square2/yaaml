@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory provides operational context about log access but does not address the core question of what Snowflake tables already exist or whether they can serve as a handoff queue.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1724,
+      "memory_title": "Prefect logs on forge-signalsmith: local CLI + Vertex infra fallback"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes signal data dumps to Snowflake, but the current turn is specifically researching existing Snowflake writes in Signalsmith/Dumbo code (PR tracker and run stats tables), which are different systems and tables.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1731,
+      "memory_title": "Snowflake mirror of signal data exists but needs historical partition column"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses offline signal production-use classification and Dumbo shadow logs, which is unrelated to the current query about existing Snowflake writes in Signalsmith/Dumbo code for a potential queue handoff.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2072,
+      "memory_title": "Offline signal production-use classification: Dumbo shadow logs + Sourcegraph layering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a durable checkpoint pattern for long-running backfill jobs, but the current turn is investigating existing Snowflake table writes in Signalsmith/Dumbo code to determine if they can serve as a handoff queue\u2014a different architectural concern unrelated to resumable backfill checkpointing.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2126,
+      "memory_title": "Resumable long-running Snowflake backfill job: durable checkpoint pattern with window-status table"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns obsolete Snowflake HCL manifests and Kafka topic registration, which is unrelated to the current query about existing Snowflake table writes in Signalsmith/Dumbo code for potential queue reuse.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2705,
+      "memory_title": "Gap PR #11871: Snowflake Streamer manifest cleanup\u2014no runtime impact but doc gap"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Dumbo feature coverage and usage statistics is unrelated to the current query about existing Snowflake writes in Signalsmith/Dumbo code for a potential handoff queue.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2738,
+      "memory_title": "Offline Dumbo feature coverage: ~64% unused at featureExtId grain (90d, known external callers only)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses PR #521's lifecycle refactor and BigQuery parameters, which is tangentially related to Signalsmith code structure but does not address the current query about existing Snowflake writes or whether they can serve as a handoff queue.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3044,
+      "memory_title": "forge-signalsmith PR #521: lifecycle refactor with BigQuery parameters follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses testing Prefect\u2013Blox connectivity without PR review, but the current turn is researching existing Snowflake writes in Signalsmith/Dumbo code\u2014a different investigation path with no overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3059,
+      "memory_title": "Testing Prefect\u2013Blox without PR review"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns pyriskarbiter CLI refactoring and library consolidation, which is completely unrelated to the current query about existing Snowflake writes in Signalsmith/Dumbo code.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory covers deprecated signal inventory and Dumbo cleanup gates, but the current turn is specifically researching existing Snowflake writes in Signalsmith/Dumbo code for a potential queue handoff\u2014a different technical concern with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3181,
+      "memory_title": "Deprecated signal audit: inventory, mapping, backfill evidence, ownership classification, and Dumbo cleanup gates"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes feature archival policy timelines and PR review cycles, but the current turn is investigating existing Snowflake table writes in Signalsmith/Dumbo code\u2014a different technical concern that requires code inspection rather than policy context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3205,
+      "memory_title": "Feature archival policy timeline: 90+90 days, 7+3 day PR review/queue"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the architecture decision (whether to use existing Snowflake tables as handoff queue vs. new Blox dispatch), but the stored memory focuses on Blox precedent and auth rather than the current Snowflake table schema and write paths that the query is investigating.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3245,
+      "memory_title": "Blox hybrid migration research: architecture, precedent, and spike plan"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses KITT migration strategy for the entire Prefect flow, but the current turn is specifically researching existing Snowflake table writes in Signalsmith/Dumbo code to determine if they can serve as a handoff queue\u2014a tactical code investigation unrelated to deployment platform migration.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3272,
+      "memory_title": "KITT migration path: move entire Prefect flow from Vertex to KITT rather than split dispatcher+executor"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory documents historical pain points motivating infrastructure migration, but the current turn is specifically researching existing Snowflake table writes in Signalsmith/Dumbo code\u2014a concrete code-tracing task unrelated to past motivation or architecture decisions.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3273,
+      "memory_title": "Vertex pain points motivating infrastructure migration: auth brittleness, GitHub PR generation fragility, token/cache issues, platform limits"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses KITT migration strategy and infrastructure choices, but the current turn is asking about existing Snowflake table writes in Signalsmith/Dumbo code\u2014a code-level factual question unrelated to the KITT migration path.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3274,
+      "memory_title": "KITT migration path for signals-deprecate-and-delete-prefect: onboard \u2192 backend switch \u2192 data/auth resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory discusses BigQuery usage tables and potential Snowflake sync bridges, but current turn is specifically investigating existing Snowflake writes in Signalsmith/Dumbo code for a handoff queue\u2014a different architectural question.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3275,
+      "memory_title": "Snowflake does not yet have feature-level usage tables; BigQuery remains source for deprecation eligibility, compact sync tables would bridge"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes Vertex infrastructure pain points and migration rationale, but current turn is specifically researching existing Snowflake table writes in Signalsmith/Dumbo code\u2014different scope and not actionable for this investigation.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3276,
+      "memory_title": "Vertex pain motivating infrastructure migration: headless auth brittleness, expensive git/agent work, PR size limits, token expiry, slow Bazel, low throttle hiding capacity concerns"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f0025-3f91-7922-81e4-7bc8cb3def79",
+    "source_run_id": 3306,
+    "turn_ordinal": 40
+  }
+}

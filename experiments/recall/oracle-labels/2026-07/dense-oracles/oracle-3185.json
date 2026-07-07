@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the core issue being worked on: implementing kind-aware recall gating with task-state filtering logic, which is exactly what the current turn is implementing with the recall-path guard and segment-status validation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses memory quality evaluation and lifecycle management in general terms, but the current turn is focused on a specific technical implementation detail about segment-status checking and task-state validity in the recall path, making this context tangential rather than directly actionable.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a completed PR review for manual rule archival (MLP-4410), while the current turn is actively debugging segment/task-state memory recall logic\u2014entirely different codebases and problems with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a test plan for recall matching architectures, but the current turn is focused on implementing recall-path guards for stale task-state and segment status validation\u2014a different implementation concern than the hybrid retrieval strategy being discussed in the memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant\u2014documents the exact implementation solution (soft-deactivate via deactivate_task_state_memories_with_inactive_origin_segments) that the current turn is actively working through and validating.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2913,
+      "memory_title": "Task-state memory stale-state cleanup implemented"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current work on recall-path guards and task-state deactivation, but the stored memory describes a completed implementation while the current turn is actively designing and refining the approach.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2928,
+      "memory_title": "Stale task-state deactivation completed and effective"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a BigQuery PR refactor unrelated to the current turn's focus on segment/task-state memory recall logic and daemon refresh behavior.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3044,
+      "memory_title": "forge-signalsmith PR #521: lifecycle refactor with BigQuery parameters follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed deduplication fixes for recall quality, but the current turn is focused on segment-status validation and task-state eligibility in the recall path\u2014a different problem domain with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses task lifecycle metadata cleanup (clearing stale retry fields), but the current turn focuses on segment-status validation and recall-path guards for memory suppression\u2014different subsystems with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3135,
+      "memory_title": "Task lifecycle metadata fixes: clear stale retry fields on transitions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns pyriskarbiter CLI refactoring and library consolidation, while the current turn focuses on segment/task-state memory recall logic and database schema\u2014completely different technical domains with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns Risk Arbiter rule cleanup and archival mechanics, which is unrelated to the current turn's focus on segment/task-state memory recall filtering and daemon refresh logic.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the recall-path guard being implemented; documents a regression test for session cache invalidation on inactive memories, which is closely related to the current work on recall-time suppression and stale task-state handling.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3189,
+      "memory_title": "Session recall cache must invalidate on inactive memory IDs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past experiment logs and metrics, but the current turn is focused on implementing a specific code fix for recall-path segment status validation, which requires no reference to historical experiment data.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a past experiment on segment/task-fit recall strategies, but the current turn is focused on implementing a specific recall-path guard for stale segment status\u2014a different technical concern than the experimental tradeoff analysis.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses filtering strategies and ranking approaches that were already explored and rejected, while the current turn is focused on implementing a specific recall-path guard for stale segment status\u2014a different technical direction that doesn't benefit from the prior experimental conclusions.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses hardcoded phrase taxonomy and tool-key extraction in YAAML recall, which is orthogonal to the current turn's focus on segment-status staleness, recall-path guards, and task-state validity checks.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a recall quality regression and proposes topic-based filtering, but the current turn is focused on segment-status staleness and recall-path guards for task-state validity, which are orthogonal concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3185,
+    "turn_ordinal": 357
+  }
+}

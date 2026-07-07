@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes Datadog traffic check guards for disable RPCs, but the current turn focuses on troubleshooting Cloudflare Access authentication issues blocking Datadog access itself\u2014different concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1779,
+      "memory_title": "Datadog traffic check guards for disable RPCs: traffic detected blocks by default, bypass flag bypasses check"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past successful TD_11 payroll evaluation with good latency metrics, but the current turn reports ongoing Cloudflare Access blocking and intermittent Mux timeout/missing-signal errors with no fresh metrics available, making the stale positive baseline minimally actionable for the current troubleshooting context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2632,
+      "memory_title": "Served TD_11 payroll evaluation: no timeout errors, p99 latency 4.3s under 10s caller timeout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a DynamoDB read spike from 2026-06-25, while the current turn focuses on TD_11 Datadog polling blocked by Cloudflare Access authentication\u2014completely different systems and timeframes with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2709,
+      "memory_title": "Risk Arbiter DynamoDB read spike investigation (2026-06-25)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to TD_11 monitoring context, but memory describes a past DLQ root cause while current turn focuses on present Datadog access issues and polling gaps.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2824,
+      "memory_title": "TD_11 stale DLQ item root cause: Mux GetFeatures timeout on retry loop"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the Datadog polling workflow and metrics tracked (TD_11, Mux failures, circuit breaker state), which directly matches the current turn's focus on TD_11 polling and metric retrieval, but requires filtering since the current turn emphasizes authentication blocking rather than the polling mechanics themselves.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2830,
+      "memory_title": "Datadog monitoring workflow: repeated multi-window metric polling with log cross-checks"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to TD_11 monitoring context (timeout issues and Mux errors mentioned in current turn), but stored memory focuses on flag configuration details while current turn is about Datadog access blocking and polling gaps.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2844,
+      "memory_title": "LaunchDarkly timeout flag riskarbiter-mux-max-timeout-millis: TD_11 currently at fallthrough 15s, available 25s variant"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the TD_11 monitoring workflow, baseline metrics, and safety checks that are central to evaluating the current polling attempt and interpreting the latest valid state reported in the turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2845,
+      "memory_title": "TD_11 Mux cutover monitoring workflow: flagging rate, safety checks, and window strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides directly relevant Datadog monitoring methodology for TD_11, but the current turn shows authentication/access issues blocking metric retrieval, so the guidance needs filtering for applicability in the blocked state.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2851,
+      "memory_title": "Datadog production monitoring workflow for TD_11 trigger post-cutover"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents TD_11's baseline flagging behavior and confirms the current intermittent errors are consistent with known isolated noise patterns, but requires filtering since the memory is from an earlier timestamp (00:59Z) and the current turn is at 15:30Z.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2853,
+      "memory_title": "TD_11 risk assessment monitoring: isolated flagging blip is normal and ages out cleanly"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the established Datadog polling pattern and safety checks for TD_11 monitoring, which is directly relevant to the current turn's discussion of retrying the TD_11 poll and reporting on flagging/Mux timeout states, though the current turn focuses on access/auth blockers rather than the polling methodology itself.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2858,
+      "memory_title": "Datadog polling pattern for trigger definition flagging monitoring"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the TD_11 monitoring procedure, key metrics windows, safety checks, and stale-data interpretation logic that the current turn is actively applying.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2859,
+      "memory_title": "TD_11 monitoring: repeated polling procedure and stale metric interpretation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides directly relevant monitoring methodology for TD_11 that aligns with the current turn's focus on TD_11 polling and metrics, though the current turn is blocked by auth issues rather than actively executing the sampling strategy.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2860,
+      "memory_title": "TD_11 monitoring: repeated sample windows and baseline for drift detection"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses how to handle stale metrics (confirming zero failures/errors over time windows), which is relevant to the current turn's conclusion that 'latest valid state remains' with no job failures, but requires minor filtering since the current context already confirms this pattern rather than needing to apply the procedure.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2861,
+      "memory_title": "TD_11 stale metric confirmation: zero job failures + zero ACL errors over time span"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides the exact monitoring procedure and metric queries being attempted in the current turn, but the current context shows access is blocked by Cloudflare, making the procedure itself temporarily unexecutable despite its relevance.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2863,
+      "memory_title": "TD_11 monitoring procedure: reusable Datadog query set for flagging trend verification"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the TD_11 monitoring poll procedure that the current turn is actively executing, including the exact metrics being queried (flagging rate, job failures, circuit breaker state, deadletter count) and reporting format being used.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2864,
+      "memory_title": "TD_11 monitoring poll procedure: reusable query set and baseline comparison"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact TD_11 Mux timeout/missing-signal issue being monitored in the current turn, providing baseline metrics and context for evaluating whether the retry attempt yielded new data.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2869,
+      "memory_title": "TD_11 Mux timeout / missing signal errors persisting despite 25s flag setting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly documents the TD_11 Mux timeout/missing-signal errors that the current turn references as the latest valid state, providing essential context for understanding the ongoing monitoring situation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2894,
+      "memory_title": "TD_11 Mux timeout/missing-signal failures during rollout monitoring"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes a different diagnostic context (Blox/Prefect integration with mesh endpoint) unrelated to the current TD_11 polling issue with Datadog and Cloudflare Access authentication.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3253,
+      "memory_title": "Blox/Prefect integration validation: diagnostic run with mesh endpoint in progress"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ed6df-0d7b-7210-b6eb-9da62527d7f1",
+    "source_run_id": 3076,
+    "turn_ordinal": 128
+  }
+}

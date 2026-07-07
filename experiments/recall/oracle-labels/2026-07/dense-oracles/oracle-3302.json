@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Prefect log discovery is unrelated to the current turn's focus on Docker Desktop startup issues and preprod deployment.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1725,
+      "memory_title": "Prefect log discovery: use deployment ID + tags, not --flow-name"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory about a past PR deployment window is unrelated to the current Docker startup and preprod deployment troubleshooting.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2614,
+      "memory_title": "PR #482106 missed auto-deploy by minutes; deployed next window at 11:03 PDT on Jun 24"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the testing strategy being executed in the current turn\u2014option 2 (temporary diagnostic branch deployed to preprod)\u2014and provides the exact context for why this approach was chosen and what it validates.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3059,
+      "memory_title": "Testing Prefect\u2013Blox without PR review"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a completed manual Blox test, but the current turn is focused on Docker startup issues blocking preprod deployment\u2014different problem domain with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3077,
+      "memory_title": "Manual no-op Blox routine completed: bbsubscriber reachable, run_as_service=sa-builderbot works from laptop"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes Blox hybrid migration research and a spike plan, but the current turn is focused on Docker startup issues during preprod deployment\u2014a completely different operational context with no overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3245,
+      "memory_title": "Blox hybrid migration research: architecture, precedent, and spike plan"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the current deployment state, diagnostic flow status, and next steps (polling for mesh endpoint diagnostic run completion), making it essential context for proceeding with the validation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3253,
+      "memory_title": "Blox/Prefect integration validation: diagnostic run with mesh endpoint in progress"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a known behavior about image rebuilds and caching, but the current turn is focused on Docker daemon startup issues blocking the deploy entirely, making this context stale and not actionable for the immediate problem.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3257,
+      "memory_title": "Preprod deploy reruns append new dirty-worktree hash even with cached image"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides useful context about the overall task goal (preprod diagnostic run), but the current turn shows the deployment is still blocked on Docker startup issues, so the memory's focus on post-deployment polling is not immediately actionable.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3258,
+      "memory_title": "Task checkpoint: blox-prefect-noop preprod diagnostic run in progress"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Prefect diagnostic parameter override, but the current turn is focused on Docker startup issues blocking the deploy itself, making this context stale and not actionable for the immediate problem.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3262,
+      "memory_title": "Blox endpoint override for Prefect diagnostic testing"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the current blocker: Docker Desktop startup automation on macOS is unreliable, and the conversation shows multiple failed attempts to start Docker via CLI commands\u2014exactly matching the documented issue and suggesting the fallback approach.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3264,
+      "memory_title": "Docker Desktop startup automation (mac) via docker desktop start cmd is unreliable"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Prefect CLI output parsing is stale and tangential; the current turn is focused on Docker startup issues blocking a preprod deploy, not on Prefect flow inspection or log parsing.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3266,
+      "memory_title": "Prefect CLI output parsing pitfalls"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past diagnostic run result, but the current turn is focused on Docker startup issues blocking the deploy itself, making this context stale and not actionable for the immediate problem.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3267,
+      "memory_title": "Blox/Prefect/Vertex diagnostic: mesh endpoint param working"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a KITT migration strategy, but the current turn is focused on immediate Docker startup issues blocking a preprod deploy of a temporary diagnostic\u2014unrelated to the KITT migration decision.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3272,
+      "memory_title": "KITT migration path: move entire Prefect flow from Vertex to KITT rather than split dispatcher+executor"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a future KITT migration strategy, but the current turn is focused on immediate Docker startup issues blocking a preprod deploy of the temporary diagnostic\u2014not the KITT migration path.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3274,
+      "memory_title": "KITT migration path for signals-deprecate-and-delete-prefect: onboard \u2192 backend switch \u2192 data/auth resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about runway pipeline onboarding to forge-signalsmith is unrelated to the current Docker startup and preprod deployment troubleshooting.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3297,
+      "memory_title": "Runway pipeline onboarded to forge-signalsmith"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant context about the KITT migration project structure and configuration, but the current turn is focused on immediate Docker/deployment troubleshooting that requires real-time diagnostic information rather than high-level project architecture.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3395,
+      "memory_title": "KITT migration for forge-signalsmith: WIF + preprod rollout \u2014 implementation in progress"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f0025-3f91-7922-81e4-7bc8cb3def79",
+    "source_run_id": 3302,
+    "turn_ordinal": 32
+  }
+}

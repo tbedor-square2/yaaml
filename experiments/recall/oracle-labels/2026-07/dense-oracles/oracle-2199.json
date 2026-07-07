@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a PR-to-ticket reconciliation workflow, but the current turn is about summarizing findings on a specific Linear ticket (MLP-2470) and posting a comment\u2014a different task that doesn't require PR reconciliation logic.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1767,
+      "memory_title": "Work-review-updates workflow: PR-to-ticket reconciliation process"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes batch endpoint optimization and feature flag implementation for the payroll signal generator, which is directly related to MLP-2470's scope, but lacks specific deployment metrics, timeout findings, or rollback guidance needed for the current summary.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1882,
+      "memory_title": "Batch endpoint optimization with feature flag for safe rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly describes the MLP-2470 ticket's optimization strategy, implementation details, and rollout plan\u2014exactly what's needed to summarize findings on that specific issue.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1899,
+      "memory_title": "Payroll Duplograph signal optimization: batch endpoints, requestedSignals filtering, tri-state rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly addresses MLP-2470 with relevant context on timeout issues, recommended migration path, and feature flag strategy that is actionable for summarizing findings and planning next steps.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1968,
+      "memory_title": "Linear rolloff ticket for payroll signal generator"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a PR-to-ticket reconciliation workflow, but the current turn is about summarizing findings on a specific ticket (MLP-2470) and posting a comment\u2014a different task that doesn't require the reconciliation process or Linear state management patterns described.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1982,
+      "memory_title": "PR-to-ticket reconciliation workflow and Linear state management"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a Java package splitting project (MLP-4455/4456/4457/4458) unrelated to the current ticket MLP-2470 about removing SignalGenerator from PayrollDuplicateGraph.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2001,
+      "memory_title": "Java package splitting project with three issues and audit-log follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant project context and mentions MLP-2470 specifically, but focuses on archived rule reactivation rather than the SignalGenerator removal findings just posted.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2354,
+      "memory_title": "Online ML Model/Feature Rule Cleanup project status and phase"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory concerns LaunchDarkly rollout-date handling and a different ticket (MLP-4410/MLP-4409), while current turn focuses on summarizing findings for MLP-2470 (SignalGenerator removal); no clear connection or actionable context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2441,
+      "memory_title": "LaunchDarkly malformed rollout-date handling backported to #480115"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory concerns MLP-4409/4410 stack and archival storage work, while current turn focuses on MLP-2470 ticket summarization and Linear comment posting\u2014completely different issues with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns MLP-4411 notification job implementation, while the current turn is about summarizing findings on MLP-2470 (SignalGenerator removal); these are unrelated tickets with no contextual overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2486,
+      "memory_title": "MLP-4411 notification job implementation complete; draft PR ready without wiring scheduled sends"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly useful\u2014contains deployment metrics, latency improvements, and SLO data for MLP-2470 that are exactly what needs to be summarized in the Linear ticket findings.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2609,
+      "memory_title": "PR #482106 deployment to Mixtape production confirmed; latency/SLO metrics show improvement"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant\u2014stores deployment metrics and latency findings for the exact ticket (MLP-2470) being summarized, including pre/post-deploy p99 latency, SLO performance, and commit SHA that are actionable context for the Linear comment.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2615,
+      "memory_title": "payroll_connected_users latency improved post-deploy 11:03 PDT; p99 ~24s \u2192 ~5-9s, SLO misses nearly eliminated"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory is about MLP-4410 PR review and freeze annotation fixes, while current turn focuses on summarizing findings for MLP-2470 ticket\u2014different tickets with no apparent connection.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context about MLP-2470 and the signal generator migration project, though the stored memory lacks the specific deployment/timeout/latency findings that were just posted.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2650,
+      "memory_title": "Outstanding signal generators migration status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns LaunchDarkly rollout date parsing (MLP-4410), while the current turn focuses on summarizing findings for ticket MLP-2470 about removing SignalGenerator; these are distinct issues with no apparent connection.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2749,
+      "memory_title": "MLP-4410 backport to #480115: malformed/whitespace LaunchDarkly rollout dates now trimmed, logged, skipped instead of aborting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about ML ModelFeatureRule cleanup project status templates and blockers, which is unrelated to the current ticket MLP-2470 about removing SignalGenerator from PayrollDuplicateGraphSignalGenerator.java.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2941,
+      "memory_title": "Online ML ModelFeatureRule cleanup project: Cycle 2 status template and blockers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory covers MLP cycle progress from a different week (2026-06-22) and tracks different tickets (MLP-4410, 4411, 4536, 4477, 4562), not the current ticket MLP-2470 being summarized.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2942,
+      "memory_title": "MLP Cycle 2: ticket progress mapping (week of 2026-06-22)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns pyriskarbiter CLI refactoring and library consolidation, which is completely unrelated to the MLP-2470 ticket about removing SignalGenerator from PayrollDuplicateGraphSignalGenerator.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019edcc8-cff6-77d1-8e48-04b9adabc032",
+    "source_run_id": 2199,
+    "turn_ordinal": 42
+  }
+}

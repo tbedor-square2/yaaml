@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses tmux for background processes, but the current turn is specifically about nested tmux client detach semantics and bot-manager session switching, which requires different tmux knowledge than background process management.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2082,
+      "memory_title": "Use tmux for long-running background processes; nohup and detached tool execution are unreliable"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a working PreToolUse hook, but the current turn focuses on tmux nesting issues and exit flow problems, which are unrelated to hook functionality or memory recall.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2504,
+      "memory_title": "Codex PreToolUse hook for YAAML is live and working end-to-end"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes tmux session working directory handling, but the current turn focuses on nested tmux detach behavior and exit flow\u2014different concerns that don't directly inform the solution.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2691,
+      "memory_title": "bot-manager: tmux/Codex startup uses stored session cwd"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses session working directory handling, but the current turn is focused on tmux nesting and detach behavior\u2014a different architectural issue.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2697,
+      "memory_title": "Session join uses stored working directory for tmux and Codex"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly explains the root cause of the double-detach bug the user is experiencing and documents the fix that was applied.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2699,
+      "memory_title": "Double detach bug in tmux session rejoin fixed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a removed PreToolUse hook experiment and service diagnostics, but the current turn focuses on tmux nesting issues and session exit behavior\u2014different technical domains with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2769,
+      "memory_title": "Codex PreToolUse hook removed due to installation friction and low quality scores"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes TUI features (done-session visibility, search navigation, new-session creation) but the current turn focuses on tmux nesting and detach behavior, which are orthogonal concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3207,
+      "memory_title": "bot-manager TUI: done-session visibility, active status overlay, search navigation, and new-session creation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses TUI rendering performance after tmux attach, but the current turn focuses on nested tmux detach semantics and session exit flow\u2014different architectural concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3208,
+      "memory_title": "TUI post-return refresh must be non-blocking to avoid blank screen"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about terminal iteration preferences is unrelated to the current discussion about tmux nesting and session exit behavior.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3228,
+      "memory_title": "User preference: terminal iterations before stopping on TUI work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses TUI toggle behavior and session refresh, but the current turn focuses on tmux nesting and detach semantics for exiting coding sessions, which are unrelated concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3236,
+      "memory_title": "D toggle and session refresh behaviors in bot-manager TUI"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly explains the tmux nesting architecture and the solution (auto-wrapping bot-manager in a global session with temporary attach windows) that resolves the user's double-detach issue.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3278,
+      "memory_title": "Managed tmux workspace: global session with local attach windows"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about TUI hotkey bindings is unrelated to the current discussion about tmux nested session exit behavior and bot-manager architecture.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3288,
+      "memory_title": "TUI hotkey audit: p/P split, removed o alias, documented all normal-mode bindings"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly addresses the user's current issue about needing two detaches to exit a coding session, explaining the tmux nesting problem and the implemented solution of selecting the manager window on reattach.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3289,
+      "memory_title": "Managed tmux reattach: select manager window when session is detached"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses closing peek panes, but the current turn is about nested tmux session exit behavior and detaching from coding sessions\u2014a different tmux interaction problem.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3294,
+      "memory_title": "Close tmux peek panes with Ctrl-b x then y"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the tmux session management and re-entry flow being discussed, though it addresses a specific window-existence edge case rather than the nested tmux detach problem currently being analyzed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3301,
+      "memory_title": "bot-manager tmux launcher fixed for re-entry into existing managed sessions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory covers tmux session identity and window management strategy, but the current turn is focused on nested tmux detach behavior and exit flow\u2014a different architectural concern not addressed by this memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3327,
+      "memory_title": "Tmux session/window identity strategy for bot-manager"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses tmux session deduplication and reuse logic, but the current turn is focused on the nested tmux detach problem and how to fix the exit flow\u2014different architectural concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3342,
+      "memory_title": "Tmux session deduplication strategy for bot-manager"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019efc9f-ff22-7d32-bdac-00301bac40a8",
+    "source_run_id": 2967,
+    "turn_ordinal": 71
+  }
+}

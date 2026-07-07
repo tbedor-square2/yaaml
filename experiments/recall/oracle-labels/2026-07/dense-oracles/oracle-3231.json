@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses flag defaults and feature enablement strategy, which is tangential to the current discussion about date format precedent and consistency within the codebase.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2380,
+      "memory_title": "riskarbiter pending rule archival flag default: empty string, not far-future date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a feature flag implementation detail, but the current turn discusses date format precedent and consistency within the repo, which are orthogonal concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2406,
+      "memory_title": "LD flag for rule archival trigger rollout dates with Jan 1, 2126 default"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses RuleArchivalDateCalculator cancellation logic and operational constraints, which is unrelated to the current query about date style formatting precedent in the repository.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2428,
+      "memory_title": "RuleArchivalDateCalculator cancellation scope risk mitigated by operational constraints"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to date format precedent discussion, but focuses on flag default values rather than the yyyy-MM-dd format decision itself.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2484,
+      "memory_title": "Pending rule archival rollout flag: empty string for unset, not far-future date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses PendingRuleArchival's data model and validation logic, but the current turn is specifically about date format style consistency within the repository, which this memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2610,
+      "memory_title": "PendingRuleArchival: track exact rule_config_id for archival targeting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses PendingRuleArchival schema and targeting logic, but does not address date formatting style or precedent, which is the core question being asked.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2616,
+      "memory_title": "PendingRuleArchival: Add rule_config_id, keep metadata, use exact targeting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses change-freeze guards and RPC implementation details for rule archival, but the current turn is specifically about date format style consistency (`yyyy-MM-dd` precedent), which this memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2622,
+      "memory_title": "RiskArbiter rule archival manual RPC requires change-freeze guard on both code paths"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a LaunchDarkly feature flag for rollout control, but the current turn is asking about date format precedent within the codebase\u2014the memory provides implementation details about flag mechanics rather than relevant precedent examples or format guidance.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2783,
+      "memory_title": "LaunchDarkly flag for rule archival rollout: riskarbiter-pending-rule-archival-trigger-rollout-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses rule archival eligibility policy and trigger exemptions, but the current turn is specifically about date format style consistency (`yyyy-MM-dd` precedent), which this memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3008,
+      "memory_title": "Rule archival eligibility policy for SQ Lending"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory provides relevant implementation context for archival date handling and KUI labeling, but uses milliseconds field while current turn discusses string format precedent, requiring minor reconciliation.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3011,
+      "memory_title": "Risk Arbiter rule archival date surfacing: use min pending date per model_name in RuleSummary"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the KUI rules table archival feature implementation, which provides useful context about the archival date field being discussed, but lacks the specific date format precedent and proto schema details that directly answer the current query.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3012,
+      "memory_title": "KUI rules table archival state: show pending date and filter by archival status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly supports the current discussion by providing the exact design decision and rationale for using `yyyy-MM-dd` format for the archival date field in the UI, including the precedent analysis and production data justification.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3031,
+      "memory_title": "Rule archival state in KUI: min date per model_name, not repeated list"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses backend implementation details for attaching archival data to an RPC endpoint, but the current turn is asking about date format style consistency with repository precedent, which the memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3033,
+      "memory_title": "Backend implementation: attach pending archival read to GetRulesSummaryAction"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact proto field design decision (`next_automated_archival_utc_date` with `yyyy-MM-dd` format) and precedent reasoning that answers the current query about date style consistency.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3123,
+      "memory_title": "Rule archival date surfacing: backend proto field + KUI table/filter display"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact date format decision (`yyyy-MM-dd` string) and field naming (`next_automated_archival_utc_date`) that the current turn is validating against repo precedent.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3221,
+      "memory_title": "Backend/frontend sync: RuleSummary archival dates (PR #484157 & #14118)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a rollout script and feature flag management for archival, but does not address the date format style question or provide relevant precedent information.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3368,
+      "memory_title": "Riskarbiter archival rollout: staged feature flag and script"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef566-2195-7d72-a3ad-cfb9ad00f810",
+    "source_run_id": 3231,
+    "turn_ordinal": 63
+  }
+}

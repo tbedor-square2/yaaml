@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses a key finding from the experiment (precision/ranking of stale task_state is the problem, not LLM selection), but the current turn has already concluded with actionable lessons, so this memory provides useful validation rather than new direction.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the experiment findings being summarized\u2014supports the conclusion about eval-informed reranking being valuable\u2014but the current turn already covers this lesson (point 4), so recall adds confirmation rather than new information.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2244,
+      "memory_title": "Eval-context retrieval union underperforms vs reranking on 200-anchor sample"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses eval-context embedding architecture decisions, but the current turn summarizes high-level lessons from a completed experiment where reranking was already evaluated and found to have modest signal; this memory adds technical detail about a specific architectural choice rather than answering what was learned.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2261,
+      "memory_title": "Eval-context embedding architecture decision: rerank vs union retrieval"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the experimental findings being summarized\u2014it documents a specific, tested improvement technique (strict_top_fallback with kind-diversity selection) that aligns with the current turn's discussion of recall quality, context reduction, and selection strategies.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2285,
+      "memory_title": "Kind-diversity selection with strict threshold + top fallback is the recommended recall improvement"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes metric definitions and taxonomy, but the current turn asks for substantive lessons learned from experiments\u2014the assistant has already provided detailed findings that don't depend on recalling this structural/definitional memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2311,
+      "memory_title": "Recall and memory-corpus metrics separation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly supports and is referenced in the current turn's lesson #2 ('Empty recall is often correct'), providing the exact principle and metrics framework discussed.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2312,
+      "memory_title": "Empty recall is abstention, not failure"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly supports the current turn's discussion of experiment lessons, particularly points 2 (empty recall correctness) and 7 (corpus-quality suppression weakness), though the memory adds diagnostic detail about *why* bad memories occur rather than *what* to do about them.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents a key experimental finding that is explicitly referenced and expanded upon in the current turn's summary (point 4: 'Eval-informed health reranking is valuable'), providing concrete baseline metrics and context for understanding why this approach was valuable.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2327,
+      "memory_title": "Eval-based health reranking improves but is symptom-level"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the 5x5 experiment referenced in the current turn and provides the exact findings (top_2 as strongest lever, specific metrics) that the assistant is summarizing.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2350,
+      "memory_title": "Recall candidate families 5x5 experiment: top signals identified"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly summarizes the current eval metrics and failure modes that the assistant is actively discussing and grounding its lessons in.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the experiment findings being summarized, providing specific quantitative results and a key insight about segment/task-fit limitations, though the current turn already covers this lesson in point 6 (broad gates not obviously better).",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3195,
+      "memory_title": "Segment/task-fit reranking is limited; segment summaries needed for generation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the experiment findings and durable lessons the user is asking about, providing the exact summary framework and key conclusions needed to answer the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant experiment data on segment/task-fit strategies that complements the current turn's summary of lessons learned, though the turn already synthesizes broader findings and this memory covers a specific tactical experiment with mixed results.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses recall strategy and failure modes discussed in the current turn, but requires filtering since it proposes future directions rather than summarizing the completed experiment lessons already covered.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the experiment summary\u2014identifies a specific regression pattern (wrong-context recalls in same-project drift) that complements the lessons learned, though the current turn focuses on broader durable lessons rather than this particular diagnostic.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes corpus quality findings and measurement infrastructure, but the current turn is asking for lessons from a specific experiment already being discussed in detail with concrete metrics and conclusions\u2014this memory is stale background context that doesn't add actionable insight to the active summary.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3276,
+    "turn_ordinal": 414
+  }
+}

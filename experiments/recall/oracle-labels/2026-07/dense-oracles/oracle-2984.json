@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about deploy startup timing analysis is unrelated to the current query about internal documentation for failed canary cleanup and rollback procedures.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1757,
+      "memory_title": "Deploy startup analysis: granular timing breakdown with metrics and logs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about deploy-startup-analysis tooling is unrelated to the current query about internal documentation for failed canary cleanup and rollback procedures.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1758,
+      "memory_title": "just deploy-startup-analysis: auto-detect latest prod rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about LaunchDarkly audit findings for RiskArbiter is completely unrelated to the current query about Cloud CD canary deployment cleanup and internal documentation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1881,
+      "memory_title": "RiskArbiter LaunchDarkly audit findings: mux rollout flag stuck in partial state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory about Risk Arbiter NLB optimization is unrelated to the current query about internal documentation for failed canary cleanup and rollback procedures.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2306,
+      "memory_title": "Risk Arbiter deploy time improved by moving NLB to jobs-blue"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about RiskArbiter2App dormancy is unrelated to the current query about Cloud CD canary deployment cleanup and internal documentation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2452,
+      "memory_title": "RiskArbiter2App is dormant in production"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This DynamoDB incident memory is completely unrelated to the current query about Cloud CD canary deployment cleanup and internal documentation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2709,
+      "memory_title": "Risk Arbiter DynamoDB read spike investigation (2026-06-25)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly answers the user's question about internal docs for handling failed canary cleanup, providing the official recommended path (retrigger deploy via Cloud CD) versus manual kubectl deletion, which is exactly what the current turn is investigating.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2723,
+      "memory_title": "Cloud CD canary cleanup: retry deploy rather than manual kubectl delete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the user's question about internal docs for handling failed canary cleanup, providing the official supported path (retrigger deploy) and documented escalation procedure (manual kubectl delete).",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2729,
+      "memory_title": "Cloud CD stuck canary cleanup: use retrigger deploy or manual kubectl delete as last resort"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about archival-candidates discovery is completely unrelated to the current query about Cloud CD canary cleanup and rollback documentation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2757,
+      "memory_title": "archival-candidates is pre-rollout discovery only"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about archival-candidates discovery is completely unrelated to the current turn's focus on Cloud CD canary deployment cleanup and rollback procedures.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2762,
+      "memory_title": "archival-candidates discovery helper is pre-flag only, does not check LD or pending rows"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a specific past canary failure (PersonService ACL issue), but the current turn is asking about internal documentation for the general process of handling failed canaries and cleanup procedures, which are distinct concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2781,
+      "memory_title": "Production canary failure root cause: PersonService.BatchGetByPersonToken ACL missing for mixtape"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about pyriskarbiter refactoring is completely unrelated to the current query about Cloud CD canary deployment cleanup and internal documentation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about Risk Arbiter partition metadata cleanup and evidence taxonomy, which is completely unrelated to the current query about Cloud CD canary deployment documentation and rollback procedures.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3151,
+      "memory_title": "Risk Arbiter no-traffic cleanup: partition metadata enrichment, evidence taxonomy, and execution status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about deprecated signal audit, Dumbo cleanup gates, and feature ownership is completely unrelated to the current query about Cloud CD canary deployment documentation and rollback procedures.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3181,
+      "memory_title": "Deprecated signal audit: inventory, mapping, backfill evidence, ownership classification, and Dumbo cleanup gates"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a specific build's canary deployment status and monitoring alerts, but the current turn is asking for internal documentation on canary cleanup/rollback procedures\u2014different concerns that don't overlap meaningfully.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3232,
+      "memory_title": "riskarbiter canary deploy (build 7692) status and blockers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about riskarbiter archival rollout and LaunchDarkly feature flags is completely unrelated to the current query about Cloud CD canary deployment cleanup and internal documentation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3368,
+      "memory_title": "Riskarbiter archival rollout: staged feature flag and script"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef12b-5400-7f41-9c2c-7c82f7013391",
+    "source_run_id": 2984,
+    "turn_ordinal": 132
+  }
+}

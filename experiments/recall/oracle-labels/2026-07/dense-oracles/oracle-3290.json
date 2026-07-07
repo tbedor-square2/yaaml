@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the implementation plan's focus on memory health classification, outdated-memory handling, and lifecycle states, though the stored memory is analytical rather than prescriptive for the specific schema/consolidation edits underway.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory documents a completed PR review and code changes unrelated to the current turn's focus on implementing outdated-memory pass schema, health classification, recall filtering, and cache invalidation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the implementation plan (schema/model support, health classification), but describes completed schema changes rather than the current focus on supersession metadata and recall filtering.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2693,
+      "memory_title": "Segment oracle schema changes and test impacts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past PR review and BigQuery parameter refactoring, but the current turn is about implementing an outdated-memory pass with schema/metadata/recall filtering\u2014different technical scope with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3044,
+      "memory_title": "forge-signalsmith PR #521: lifecycle refactor with BigQuery parameters follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed deduplication fixes from past commits, but the current turn is focused on implementing new outdated-memory features (supersession metadata, health classification, recall filtering), making this historical context mostly stale and tangential.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory documents a completed PR rebase and build dependency removal, which is unrelated to the current turn's focus on implementing an outdated-memory pass with schema/model support, health classification, and recall-time penalties.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a task lifecycle metadata fix unrelated to the current turn's focus on implementing memory outdated-status classification, supersession tracking, and recall filtering.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3135,
+      "memory_title": "Task lifecycle metadata fixes: clear stale retry fields on transitions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed refactoring (PR #543) for pyriskarbiter, but the current turn is about implementing an outdated-memory pass with schema/health classification and recall filtering\u2014different technical scope with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the YAAML recall system architecture, schema, consolidation logic, and known issues that are actively being implemented and debugged in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3187,
+      "memory_title": "YAAML Rust memory recall system: architecture, filtering, health, schema v6, consolidation, and known issues"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the implementation work on memory metadata and recall filtering, but the stored memory documents a completed test rather than actionable guidance for the current implementation phase.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3189,
+      "memory_title": "Session recall cache must invalidate on inactive memory IDs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past experiment logs and lessons but does not directly address the current implementation task of adding supersession metadata, health classification, or recall-time penalties to the memory system.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a past experiment on segment/task-fit recall strategies, but the current turn is focused on implementing outdated-memory health classification and supersession metadata\u2014a different architectural concern with no direct overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes a past eval regression diagnosis, but current turn is actively implementing memory health/outdated classification features\u2014different problem domain with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR #14151 UI changes is completely unrelated to the current turn's focus on implementing memory metadata, supersession tracking, and recall filtering architecture.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory is about Riskarbiter refactoring (renaming utilities, removing signal-generator code) and is completely unrelated to the current turn's focus on implementing memory health classification, supersession metadata, and recall-time penalties.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the implementation plan (memory quality, eval classification, recall filtering) but lacks specific schema/code details needed for immediate execution.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed persuasion document for budget approval, but the current turn is focused on concrete implementation of memory infrastructure (supersession metadata, health classification, recall filtering), making this historical context mostly stale and not actionable for the implementation work ahead.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3376,
+      "memory_title": "Memory techniques report: technical persuasion doc for internal eng buy-in"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3290,
+    "turn_ordinal": 422
+  }
+}

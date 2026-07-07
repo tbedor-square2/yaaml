@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory explains the data source architecture (Java Signalsmith jobs \u2192 GCS CSVs \u2192 BigQuery external tables), which is useful context for understanding why partition filters are needed and why certain columns may not be available, though it doesn't directly address the current retry attempts or the `isInternal` column investigation.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1730,
+      "memory_title": "SSS BigQuery source is Java Signalsmith jobs producing GCS CSVs daily"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Snowflake mirror solution for signal data that directly addresses the current turn's focus on querying signal metadata, but requires filtering/adaptation since the current turn is actively troubleshooting BigQuery access and schema validation rather than implementing Snowflake migration.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1731,
+      "memory_title": "Snowflake mirror of signal data exists but needs historical partition column"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Datadog metrics is stale and irrelevant to the current turn, which focuses on BigQuery schema inspection, partition filtering, and internal-feature dependency detection.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2011,
+      "memory_title": "Dumbo Datadog metric structure and timebound queries"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses offline signal classification and Dumbo shadow logs, but the current turn is focused on BigQuery schema validation, partition filtering, and dependency analysis for feature metadata\u2014completely different technical contexts with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2072,
+      "memory_title": "Offline signal production-use classification: Dumbo shadow logs + Sourcegraph layering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory contains cost and catalog baseline information about Beacon/Dumbo, but the current turn is focused on troubleshooting BigQuery schema queries and internal-feature dependency detection, making this context largely irrelevant to the immediate technical problem.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2229,
+      "memory_title": "Beacon/Dumbo spend estimates and catalog baselines"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Blockcell site for partition analysis, which is completely unrelated to the current turn's focus on BigQuery schema validation, internal feature detection, and dependency checking.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2508,
+      "memory_title": "Blockcell site for removable partitions analysis with shareable trigger filters and cache-busted assets"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the core problem being debugged: distinguishing internal validation calls from external Dumbo usage to avoid false negatives in signal cleanup, which is exactly what the current turn's investigation into BigQuery schema and dependency tracking is attempting to solve.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2571,
+      "memory_title": "forge-signalsmith cleanup: Distinguish internal validation from blocking Dumbo usage"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses RiskArbiter dependency probes and wildcard patterns, but the current turn is focused on BigQuery schema validation, partition filtering, and inferring internal-feature dependencies from metadata tables\u2014a different technical context with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2585,
+      "memory_title": "RiskArbiter dependency probes: exact feature wildcards vs. generic concrete features"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about payroll_connected_users latency improvements is completely unrelated to the current turn's focus on BigQuery schema exploration, partition filtering, and internal feature dependency detection.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2615,
+      "memory_title": "payroll_connected_users latency improved post-deploy 11:03 PDT; p99 ~24s \u2192 ~5-9s, SLO misses nearly eliminated"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the core technical decision (BigQuery join vs Datadog) that underlies the current troubleshooting, but the current turn is focused on retry attempts and schema validation rather than the join strategy itself.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2737,
+      "memory_title": "Dumbo offline usage data: BigQuery join needed, not Datadog caller traffic"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant prior analysis of Dumbo feature coverage and BigQuery schema exploration, but requires filtering since the current turn is retrying auth/queries and may supersede these findings.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2738,
+      "memory_title": "Offline Dumbo feature coverage: ~64% unused at featureExtId grain (90d, known external callers only)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides useful context about feature metrics granularity that is relevant to the ongoing BigQuery investigation, but requires filtering since the current turn focuses on schema validation and internal-feature dependency detection rather than coverage metrics.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2739,
+      "memory_title": "Feature coverage metrics have two grains: featureExtId (inflated by variants) vs signalDefinition (policy-language appropriate)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past PR refactoring effort with BigQuery parameters, but the current turn is actively debugging BigQuery schema queries and authentication issues with no connection to the PR's structural changes or parameter recommendations.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3044,
+      "memory_title": "forge-signalsmith PR #521: lifecycle refactor with BigQuery parameters follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns Risk Arbiter partition metadata and rule cleanup workflows, while the current turn is debugging BigQuery schema issues and internal-feature dependency detection\u2014completely different problem domains with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3151,
+      "memory_title": "Risk Arbiter no-traffic cleanup: partition metadata enrichment, evidence taxonomy, and execution status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides highly relevant context on Dumbo signal usage tracking and BigQuery table schemas (beacon2_available_signals_v2, dumbo_signal_usage), which directly relates to the current turn's troubleshooting of BigQuery partition filters and schema inspection, though it requires filtering for the specific technical details needed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3181,
+      "memory_title": "Deprecated signal audit: inventory, mapping, backfill evidence, ownership classification, and Dumbo cleanup gates"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the core issue being debugged\u2014BigQuery as the authoritative source for feature usage and internal/external classification\u2014and proposes a bridge solution, though the current turn is focused on immediate troubleshooting rather than architecture.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3275,
+      "memory_title": "Snowflake does not yet have feature-level usage tables; BigQuery remains source for deprecation eligibility, compact sync tables would bridge"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Vertex infrastructure pain points and migration strategy, which is completely unrelated to the current turn's focus on BigQuery schema exploration, partition filtering, and internal-feature dependency detection.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3276,
+      "memory_title": "Vertex pain motivating infrastructure migration: headless auth brittleness, expensive git/agent work, PR size limits, token expiry, slow Bazel, low throttle hiding capacity concerns"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f0025-3f91-7922-81e4-7bc8cb3def79",
+    "source_run_id": 2990,
+    "turn_ordinal": 7
+  }
+}

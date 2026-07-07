@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant prior experiment results and identified failure modes (wrong-context, stale episodic, noisy task-keys) that inform the current 5x5 segment-fit experiment design, though the stored memory focuses on health-reranking rather than the specific segment-fit variants being tested now.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2327,
+      "memory_title": "Eval-based health reranking improves but is symptom-level"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant prior experiment on recall candidate families with frozen artifacts and metrics, but focuses on different variant families (abstention_gate, candidate_pool, etc.) rather than the current segment/task-fit strategies being run.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2350,
+      "memory_title": "Recall candidate families 5x5 experiment: top signals identified"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a hybrid recall architecture test plan that is directly relevant to the current turn's segment/task-fit experiment, but requires filtering since the current turn is executing a specific 5x5 replay with concrete variants rather than the broader architectural comparison outlined in memory.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR #477833 (riskarbiter-trigger-traffic rebase) is unrelated to the current turn's focus on running a segment/task-fit experiment with recall metrics and logging results to EXPERIMENTS_LOG.md.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3065,
+      "memory_title": "PR #477833 tbedor/riskarbiter-trigger-traffic: rebased and pushed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes past deduplication fixes for recall quality, but the current turn is actively running a new 5x5 segment-fit experiment with specific variants and metrics\u2014the memory is stale context about prior cleanup rather than actionable for the ongoing experiment execution.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed CLI refactoring and library consolidation (PR #543) for pyriskarbiter, which is unrelated to the current turn's focus on running a segment/task-fit experiment with recall metrics and strategy variants.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides directly relevant architectural context for the YAAML recall system being used in the current turn's experiment, including task-state scoping, segment filtering, and health diagnostics that inform the 5x5 segment-task-fit experiment design, though it doesn't address the specific experiment variants or metrics being tested.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3187,
+      "memory_title": "YAAML Rust memory recall system: architecture, filtering, health, schema v6, consolidation, and known issues"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant baseline metrics for the 5x5 segment-fit experiment; provides prior recall quality context needed to interpret new results and detect regressions.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly documents the 5x5 segment/task-fit experiment results and findings that the current turn is actively executing and logging, providing essential context on what was tested, the metrics achieved, and the key insight that reranking alone is insufficient.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3195,
+      "memory_title": "Segment/task-fit reranking is limited; segment summaries needed for generation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the current turn's stated goal of writing results into `EXPERIMENTS_LOG.md` after running the 5x5 experiment, providing the exact requirement and format guidance needed.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3196,
+      "memory_title": "5x5 prompt should require EXPERIMENTS_LOG.md updates on primary branch"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a related 5x5 experiment workflow with metrics runners and worktree orchestration, providing useful context on experiment structure and logging patterns, though the current turn focuses on segment/task-fit variants rather than worktree-based approaches.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3198,
+      "memory_title": "YAAML 5x5 experiment workflow: orchestrated metrics runner and prompt"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the EXPERIMENTS_LOG.md structure, prior 5x5 experiment results, and durable lessons that are essential context for the current turn's segment/task-fit 5x5 experiment design and result logging.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly documents the 5x5 segment/task-fit experiment results that the current turn is actively executing and logging, providing concrete baseline metrics, variant performance data, and conclusions needed to write the final EXPERIMENTS_LOG.md entry.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses segment/task-fit experiment findings and proposes next directions, which is highly relevant to the current turn's focus on running a 5x5 segment-fit experiment; however, it documents conclusions from a prior run rather than actionable setup details needed for the current execution.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current segment/task-fit experiment design, which explicitly aims to address wrong-context recalls through task-state gating and segment evidence gates; provides concrete problem statement and metrics baseline.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses memory quality evidence and corpus statistics, but the current turn is focused on running a concrete 5x5 segment-fit experiment with specific strategy variants and logging results\u2014different scope and not actionable for this immediate task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed persuasion document for budget approval, but the current turn is actively running a new 5x5 segment-fit experiment with specific technical implementation details\u2014different scope and phase.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3376,
+      "memory_title": "Memory techniques report: technical persuasion doc for internal eng buy-in"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3278,
+    "turn_ordinal": 419
+  }
+}

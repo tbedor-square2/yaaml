@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses transcript handling and recall timing, but the current turn is focused on test coverage, replay validation, and gate behavior for branch-management facts\u2014orthogonal concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1818,
+      "memory_title": "Preference: incomplete transcript slices in live session context"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the kind-aware recall gating strategy being implemented in the current turn, including the specific ProjectFact branch-management gate and task-key matching logic that is actively being tested and debugged.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses backfilling legacy model features for replay training, but the current turn focuses on testing a new branch-management gate and fixing stale fact recalls in an active debugging session\u2014different problem domains with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2247,
+      "memory_title": "Backfilled modern features for legacy model replay are viable if point-in-time correct and trained on high-fire windows"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses memory quality issues and lifecycle management, which is tangentially relevant to the current turn's focus on testing and replay validation, but doesn't directly address the specific branch-management gate, ProjectFact filtering, or replay turn inspection being performed.",
+      "judge_score": "3",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past 5x5 experiment on recall candidate families, but the current turn is focused on immediate debugging of branch-management gate tests and replay validation\u2014different problem domain with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2350,
+      "memory_title": "Recall candidate families 5x5 experiment: top signals identified"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed PR work on MLP-4409/4410 with LaunchDarkly rollout handling, but the current turn is focused on recall-quality testing, branch-management gates, and replay validation\u2014different technical concerns with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed PR review and freeze-related fix for MLP-4410, which is entirely unrelated to the current turn's focus on recall-quality batch completion, branch-management gate testing, and replay checks against stale project facts.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes stale task-state refresh and planning-diagnostic suppression mechanisms that are directly relevant to the current turn's focus on branch-management gate testing and replay validation, though it addresses a related but distinct filtering concern (planning diagnostics vs. project facts).",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2977,
+      "memory_title": "YAAML stale task-state refresh: segment rollover + planning-diagnostic suppression"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed fixes from earlier commits, but the current turn is actively working through a different recall-quality batch focused on branch-management gates and ProjectFact filtering, making this prior context stale and tangential.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a pyriskarbiter refactoring and PR consolidation, which is completely unrelated to the current turn's focus on recall-quality batch testing, branch-management gates, ProjectFact filtering, and replay checks.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Risk Arbiter rule cleanup and design decisions is completely unrelated to the current turn's focus on branch-management gate testing, ProjectFact filtering, and replay validation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant baseline metrics for evaluating whether the current recall-quality batch improvements (new gate, focused tests, replay checks) are moving the needle on the 4.1 avg score and 15% low-score rate.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past experiment logs and lessons, but the current turn is focused on immediate debugging of a specific replay turn (MLP-2581 fact surfacing), which requires live inspection and decision-making rather than historical experiment summaries.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past segment/task-fit experiment with baseline metrics, but the current turn is focused on implementing and testing a new ProjectFact branch-management gate and replaying specific known-bad turns\u2014different scope and implementation stage.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses segment/task-fit gating experiments and ranking strategies, but the current turn is focused on implementing and testing a specific branch-management gate for ProjectFact filtering\u2014a concrete, tactical implementation task unrelated to the broader recall ranking architecture explored in the stored memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past recall quality regression with root causes (wrong-context, topic drift) that are distinct from the current turn's focus on adding tests for a new ProjectFact branch-management gate and replaying known bad turns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns Riskarbiter Mux helper refactoring and signal-generator cleanup, which is completely unrelated to the current turn's focus on recall-quality batch testing, branch-management gates, ProjectFact filtering, and replay validation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3212,
+    "turn_ordinal": 365
+  }
+}

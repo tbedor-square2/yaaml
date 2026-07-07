@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the segment/eval architecture the assistant is implementing and testing in the current turn, providing the conceptual framework for the work being executed.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a test plan for recall architectures, but the current turn is focused on executing segment/eval work, running quality gates, and test verification\u2014not on designing or evaluating hybrid recall strategies.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes segment oracle architecture and design patterns that are relevant context for the in-progress segment/eval work, but the current turn focuses on test execution and quality gate results rather than architectural decisions.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2692,
+      "memory_title": "Segment oracle architecture: tables, API, backfill design"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant schema and migration context for the segment/eval work in progress, but the current turn focuses on test execution and quality gate results rather than schema details.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2693,
+      "memory_title": "Segment oracle schema changes and test impacts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past architectural decision about removing a PreToolUse hook, but the current turn is focused on active segment/eval work, test execution, and quality gate verification with no mention of tool recall hooks or daemon installation issues.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2698,
+      "memory_title": "PreToolUse hook experiment removed: low recall quality + installation friction"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past decision to remove a PreToolUse hook, but the current turn is focused on ongoing segment/eval test implementation and running the quality gate\u2014different technical work with no actionable connection to the hook removal rationale.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2766,
+      "memory_title": "PreToolUse hook removed: daemon/install friction plus low tool-recall quality"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed task-state deactivation feature from a past commit, but the current turn is focused on ongoing segment/eval test work and running the quality gate, making this historical implementation detail mostly irrelevant to the immediate work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2928,
+      "memory_title": "Stale task-state deactivation completed and effective"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed recall-quality fixes from past commits, but the current turn is actively working on segment/eval test implementation and running the quality gate\u2014different work stream with no actionable connection.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes segment task-key extraction logic, but the current turn is focused on running quality gates and test suites, making this implementation detail mostly irrelevant to the immediate work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3098,
+      "memory_title": "Segment task-key extraction: filter tool output and prioritize identity keys"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past task lifecycle fix unrelated to the current turn's focus on segment/eval work, test assertions, and quality gate execution.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3135,
+      "memory_title": "Task lifecycle metadata fixes: clear stale retry fields on transitions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory reports historical recall quality metrics that are stale context; the current turn is actively executing repo quality gates and tests with no connection to recall evaluation statistics.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses past segment/task-fit reranking experiments and their limitations, but the current turn is focused on implementing segment metadata visibility in eval tests and running the quality gate\u2014different technical work with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3195,
+      "memory_title": "Segment/task-fit reranking is limited; segment summaries needed for generation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past experiments log and lessons backlog, but the current turn is actively executing repo quality gates and tests with no reference to experimental findings or recall strategies.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes past segment/task-fit experiment results, but the current turn is actively executing repo quality gates and tests with no mention of recall strategy tuning or experiment comparison.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses past segment/task-fit experiments and filtering strategies, but the current turn is focused on immediate implementation work (running tests, quality gates, and verifying segment metadata in output), making the historical design decision context stale and not actionable for the current execution phase.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a refactoring direction for YAAML recall (removing hardcoded phrases and tool keys), but the current turn is focused on running tests and quality gates for segment/eval work, which are orthogonal concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses recall quality regression and background recall metrics, which is tangentially related to the current turn's focus on running repo quality gates and segment/eval tests, but provides no actionable context for the immediate task of completing test execution and verification.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past corpus analysis and quality metrics, but the current turn is focused on active implementation work (running tests, quality gates, segment/eval fixes), making this historical evidence mostly stale and not actionable for the immediate task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3020,
+    "turn_ordinal": 290
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory covers architectural decisions on storage, providers, and transcript handling that are relevant context for the segment backfill implementation being discussed, though it doesn't directly address the current schema migration or segment table specifics.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1799,
+      "memory_title": "YAAML Rust implementation\u2014scope, storage, and provider decisions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses eval stats segmentation and metrics reporting, which is tangentially related to the segment work but addresses a different concern (stats/metrics) than the current turn's focus on persisted segment metadata, backfill algorithms, and database schema changes.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2478,
+      "memory_title": "Stats segmentation keeps legacy top-level metrics while adding origin/tool breakdowns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the segment model architecture, schema design, and backfill strategy that the current turn is actively implementing (deterministic segment builder, schema v4, replace/list APIs, segment table with summaries and keys).",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses testing hybrid recall architectures with segment-aware reranking, but the current turn focuses on implementing segment model persistence, schema migration, and database storage\u2014different phases of the same feature with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the segment oracle architecture, backfill design, and storage patterns that the current turn is actively implementing (schema v4, deterministic segment builder, replace/list APIs, migration tests).",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2692,
+      "memory_title": "Segment oracle architecture: tables, API, backfill design"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the schema v4 changes, migration safety patterns, and test updates that are central to the current turn's work on segment persistence and backfill implementation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2693,
+      "memory_title": "Segment oracle schema changes and test impacts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the segment metadata/backfill work being implemented, providing design guidance on evidence hierarchy and oracle strategy, though the current turn focuses on immediate schema/storage implementation rather than the oracle logic itself.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2703,
+      "memory_title": "Segmentation strategy: path evidence hierarchy and oracle design"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the segment metadata/backfill work in progress, providing specific implementation details on path-key normalization and capping that should be applied when extracting and storing segment keys.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2811,
+      "memory_title": "Segment path keys need aggressive normalization and capping"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a BigQuery/Prefect PR refactor unrelated to the current turn's focus on segment metadata persistence, database schema migrations, and CLI backfill logic.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3044,
+      "memory_title": "forge-signalsmith PR #521: lifecycle refactor with BigQuery parameters follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to segment metadata/backfill implementation\u2014covers task-key extraction logic and filtering rules needed for the deterministic segment builder, though the current turn focuses on schema/storage rather than key extraction specifics.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3098,
+      "memory_title": "Segment task-key extraction: filter tool output and prioritize identity keys"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns task lifecycle metadata and retry field cleanup, which is unrelated to the current turn's focus on persisted segment metadata, backfill algorithms, schema migrations for segments, and database storage methods.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3135,
+      "memory_title": "Task lifecycle metadata fixes: clear stale retry fields on transitions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed refactoring of pyriskarbiter CLI logic into library modules (PR #543), which is entirely unrelated to the current turn's focus on adding persisted segment metadata/backfill functionality to a database schema.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the segment metadata/backfill work being implemented, as it explains why segment summaries are needed for generation and retrieval, though it focuses on past reranking limitations rather than the current schema/storage implementation.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3195,
+      "memory_title": "Segment/task-fit reranking is limited; segment summaries needed for generation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past recall experiments and lessons, but the current turn is focused on implementing segment metadata persistence and database schema changes\u2014a different technical domain with no direct connection to recall strategy or experiment findings.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes past segment-aware recall strategy experiments and their tradeoffs, but the current turn is focused on implementing segment metadata persistence and backfill infrastructure (schema v4, deterministic segment builder, storage APIs), which is a different phase of work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses removing hardcoded phrases and tool-specific task keys from recall, while the current turn focuses on implementing segment metadata persistence and backfill\u2014different architectural concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns Riskarbiter mux helper renaming and signal-generator cleanup, which is completely unrelated to the current turn's focus on persisted segment metadata, database schema versioning, and backfill algorithms.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3015,
+    "turn_ordinal": 287
+  }
+}

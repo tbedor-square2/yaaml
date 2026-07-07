@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Prefect flow diagnostic run in preprod, but the current turn is asking about next steps after onboarding and focuses on CLI verification (kittctl, Kubernetes context, service accounts), making this memory stale and contextually misaligned.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3258,
+      "memory_title": "Task checkpoint: blox-prefect-noop preprod diagnostic run in progress"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory outlines the KITT migration strategy and next steps after onboarding, directly addressing what comes after the onboarding flow, though the current turn shows the user is still in CLI verification phase rather than ready for the migration steps.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3272,
+      "memory_title": "KITT migration path: move entire Prefect flow from Vertex to KITT rather than split dispatcher+executor"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Vertex infrastructure pain points and migration motivation, but the current turn is asking about immediate next steps after onboarding completion\u2014it requires actionable guidance on KITT setup, not historical context about why the migration happened.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3273,
+      "memory_title": "Vertex pain points motivating infrastructure migration: auth brittleness, GitHub PR generation fragility, token/cache issues, platform limits"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly outlines the next steps after onboarding completion: backend switch (forge.yaml changes), secrets/auth resolution, and data dependency handling\u2014exactly what the user is asking about.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3274,
+      "memory_title": "KITT migration path for signals-deprecate-and-delete-prefect: onboard \u2192 backend switch \u2192 data/auth resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the user's next step after onboarding by explaining the Terraform PR requirement and providing the exact smoke test command they need to run.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3282,
+      "memory_title": "KITT onboarding generates Terraform PR for Forge/Prefect access"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Buildkite principal removal is unrelated to the current turn, which focuses on post-onboarding KITT CLI verification and service account permissions troubleshooting.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3284,
+      "memory_title": "Buildkite principal removal in Forge template is intentional"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses a specific Prefect-on-KITT deployment issue, but the current turn is focused on CLI verification and onboarding validation steps, not yet at the Prefect deployment stage.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3295,
+      "memory_title": "KITT runtime home directory fix for Prefect"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a migration strategy for moving a deprecation job to KITT, but the current turn is about immediate next steps after onboarding completion and troubleshooting a Kubernetes permission error\u2014not about migration planning.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3296,
+      "memory_title": "Preferred KITT migration strategy for signalsmith"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed onboarding action (PR merged, pipeline created) but does not address the current turn's question about next steps after onboarding, nor does it help with the CLI verification and KITT job validation work currently in progress.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3297,
+      "memory_title": "Runway pipeline onboarded to forge-signalsmith"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses a specific Forge onboarding YAML duplication bug, but the current turn is asking about next steps after completing onboarding flow\u2014a forward-looking question about workflow progression, not a technical issue with duplicate configs.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3298,
+      "memory_title": "KITT Forge onboarding duplicate YAML fix: additive merge strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about KITT secret-file auth patterns is stale context unrelated to the current turn's focus on CLI verification, Kubernetes context setup, and service account permissions troubleshooting.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3300,
+      "memory_title": "KITT secret-file auth pattern: GitHub and Slack creds"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes credential lookup chains for auth helpers, but the current turn is focused on KITT CLI verification and Kubernetes pod creation failures, which are unrelated to secret authentication mechanisms.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3349,
+      "memory_title": "KITT secret auth chain: env vars \u2192 KITT mounted files \u2192 GCP Secret Manager"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes KITT secret management patterns, but current turn is about immediate next steps after onboarding (CLI verification and job submission), not credential handling.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3367,
+      "memory_title": "KITT secret file auth pattern for Prefect flows"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes GCP/WIF secret configuration, but the current turn is focused on KITT CLI onboarding verification and Kubernetes pod creation failures, which are unrelated to secret mounting flows.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3379,
+      "memory_title": "App WIF secret flow: KITT-mounted file + env var + fallback chain"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory confirms successful KITT setup and AWS identity validation, which is directly relevant context for what comes next after onboarding, but the current turn is asking for the next step rather than troubleshooting existing issues.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3394,
+      "memory_title": "KITT AWS identity confirmed + smoke tests validate path"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to KITT onboarding context\u2014describes the WIF migration and prefect-kitt configuration that the user is now validating, though it's implementation-focused rather than next-steps guidance.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3395,
+      "memory_title": "KITT migration for forge-signalsmith: WIF + preprod rollout \u2014 implementation in progress"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f0025-3f91-7922-81e4-7bc8cb3def79",
+    "source_run_id": 3309,
+    "turn_ordinal": 51
+  }
+}

@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory on kind-aware recall gating is directly relevant to the current task-key extraction work, providing framework for filtering task_state by matching keys, though the current turn focuses on parser normalization rather than recall gating implementation.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses deterministic activation keys and semantic classifiers for memory recall, while the current turn focuses on fixing noisy segment extraction keys in a Bazel target parsing system\u2014different domains with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2392,
+      "memory_title": "Tool-triggered recall: deterministic activation keys over semantic classifiers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the architectural approach being used (segment-bound task state and key extraction) but lacks specific details about the current noisy-key bug patterns and parser fixes being implemented.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a test plan for memory recall architectures, but the current turn is focused on fixing noisy segment key extraction in a live system\u2014different problem domains with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes segment oracle architecture and backfill design, which is relevant context for understanding the segment quality work being performed, but the current turn focuses on specific key extraction bugs and parser normalization rather than the architectural patterns.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2692,
+      "memory_title": "Segment oracle architecture: tables, API, backfill design"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact filtering strategy being implemented in the current turn: suppressing noisy keys from tool output, code blocks, and escaped sequences to preserve clean segment identity.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2805,
+      "memory_title": "Segment task-key extraction filters out tool output and fixture text to preserve segment identity"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed deduplication fixes for recall quality and eval metrics, but the current turn is focused on segment key extraction bugs and parser normalization\u2014different problem domains with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact segment key extraction filtering and normalization rules being applied in the current turn, including the specific patterns (escaped newlines, code-fence delimiters, parentheses) and implementation details needed to understand and verify the fix.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3098,
+      "memory_title": "Segment task-key extraction: filter tool output and prioritize identity keys"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed CLI refactoring and library consolidation (PR #543) for pyriskarbiter, which is entirely unrelated to the current turn's focus on segment quality, key extraction bugs, and target/path tokenizer normalization.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is a system evaluation metric summary unrelated to the current task of debugging segment key extraction and fixing noisy Bazel target parsing.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses segment/task-fit reranking limitations and candidate generation strategy, but the current turn focuses on fixing noisy key extraction bugs in the tokenizer and parser\u2014a different technical problem with no overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3195,
+      "memory_title": "Segment/task-fit reranking is limited; segment summaries needed for generation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a recall experiment log and lessons backlog, but the current turn is focused on debugging specific segment key extraction bugs (escaped markdown, parentheses in paths); the memory provides no actionable context for this technical debugging task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past experiment on segment/task-fit recall strategies, but the current turn is focused on fixing a concrete bug in key extraction (escaped markdown suffixes and parentheses in parsed keys), which is operationally distinct and not addressed by the experiment results.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses segment/task-fit gating and ranking strategies, but the current turn is focused on fixing concrete bugs in key extraction (escaped markdown, parentheses in paths), which is orthogonal to the recall ranking direction.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses hardcoded phrase/tool-key removal and structural-only context, but the current turn focuses on segment key extraction bugs (escaped markdown, parentheses in paths), which is a different operational concern unrelated to the refactoring direction.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses recall quality regression and wrong-context issues in a different project context (KITT/Vertex/Forge), while the current turn is focused on a specific, concrete technical task (segment key extraction and tokenizer bugs), making it mostly irrelevant to the immediate work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses overall memory quality metrics and evaluation evidence, but the current turn is focused on a specific operational task (fixing noisy segment keys in Bazel target extraction), making the memory stale and contextually misaligned.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past deliverable (internal persuasion document for memory work budget approval) that is completely unrelated to the current turn's focus on debugging segment key extraction quality and fixing tokenizer bugs in Bazel target parsing.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3376,
+      "memory_title": "Memory techniques report: technical persuasion doc for internal eng buy-in"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3043,
+    "turn_ordinal": 297
+  }
+}

@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes YAAML's general architecture and commands, but lacks specific details about project_descriptor storage mechanics, session vs. memory scoping, or daemon behavior that directly address the current turn's technical question.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1678,
+      "memory_title": "YAAML: Yet Another Agent Memory Layer package"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes YAAML's overall architecture and file-backed recall design, but does not address the specific question about whether `project_descriptor` is set per session or per memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1679,
+      "memory_title": "YAAML design: file-backed recall as sidecar"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about session idle-based memory flush is unrelated to the current discussion about per-memory vs per-session storage of `project_descriptor`.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1800,
+      "memory_title": "Session idle-based memory flush for short turn sequences"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes recall file storage locations and daemon ownership, but the current turn is specifically about whether `project_descriptor` is set per-session or per-memory, which this memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1801,
+      "memory_title": "Global per-project recall files owned by daemon"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses backlog memory formulation and session boundaries, but the current turn is specifically about `project_descriptor` storage scope (per-memory vs per-session), which this memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1803,
+      "memory_title": "Backlog memory formulation aligns on session boundaries with idle flush"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the `yaaml remember` CLI command syntax and purpose, but the current turn is asking about `project_descriptor` storage scope\u2014a technical implementation detail not addressed in this memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1814,
+      "memory_title": "YAAML remember skill for manual memory creation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the per-memory vs per-session distinction with relevant implementation details, though focuses on turn context metadata rather than project_descriptor specifically.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1821,
+      "memory_title": "Per-turn context metadata persisted for multi-project session recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes memory refinement architecture but doesn't address the current question about per-session vs per-memory storage of `project_descriptor`.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2310,
+      "memory_title": "Refined memory creation in YAAML formulation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses memory quality evaluation and lifecycle management, which is unrelated to the current turn's technical question about project_descriptor storage scope (per-session vs per-memory).",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses deterministic activation keys and tool-triggered recall mechanisms, which is unrelated to the current question about whether `project_descriptor` is set per session or per memory.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2392,
+      "memory_title": "Tool-triggered recall: deterministic activation keys over semantic classifiers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses conversation segments and task identity organization, which is tangentially related to the current discussion about per-memory vs per-session storage, but doesn't directly address the `project_descriptor` schema or daemon memory formation mechanics being discussed.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses memory provenance and consolidation tracking, which is orthogonal to the current question about whether `project_descriptor` is set per session or per memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2652,
+      "memory_title": "Memory provenance graph for consolidation tracking"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes segment oracle architecture and is completely unrelated to the current turn's question about project_descriptor storage scope (per-session vs per-memory).",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2692,
+      "memory_title": "Segment oracle architecture: tables, API, backfill design"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about schema changes and segment tables is unrelated to the current discussion about project_descriptor storage scope (per-memory vs per-session).",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2693,
+      "memory_title": "Segment oracle schema changes and test impacts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses session cache invalidation for inactive memory IDs, which is tangentially related to session/memory storage but does not directly address the current question about per-session vs per-memory storage of `project_descriptor`.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3189,
+      "memory_title": "Session recall cache must invalidate on inactive memory IDs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a specific financial service architecture (kgoose-memory-store) that is completely unrelated to the current discussion about project_descriptor storage scope and session/memory configuration.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3325,
+      "memory_title": "kgoose-memory-store: Backend service for Kgoose/Moneybot persistent user memory"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses memory consolidation mechanics, which is unrelated to the current question about whether `project_descriptor` is set per session or per memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3345,
+      "memory_title": "Kgoose memory consolidation is model-driven, not batch-scheduled"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses corpus statistics and quality metrics for YAAML memories, which is unrelated to the current turn's technical question about per-memory vs per-session storage of `project_descriptor`.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 2275,
+    "turn_ordinal": 263
+  }
+}

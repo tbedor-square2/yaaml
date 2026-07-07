@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses future schema amendments for approval/objection state tracking, which is tangential to the current query about null/not-null consistency in ruleset handling within the PR.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2413,
+      "memory_title": "Future rule archival amendments: approval/objection state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents style/convention updates (stream collection, logging, inlining helpers) but the current turn asks about null/not-null consistency in ruleset handling, which is a substantive logic concern not addressed in the memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2458,
+      "memory_title": "RuleArchivalDateCalculator: review feedback applied to stream collection and logging"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses rollout flag defaults and trigger exclusion logic, which is tangential to the current question about null/not-null consistency for rulesets across code paths.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2484,
+      "memory_title": "Pending rule archival rollout flag: empty string for unset, not far-future date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed notification job PR and upcoming archival execution work, but does not address the current question about null/not-null handling consistency for rulesets in the PR being reviewed.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2490,
+      "memory_title": "MLP-4411 notification job PR #482948 complete; MLP-4418 archival execution job next"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about predicate helpers for state contracts is relevant to the current discussion about consistent null/not-null handling, but requires filtering\u2014it addresses state invariants rather than directly answering the specific null-handling inconsistency question being asked.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2589,
+      "memory_title": "Rule archival refactoring: use predicate helpers for implicit state contracts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses public method naming and lifecycle terms, but the current turn is specifically about null/not-null handling consistency for rulesets, which is a different concern not covered by this memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2593,
+      "memory_title": "Rule archival executor factoring: public method naming and lifecycle terms"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes class naming and method signatures, but the current query focuses on null/not-null handling consistency for rulesets, which is not addressed in the stored context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2607,
+      "memory_title": "Rule archival refactor: executor naming and method signatures"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses rule_config_id tracking and validation logic, but the current turn is specifically about null/not-null consistency assumptions across different code paths\u2014a distinct concern not addressed in the stored memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2610,
+      "memory_title": "PendingRuleArchival: track exact rule_config_id for archival targeting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the data model and validation strategy for PendingRuleArchival, which is directly relevant to understanding null/not-null assumptions, but doesn't explicitly address the inconsistency in null handling between new candidate creation and existing row processing that the current turn is asking about.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2616,
+      "memory_title": "PendingRuleArchival: Add rule_config_id, keep metadata, use exact targeting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes response field refactoring and notification skip handling, but the current turn asks about null/not-null consistency for rulesets across the PR\u2014a different concern with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2618,
+      "memory_title": "MLP-4410 rule archival response: simplify notification fields; remove skip counts/reasons"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a code simplification refactoring (inlining ID sets), but the current turn asks about null/not-null consistency assumptions for rulesets\u2014a semantic correctness issue unrelated to that refactoring.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2621,
+      "memory_title": "Code simplification: inline single-use ID sets into query builders"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses change-freeze guards and RPC annotations for rule archival execution, but the current turn asks about null/not-null consistency assumptions for rulesets\u2014a different concern with no overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2622,
+      "memory_title": "RiskArbiter rule archival manual RPC requires change-freeze guard on both code paths"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses PR #483111 completion and freeze annotation fixes, but the current turn asks about null/not null consistency for rulesets in the PR\u2014a different technical concern not addressed in the stored memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes proto field additions and summary aggregation logic, but the current turn asks about null/not-null consistency in ruleset handling across code paths\u2014a different concern not addressed in the stored context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3011,
+      "memory_title": "Risk Arbiter rule archival date surfacing: use min pending date per model_name in RuleSummary"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes an implementation approach for attaching pending archival reads to GetRulesSummaryAction, but the current turn is asking about null/not-null consistency in ruleset handling within the PR\u2014a different concern that this memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3033,
+      "memory_title": "Backend implementation: attach pending archival read to GetRulesSummaryAction"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes draft PRs to open but provides no context about null/not null handling assumptions for rulesets, which is the specific technical question being asked.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3034,
+      "memory_title": "Draft PRs to open: tbedor/riskarbiter-rule-summary-archival-date and tbedor/kui-rule-archival-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a feature for surfacing archival dates in KUI, but the current turn asks about null/not-null consistency in ruleset handling within a PR\u2014different concern with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3123,
+      "memory_title": "Rule archival date surfacing: backend proto field + KUI table/filter display"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory covers high-level design decisions and implementation strategy for rule cleanup/reactivation, but does not address null/not-null handling assumptions for rulesets specifically, which is the current turn's focus.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef12b-5400-7f41-9c2c-7c82f7013391",
+    "source_run_id": 2159,
+    "turn_ordinal": 95
+  }
+}

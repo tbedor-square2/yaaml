@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides Bazel verification procedures for Java worktrees, but the current turn is focused on code implementation details (audit logging, action guards, ActionUtils integration) with no mention of Bazel testing or verification needs.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2379,
+      "memory_title": "Bazel verification for archival review RPC changes in java worktrees"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns notification job implementation and Slack/Squawk integration, while the current turn focuses on rule_config_id migration, change guards, and audit logging for archival actions\u2014entirely different technical domains with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2486,
+      "memory_title": "MLP-4411 notification job implementation complete; draft PR ready without wiring scheduled sends"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed notification job PR and mentions the next archival execution job, but the current turn is focused on addressing a P1 issue about rule_config_id migration and pending rows safety\u2014different scope and priority than the memory's project status update.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2490,
+      "memory_title": "MLP-4411 notification job PR #482948 complete; MLP-4418 archival execution job next"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes project sequencing and ticket dependencies for rule archival, but the current turn focuses on a specific P2 issue about rule_config_id migration and pending rows\u2014different technical concerns not addressed by the sequencing context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2519,
+      "memory_title": "Automated rule archival project sequencing: MLP-4409 complete; MLP-4410 (dry-run RPC) in progress; MLP-4411+ follow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes PendingRuleArchival schema design, but the current turn focuses on P2 migration safety and audit logging conventions for the archival action\u2014different concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2616,
+      "memory_title": "PendingRuleArchival: Add rule_config_id, keep metadata, use exact targeting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the P2 issue about rule_config_id migration and pending rows by documenting the implemented change-freeze guard solution on both code paths (manual RPC and executor), which is exactly what the current turn is discussing.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2622,
+      "memory_title": "RiskArbiter rule archival manual RPC requires change-freeze guard on both code paths"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a completed PR review and freeze-guard fix for the same action being discussed, providing useful context about the architectural decision to remove the blanket freeze interceptor, though the current turn focuses on addressing a P1 issue about rule_config_id migration assumptions.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a read-only extension to GetRulesSummaryAction for pending archival dates, but the current turn focuses on adding audit logging and change guards to the mutating RunPendingRuleArchivalsAction\u2014different concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3033,
+      "memory_title": "Backend implementation: attach pending archival read to GetRulesSummaryAction"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a two-PR stack plan for rule archival date surfacing, but the current turn is focused on addressing a P1 issue with rule_config_id migration and implementing audit logging conventions\u2014different scope and priority than the stored memory's PR planning context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3034,
+      "memory_title": "Draft PRs to open: tbedor/riskarbiter-rule-summary-archival-date and tbedor/kui-rule-archival-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a PR rebase and deployment status, but the current turn is about addressing a P1 issue with rule_config_id migration and audit logging conventions\u2014different context and no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3065,
+      "memory_title": "PR #477833 tbedor/riskarbiter-trigger-traffic: rebased and pushed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed rebase and BUILD dependency work on PR #483601, but the current turn focuses on rule_config_id migration safety and audit logging implementation details\u2014different concerns with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes rule archival date surfacing in KUI, but the current turn focuses on P2 migration safety for rule_config_id and audit logging conventions for the manual archival RPC\u2014different concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3123,
+      "memory_title": "Rule archival date surfacing: backend proto field + KUI table/filter display"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a pyriskarbiter consolidation refactoring (PR #543) unrelated to the current turn's focus on rule_config_id migration, pending rows, manual archival RPC, audit logging, and ActionUtils\u2014different codebase and problem domain.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents high-level design decisions for rule cleanup and reactivation, but the current turn is focused on a specific P2 issue about rule_config_id migration and pending rows, which is not addressed in the stored memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a pyriskarbiter CLI proto field addition, but the current turn focuses on rule_config_id migration safety, manual archival RPC conventions, and audit logging in Java\u2014different layers and concerns with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3213,
+      "memory_title": "pyriskarbiter trigger archival eligibility display added to PR #553"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns UI label updates and tooltip changes for a rule archival feature, while the current turn discusses backend migration logic, audit logging conventions, and action guards\u2014completely different technical domains with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a feature flag rollout script and timeline, but the current turn focuses on code implementation details (audit logging, action guards, ActionUtils) for addressing a P1 issue about rule_config_id migration\u2014different technical concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3368,
+      "memory_title": "Riskarbiter archival rollout: staged feature flag and script"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes notification validation and routing logic for RuleArchivalExecutor, but the current turn focuses on rule_config_id migration safety, manual archival RPC conventions, and audit logging\u2014different concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3374,
+      "memory_title": "RuleArchivalExecutor notification validation and routing logic"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef12b-5400-7f41-9c2c-7c82f7013391",
+    "source_run_id": 2170,
+    "turn_ordinal": 107
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about SQLite contention and daemon logging is useful context for understanding the daemon behavior and potential scheduler gaps being diagnosed, but the current turn focuses on recall-quality improvements and CLI usability rather than database/logging infrastructure.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1817,
+      "memory_title": "SQLite contention and daemon logging fixes in yaaml"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past refinement to `yaaml status` output formatting, but the current turn is focused on diagnosing scheduler gaps and recall-quality consolidation issues, making this memory stale and tangentially relevant at best.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2034,
+      "memory_title": "yaaml status command: separate transcript state from cumulative counters"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns completed PRs and LaunchDarkly rollout handling, which is unrelated to the current turn's focus on recall-quality diagnostics, daemon scheduling gaps, and CLI usability improvements.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a completed PR review for manual rule archival (MLP-4410), while the current turn focuses on diagnosing memory consolidation scheduler gaps and recall-quality improvements\u2014entirely different technical domains with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's focus on checking YAAML recall/stats/evals with time-based filtering, though the stored memory describes a completed feature rather than current diagnostic findings.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3091,
+      "memory_title": "YAAML stats and eval summary support --since filtering for recency-focused diagnostics"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the recall-quality thread being worked on; documents prior fixes that provide context for current consolidation and scheduler diagnostics, though not immediately actionable for the current turn's focus on daemon scheduling gaps.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR #483601 (rebase and BUILD dep removals) is completely unrelated to the current turn's focus on YAAML recall-quality diagnostics, memory consolidation scheduling, and CLI usability improvements.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes task lifecycle metadata fixes for stale retry fields, but the current turn focuses on recall-quality diagnostics, scheduler gaps, and CLI usability improvements\u2014different problem domains with no actionable connection.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3135,
+      "memory_title": "Task lifecycle metadata fixes: clear stale retry fields on transitions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed refactoring work (PR #543) on pyriskarbiter modules, while the current turn focuses on diagnosing a memory consolidation scheduler gap and improving CLI usability for duration parsing\u2014different problem domains with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current work on recall-quality improvements and CLI usability fixes for `--since` filtering, though this memory addresses a specific past fix rather than the current diagnostic phase.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3188,
+      "memory_title": "YAAML eval summary default limit expanded from 50 to 1000 runs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant\u2014the stored memory provides current YAAML recall/stats/evals data that the assistant is actively checking to inform recall-quality improvements on this turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about EXPERIMENTS_LOG.md updates is stale and tangential to the current turn's focus on daemon scheduling gaps, consolidation diagnostics, and CLI usability improvements.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3196,
+      "memory_title": "5x5 prompt should require EXPERIMENTS_LOG.md updates on primary branch"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a 5x5 experiment workflow and metrics runner setup, which is tangentially related to the current turn's focus on recall-quality diagnostics and scheduler gaps, but lacks direct actionable context for the immediate debugging and CLI improvement tasks being pursued.",
+      "judge_score": "3",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3198,
+      "memory_title": "YAAML 5x5 experiment workflow: orchestrated metrics runner and prompt"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents recall experiment findings and lessons that provide useful context for the current recall-quality work, though it lacks the specific runtime data and scheduler diagnostics being actively gathered in this turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the recall-quality work in progress, providing concrete diagnostic findings (45% vs 74.1% drop, wrong-context root cause) and a clear next step, though the stored memory is from an earlier phase and the current turn has moved to CLI usability improvements.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant baseline context on YAAML memory quality metrics and prior findings, but the current turn is focused on immediate scheduler diagnostics and CLI improvements rather than the broader quality evidence.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3254,
+    "turn_ordinal": 388
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents code review patterns and style preferences, but the current turn is specifically about formatting exclusions and before/after file examples, which are unrelated to those architectural review feedback patterns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1755,
+      "memory_title": "Java Risk Arbiter PR 480432: Review feedback patterns and code style preferences"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Java package splitting project and Linear issues, which is completely unrelated to the current turn's focus on formatting configuration, jooq-model exclusions, and before/after file examples.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2001,
+      "memory_title": "Java package splitting project with three issues and audit-log follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses architectural cycle-breaking and SCC measurement strategy, which is completely unrelated to the current turn's request for a before/after code formatting example with jooq-model exclusions.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2017,
+      "memory_title": "Risk Arbiter: Cycle-breaking strategy uses SCC measurement to validate architectural splits"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about Bazel verification for RPC/proto changes in Java worktrees, but the current turn is asking for a before/after example of code formatting with jooq-model exclusions\u2014completely different context.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2379,
+      "memory_title": "Bazel verification for archival review RPC changes in java worktrees"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about a test timeout fix is unrelated to the current turn's focus on code formatting exclusions and before/after examples for jooq-model classes.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2728,
+      "memory_title": "Java riskarbiter test timeout fix: mark CreateHyperdynamicRuleActionTest as medium"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about a past PR rebase and BUILD dependency removals, completely unrelated to the current turn's request for before/after formatting examples with jooq-model exclusions.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about pyriskarbiter library refactoring and PR #543 consolidation, which is completely unrelated to the current turn's request for a before/after formatting example with jooq-model exclusions in a Java project.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a Homebrew formula migration and PyPI publishing workflow, which is completely unrelated to the current turn's request for a before/after code formatting example with jooq-model exclusions.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3157,
+      "memory_title": "homebrew-formulas PR #4844: sq-riskarbiter uvx wrapper migration\u2014mlds-core#545 blocker and publish workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Bazel package splitting is unrelated to the current turn, which focuses on code formatting exclusions and before/after examples of formatted Java files.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3219,
+      "memory_title": "Build performance improvements via Bazel package splitting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This stored memory directly documents the `just fmt` task and its exclusion of jooq-model classes, providing essential context for understanding the before/after example and command behavior shown in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3355,
+      "memory_title": "java fmt task: PR-touched or explicit-set Java formatting via google-java-format"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about renaming a utility class and cleaning up signal-generator code, which is completely unrelated to the current turn's focus on formatting exclusions and before/after file examples.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a worktree setup for code analysis, which is completely unrelated to the current turn's focus on formatting exclusions and before/after file examples.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3359,
+      "memory_title": "Categorize Riskarbiter code script uses temporary sparse worktree for analysis"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a worktree setup for code analysis, which is completely unrelated to the current turn's focus on formatting exclusions and before/after file examples.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3363,
+      "memory_title": "Categorize Riskarbiter code script uses temporary sparse worktree for analysis"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory confirms Square formatter is the required tool and provides context on implementation details, but the current turn focuses on excluding jooq-model classes from formatting, which is a refinement beyond the core formatter choice already established.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3365,
+      "memory_title": "riskarbiter: Square IntelliJ code-style is a formatting requirement"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses IntelliJ formatter configuration and editorconfig setup, but the current turn is asking for a before/after example of file formatting with jooq-model exclusions\u2014the memory provides implementation details that are tangential to the immediate request.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3370,
+      "memory_title": "riskarbiter IntelliJ formatter uses monorepo editorconfig"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the jooq-model exclusion implementation, but the current turn has already moved past the .editorconfig setup phase into demonstrating the before/after example.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3372,
+      "memory_title": "java-code-styles repo deprecated; Java formatting now uses monorepo .editorconfig"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes finalized .editorconfig settings from a past PR, but the current turn is asking for a before/after example of a formatted file with jooq-model exclusions\u2014which has already been provided in the conversation history itself.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3398,
+      "memory_title": "Riskarbiter .editorconfig formatting settings finalized and applied"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f23ad-7f57-7373-9829-cd921c397d84",
+    "source_run_id": 3347,
+    "turn_ordinal": 5
+  }
+}

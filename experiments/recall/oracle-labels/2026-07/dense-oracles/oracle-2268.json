@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR comment management and canary artifacts is completely unrelated to the current discussion about rollout flags, parity checking, Mux delegation, and signal generation in Risk Arbiter.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1791,
+      "memory_title": "PR comment management: Preview SHA links and artifact canary workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the user's core question about when delegation to Mux happens versus parity checking, explaining that the fetch-from-mux flag is in a partial/stuck rollout state separate from parity, with specific production targeting details.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1881,
+      "memory_title": "RiskArbiter LaunchDarkly audit findings: mux rollout flag stuck in partial state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses deadline/timeout mechanics for Mux calls, but the current query is about rollout stages, flag semantics, and when delegation happens\u2014different concerns that this memory does not clarify.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2642,
+      "memory_title": "Payroll deadline structure: overall scoreable budget vs. parity-specific timeouts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly answers the user's core question about when parity is on versus when delegation to Mux happens, and clarifies the current rollout state for the specific payroll case they're asking about.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2643,
+      "memory_title": "Payroll parity checking flag and current rollout state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the rollout stages and delegation timeline the user is asking about, but focuses on cleanup steps rather than the current parity vs. delegation distinction being queried.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2649,
+      "memory_title": "Payroll signal generator removal steps after Mux rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses deadline handling in parity checks, but the current query is about the rollout stages, flag logic, and when delegation to Mux occurs\u2014topics not covered by this memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2658,
+      "memory_title": "Async deadline sharing vs. parity-specific deadline trade-off"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly answers the user's core confusion by clarifying that parity flag and delegation flag are separate stages, with specific flag names and their distinct purposes.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2785,
+      "memory_title": "Mux cutover flag vs. parity flag are separate concerns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the user's question about rollout stages, delegation timing, and signal usage by providing concrete staging/production metrics that distinguish parity checking from actual Mux delegation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2791,
+      "memory_title": "Strong staging evidence for TD_11 Mux cutover; missing-signal fallback not observed; recommend percentage rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides directly relevant validation and rollout procedures for Mux delegation, but the current turn is asking about the distinction between parity checking and delegation stages, which the memory addresses only partially\u2014it focuses on the cutover process rather than clarifying when parity ends and full delegation begins.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2794,
+      "memory_title": "Safe Mux cutover validation: staging evidence plus gradual rollout with metrics watch"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly addresses the user's core question about when RA delegates entirely to Mux versus parity checking, providing concrete staging evidence, production metrics, and a staged rollout strategy for the exact scenario being discussed.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2801,
+      "memory_title": "RA Mux cutover for TD_11/payroll_run_update_connected_users: staged evidence is strong; percentage rollout strategy recommended"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the delegation flag mechanics and signal filtering logic the user is asking about, but focuses on removal rather than current rollout behavior explanation.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2891,
+      "memory_title": "Flag removal process for riskarbiter-should-fetch-generated-signals-from-mux"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory claims full Mux cutover is complete and legacy traffic stopped, but the current turn's conversation shows the delegation flag is explicitly false in production with parity at 50/50 rollout\u2014directly contradicting the memory's assertion and making it actively misleading.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2910,
+      "memory_title": "RiskArbiter Mux cutover is production-verified and ready for permanent removal"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the parity vs. delegation distinction and explains why parity checking became redundant, but the stored memory describes a past cleanup rather than the current rollout state the user is asking about.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2924,
+      "memory_title": "MuxParityChecker became stale after generator migration; safe to delete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the signal flow and delegation mechanism, but focuses on generator removal rather than the parity flag rollout stages and timing that the user is asking about.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2932,
+      "memory_title": "Signal generator removal: dependency handoff mechanism and mux provider validation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes pyriskarbiter CLI refactoring and library consolidation, which is unrelated to the current question about Risk Arbiter rollout flags, parity checking, Mux delegation, and signal generation logic.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a refactoring of Mux helper utilities and signal-generator cleanup, but does not address the user's specific questions about parity flag behavior, delegation stages, or when Mux takes over\u2014making it stale and tangential to the current debugging discussion.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Provides useful context about Mux helper refactoring and signal-generator deletion, directly relevant to understanding the current Mux delegation architecture, but doesn't directly address the parity flag rollout stages or delegation timing questions.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3361,
+      "memory_title": "riskarbiter Mux helper rename to reflect post-signal-generator deletion"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019efc99-8694-7e32-aa45-80b9bafd75bb",
+    "source_run_id": 2268,
+    "turn_ordinal": 2
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the general PR workflow for this repo, which is relevant context for understanding the revert process, but the current turn is specifically about reverting changes rather than squashing/pushing, so it requires minor filtering to apply.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1722,
+      "memory_title": "forge-signalsmith PR workflow: squash, verify, then force-with-lease push"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR stacking and rebasing is stale and irrelevant to the current turn, which focuses on reverting templating changes, running validation checks, and amending/pushing a single PR commit.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1754,
+      "memory_title": "GitHub PR rebasing: stack PRs by rebasing and retargeting base"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns Java code cleanup (inlining helpers, removing unused fields) while the current turn is about reverting SQL parameterization changes in a Python/BigQuery project\u2014completely different contexts and codebases.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2357,
+      "memory_title": "PR #480432 review feedback: inlining and unused dependency cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed PRs for MLP-4409/4410 with LaunchDarkly rollout handling, which is entirely unrelated to the current turn's focus on reverting SQL parameterization/templating changes in a different codebase.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed PR review for MLP-4410 (rule archival executor), which is entirely unrelated to the current turn's focus on reverting SQL-parameterization/templating changes in a different codebase context.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the PR context, revert decision rationale, and validation status that the current turn is executing\u2014it provides essential background for understanding why templating is being reverted and what the expected outcome should be.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3035,
+      "memory_title": "forge-signalsmith PR #521: lifecycle refactor with BigQuery parameters follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the PR context, revert decision rationale, and validation status that the current turn is executing\u2014it provides essential background for understanding why templating is being reverted and what the expected outcome should be.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3044,
+      "memory_title": "forge-signalsmith PR #521: lifecycle refactor with BigQuery parameters follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different PR (#477833 for riskarbiter-trigger-traffic) and is unrelated to the current turn's revert of templating/SQL-parameterization changes in the forge-signalsmith project.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3065,
+      "memory_title": "PR #477833 tbedor/riskarbiter-trigger-traffic: rebased and pushed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory is about a different PR (#483601) involving ruleconfig rebasing and BUILD dependencies, completely unrelated to the current turn's SQL parameterization revert work.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed pyriskarbiter refactoring PR (#543) unrelated to the current turn's SQL parameterization revert work.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a Homebrew formula PR for sq-riskarbiter migration, completely unrelated to the current turn's SQL parameterization revert and project validation workflow.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3157,
+      "memory_title": "homebrew-formulas PR #4844: sq-riskarbiter uvx wrapper migration\u2014mlds-core#545 blocker and publish workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a KUI PR backend/frontend sync for an archival date field, which is completely unrelated to the current turn's focus on reverting SQL parameterization changes in a data validation codebase.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3217,
+      "memory_title": "KUI PR #14118 backend/frontend sync verified; frontend safe to merge before backend deploy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about a KUI table alignment PR, completely unrelated to the current turn which involves reverting SQL parameterization changes in a BigQuery/forge-signalsmith project.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3226,
+      "memory_title": "KUI PR #14133 deep review and alignment patch complete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completely different PR (#13972 on a KUI/metadata-table feature) with no relevance to the current turn's SQL parameterization revert on the forge-signalsmith project.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3235,
+      "memory_title": "PR #13972 updated from action-table experiment to metadata-table production implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a KUI PR about table header alignment, completely unrelated to the current turn's SQL parameterization revert work.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3241,
+      "memory_title": "KUI PR #14133 table header alignment: review addressed, CI green"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR #13972 feedback resolution is completely unrelated to the current turn, which focuses on reverting SQL parameterization/templating changes in a different codebase.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3318,
+      "memory_title": "Recently visited resources PR feedback resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a recently-visited feature PR with environment columns and timestamp fixes, which is completely unrelated to the current turn's focus on reverting SQL parameterization/templating changes in a BigQuery usage-verification context.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3384,
+      "memory_title": "PR #13972: recently-visited feature addresses prod/staging distinction, timestamp milliseconds, and KITT URL deduplication"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f0025-3f91-7922-81e4-7bc8cb3def79",
+    "source_run_id": 3233,
+    "turn_ordinal": 17
+  }
+}

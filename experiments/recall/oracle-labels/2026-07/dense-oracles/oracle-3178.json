@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses transitive dependency tracking limitations in RiskArbiter, but the current turn has already resolved the specific question (Mixtape doesn't need RiskArbiter inheritance) with concrete file-level recommendations, making this general limitation note stale and not actionable for the immediate context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1598,
+      "memory_title": "Known limitation: incomplete transitive Riskarbiter dependencies"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses EmailAge Beacon-to-Mux migration details, which is unrelated to the current question about whether Mixtape needs to inherit from RiskArbiter's SignalGenerator class.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1662,
+      "memory_title": "Mixtape EmailAge Beacon-to-Mux migration precondition"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses riskml-common build structure and CI fanout, which is completely unrelated to the current question about whether Mixtape needs to inherit from RiskArbiter's SignalGenerator class.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1769,
+      "memory_title": "riskml-common fanout is driven by monolithic :lib, not riskarbiter decomposition"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns LaunchDarkly feature flags and rollout states in RiskArbiter, which is completely unrelated to the current question about Mixtape's inheritance from RiskArbiter's SignalGenerator class.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1881,
+      "memory_title": "RiskArbiter LaunchDarkly audit findings: mux rollout flag stuck in partial state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses RiskArbiter dependency discovery patterns and feature wildcards, which is unrelated to the current question about whether Mixtape needs to inherit from RiskArbiter's SignalGenerator class.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2585,
+      "memory_title": "RiskArbiter dependency probes: exact feature wildcards vs. generic concrete features"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses payroll signal generator removal after Mux rollout, but the current turn is about whether Mixtape needs to inherit from RiskArbiter's SignalGenerator class\u2014a different architectural question already answered with specific refactoring steps.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2649,
+      "memory_title": "Payroll signal generator removal steps after Mux rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses generator migration status and outstanding tickets, but the current turn is asking a specific technical question about inheritance requirements that was already answered with concrete code analysis.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2650,
+      "memory_title": "Outstanding signal generators migration status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PersonService ACL permissions is completely unrelated to the current discussion about Mixtape's SignalGenerator inheritance hierarchy.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2773,
+      "memory_title": "Mixtape PersonService ACL: BatchGetByPersonToken requires explicit allow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about CLI commands for rule archival verification is completely unrelated to the current discussion about Mixtape's inheritance from RiskArbiter's SignalGenerator class.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2780,
+      "memory_title": "CLI command workflow for pending rule archival verification after flag set"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a production canary failure related to PersonService ACL permissions, which is completely unrelated to the current question about whether Mixtape needs to inherit from RiskArbiter's SignalGenerator class.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2781,
+      "memory_title": "Production canary failure root cause: PersonService.BatchGetByPersonToken ACL missing for mixtape"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses flag removal and signal-to-generator mapping safety, which is tangentially related to generator inheritance but does not directly answer whether Mixtape needs to inherit from RiskArbiter's SignalGenerator class.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2890,
+      "memory_title": "Flag removal safety: preserve generatedSignalToGenerator mapping check"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses flag removal for a RiskArbiter feature migration, but the current turn is about whether Mixtape needs to inherit from RiskArbiter's SignalGenerator class\u2014a different architectural question with no overlap in concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2891,
+      "memory_title": "Flag removal process for riskarbiter-should-fetch-generated-signals-from-mux"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses RiskArbiter signal-generator cleanup and module binding concerns, which is directly relevant to the current discussion about Mixtape's inheritance from RiskArbiter's SignalGenerator, but it focuses on a different generator (PayrollDuplograph) and module-level cleanup rather than the specific Mixtape inheritance question being answered.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2911,
+      "memory_title": "RiskArbiter signal-generator cleanup should be done in one PR; module bindings must be preserved or explicitly removed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses RiskArbiter payroll signal generator removal, but the current turn asks about Mixtape's inheritance dependency on RiskArbiter's SignalGenerator class\u2014a different architectural concern unrelated to the payroll cutover completion.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2920,
+      "memory_title": "RiskArbiter payroll signal generator cutover complete; safe to remove in one PR"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses MuxParityChecker deletion and generator migration history, but the current turn is asking about Mixtape's inheritance from RiskArbiter SignalGenerator\u2014different classes and concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2924,
+      "memory_title": "MuxParityChecker became stale after generator migration; safe to delete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses signal generator removal and dependency handling, which is contextually related to the inheritance question, but doesn't directly address whether Mixtape needs to inherit from RiskArbiter's SignalGenerator class.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2932,
+      "memory_title": "Signal generator removal: dependency handoff mechanism and mux provider validation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the inheritance question by documenting signal-generator cleanup and RiskArbiter dependency removal, though the stored memory focuses on renaming/cleanup rather than the specific inheritance decision already resolved in the current turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Related context about signal generator refactoring and RiskArbiter cleanup, but focuses on a different component (Mux helper) rather than the Mixtape inheritance question directly.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3361,
+      "memory_title": "riskarbiter Mux helper rename to reflect post-signal-generator deletion"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ed6df-0d7b-7210-b6eb-9da62527d7f1",
+    "source_run_id": 3178,
+    "turn_ordinal": 161
+  }
+}

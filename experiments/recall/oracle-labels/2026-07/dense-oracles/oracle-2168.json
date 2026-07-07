@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents general code review preferences from a past PR, but the current turn is focused on a specific technical task (removing NotificationResult fields and updating tests), making the style guidance largely irrelevant to immediate execution.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1755,
+      "memory_title": "Java Risk Arbiter PR 480432: Review feedback patterns and code style preferences"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory covers Bazel verification procedures for Java worktrees, but the current turn is focused on proto field cleanup and test updates for NotificationResult removal, which doesn't require Bazel-specific troubleshooting guidance.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2379,
+      "memory_title": "Bazel verification for archival review RPC changes in java worktrees"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed PRs for MLP-4409/4410 with LaunchDarkly rollout dates, while the current turn is actively working on removing NotificationResult fields and updating tests\u2014entirely different scope and context.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant context about the notification job implementation and PR structure, but the current turn focuses on removing NotificationResult fields and updating tests, which requires more specific technical details about the proto changes and test modifications than this summary captures.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2486,
+      "memory_title": "MLP-4411 notification job implementation complete; draft PR ready without wiring scheduled sends"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents the completed notification job PR and provides useful context about the overall feature work, but the current turn is focused on a specific proto cleanup task (removing NotificationResult fields) that requires detailed knowledge of the current code state rather than high-level project status.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2490,
+      "memory_title": "MLP-4411 notification job PR #482948 complete; MLP-4418 archival execution job next"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the overall project sequencing and ticket dependencies, but the current turn is focused on a specific technical implementation detail (removing NotificationResult fields and updating tests), which is not directly addressed in the memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2519,
+      "memory_title": "Automated rule archival project sequencing: MLP-4409 complete; MLP-4410 (dry-run RPC) in progress; MLP-4411+ follow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact refactoring being executed in the current turn\u2014removing NotificationResult fields, collapsing to simple counts, and updating tests accordingly.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2618,
+      "memory_title": "MLP-4410 rule archival response: simplify notification fields; remove skip counts/reasons"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed PR review and freeze fix from an earlier phase, but the current turn is actively implementing notification result removal and test updates, making this historical context stale and not actionable for the ongoing work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completely different PR (#477833 about Datadog traffic metrics) unrelated to the current turn's focus on removing NotificationResult fields and updating tests.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3065,
+      "memory_title": "PR #477833 tbedor/riskarbiter-trigger-traffic: rebased and pushed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed rebase and BUILD dependency cleanup for a different PR (#483601), which is unrelated to the current turn's focus on removing NotificationResult fields and updating tests.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past refactoring of pyriskarbiter CLI modules and library extraction, which is completely unrelated to the current turn's focus on removing NotificationResult fields and updating notification response handling in what appears to be a different codebase.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a Homebrew formula migration and PyPI publishing workflow, which is completely unrelated to the current turn's discussion about removing NotificationResult fields from a proto response and updating tests.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3157,
+      "memory_title": "homebrew-formulas PR #4844: sq-riskarbiter uvx wrapper migration\u2014mlds-core#545 blocker and publish workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes proto regeneration and CLI display updates for trigger archival eligibility, but the current turn focuses on removing NotificationResult fields and updating tests for notification responses\u2014different features with only tangential proto-related overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3213,
+      "memory_title": "pyriskarbiter trigger archival eligibility display added to PR #553"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about test harness refactoring for suspension threshold tests, while the current turn is focused on removing NotificationResult fields and updating notification-related code and tests\u2014completely different contexts.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3237,
+      "memory_title": "PR #483601: Reduce AbstractSuspicionThresholdTest dependency via explicit rule config harness"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR #13972 feedback on recently visited resources is completely unrelated to the current turn's focus on removing NotificationResult fields and updating notification-related code.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3318,
+      "memory_title": "Recently visited resources PR feedback resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about UI label/tooltip updates for rule archival eligibility, while the current turn is focused on removing NotificationResult fields from proto definitions and updating backend tests\u2014completely different contexts.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns Mux helper renaming and signal-generator cleanup, which is completely unrelated to the current turn's focus on removing NotificationResult fields and updating notification response handling.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes environment-specific notification routing and validation logic, but the current turn focuses on removing NotificationResult fields and simplifying the response proto\u2014different concerns that don't directly inform the ongoing refactoring work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3374,
+      "memory_title": "RuleArchivalExecutor notification validation and routing logic"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef12b-5400-7f41-9c2c-7c82f7013391",
+    "source_run_id": 2168,
+    "turn_ordinal": 105
+  }
+}

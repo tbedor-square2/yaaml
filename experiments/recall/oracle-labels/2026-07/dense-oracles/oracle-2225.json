@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a Snowflake backfill process for partition-selection history, which is completely unrelated to the current turn's discussion about RiskArbiter payroll async job timeouts, MuxFeatureFetcher, and scoreable deadlines.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2300,
+      "memory_title": "Partition-selection-history backfill: three-artifact durable state machine with strict reconciliation cycle"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses Bazel verification for RPC/proto changes in Java worktrees, but the current turn is about implementing a deadline change to PayrollRunUpdateJobHandler and submitting a draft PR\u2014a different technical context with no overlap in concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2379,
+      "memory_title": "Bazel verification for archival review RPC changes in java worktrees"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns completed PRs for archival storage and dry-run RPC features, which is entirely unrelated to the current turn's focus on payroll async job timeout configuration and RiskArbiter changes.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's workflow of submitting a draft PR with Bazel verification, but requires filtering since the memory advises delegating to CI rather than waiting for local builds\u2014which aligns with the assistant's stated approach of delegating to a subagent per repo instructions.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2536,
+      "memory_title": "Verify rebases and push via CI rather than local Bazel when test compile is slow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory concerns PR #483111 for manual rule archival (MLP-4410), which is entirely unrelated to the current turn's discussion of payroll async job timeouts, MuxFeatureFetcher, and RiskArbiter deadline changes.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly explains the core technical constraint the user is addressing: why raising the LD flag alone won't help, and that an explicit scoreable deadline is needed\u2014which is exactly what the current turn is implementing.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2630,
+      "memory_title": "TD_11 payroll Mux timeout computation: default 10s baseline, LD cap applied on top"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Provides relevant context on TD_11 payroll parity flag rollout status and current timeout issues, but lacks specific implementation details needed for the deadline code change being discussed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2631,
+      "memory_title": "TD_11 payroll parity flag and current rollout status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly explains the root cause and solution for the exact problem being discussed in the current turn\u2014missing scoreable deadline in payroll async job and how to fix it by injecting the LD flag.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2639,
+      "memory_title": "RiskArbiter TD_11 payroll Mux fetch timeout: root cause is missing scoreable deadline"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly explains the deadline structure and how riskarbiter-mux-max-timeout-millis interacts with scoreables, which is the core technical context for the current turn's discussion about adding a scoreable deadline to the payroll job.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2642,
+      "memory_title": "Payroll deadline structure: overall scoreable budget vs. parity-specific timeouts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes post-rollout cleanup steps for removing a legacy signal generator, but the current turn focuses on implementing a deadline change to the payroll async scoreable to control Mux fetch timeout\u2014a different technical concern with no overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2649,
+      "memory_title": "Payroll signal generator removal steps after Mux rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant\u2014provides the root cause analysis (hardcoded 10s default, LD cap ineffective without scoreable deadline) and context for the exact code change being discussed in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2820,
+      "memory_title": "Mux feature-fetch timeout causing DLQ backlog on TD_11 payroll_run_update"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different PR (#477833 for riskarbiter-trigger-traffic) unrelated to the current payroll async job deadline change being discussed.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3065,
+      "memory_title": "PR #477833 tbedor/riskarbiter-trigger-traffic: rebased and pushed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed rebase and BUILD dependency cleanup for a different PR (#483601), which is stale context unrelated to the current payroll async job deadline implementation and draft PR submission.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns pyriskarbiter CLI refactoring and library consolidation, which is unrelated to the current turn's focus on RiskArbiter payroll async job timeout configuration and scoreable deadline implementation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns Homebrew formula migration and PyPI publishing workflows, which is entirely unrelated to the current turn's discussion of RiskArbiter payroll job timeout configuration, Mux feature fetcher deadlines, and code changes to PayrollRunUpdateJobHandler.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3157,
+      "memory_title": "homebrew-formulas PR #4844: sq-riskarbiter uvx wrapper migration\u2014mlds-core#545 blocker and publish workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Bazel package splitting is unrelated to the current discussion about adding a scoreable deadline to the payroll async job to control Mux fetch timeouts.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3219,
+      "memory_title": "Build performance improvements via Bazel package splitting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory concerns Blox hybrid migration architecture and is entirely unrelated to the current turn's focus on RiskArbiter payroll timeout configuration and PR submission.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3245,
+      "memory_title": "Blox hybrid migration research: architecture, precedent, and spike plan"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past refactoring (renaming MuxSignalGeneratorMigrationUtil and cleanup) that is stale and unrelated to the current turn's focus on adding a scoreable deadline to the payroll async job to control Mux fetch timeout.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019edcc8-cff6-77d1-8e48-04b9adabc032",
+    "source_run_id": 2225,
+    "turn_ordinal": 46
+  }
+}

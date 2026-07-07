@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the recently visited feature implementation, recorder mounting location, data structure, and metadata limitations\u2014exactly matching the current turn's discussion about what page-visit data is being captured and how to enhance it.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3137,
+      "memory_title": "KUI Recently Visited Feature: Implementation, Route Matching, and Home Page Integration"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the implemented metadata-table layout and data schema, which is directly relevant to understanding what is currently being captured in page visits, but it lacks the technical detail about the shell-level recorder mounting and the unfilled optional fields (`state`, `updatedAt`, `details`) that the current turn is exploring.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3233,
+      "memory_title": "Square Console KUI recently-visited feature: metadata table direction won team feedback"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the implementation mechanism (localStorage upsert vs deduplication) but the current turn focuses on what metadata is captured at page visit time, which requires understanding the data shape and mounting point rather than the storage strategy itself.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3234,
+      "memory_title": "KUI recently-visited: use localStorage upsert instead of useLocalHistory deduplication"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current discussion about capturing page metadata in recently-visited entries, but describes the UI implementation rather than the data-capture mechanism being debated.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3239,
+      "memory_title": "Recently-visited metadata table won team feedback; update PR #13972 with new implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current discussion about capturing page visit information and metadata storage, but lacks details about the specific data fields (state, updatedAt, details) and page-level integration points that the current turn is exploring.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3247,
+      "memory_title": "Recently visited resources: metadata table with client-side timestamp tracking"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the recently-visited feature implementation and data structure, which is directly relevant to the current discussion about capturing page metadata, but lacks details about the specific mounting location and metadata population strategy being debated.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3250,
+      "memory_title": "KUI recently-visited feature: switch to metadata table with client-side tracking"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the storage mechanism and deduplication strategy for recently-visited entries, which is directly relevant to understanding how page visits are captured and stored, but doesn't address the current question about capturing page-level metadata (state, updatedAt, details) at visit time.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3251,
+      "memory_title": "KUI recently-visited: use localStorage directly instead of useLocalHistory for upsert semantics"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the implemented solution to the exact question being asked\u2014what page-level metadata is being captured during page visits and how it's being stored.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3254,
+      "memory_title": "Recently Visited Metadata Capture Strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the implemented solution to the exact problem discussed in the current turn\u2014capturing page-level metadata in recently visited resources without extra fetches.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3285,
+      "memory_title": "Page-Level Metadata Capture for Recently Visited Resources"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the core issue: how to capture and preserve page-level metadata (state, updatedAt, details) when the route recorder runs at shell level, which is exactly what the current turn is exploring.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3286,
+      "memory_title": "Metadata Merge Strategy for Recently Visited History"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant example of page-level metadata capture pattern, but for a different page (rule chaining graph) than the current discussion about rule/model/job detail pages.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3304,
+      "memory_title": "Recently visited resources capture for rule chaining graph selections"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the current discussion about capturing page-level metadata in page visits, describing the exact component (RecordRecentlyVisitedResourceMetadata) and metadata fields (state, stats, status) that the conversation is exploring as a solution.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3306,
+      "memory_title": "KUI recently visited resources: route canonicalization and metadata capture"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the current discussion about capturing page-level metadata in recently visited resources, providing specific implementation details about how graph metadata is being recorded and the component pattern used.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3315,
+      "memory_title": "KUI recently visited resources: route canonicalization and graph metadata"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents PR feedback on recently visited resources implementation, directly relevant to the current discussion about capturing page visit data, though it focuses on past fixes rather than the current architectural question about metadata capture.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3318,
+      "memory_title": "Recently visited resources PR feedback resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a related implementation pattern (graph selection capture) that mirrors the trigger/rule detail page metadata approach the assistant is recommending, but it's about a specific feature rather than the general architectural guidance needed for the current turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3320,
+      "memory_title": "Graph selection recently visited capture implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a similar pattern (page-level metadata capture for recently visited resources) but applies to rule chaining graphs specifically, whereas the current turn discusses the general architecture and whether metadata can be captured for rules/models/jobs detail pages\u2014useful context with minor filtering needed to extract the applicable pattern.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3322,
+      "memory_title": "Rule Chaining Graph recently visited capture added to KUI"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed PR about recently-visited features (environment column, timestamps, deduplication) but does not address the current discussion about capturing page-level metadata like state, updatedAt, and details at the point of page visit.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3384,
+      "memory_title": "PR #13972: recently-visited feature addresses prod/staging distinction, timestamp milliseconds, and KITT URL deduplication"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef68c-243f-7541-9fb6-ccd845bcf6d6",
+    "source_run_id": 3300,
+    "turn_ordinal": 22
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses provider latency monitoring windows, but the current turn is focused on flagging rates, safety metrics, and system health polling with no mention of provider latency or heartbeat p99 analysis.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2204,
+      "memory_title": "Short-lived blips vs. real incidents in provider latency: the 15-min sustained window filter"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Datadog monitor for provider heartbeat p99 latency, but the current turn is focused on flagging rates, safety metrics, Mux failures, and deadletter events\u2014different monitoring domains with no overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2209,
+      "memory_title": "Provider heartbeat p99 monitoring: 1h change-shift with 1000ms absolute threshold"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a latency improvement from a past deploy (2026-06-24), but the current turn is monitoring system health metrics and flagging rates at 2026-06-27, with no connection to the payroll_connected_users signal or latency concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2615,
+      "memory_title": "payroll_connected_users latency improved post-deploy 11:03 PDT; p99 ~24s \u2192 ~5-9s, SLO misses nearly eliminated"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes historical payroll latency performance and timeout resolution, but the current turn is actively monitoring system health metrics (flagging, Mux failures, deadletters) in real-time with no mention of latency concerns or TD_11 payroll evaluation.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2632,
+      "memory_title": "Served TD_11 payroll evaluation: no timeout errors, p99 latency 4.3s under 10s caller timeout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a DynamoDB read spike from 2026-06-25, but the current turn is a system health poll from 2026-06-27 checking metrics, flagging, and safety\u2014different system, different date, no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2709,
+      "memory_title": "Risk Arbiter DynamoDB read spike investigation (2026-06-25)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the baseline flagging rates, safety metrics, and stability pattern for TD_11 payroll_run_update post-Mux cutover, which is exactly what the current turn is monitoring and comparing against in real-time polls.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2816,
+      "memory_title": "TD_11 payroll_run_update flagging rate post-Mux cutover: stable within expected band"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact polling pattern, metric windows, log signatures, and comparison methodology being executed in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2826,
+      "memory_title": "Production monitoring workflow: multi-window metric polling with log cross-check"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact monitoring workflow, metric windows, and cross-check patterns being executed in the current turn, providing essential context for understanding the polling strategy and watchpoints.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2830,
+      "memory_title": "Datadog monitoring workflow: repeated multi-window metric polling with log cross-checks"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact monitoring workflow being executed in the current turn: multi-window metric polling (60m/10m/2m/baseline), safety checks (Mux failures, deadletters, ACL errors, circuit breaker), and the pattern of checking for fresh regressions while confirming short windows remain clean.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2837,
+      "memory_title": "Production monitoring workflow: multi-window metric polling with log cross-check"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact monitoring pattern being executed in the current turn\u201460m/10m/2m flagging windows, baseline comparison, safety signals, and material-change reporting\u2014making it essential context for understanding and validating the polling strategy.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2840,
+      "memory_title": "Monitoring pattern for production flag rollout stability"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact monitoring pattern being executed in the current turn: parallel metric windows (60m/10m/2m), flagging rate percentages, job/ACL/circuit breaker checks, and baseline comparison logic.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2852,
+      "memory_title": "Datadog monitoring pattern for production service health"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses flagging behavior and aging patterns relevant to the current poll's flagging analysis, but the timestamp (2026-06-27T00:59Z) is slightly earlier than the current turn (2026-06-27T00:14-00:15Z), requiring minor temporal reconciliation.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2853,
+      "memory_title": "TD_11 risk assessment monitoring: isolated flagging blip is normal and ages out cleanly"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact monitoring procedure, metric windows, and safety checks being executed in the current turn, providing essential context for interpreting the polling results and understanding the watchpoints.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2859,
+      "memory_title": "TD_11 monitoring: repeated polling procedure and stale metric interpretation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides a relevant pattern for interpreting stale metrics versus active failures, which directly applies to the current turn's monitoring approach of checking logs to confirm no fresh job failures or ACL issues, though the current turn already demonstrates this methodology in practice.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2861,
+      "memory_title": "TD_11 stale metric confirmation: zero job failures + zero ACL errors over time span"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact monitoring procedure being executed in the current turn\u2014flagging rates, safety metrics, Mux failures, deadletters, circuit breaker state, and comparative windowing\u2014making it highly actionable reference material for validating the polling approach.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2863,
+      "memory_title": "TD_11 monitoring procedure: reusable Datadog query set for flagging trend verification"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact monitoring poll procedure, query set, and reporting format being executed in the current turn, providing the framework for interpreting the metrics and safety signals presented.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2864,
+      "memory_title": "TD_11 monitoring poll procedure: reusable query set and baseline comparison"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns deprecated signal inventory, mapping, and cleanup gates\u2014entirely unrelated to the current turn's system health polling, metrics monitoring, flagging rates, and stability assessment.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3181,
+      "memory_title": "Deprecated signal audit: inventory, mapping, backfill evidence, ownership classification, and Dumbo cleanup gates"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ed6df-0d7b-7210-b6eb-9da62527d7f1",
+    "source_run_id": 3057,
+    "turn_ordinal": 66
+  }
+}

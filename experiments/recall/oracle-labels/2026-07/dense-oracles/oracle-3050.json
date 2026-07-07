@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a latency improvement from a past deploy (2026-06-24), but the current turn is focused on monitoring DLQ items, flagging rates, and safety guardrails in real-time\u2014different metrics and concerns with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2615,
+      "memory_title": "payroll_connected_users latency improved post-deploy 11:03 PDT; p99 ~24s \u2192 ~5-9s, SLO misses nearly eliminated"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to understanding the payroll_run_update DLQ item and flagging metrics being monitored, but the stored memory focuses on parity flag configuration rather than current operational status or recent failure patterns.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2631,
+      "memory_title": "TD_11 payroll parity flag and current rollout status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes historical latency and timeout performance for a payroll evaluation service, but the current turn is focused on monitoring flagging rates, DLQ items, and post-cutover safety guardrails in real-time\u2014different metrics and context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2632,
+      "memory_title": "Served TD_11 payroll evaluation: no timeout errors, p99 latency 4.3s under 10s caller timeout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents staging evidence for a TD_11 Mux cutover decision, but the current turn is actively monitoring post-cutover health metrics (flagging rates, DLQ items, guardrails) with no mention of the cutover decision itself or need for staging validation.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2791,
+      "memory_title": "Strong staging evidence for TD_11 Mux cutover; missing-signal fallback not observed; recommend percentage rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the post-cutover flagging rate baseline and guardrail status that the current turn is actively monitoring and comparing against in real-time samples.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2816,
+      "memory_title": "TD_11 payroll_run_update flagging rate post-Mux cutover: stable within expected band"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly explains the root cause of the single DLQ item being monitored in the current turn, providing essential context for interpreting the ongoing metric samples and guardrail checks.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2820,
+      "memory_title": "Mux feature-fetch timeout causing DLQ backlog on TD_11 payroll_run_update"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly explains the root cause of the single DLQ item being monitored in the current turn, providing actionable context for understanding whether the stuck item is a transient timeout or requires flag adjustment.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2823,
+      "memory_title": "TD_11 payroll_run_update DLQ failure root cause: Mux feature-fetch timeout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly actionable: the stored memory identifies the root cause of the stuck DLQ item the current turn is actively monitoring, providing specific timeout details and LaunchDarkly flag configuration that explains why TD_11 is experiencing Mux GetFeatures timeouts.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2824,
+      "memory_title": "TD_11 stale DLQ item root cause: Mux GetFeatures timeout on retry loop"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact monitoring workflow, metric windows, and cross-check patterns the current turn is executing, making it essential context for understanding the ongoing Datadog polling strategy.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2830,
+      "memory_title": "Datadog monitoring workflow: repeated multi-window metric polling with log cross-checks"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the Datadog monitoring workflow, metric windows, query patterns, and regression signals that the current turn is actively executing and interpreting.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2851,
+      "memory_title": "Datadog production monitoring workflow for TD_11 trigger post-cutover"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the same DLQ/flagging monitoring pattern and provides historical context showing that isolated flagging events age out cleanly, which is highly relevant for interpreting the current turn's ongoing sample collection and guardrail checks.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2853,
+      "memory_title": "TD_11 risk assessment monitoring: isolated flagging blip is normal and ages out cleanly"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact monitoring procedure, metric windows, safety checks, and interpretation logic being applied in the current turn's repeated Datadog polling and DLQ analysis.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2859,
+      "memory_title": "TD_11 monitoring: repeated polling procedure and stale metric interpretation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact monitoring strategy being executed in the current turn\u2014repeated close-interval Datadog samples with consistent metric windows (60m/10m/2m flagging, baseline, job failures, guardrails)\u2014making it highly actionable context for validating the sampling approach and metric selection.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2860,
+      "memory_title": "TD_11 monitoring: repeated sample windows and baseline for drift detection"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about stale metric confirmation is useful context for interpreting the persistent DLQ peak=1 observation, but the current turn already applies this logic implicitly (noting the single item hasn't grown into a stream and safety is clean), so it requires only minor filtering to directly apply.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2861,
+      "memory_title": "TD_11 stale metric confirmation: zero job failures + zero ACL errors over time span"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact monitoring procedure being executed in the current turn\u2014the reusable Datadog query set for flagging trends, guardrails, and DLQ tracking that the assistant is actively applying.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2863,
+      "memory_title": "TD_11 monitoring procedure: reusable Datadog query set for flagging trend verification"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact monitoring procedure being executed in the current turn, providing the reusable query set, baseline comparison logic, and reporting format that the assistant is actively following.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2864,
+      "memory_title": "TD_11 monitoring poll procedure: reusable query set and baseline comparison"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns deprecated signal inventory, backfill evidence, and Dumbo cleanup gates\u2014entirely unrelated to the current turn's focus on Datadog monitoring, DLQ metrics, flagging rates, and post-cutover health checks.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3181,
+      "memory_title": "Deprecated signal audit: inventory, mapping, backfill evidence, ownership classification, and Dumbo cleanup gates"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ed6df-0d7b-7210-b6eb-9da62527d7f1",
+    "source_run_id": 3050,
+    "turn_ordinal": 42
+  }
+}

@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes future schema extensions for approval/objection state in rule archival, which is tangentially related to the current deep-pr-review of schema changes (including `rule_config_id` NOT NULL), but does not directly address the immediate review findings or current PR scope.",
+      "judge_score": "3",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2413,
+      "memory_title": "Future rule archival amendments: approval/objection state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed PRs #480115 and #482842 with historical context about backports and blockers, but the current turn is actively running a deep-pr-review on the current PR head, making the stale completion status and past blockers mostly irrelevant to the ongoing analysis.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the RPC design and review path being tested in the current deep-pr-review, but lacks details on schema changes, side-effect boundaries, and the specific worktree/commit state currently being analyzed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2449,
+      "memory_title": "MLP-4410 review RPC design: no-write path, structured output, explicit overrides"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides useful context about the PR's notification job implementation and testing status, but the current turn is focused on a deep review of the PR head itself, requiring direct code analysis rather than historical completion notes.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2490,
+      "memory_title": "MLP-4411 notification job PR #482948 complete; MLP-4418 archival execution job next"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides useful context about the project sequencing and MLP-4410 status (dry-run RPC in progress), which aligns with the current deep-pr-review workflow, but requires filtering since the review is focused on technical implementation details (schema, RPC paths, bindings) rather than ticket dependencies.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2519,
+      "memory_title": "Automated rule archival project sequencing: MLP-4409 complete; MLP-4410 (dry-run RPC) in progress; MLP-4411+ follow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past cherry-pick conflict resolution, but the current turn is actively running a deep PR review of the present state; the historical conflict context is stale and not actionable for analyzing current changes.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2587,
+      "memory_title": "Cherry-pick conflict resolution in MLP-4410: keep master's deletion of obsolete RunPendingRuleArchivals proto"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the deep-pr-review context (executor/calculator method signatures and naming), but the stored memory is a summary that would need cross-reference with actual code changes being traced.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2607,
+      "memory_title": "Rule archival refactor: executor naming and method signatures"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly describes the schema change and validation logic for `rule_config_id` in `PendingRuleArchival` that the deep review is actively examining, including the NOT NULL constraint, uniqueness semantics, and edit detection behavior.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2616,
+      "memory_title": "PendingRuleArchival: Add rule_config_id, keep metadata, use exact targeting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses a critical safety concern (change-freeze guards on the rule archival RPC) that is actively being reviewed in the current deep-pr-review session, providing specific implementation details about annotations, feature flags, and exception handling that are essential for validating the PR's correctness.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2622,
+      "memory_title": "RiskArbiter rule archival manual RPC requires change-freeze guard on both code paths"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the deep PR review's focus on RPC/action patterns and side-effect boundaries, though the current turn is mid-review and may need this context only if the PR modifies mutation action guards or executor freeze semantics.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2624,
+      "memory_title": "RPC mutation actions in Riskarbiter require @CheckAllowedChange and @AuditLogged guards"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a completed final review and fixes for PR #483111, directly relevant to the deep-pr-review being run, but lacks current execution details and specific findings from the ongoing review trace.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the PR review context\u2014describes the backend implementation approach for pending archival integration into GetRulesSummaryAction, which is part of the 25-file change set being reviewed, though the current turn is mid-review and may need additional details about schema/wiring validation.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3033,
+      "memory_title": "Backend implementation: attach pending archival read to GetRulesSummaryAction"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes draft PRs to open in the future, but the current turn is actively running a deep-pr-review on an existing PR; the memory is stale context about planning rather than actionable for the ongoing review.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3034,
+      "memory_title": "Draft PRs to open: tbedor/riskarbiter-rule-summary-archival-date and tbedor/kui-rule-archival-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the rule archival date surfacing feature and its implementation details, which is directly relevant context for understanding the PR's changes to RPC/proto, store schema, and executor paths being reviewed in the current deep-pr-review run.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3123,
+      "memory_title": "Rule archival date surfacing: backend proto field + KUI table/filter display"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed refactoring work (PR #543) and library extraction, but the current turn is actively running a deep-pr-review on a different PR with schema/storage concerns unrelated to the consolidation series.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly documents the design decisions and implementation strategy for the Risk Arbiter rule cleanup PR currently under deep review, including schema changes, archival logic, reactivation semantics, and the RuleConfigCopier extraction pattern.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a different PR (#14118) with frontend/backend sync verification, while the current turn is executing a deep-pr-review workflow on an active PR with schema changes to pending_rule_archivals and rule_config_id\u2014completely different context and not actionable for the current review.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3217,
+      "memory_title": "KUI PR #14118 backend/frontend sync verified; frontend safe to merge before backend deploy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory is about Mux helper renaming and signal-generator cleanup, which is unrelated to the current deep-pr-review of Riskarbiter RPC/proto, pending archival store schema, and rule config validation changes.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef12b-5400-7f41-9c2c-7c82f7013391",
+    "source_run_id": 2169,
+    "turn_ordinal": 106
+  }
+}

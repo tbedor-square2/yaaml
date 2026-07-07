@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses RuleConfigStore query narrowing patterns, but the current turn is specifically about whether PendingRuleArchivalKey AutoValue class should be removed\u2014a different class and removal decision with only tangential architectural alignment.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2328,
+      "memory_title": "Java Risk Arbiter PR 480432: Store interface for inactive rule queries should take domain-specific params"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes Riskarbiter store conventions and patterns, which provides useful context for understanding the architectural decisions around `PendingRuleArchivalKey`, though the current turn is specifically about whether to remove this class rather than implement it.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2485,
+      "memory_title": "Riskarbiter store/query conventions: AutoValue + EqualityQuery + JooqDataStoreFetch override"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory is about notification/execution job PRs (MLP-4411, MLP-4418) and is completely unrelated to the current question about whether PendingRuleArchivalKey AutoValue class should be removed.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2490,
+      "memory_title": "MLP-4411 notification job PR #482948 complete; MLP-4418 archival execution job next"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents project sequencing and ticket dependencies for rule archival, but the current turn is asking about code cleanup (removing an unused AutoValue class), which is orthogonal to the project roadmap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2519,
+      "memory_title": "Automated rule archival project sequencing: MLP-4409 complete; MLP-4410 (dry-run RPC) in progress; MLP-4411+ follow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses predicate helpers for state contracts, but the current turn is about whether to delete an AutoValue class entirely\u2014a different refactoring concern with no overlap in approach or decision logic.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2589,
+      "memory_title": "Rule archival refactoring: use predicate helpers for implicit state contracts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses method naming and lifecycle terms in rule archival classes, but the current turn is specifically about whether to delete the `PendingRuleArchivalKey` AutoValue class and its usages\u2014a different refactoring concern not addressed by the stored context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2593,
+      "memory_title": "Rule archival executor factoring: public method naming and lifecycle terms"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses executor naming and method signatures, but the current turn focuses on whether `PendingRuleArchivalKey` class should be removed\u2014a different refactoring concern with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2607,
+      "memory_title": "Rule archival refactor: executor naming and method signatures"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant context about PendingRuleArchival's structure and uniqueness constraints, but the current turn is specifically about whether to remove PendingRuleArchivalKey entirely, which requires different analysis than the memory's focus on rule_config_id and metadata design.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2616,
+      "memory_title": "PendingRuleArchival: Add rule_config_id, keep metadata, use exact targeting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a local variable naming convention in RuleArchivalDateCalculator, but the current turn is evaluating whether to delete the entire PendingRuleArchivalKey class and refactor its usage\u2014a higher-level architectural decision that makes the naming detail largely moot.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2620,
+      "memory_title": "MLP-4410 local variable naming: activePendingArchivalKeys"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses inlining single-use ID sets into query builders, but the current turn focuses on whether to remove the entire `PendingRuleArchivalKey` AutoValue class and its associated query methods\u2014a broader refactoring decision unrelated to the previous inlining pattern.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2621,
+      "memory_title": "Code simplification: inline single-use ID sets into query builders"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses keeping AutomatedRuleArchivalTriggerEligibility as a separate class to avoid coupling, while the current turn asks whether PendingRuleArchivalKey should be removed due to limited usage\u2014different classes with opposite conclusions that don't directly inform the current decision.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3001,
+      "memory_title": "Keep AutomatedRuleArchivalTriggerEligibility as its own class, not a method on calculator"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses rule archival date surfacing and RuleSummary proto changes, but the current turn is specifically about whether to remove the PendingRuleArchivalKey AutoValue class\u2014a different refactoring concern with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3011,
+      "memory_title": "Risk Arbiter rule archival date surfacing: use min pending date per model_name in RuleSummary"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses justification for keeping a different helper class (AutomatedRuleArchivalTriggerEligibility) and is not relevant to the current decision about whether to remove PendingRuleArchivalKey.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3018,
+      "memory_title": "AutomatedRuleArchivalTriggerEligibility helper class justification"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses backend implementation for attaching pending archival reads to GetRulesSummaryAction, which is unrelated to the current question about whether PendingRuleArchivalKey AutoValue class should be removed.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3033,
+      "memory_title": "Backend implementation: attach pending archival read to GetRulesSummaryAction"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses rule archival date surfacing and KUI display, but the current turn is specifically about whether to remove the `PendingRuleArchivalKey` AutoValue class\u2014a code cleanup decision unrelated to the feature requirements or display logic.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3123,
+      "memory_title": "Rule archival date surfacing: backend proto field + KUI table/filter display"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses high-level Risk Arbiter cleanup design decisions and implementation strategy, but does not address the specific question about whether `PendingRuleArchivalKey` AutoValue class is still needed.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a high-level architecture for redundant-rules data pipeline and UI export, which is completely unrelated to the specific question about whether PendingRuleArchivalKey AutoValue class is still needed in the RiskArbiter codebase.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3174,
+      "memory_title": "redundant-rules: Full architecture, data pipeline, and UI export"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a design decision about keeping a helper class separate to avoid coupling, while the current turn asks whether to remove `PendingRuleArchivalKey`; both involve AutoValue class justification but address different components and coupling concerns.",
+      "judge_score": "3",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3331,
+      "memory_title": "Shared eligibility helper design decision: own class vs calculator method"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef12b-5400-7f41-9c2c-7c82f7013391",
+    "source_run_id": 2176,
+    "turn_ordinal": 113
+  }
+}

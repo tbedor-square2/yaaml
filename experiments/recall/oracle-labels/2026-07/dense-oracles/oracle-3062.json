@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a successful latency improvement from a deploy on 2026-06-24, but the current turn is monitoring stability at 2026-06-27 00:53-00:54Z with focus on payroll failures and safety metrics, making the historical deploy context stale and not actionable for the immediate regression-detection task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2615,
+      "memory_title": "payroll_connected_users latency improved post-deploy 11:03 PDT; p99 ~24s \u2192 ~5-9s, SLO misses nearly eliminated"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's focus on stability monitoring and safety checks, providing baseline latency and timeout performance data for TD_11 payroll evaluation that contextualizes the current poll's clean metrics.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2632,
+      "memory_title": "Served TD_11 payroll evaluation: no timeout errors, p99 latency 4.3s under 10s caller timeout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past DynamoDB read spike investigation from 2026-06-25, while the current turn is about ongoing Datadog polling for metric stability checks on 2026-06-27 with focus on payroll failures and ACL errors\u2014different systems, different dates, and no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2709,
+      "memory_title": "Risk Arbiter DynamoDB read spike investigation (2026-06-25)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory provides directly relevant staging validation and risk assessment for the TD_11 Mux cutover being monitored in the current turn, though the current turn focuses on real-time post-cutover stability polling rather than the pre-rollout decision context.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2791,
+      "memory_title": "Strong staging evidence for TD_11 Mux cutover; missing-signal fallback not observed; recommend percentage rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the baseline flagging rates, safety metrics, and stability patterns that the current turn is actively monitoring and comparing against in real-time continuation polls.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2816,
+      "memory_title": "TD_11 payroll_run_update flagging rate post-Mux cutover: stable within expected band"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact monitoring workflow being executed in the current turn: multi-window metric polling (60m/10m/2m/baseline), log cross-checks for payroll failures and ACL errors, and the comparison methodology for detecting regressions.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2826,
+      "memory_title": "Production monitoring workflow: multi-window metric polling with log cross-check"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact monitoring workflow, metric windows, log signatures, and reporting pattern being executed in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2830,
+      "memory_title": "Datadog monitoring workflow: repeated multi-window metric polling with log cross-checks"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact monitoring workflow being executed in the current turn: multi-window metric polling (60m/10m/2m/baseline), log cross-checks for payroll failures and ACL errors, safety checks, and the ~1-2 minute polling cadence for active recovery monitoring.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2837,
+      "memory_title": "Production monitoring workflow: multi-window metric polling with log cross-check"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact Datadog monitoring workflow being executed in the current turn\u2014metric windows, log queries, regression signals, and normalization patterns all match the ongoing continuation polls at 00:53Z and 00:54Z.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2851,
+      "memory_title": "Datadog production monitoring workflow for TD_11 trigger post-cutover"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the expected behavior of isolated TD_11 flagging blips and their normal aging pattern, which is precisely what the current turn is monitoring for across consecutive polls.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2853,
+      "memory_title": "TD_11 risk assessment monitoring: isolated flagging blip is normal and ages out cleanly"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact monitoring procedure, metric windows, and safety checks being executed in the current turn, providing a complete reference frame for interpreting the repeated TD_11 polling samples.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2859,
+      "memory_title": "TD_11 monitoring: repeated polling procedure and stale metric interpretation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact monitoring strategy being executed in the current turn: repeated Datadog samples at 1\u20132m intervals with consistent metric windows (60m/10m/2m, baseline, job failures, ACL errors, circuit breaker, deadletters) for TD_11 drift detection.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2860,
+      "memory_title": "TD_11 monitoring: repeated sample windows and baseline for drift detection"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly explains the pattern being observed in the current turn: stale metric counters (Mux/deadletter bins from 23:57Z and 00:19Z) with zero fresh failures in active logs, which is exactly the safety confirmation strategy being applied across multiple continuation polls.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2861,
+      "memory_title": "TD_11 stale metric confirmation: zero job failures + zero ACL errors over time span"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact monitoring procedure being executed in the current turn\u2014the reusable Datadog query set for TD_11 flagging trend verification with all the specific windows, metrics, and safety checks mentioned.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2863,
+      "memory_title": "TD_11 monitoring procedure: reusable Datadog query set for flagging trend verification"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact polling procedure, metric windows, and safety checks being executed in the current turn, making it highly actionable context for understanding and validating the ongoing monitoring workflow.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2864,
+      "memory_title": "TD_11 monitoring poll procedure: reusable query set and baseline comparison"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns Risk Arbiter partition metadata cleanup and evidence taxonomy, while the current turn is a real-time Datadog monitoring poll checking metric stability and safety after a cutover\u2014completely different operational contexts with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3151,
+      "memory_title": "Risk Arbiter no-traffic cleanup: partition metadata enrichment, evidence taxonomy, and execution status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns deprecated signal inventory, Dumbo cleanup gates, and ownership classification\u2014completely unrelated to the current turn's focus on Datadog metric polling, payroll failures, ACL errors, and system stability monitoring.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3181,
+      "memory_title": "Deprecated signal audit: inventory, mapping, backfill evidence, ownership classification, and Dumbo cleanup gates"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ed6df-0d7b-7210-b6eb-9da62527d7f1",
+    "source_run_id": 3062,
+    "turn_ordinal": 92
+  }
+}

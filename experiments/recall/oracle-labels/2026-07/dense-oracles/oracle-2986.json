@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory about user preferences for planning docs and a specific FEM project brief is unrelated to the current discussion about session status models, human action indicators, and metadata refresh logic.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1601,
+      "memory_title": "User prefers planning docs over code; update FEM brief on Slack changes"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a project status update template format, but the current turn is discussing technical implementation of a human-action-required indicator in a session tracking system\u2014different contexts with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1868,
+      "memory_title": "Lookout project update template: Cycle 2 Status, Key Update, Blockers/Risks, Leadership Ask"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a refactoring of the `yaaml status` command output format, which is tangential to the current discussion about adding human-action-required signals to session metadata and status models.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2034,
+      "memory_title": "yaaml status command: separate transcript state from cumulative counters"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory about out-of-office representation in SummaryBot is unrelated to the current discussion about actionable status indicators and human action requirements in session management.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2628,
+      "memory_title": "SummaryBot leave/out-of-office representation gap"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory discusses leave/out-of-office representation in summaries, which is orthogonal to the current discussion about human action required signals and status model implementation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2648,
+      "memory_title": "SummaryBot leave/out-of-office representation is a prompt priority, not a UI gap"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly describes the bot-manager architecture and metadata model (including status, summary, attention columns) that the current turn is actively refining with the new `human_action_required` logic and `working -> idle` trigger.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2673,
+      "memory_title": "bot-manager v1: Codex-session-first browser with ephemeral summarization"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about TUI screenshots and iteration is stale context from a previous phase; the current turn is focused on actionability signals and status model design, which is orthogonal to screenshot/iteration preferences.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2677,
+      "memory_title": "User preference: TUI screenshots and iteration before stopping"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses background worker logging and refresh policy details, which is tangential to the current discussion about actionable status indicators and human-action-required signals in the session model.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2682,
+      "memory_title": "Background title worker should not emit noisy warnings; refresh policy should respect quiet periods and insufficient-context outcomes"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly documents the exact design decision being discussed in the current turn\u2014collapsing attention into status and defining actionable statuses\u2014making it essential context for grounding the implementation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2684,
+      "memory_title": "Collapse AttentionSignal enum into SessionStatus for simpler model"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about a tmux detach bug is completely unrelated to the current discussion about adding human-action-required indicators to session status models.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2699,
+      "memory_title": "Double detach bug in tmux session rejoin fixed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly documents the implementation of the exact feature being discussed\u2014adding human action indication to session metadata\u2014and confirms the design decisions (actionable statuses, placement in details pane, refresh behavior) that align with the current turn's conversation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2902,
+      "memory_title": "bot-manager: next_action field added to session metadata"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes TUI visibility and navigation features, but the current turn discusses the core logic for determining human action requirements and status model design, which this memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3207,
+      "memory_title": "bot-manager TUI: done-session visibility, active status overlay, search navigation, and new-session creation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses threading and performance concerns, but the current turn focuses on status model design and actionability signals\u2014different architectural layers with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3230,
+      "memory_title": "All major refresh work must run in background workers, not UI thread"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory covers UI toggle behavior and refresh mechanics, but the current turn is about status-model design and actionability signals\u2014different concerns that don't directly inform the discussion.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3236,
+      "memory_title": "D toggle and session refresh behaviors in bot-manager TUI"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past UI implementation decision about metadata tables and filtering, but the current turn is actively discussing the design of a status model and human-action-required logic\u2014different concerns that have already moved beyond this earlier work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3239,
+      "memory_title": "Recently-visited metadata table won team feedback; update PR #13972 with new implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a queue/refresh mechanism for transcripts, but the current turn is about detecting when human action is required based on session state transitions (working\u2192idle), which is a different concern.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3281,
+      "memory_title": "Priority refresh after session return"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses a technical implementation detail about done status unification, but the current turn is about designing when and how to trigger human-action-required signals based on working\u2192idle transitions, which is a different concern.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3287,
+      "memory_title": "Session done status definition unified across refresh paths"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses status precedence rules (working overrides ci_failed) but the current turn is about triggering human-action detection on working\u2192idle transitions and integrating it into the status model, which this memory doesn't directly inform.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3291,
+      "memory_title": "Working status overrides ci_failed and other action statuses"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019efc9f-ff22-7d32-bdac-00301bac40a8",
+    "source_run_id": 2986,
+    "turn_ordinal": 74
+  }
+}

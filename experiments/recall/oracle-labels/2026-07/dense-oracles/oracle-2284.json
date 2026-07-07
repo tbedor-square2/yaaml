@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Rust TUI project's architecture and features, but the current query is specifically about Codex's API for controlling title display via config\u2014a different system entirely.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1774,
+      "memory_title": "Node/Rust project (tbedor) active-thread goal: CLI agent dispatch, GitHub replies, run lifecycle, and notifications"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about Codex's PreToolUse hook and YAAML session recall infrastructure, which is completely unrelated to the current query about APIs for controlling title display visibility.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2504,
+      "memory_title": "Codex PreToolUse hook for YAAML is live and working end-to-end"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the thread title API but focuses on setting the title value rather than controlling its display visibility, which is the current question.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2655,
+      "memory_title": "Codex app-server thread/name/set API for setting thread titles"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly answers the current query by explaining that title display is controlled via `tui.terminal_title` and `tui.status_line` config lists, with concrete API examples for toggling visibility.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2672,
+      "memory_title": "Codex thread title can be set via app-server JSON-RPC thread/name/set"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about TUI screenshots and iteration preferences is stale context about workflow style, not relevant to the current technical question about APIs for controlling title display.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2677,
+      "memory_title": "User preference: TUI screenshots and iteration before stopping"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses internal TUI warning behavior for background title refresh, while the current query asks about the API to control title display visibility\u2014different concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2682,
+      "memory_title": "Background title worker should not emit noisy warnings; refresh policy should respect quiet periods and insufficient-context outcomes"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about session working directory behavior is unrelated to the current query about controlling title display visibility via API.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2697,
+      "memory_title": "Session join uses stored working directory for tmux and Codex"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PreToolUse hook removal is unrelated to the current query about APIs for controlling title display visibility.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2769,
+      "memory_title": "Codex PreToolUse hook removed due to installation friction and low quality scores"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes TUI visibility toggles for done sessions and search navigation, but the current query asks about an API to control title display, which is answered by config/batchWrite and tui.terminal_title settings\u2014a different concern.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3207,
+      "memory_title": "bot-manager TUI: done-session visibility, active status overlay, search navigation, and new-session creation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses TUI rendering implementation details (line-diff vs cell-diff), which is tangential to the current question about APIs for controlling title display visibility.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3227,
+      "memory_title": "Rendering strategy: line-diff over cell-diff for TUI"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about terminal iteration preferences is unrelated to the current query about APIs for controlling title display visibility.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3228,
+      "memory_title": "User preference: terminal iterations before stopping on TUI work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes D-key toggle behavior and session refresh in bot-manager TUI, which is unrelated to the current query about APIs for controlling title display visibility.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3236,
+      "memory_title": "D toggle and session refresh behaviors in bot-manager TUI"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about tmux workspace management is unrelated to the current query about APIs for controlling title display visibility.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3278,
+      "memory_title": "Managed tmux workspace: global session with local attach windows"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents TUI hotkey bindings and UI controls, but the current query asks about an API to toggle title display visibility, which is answered via config/batchWrite and TUI config lists\u2014entirely different from hotkey documentation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3288,
+      "memory_title": "TUI hotkey audit: p/P split, removed o alias, documented all normal-mode bindings"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about tmux session identity strategy is unrelated to the current query about APIs for controlling title display visibility in Codex configuration.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3327,
+      "memory_title": "Tmux session/window identity strategy for bot-manager"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about transcript preview rendering is unrelated to the current query about APIs for controlling title display visibility.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3352,
+      "memory_title": "TUI live transcript preview rendering"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019efc9f-ff22-7d32-bdac-00301bac40a8",
+    "source_run_id": 2284,
+    "turn_ordinal": 4
+  }
+}

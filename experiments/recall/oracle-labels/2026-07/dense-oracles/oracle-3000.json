@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Rust TUI project for code review, but the current turn is about UI layout decisions (table vs. details pane) and database schema changes for a session metadata field\u2014entirely different context.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1774,
+      "memory_title": "Node/Rust project (tbedor) active-thread goal: CLI agent dispatch, GitHub replies, run lifecycle, and notifications"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes table sorting and PR display capping, which is unrelated to the current turn's focus on adding a `next_action` field to the details pane and committing those changes.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2734,
+      "memory_title": "bot-manager TUI: stabilize table sort and cap PR display"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the implementation decision and design that was just executed in the current turn, making it essential context for understanding what was built and why.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2902,
+      "memory_title": "bot-manager: next_action field added to session metadata"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory about PR #483601 rebase and BUILD dependency removals is completely unrelated to the current turn's discussion about UI layout decisions for displaying next-action metadata in a details pane versus a table.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes task lifecycle metadata fixes for retry fields, which is unrelated to the current turn's discussion about UI layout (details pane vs. table) and next_action field implementation.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3135,
+      "memory_title": "Task lifecycle metadata fixes: clear stale retry fields on transitions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory describes a completed pyriskarbiter refactoring project unrelated to the current turn's discussion about UI table/details pane layout and next_action metadata implementation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes TUI visibility and navigation features, but the current turn is focused on implementing `next_action` metadata storage and UI display in the details pane, which is unrelated to done-session visibility or search navigation.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3207,
+      "memory_title": "bot-manager TUI: done-session visibility, active status overlay, search navigation, and new-session creation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory concerns a KUI PR alignment patch and is completely unrelated to the current turn about UI layout decisions for a details pane vs. table display in a different system.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3226,
+      "memory_title": "KUI PR #14133 deep review and alignment patch complete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a KUI PR about action-table to metadata-table migration, but the current turn is about bot-manager implementation for next_action fields in a details pane\u2014different codebase and context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3235,
+      "memory_title": "PR #13972 updated from action-table experiment to metadata-table production implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory covers UI toggle behavior and refresh mechanics, but the current turn is focused on committing implementation changes for next_action metadata in SQLite and the details pane\u2014a different concern.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3236,
+      "memory_title": "D toggle and session refresh behaviors in bot-manager TUI"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past UI design decision about metadata tables and visited resources, but the current turn is focused on implementing `next_action` field storage and display in a details pane\u2014a different feature with no overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3239,
+      "memory_title": "Recently-visited metadata table won team feedback; update PR #13972 with new implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory concerns a Kubernetes UI PR with table header alignment fixes, completely unrelated to the current turn about adding a `next_action` field to a session details pane in what appears to be a different project.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3241,
+      "memory_title": "KUI PR #14133 table header alignment: review addressed, CI green"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes UI cleanup for a resource table's action labels, but the current turn focuses on implementing a `next_action` metadata field in a details pane for a different system, making this context stale and contextually misaligned.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3248,
+      "memory_title": "Action-table label cleanup for recently-visited resources"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes status override logic for working states, but the current turn is focused on implementing next_action field storage and UI display in details pane, which are unrelated concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3291,
+      "memory_title": "Working status overrides ci_failed and other action statuses"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns PR feedback on recent-history features and table columns, while the current turn discusses UI placement of next-action metadata in a details pane versus table\u2014entirely different contexts with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3318,
+      "memory_title": "Recently visited resources PR feedback resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about a UI label/tooltip update in a PR, completely unrelated to the current turn's discussion about database schema, SQLite migrations, and next_action metadata implementation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about a recently-visited feature PR is entirely unrelated to the current turn's discussion about UI layout (details pane vs. table), metadata schema, SQLite implementation, and commit management.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3384,
+      "memory_title": "PR #13972: recently-visited feature addresses prod/staging distinction, timestamp milliseconds, and KITT URL deduplication"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019efc9f-ff22-7d32-bdac-00301bac40a8",
+    "source_run_id": 3000,
+    "turn_ordinal": 84
+  }
+}

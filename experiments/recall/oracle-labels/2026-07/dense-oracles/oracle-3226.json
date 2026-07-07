@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about MLP-4409/4410 PR stack completion is unrelated to the current turn's focus on debugging recall/eval stats bugs, YAAML memory lifecycle, and task-state patterns.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory concerns a completed PR review and code changes unrelated to the current turn's focus on memory recall stats bugs, YAAML ranking patterns, and abstention tracking aggregation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents prior fixes to YAAML recall quality that are directly relevant to the current turn's investigation of post-install recall/eval behavior and stats bugs, though it doesn't address the specific abstention stats aggregation issue being debugged now.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2931,
+      "memory_title": "YAAML recall quality: primary fixes installed are stale task-state deactivation and segment context recency-bounding"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the concrete stats bug the assistant is currently debugging: the mismatch between overall recall_runs/non_empty_recall_runs counts and abstention.empty_recall_runs, which requires understanding run-based vs turn-based counting.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2939,
+      "memory_title": "Stats aggregation must count eval runs, not unique turns, for metric coherence"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory about a PR rebase and deployment is completely unrelated to the current turn's focus on memory recall evaluation bugs, stats aggregation issues, and task volume parsing.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3065,
+      "memory_title": "PR #477833 tbedor/riskarbiter-trigger-traffic: rebased and pushed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current debugging of eval stats bugs and recall quality metrics, though the stored memory describes a past fix rather than the current concrete issue being investigated.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3088,
+      "memory_title": "Ignore superseded eval reruns in metrics"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes `--since` filtering and eval summary features that are directly relevant to the current turn's focus on inspecting recent recall/eval behavior and debugging stats aggregation issues, though it doesn't address the specific empty_recall_runs bug being investigated.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3091,
+      "memory_title": "YAAML stats and eval summary support --since filtering for recency-focused diagnostics"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes past fixes for recall quality and deduplication, but the current turn is focused on diagnosing a concrete stats bug in abstention tracking and empty recall counting, which is a different problem domain.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory about a PR rebase and BUILD dependency removals is completely unrelated to the current turn's focus on debugging memory recall stats bugs and YAAML task-state patterns.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes task lifecycle metadata fixes for retry fields, but the current turn is focused on debugging a stats aggregation bug in recall/eval tracking (empty_recall_runs mismatch), which is unrelated to task retry metadata cleanup.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3135,
+      "memory_title": "Task lifecycle metadata fixes: clear stale retry fields on transitions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past refactoring project (PR #543, pyriskarbiter consolidation) that is completely unrelated to the current turn's focus on debugging memory recall stats bugs and YAAML task-state patterns.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past fix to eval summary limits, but the current turn is focused on diagnosing a concrete stats aggregation bug with empty recall runs and session_id parsing, which is unrelated to the summary limit issue.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3188,
+      "memory_title": "YAAML eval summary default limit expanded from 50 to 1000 runs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant baseline metrics for evaluating the current recall/eval investigation, though the stored snapshot may be slightly stale relative to the ongoing live inspection.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past experiment logs and lessons, but the current turn is actively debugging a concrete stats bug in live recall aggregation (empty_recall_runs mismatch), which requires real-time code inspection rather than historical experiment context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about KUI PR #14133 table alignment is completely unrelated to the current turn's focus on memory recall/eval stats bugs and YAAML task-state patterns.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3226,
+      "memory_title": "KUI PR #14133 deep review and alignment patch complete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a past recall quality regression and proposes a solution (stricter same-project gating), but the current turn is actively debugging a concrete stats bug in abstention tracking and empty recall parsing, which is a different technical problem.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Riskarbiter Mux helper renaming and signal-generator cleanup is completely unrelated to the current turn's focus on memory recall/eval behavior, YAAML task-state patterns, and stats aggregation bugs.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3226,
+    "turn_ordinal": 370
+  }
+}

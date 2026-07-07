@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's focus on recall filtering and context inference, but requires filtering since the stored memory describes the infrastructure layer while the turn is debugging a specific PR-identity matching issue.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1821,
+      "memory_title": "Per-turn context metadata persisted for multi-project session recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly addresses the current turn's core issue: implementing kind-aware recall gating to prevent same-PR memories from surfacing in wrong contexts (branch/PR-management vs. code-cleanup), with specific guidance on task-key matching and debug output for validation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the core issue being debugged: a recall gating strategy that distinguishes task_state scope (same-project with task-key match) from broader memory types, which is exactly the scoped change needed to prevent implementation-cleanup memories from surfacing during branch/PR-management turns.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2062,
+      "memory_title": "Kind-aware recall gating strategy: preference/lesson/workflow cross-project if strong; task_state same-project only with task-key match"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the current turn's core issue: PR identity is too broad for recall filtering, and this memory proposes conversation segments as the solution to decouple task identity from session/PR scope.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a testing plan for recall architectures that directly addresses the current turn's focus on fixing overly-broad PR identity matching through segment-aware filtering, but requires some translation from test methodology to implementation specifics.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly addresses the current turn's core issue: same PR identity being too broad and surfacing implementation-cleanup memories during branch/PR-management turns, with a concrete solution (segment-based grouping with kind-specific expiry rules) that matches the assistant's investigation into context/tag extraction and recall filtering.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2751,
+      "memory_title": "Recall quality bottleneck: segment and task-state drift over session length"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the core recall issue being investigated: same PR identity matching memories across different task phases, and proposes segment-scoping and task-state expiry as solutions, which aligns with the current turn's focus on narrowing PR identity scope and inspecting context/tag extraction.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2755,
+      "memory_title": "YAAML recall quality: task/segment drift is main failure mode, not bad memories"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's focus on context/tag extraction and recall filtering, but requires minor filtering since it addresses suppression rules rather than the specific PR-identity-scoping issue being debugged.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2927,
+      "memory_title": "Segment context suppression blocks must match recall query suppression"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the current turn's focus on filtering and tag extraction for recall eligibility, but requires mapping from path-token normalization to the broader PR-identity/context-inference problem being debugged.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3098,
+      "memory_title": "Segment task-key extraction: filter tool output and prioritize identity keys"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a completed pyriskarbiter refactoring (PR #543), but the current turn is debugging recall filter logic for memory eligibility\u2014entirely different domain with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory about Risk Arbiter rule cleanup is entirely unrelated to the current turn's focus on recall system design, memory tagging, segment scoping, and PR-management context filtering.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the recall filtering and invalidation logic being debugged, but focuses on session-cache invalidation rather than the current PR-identity scoping issue.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3189,
+      "memory_title": "Session recall cache must invalidate on inactive memory IDs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past experiment logs and lessons, but the current turn is actively debugging a specific recall issue (PR identity too broad) with live transcript inspection and tag extraction\u2014requiring real-time context and tool output, not historical experiment summaries.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant experimental data on recall filtering strategies and segment/task-fit tradeoffs, but requires interpretation to apply to the current PR-identity-too-broad issue being diagnosed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the recall filtering problem being investigated (same PR identity matching across different task contexts), but focuses on segment-scoping strategy rather than the specific tag-extraction and context-inference inspection currently underway.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the recall filtering problem being debugged (same PR identity matching too broadly), but requires filtering to extract the actionable refactoring direction from broader design philosophy.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly addresses the current turn's core issue: same PR identity matching is too broad and causes wrong-context recalls during task shifts, which is exactly what the assistant is investigating and planning to fix with scoped recall gating.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed technical report on memory techniques, but the current turn is actively debugging recall filter logic and PR-identity scoping\u2014different work streams with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3376,
+      "memory_title": "Memory techniques report: technical persuasion doc for internal eng buy-in"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3188,
+    "turn_ordinal": 359
+  }
+}

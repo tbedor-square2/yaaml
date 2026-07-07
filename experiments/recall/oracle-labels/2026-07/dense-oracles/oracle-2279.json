@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes backlog memory formulation and session boundaries, but the current turn focuses on segment creation anti-sprawl patterns and operational mechanics, which are distinct concerns with only tangential overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1803,
+      "memory_title": "Backlog memory formulation aligns on session boundaries with idle flush"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to anti-sprawl mechanisms and recall filtering strategy, but focuses on memory recall rather than segment creation specifics; provides useful pattern precedent with minor filtering needed to apply to segments.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2083,
+      "memory_title": "Kind-aware recall filtering with LLM reranking roadmap"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The memory discusses memory quality evaluation and lifecycle management, but the current turn is about segment creation anti-sprawl patterns and operational structure\u2014different enough that this adds noise rather than actionable context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the segment creation strategy with anti-sprawl patterns, oracle decision logic, and key-based deduplication that the current turn is actively implementing and refining.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the anti-sprawl consolidation pattern being discussed, but focuses on memory provenance tracking rather than the segment creation flow specifics being proposed in the current turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2652,
+      "memory_title": "Memory provenance graph for consolidation tracking"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a test plan for segment-aware hybrid recall, which is relevant context for the current discussion on segment creation and anti-sprawl patterns, but requires filtering since it focuses on evaluation methodology rather than the architectural decisions being debated.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the anti-sprawl segment creation strategy discussed in the current turn by providing the implemented architecture, decision patterns, and consolidation approach already built.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2692,
+      "memory_title": "Segment oracle architecture: tables, API, backfill design"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant schema and implementation details for segment creation, but focuses on past migration mechanics rather than the anti-sprawl design patterns being discussed in the current turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2693,
+      "memory_title": "Segment oracle schema changes and test impacts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the anti-sprawl segmentation strategy being discussed, providing concrete evidence hierarchy, oracle design, and metadata patterns that align with the current turn's proposal for segment creation controls.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2703,
+      "memory_title": "Segmentation strategy: path evidence hierarchy and oracle design"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to segment creation anti-sprawl strategy, but focuses on a specific implementation detail (suppression rules) rather than the broader architectural decisions being discussed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2927,
+      "memory_title": "Segment context suppression blocks must match recall query suppression"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to anti-sprawl segment creation strategy, but focuses on retrieval/reranking limitations rather than the creation-flow design being discussed in the current turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3195,
+      "memory_title": "Segment/task-fit reranking is limited; segment summaries needed for generation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past experiment logs and recall metrics, but the current turn is about designing segment creation anti-sprawl patterns and schema\u2014a forward-looking architectural discussion with no direct connection to historical experiment data.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a past experiment on segment-aware recall strategies, but the current turn is about designing the segment creation and anti-sprawl mechanism itself, not evaluating recall performance\u2014making this memory stale and tangential to the immediate design discussion.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the anti-sprawl segment creation strategy being discussed, but focuses on retrieval/ranking rather than creation-time deduplication logic.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the anti-sprawl pattern discussion\u2014shows how memory consolidation works model-driven rather than batch-scheduled, which informs the segment creation strategy being proposed, though the memory body focuses on implementation details rather than the architectural principle being applied.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3345,
+      "memory_title": "Kgoose memory consolidation is model-driven, not batch-scheduled"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses memory quality metrics and evaluation evidence, but the current turn is focused on segment creation anti-sprawl patterns and operational mechanics\u2014different enough that this memory provides no actionable context for the immediate discussion.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past deliverable (persuasion doc for memory work) but provides no actionable context for the current turn's discussion of segment creation anti-sprawl patterns and implementation strategy.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3376,
+      "memory_title": "Memory techniques report: technical persuasion doc for internal eng buy-in"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 2279,
+    "turn_ordinal": 267
+  }
+}

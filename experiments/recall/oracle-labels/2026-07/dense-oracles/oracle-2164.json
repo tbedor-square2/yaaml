@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses PR #480432 cleanup work, but the current turn is about PR #483111 with a different variable rename task, making it stale and contextually misaligned.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2357,
+      "memory_title": "PR #480432 review feedback: inlining and unused dependency cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant Bazel verification procedures for the same codebase and test target being used in the current turn, though the current turn has already completed the verification successfully.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2379,
+      "memory_title": "Bazel verification for archival review RPC changes in java worktrees"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about committing without waiting for CI is relevant context for the current turn's workflow, but the turn shows the assistant already followed this pattern (committed and pushed after local test), so it provides useful confirmation of established preferences with minor redundancy.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2429,
+      "memory_title": "Commit and push without waiting for CI in rule-archival PR work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed work on MLP-4411 notification job and upcoming MLP-4418, but the current turn is focused on a small variable rename in RuleArchivalDateCalculator for PR #483111, which is a different task with no direct connection to the stored context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2490,
+      "memory_title": "MLP-4411 notification job PR #482948 complete; MLP-4418 archival execution job next"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes high-level project sequencing and ticket dependencies for rule archival work, but the current turn is focused on a specific code rename and test verification task that doesn't require this strategic context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2519,
+      "memory_title": "Automated rule archival project sequencing: MLP-4409 complete; MLP-4410 (dry-run RPC) in progress; MLP-4411+ follow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant context about the RuleArchivalExecutor and RuleArchivalDateCalculator architecture, but the current turn focuses on a specific variable rename that has already been completed and pushed, making the broader architectural context useful but not directly actionable for this immediate task.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2607,
+      "memory_title": "Rule archival refactor: executor naming and method signatures"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact variable rename that was just completed in the current turn, providing clear context about the naming rationale and scope.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2620,
+      "memory_title": "MLP-4410 local variable naming: activePendingArchivalKeys"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed PR #483111 work (final review, freeze fix, helper consolidation), but the current turn shows an isolated variable rename task (`retainedActiveKeys` \u2192 `activePendingArchivalKeys`) that is separate from the prior context and does not require the historical details.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes future PRs to open, but the current turn shows completed work on PR #483111 with a specific commit, making this memory stale and not actionable for the immediate context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3034,
+      "memory_title": "Draft PRs to open: tbedor/riskarbiter-rule-summary-archival-date and tbedor/kui-rule-archival-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different PR (#477833) with unrelated changes (traffic metrics, Datadog), while the current turn focuses on PR #483111 with a variable rename in RuleArchivalDateCalculator.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3065,
+      "memory_title": "PR #477833 tbedor/riskarbiter-trigger-traffic: rebased and pushed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes PR #483601 (rebase and BUILD dep removals), while the current turn involves PR #483111 (variable rename in RuleArchivalDateCalculator)\u2014different PRs with no overlapping context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a feature for surfacing archival dates in KUI, while the current turn focuses on a narrow variable rename in RuleArchivalDateCalculator\u2014related codebase but not actionable context for this specific refactoring task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3123,
+      "memory_title": "Rule archival date surfacing: backend proto field + KUI table/filter display"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes pyriskarbiter refactoring and PR #543 consolidation, while the current turn is about renaming a variable in RuleArchivalDateCalculator and pushing to PR #483111\u2014completely different contexts with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents high-level design decisions for Risk Arbiter rule cleanup, but the current turn is executing a narrow variable rename in RuleArchivalDateCalculator with no connection to the design strategy or implementation details.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns KUI PR #14118 backend/frontend sync for archival date fields, while the current turn is about renaming a local variable in RuleArchivalDateCalculator and pushing to PR #483111\u2014different PRs, different concerns, not actionable context.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3217,
+      "memory_title": "KUI PR #14118 backend/frontend sync verified; frontend safe to merge before backend deploy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completely different PR (#13972 on a KUI component) unrelated to the current turn's focus on PR #483111 involving Java code refactoring in RuleArchivalDateCalculator.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3235,
+      "memory_title": "PR #13972 updated from action-table experiment to metadata-table production implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes UI/frontend work on PR #14151 (rule archival labels and tooltips), while the current turn involves backend Java refactoring on PR #483111 (renaming a variable in RuleArchivalDateCalculator), making them contextually unrelated.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different refactoring (MuxSignalGeneratorMigrationUtil rename and signal-generator cleanup) unrelated to the current turn's RuleArchivalDateCalculator variable rename.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef12b-5400-7f41-9c2c-7c82f7013391",
+    "source_run_id": 2164,
+    "turn_ordinal": 101
+  }
+}

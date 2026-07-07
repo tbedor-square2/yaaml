@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses UI exposure of rule names and rule-config mapping, but the current turn is asking about decision handling logic when a rule is marked flagging\u2014a different layer of the system.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1565,
+      "memory_title": "Expression vs. rule-config distinction in Risk Arbiter model"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses rule correlation analysis and measurement approaches, but the current query asks specifically about decision handling when a rule is marked flagging\u2014a different technical concern that requires implementation details about flagging logic, not correlation analysis.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1580,
+      "memory_title": "Rule correlation analysis work in Risk systems"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses flagging behavior in rule handling, but focuses on turn-off signals rather than decision handling consequences, requiring minor filtering to apply to the current query.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1593,
+      "memory_title": "Flagging state determines turn-off signal in redundant-rules"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a rule dependency graph collection strategy, which is tangential infrastructure detail unrelated to the current question about decision handling when a rule is marked flagging.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1596,
+      "memory_title": "Rule dependency graph collection strategy for Riskarbiter"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses dependency tracking limitations in Riskarbiter, but the current turn is specifically about decision handling when a rule is marked flagging\u2014a different concern that doesn't require dependency analysis.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1598,
+      "memory_title": "Known limitation: incomplete transitive Riskarbiter dependencies"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns audit logging interceptors (@DangerousRpc vs @AuditLogged), which is completely unrelated to the current query about decision handling when a rule is marked flagging.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1797,
+      "memory_title": "RiskArbiter audit paths: @DangerousRpc (Slack) vs @AuditLogged (Squawk/Datadog) are separate interceptors"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns LaunchDarkly feature flag audit findings unrelated to rule flagging behavior in decision handling; it provides no actionable context for understanding how flagged rules affect decision processing.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1881,
+      "memory_title": "RiskArbiter LaunchDarkly audit findings: mux rollout flag stuck in partial state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a specific internal table schema and its replication status, which is tangential to the current question about decision handling logic when rules are flagged\u2014the conversation is focused on code paths and decision outcomes, not data warehouse tables.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2139,
+      "memory_title": "model_suspicions table: RiskArbiter OLTP only, not Snowflake-replicated"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory covers model/rule deprecation and governance research, but the current turn is asking about specific decision-handling behavior when a rule is marked flagging\u2014a technical implementation question that requires code-level details, not deprecation strategy.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2230,
+      "memory_title": "Multi-classifier and rule/model deprecation research docs located"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes rule reactivation workflows and documentation, but the current query asks about decision handling when a rule is marked flagging\u2014a different operational concern unrelated to reactivation.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2551,
+      "memory_title": "RiskArbiter rule reactivation feature and documentation workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns RiskArbiter dependency probing and feature name patterns, which is unrelated to the current query about decision handling when a rule is marked flagging.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2667,
+      "memory_title": "RiskArbiter dependency probing: concrete feature names vs. broad wildcards, model-mediated folding"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns pyriskarbiter CLI refactoring and module extraction, while the current turn asks about decision handling when a rule is marked flagging\u2014a runtime behavior question unrelated to CLI consolidation or library restructuring.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Risk Arbiter rule cleanup and reactivation mechanics, but the current query asks about decision handling when a rule is marked flagging\u2014a runtime behavior question that requires understanding Decisions/Riskarbiter integration, not cleanup/archival design.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a duplicate-detection and rule-management pipeline, but the current turn asks about decision-handling logic when rules are flagged, which requires understanding Riskarbiter/Decisions internals, not rule metadata architecture.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3174,
+      "memory_title": "redundant-rules: Full architecture, data pipeline, and UI export"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a documentation workflow for agent guidance, which is completely unrelated to the technical question about decision handling when rules are marked flagging.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3218,
+      "memory_title": "Agent guidance documentation workflow for Risk Arbiter and KUI"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses DAG design and rule-to-node binding architecture, but the current turn is asking about the operational behavior of flagged rules in decision handling, which requires runtime semantics not architectural design patterns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3242,
+      "memory_title": "Riskarbiter DAG design: separate node topology from rule binding"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses experiment handling and scheme selection, but the current query is specifically about what happens to decision handling when a rule is marked flagging\u2014a different concern that requires understanding rule flagging logic, not experiment/scheme mechanics.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3244,
+      "memory_title": "Decisions experiment handling: scheme-based, not graph-specific"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f1a6e-70e5-7bb2-a312-f6b36acdbeb0",
+    "source_run_id": 3296,
+    "turn_ordinal": 1
+  }
+}

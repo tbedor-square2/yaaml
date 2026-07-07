@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context about the flag's partial rollout state and 119 rules, but doesn't address the specific question of whether false rule values are actually evaluated in the code path.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1881,
+      "memory_title": "RiskArbiter LaunchDarkly audit findings: mux rollout flag stuck in partial state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about TD_45 rule archival exclusion is tangential to the current investigation of whether false LD flag values are actually evaluated in the TD_11 payroll queue path; it addresses a different trigger and a different system concern (archival gating vs. serving evaluation).",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2472,
+      "memory_title": "TD_45 hardcoded trigger exclusion in rule archival"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns rule archival flag defaults and date parsing, which is unrelated to the current query about LaunchDarkly rule evaluation order and whether false values are actually being evaluated in the serving/scoring path.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2484,
+      "memory_title": "Pending rule archival rollout flag: empty string for unset, not far-future date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory discusses timeout computation and LD flag capping, but the current query is about code-path evaluation and whether false rule values are actually reachable\u2014a different concern.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2630,
+      "memory_title": "TD_11 payroll Mux timeout computation: default 10s baseline, LD cap applied on top"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly provides the flag name, targeting attributes, current rollout status, and parity metrics needed to trace whether false values are actually evaluated in the TD_11 payroll scenario.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2631,
+      "memory_title": "TD_11 payroll parity flag and current rollout status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses a timeout/deadline issue in PayrollRunUpdateJobHandler, but the current turn is asking about code-path evaluation and whether false LD rule values are actually being evaluated\u2014a different concern that requires tracing flag evaluation logic, not debugging timeout defaults.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2639,
+      "memory_title": "RiskArbiter TD_11 payroll Mux fetch timeout: root cause is missing scoreable deadline"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory discusses deadline/timeout mechanics for Mux RPC calls, but the current query is about code-path tracing and whether false flag values are actually evaluated\u2014a different concern unrelated to deadline management.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2642,
+      "memory_title": "Payroll deadline structure: overall scoreable budget vs. parity-specific timeouts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context about the flag's current rollout state and TD_11 status, but lacks detail on the specific rule ordering and evaluation paths needed to fully answer whether false values are actually reachable.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2643,
+      "memory_title": "Payroll parity checking flag and current rollout state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes post-rollout cleanup steps, but the current turn is asking about code-path tracing and whether false flag values are actually evaluated during the active rollout\u2014a different analytical concern.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2649,
+      "memory_title": "Payroll signal generator removal steps after Mux rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses staging evidence and rollout recommendations for TD_11, but the current turn is asking about code-path evaluation logic (whether false values in rules are actually reachable), which requires tracing execution flow rather than metrics/staging data.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2791,
+      "memory_title": "Strong staging evidence for TD_11 Mux cutover; missing-signal fallback not observed; recommend percentage rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses deployment strategy and staging evidence for a Mux cutover, but the current turn is asking about code-path evaluation logic and whether false rule values are actually reachable\u2014a different analytical concern.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2801,
+      "memory_title": "RA Mux cutover for TD_11/payroll_run_update_connected_users: staged evidence is strong; percentage rollout strategy recommended"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses flag routing and feature-domain setup, but the current query is asking about code-path execution and whether false rule values are actually evaluated\u2014a different analytical concern.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2802,
+      "memory_title": "Cutover flag only changes RA routing; feature domain is a separate concern but already in place for TD_11 payroll"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides observational metrics about TD_11 flagging rates post-cutover, but the current turn is asking for code-path tracing to determine whether false rule values are actually evaluated\u2014a structural/logical question that requires code inspection, not operational telemetry.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2816,
+      "memory_title": "TD_11 payroll_run_update flagging rate post-Mux cutover: stable within expected band"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a timeout configuration flag unrelated to the current query about evaluating false values in rule ordering and code paths.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2844,
+      "memory_title": "LaunchDarkly timeout flag riskarbiter-mux-max-timeout-millis: TD_11 currently at fallthrough 15s, available 25s variant"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a past monitoring observation about flag behavior and aging, but does not address the current query about whether false values in code paths are actually being evaluated during execution.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2853,
+      "memory_title": "TD_11 risk assessment monitoring: isolated flagging blip is normal and ages out cleanly"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory explains the dependency handoff and mux provider validation mechanism relevant to understanding signal flow, but the current turn is specifically asking whether false LD rule values are actually evaluated in the code path\u2014requiring direct trace of rule evaluation order and conditional logic, not just dependency classification.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2932,
+      "memory_title": "Signal generator removal: dependency handoff mechanism and mux provider validation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about deprecated signal audit, inventory mapping, and Dumbo cleanup is entirely unrelated to the current turn's focus on tracing LaunchDarkly flag evaluation logic and whether false rule values are actually evaluated in code paths.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3181,
+      "memory_title": "Deprecated signal audit: inventory, mapping, backfill evidence, ownership classification, and Dumbo cleanup gates"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ed6df-0d7b-7210-b6eb-9da62527d7f1",
+    "source_run_id": 3119,
+    "turn_ordinal": 131
+  }
+}

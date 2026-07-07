@@ -1,0 +1,26 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The recall query is empty, making this technical memory about recall system architecture completely non-actionable for the current turn.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2765,
+      "memory_title": "Recall quality improvement: segment-based task-state expiry and stale-memory suppression"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The recall query is empty, making this stored memory about task-key extraction filtering completely non-actionable for the current turn.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2808,
+      "memory_title": "Segment task-key extraction: exclude tool output and meta-discussion"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3092,
+    "turn_ordinal": 316
+  }
+}

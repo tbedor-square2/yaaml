@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed PRs and LaunchDarkly rollout handling, which is unrelated to the current turn's focus on segment boundary logic, task-state recall suppression, and context shift detection.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the conversation segments architecture and design principles that the current turn is actively implementing and refining, including segment boundaries, context markers, and recall logic.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a test plan for recall matching that directly relates to the current turn's focus on segment-aware recall and boundary logic, but requires minor filtering since the current turn has moved into implementation details beyond the initial test architecture.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant architectural context on segment oracle design, storage, and recall mechanics, though the current turn focuses on implementing context-shift boundary logic rather than the overall architecture.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2692,
+      "memory_title": "Segment oracle architecture: tables, API, backfill design"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents schema and migration changes that are relevant context for understanding the segment infrastructure being modified, but the current turn focuses on segment boundary logic and recall window behavior rather than schema details.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2693,
+      "memory_title": "Segment oracle schema changes and test impacts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly identifies task/segment drift as the core recall problem and aligns perfectly with the current turn's focus on implementing segment boundary logic and task-state expiry to address exactly this failure mode.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2755,
+      "memory_title": "YAAML recall quality: task/segment drift is main failure mode, not bad memories"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact problem being solved in the current turn: segment-based task-state expiry and stale-memory suppression, including the implementation strategy of context-shift detection and segment boundary logic that the assistant is actively implementing.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2765,
+      "memory_title": "Recall quality improvement: segment-based task-state expiry and stale-memory suppression"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR #477833 and riskarbiter-trigger-traffic is completely unrelated to the current turn's focus on segment boundary logic, task-state recall suppression, and context-shift detection in a memory/conversation system.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3065,
+      "memory_title": "PR #477833 tbedor/riskarbiter-trigger-traffic: rebased and pushed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed deduplication fixes from past commits, but the current turn is actively implementing new segment boundary logic and context-shift detection\u2014different work streams with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR #483601 (rebase and BUILD dep removals) is entirely unrelated to the current turn's focus on segment boundary logic, task-state recall suppression, and context-shift detection in a memory/conversation system.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns task lifecycle metadata cleanup in a database layer, while the current turn focuses on conversation segment boundaries and memory recall logic\u2014entirely different subsystems with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3135,
+      "memory_title": "Task lifecycle metadata fixes: clear stale retry fields on transitions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed pyriskarbiter refactoring (PR #543) unrelated to the current turn's focus on conversation segment boundaries, task-state recall suppression, and context-shift detection logic.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns Risk Arbiter rule cleanup and archival policies, which is entirely unrelated to the current turn's focus on conversation segment boundaries, task-state recall suppression, and context-shift detection in a memory/conversation system.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns Risk Arbiter partition metadata cleanup and evidence taxonomy, which is entirely unrelated to the current turn's focus on conversation segment boundaries, task-state recall suppression, and context-shift detection in a memory system.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3151,
+      "memory_title": "Risk Arbiter no-traffic cleanup: partition metadata enrichment, evidence taxonomy, and execution status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past experiment logs and lessons, but the current turn is actively implementing a specific code change to segment boundaries and recall logic, making the historical experiment record tangentially relevant at best.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents experimental results on segment/task-fit strategies that directly relate to the current turn's focus on refining segment boundaries and task-state recall logic, though it represents past baseline data rather than the current implementation changes being made.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a prior experiment on segment/task-fit gating that concluded hard gates don't improve recall, but the current turn is implementing deterministic context-shift boundaries and context-marker compatibility\u2014a lighter-weight approach aligned with the memory's recommendation, though the memory's specific findings about ranking vs. gating are not directly actionable for the current implementation work.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the wrong-context recall problem the current turn is addressing (task-state stale despite active status, context drift within same project), providing concrete baseline metrics and confirming the root cause analysis, though it predates the specific segment-boundary solution being implemented.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3066,
+    "turn_ordinal": 310
+  }
+}

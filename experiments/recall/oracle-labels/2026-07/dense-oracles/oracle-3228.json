@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about Snowflake query resilience/retry logic, while the current turn is about BigQuery SQL parameterization best practices\u2014different databases, different problem domains, not actionable here.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1606,
+      "memory_title": "Added resilient retry and timeout wrapper for Snowflake queries"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes data pipeline infrastructure (Java jobs, GCS CSVs, external tables) but is irrelevant to the current discussion about SQL parameterization best practices and BigQuery query parameters.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1730,
+      "memory_title": "SSS BigQuery source is Java Signalsmith jobs producing GCS CSVs daily"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses model output refactoring and pickle artifact changes, which is completely unrelated to the current turn's focus on BigQuery SQL templating and query parameters.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1734,
+      "memory_title": "Two options for model output refactoring: scalar selection vs. vector output"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about Java code review patterns for a Risk Arbiter PR, while the current turn is about BigQuery SQL parameterization in Python\u2014completely different context and technology stack.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1755,
+      "memory_title": "Java Risk Arbiter PR 480432: Review feedback patterns and code style preferences"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Snowflake write restrictions is unrelated to the current discussion about BigQuery query parameters and SQL templating best practices.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2092,
+      "memory_title": "Snowflake query-expert write restrictions: CREATE TRANSIENT/TEMPORARY TABLE and INSERT only"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about rule archival schema and approval states is completely unrelated to the current turn's discussion of BigQuery SQL templating and query parameters.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2413,
+      "memory_title": "Future rule archival amendments: approval/objection state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about code simplification (inlining ID sets) and is unrelated to the current turn's focus on templated SQL and BigQuery query parameters.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2621,
+      "memory_title": "Code simplification: inline single-use ID sets into query builders"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses code factoring and helper method design patterns, but the current turn is about SQL templating and BigQuery query parameters\u2014completely different technical domains with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2638,
+      "memory_title": "Code factoring preference: small helper methods acceptable if they encode domain predicates or readability gates; avoid wrappers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about payroll generator removal strategy is completely unrelated to the current discussion about BigQuery SQL templating and query parameters.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2916,
+      "memory_title": "Remove payroll generator: single large PR vs phased approach trade-off"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes PR #521's refactoring of lifecycle helpers and mentions BigQuery verification, which is contextually related to the current discussion about templated SQL and BigQuery query parameters, but doesn't contain the specific SQL templating issue or implementation details needed for the current turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2961,
+      "memory_title": "forge-signalsmith: PR #521 refactors lifecycle PR generation shared helpers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly captures the exact recommendation and implementation pattern being discussed in the current turn, providing actionable guidance on BigQuery query parameters vs. templating.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2999,
+      "memory_title": "BigQuery SQL templating: use named query parameters instead of string interpolation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact PR discussion about templated SQL and BigQuery parameters, including the recommended implementation approach with named parameters and query parameter objects that the current turn is asking about.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3044,
+      "memory_title": "forge-signalsmith PR #521: lifecycle refactor with BigQuery parameters follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about pyriskarbiter library refactoring and CLI consolidation, completely unrelated to the current turn's discussion of BigQuery SQL templating and query parameters.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about a metadata table UI implementation is completely unrelated to the current discussion about BigQuery SQL templating and query parameters.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3239,
+      "memory_title": "Recently-visited metadata table won team feedback; update PR #13972 with new implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Snowflake vs BigQuery usage tables for deprecation eligibility, which is completely unrelated to the current turn's focus on templated SQL and BigQuery query parameters for a PR comment.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3275,
+      "memory_title": "Snowflake does not yet have feature-level usage tables; BigQuery remains source for deprecation eligibility, compact sync tables would bridge"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Vertex infrastructure pain points and migration strategy, which is completely unrelated to the current turn's focus on BigQuery query parameters and SQL templating best practices.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3276,
+      "memory_title": "Vertex pain motivating infrastructure migration: headless auth brittleness, expensive git/agent work, PR size limits, token expiry, slow Bazel, low throttle hiding capacity concerns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about UI label updates and tooltips in a triggers table, completely unrelated to the current turn's discussion of BigQuery SQL templating and query parameters.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f0025-3f91-7922-81e4-7bc8cb3def79",
+    "source_run_id": 3228,
+    "turn_ordinal": 13
+  }
+}

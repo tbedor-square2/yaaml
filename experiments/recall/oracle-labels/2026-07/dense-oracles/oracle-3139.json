@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a different LaunchDarkly flag (riskarbiter-should-fetch-generated-signals-from-mux) and general audit findings, while the current turn focuses on the specific riskarbiter-log-missing-mux-signals flag and whether its associated logs/metrics are actually observed in production.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1881,
+      "memory_title": "RiskArbiter LaunchDarkly audit findings: mux rollout flag stuck in partial state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes payroll signal generator removal, but the current turn is about removing missing-signal logging/test coverage\u2014different functionality and context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2649,
+      "memory_title": "Payroll signal generator removal steps after Mux rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses flag separation for mux cutover vs. parity checks, but the current turn is specifically about whether logs/metrics from the missing-signals functionality are actually being observed, making this distinction tangential rather than directly actionable.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2785,
+      "memory_title": "Mux cutover flag vs. parity flag are separate concerns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses TD_11 mux cutover metrics and staging evidence, but the current turn is asking whether logs/metrics from the missing-signal functionality are being observed to decide whether to remove it entirely\u2014a different decision point than the cutover rollout strategy.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2791,
+      "memory_title": "Strong staging evidence for TD_11 Mux cutover; missing-signal fallback not observed; recommend percentage rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses safe Mux cutover validation and rollout strategy, but the current turn is specifically about whether logs/metrics from the missing-signals functionality are actually being observed in production, with intent to remove dead code if not\u2014a different diagnostic question.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2794,
+      "memory_title": "Safe Mux cutover validation: staging evidence plus gradual rollout with metrics watch"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a different feature flag (`riskarbiter-should-fetch-generated-signals-from-mux` for `TD_11`) and is unrelated to the current turn's investigation of the `riskarbiter-log-missing-mux-signals` flag and whether to remove dead diagnostic code.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2801,
+      "memory_title": "RA Mux cutover for TD_11/payroll_run_update_connected_users: staged evidence is strong; percentage rollout strategy recommended"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses flag removal safety for a different flag (riskarbiter-should-fetch-generated-signals-from-mux) and mapping checks, while the current turn is about removing the missing-signals logging/test coverage based on observability data\u2014different scope and decision criteria.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2890,
+      "memory_title": "Flag removal safety: preserve generatedSignalToGenerator mapping check"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a different flag removal process (riskarbiter-should-fetch-generated-signals-from-mux) unrelated to the current discussion about missing-signal logging and test coverage.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2891,
+      "memory_title": "Flag removal process for riskarbiter-should-fetch-generated-signals-from-mux"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the decision about removing dead code, but focuses on a different feature (mux cutover) than the current query about missing-signal logging and test coverage.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2910,
+      "memory_title": "RiskArbiter Mux cutover is production-verified and ready for permanent removal"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past cleanup of MuxParityChecker, but the current turn is about whether to remove missing-signal logging/test coverage based on observing actual logs and metrics\u2014a different decision point with different evidence requirements.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2924,
+      "memory_title": "MuxParityChecker became stale after generator migration; safe to delete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses signal generator removal and mux provider validation, but the current turn is specifically about whether logs/metrics from the 'missing signals' functionality are actually being observed in production, with a decision to remove dead code if not\u2014a different concern than the dependency handoff mechanism.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2932,
+      "memory_title": "Signal generator removal: dependency handoff mechanism and mux provider validation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant precedent: both involve deciding whether to remove dead/unused code (missing-signal helper vs. migration util), and the stored memory shows the team chose deletion over keeping diagnostic code alive with added deps.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2945,
+      "memory_title": "Strict-deps error on MuxMigrationUtilTest was resolved by deleting the test and util"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about pyriskarbiter library refactoring and module extraction, while the current turn is investigating whether to remove dead diagnostic code (missing-signal logging/metrics) based on actual observability data\u2014completely different contexts with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory covers deprecated signal inventory and cleanup gates, but the current turn is specifically about whether logs/metrics from the 'missing-signal' functionality are being observed in production\u2014a narrower operational question unrelated to signal deprecation workflows.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3181,
+      "memory_title": "Deprecated signal audit: inventory, mapping, backfill evidence, ownership classification, and Dumbo cleanup gates"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a past refactoring (renaming MuxSignalGeneratorMigrationUtil and removing signal-generator code), but the current turn is about evaluating whether to remove the missing-signal logging/metric helper based on observing actual logs and metrics in Datadog\u2014a different cleanup decision with no overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past refactoring of Mux helper naming, but the current turn is investigating whether to remove dead code (missing-signal logging/metrics) based on observability data\u2014different scope and decision point.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3361,
+      "memory_title": "riskarbiter Mux helper rename to reflect post-signal-generator deletion"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ed6df-0d7b-7210-b6eb-9da62527d7f1",
+    "source_run_id": 3139,
+    "turn_ordinal": 145
+  }
+}

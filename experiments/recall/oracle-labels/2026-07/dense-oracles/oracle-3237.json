@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly actionable: the stored memory describes the exact recall-gating strategy needed to fix the stale task_state and context-mismatch issues (forge-signalsmith PR #501 vs #521, bot-manager over-generality) that the current turn is actively debugging and validating.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly explains the metrics framework being used in the current turn (recall quality vs. corpus health separation), but the current turn is already applying this framework operationally rather than needing the framework definition itself.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2311,
+      "memory_title": "Recall and memory-corpus metrics separation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's analysis of score-3 recalls and stale memory issues, though the stored memory addresses broader lifecycle strategy rather than the specific bot-manager context-mismatch problem being debugged.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past 5x5 experiment on recall candidate families, but the current turn is actively debugging live recall failures and checking current session state\u2014making the historical experiment findings stale and not actionable for the immediate troubleshooting work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2350,
+      "memory_title": "Recall candidate families 5x5 experiment: top signals identified"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's analysis of recall quality issues\u2014the stored memory describes the segment-based recall architecture that the assistant is actively debugging (e.g., the PR #521 vs #501 stale-memory problem and the bot-manager over-generalization), providing useful context for understanding why certain recalls succeed or fail.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's focus on recall-quality issues and ranking problems, though the stored memory describes a test plan rather than current execution results.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly summarizes the exact eval batch, known issues, and current daemon state that the current turn is actively inspecting and building upon.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3016,
+      "memory_title": "YAAML recall eval status: recent sessions show 4.0 avg, stale segment/task mismatch remains focus"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes past fixes to recall quality (source-overlap suppression and rerun deduplication), but the current turn is actively diagnosing new recall issues (forge-signalsmith stale memory, bot-manager over-generalization) and checking live metrics, making this historical context stale and not actionable for the present debugging work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Marginally relevant\u2014addresses session recall cache invalidation which relates to the current debugging of recall quality issues, but the stored memory is about a specific regression test implementation rather than actionable context for the current turn's investigation of stale memory selection and ranking problems.",
+      "judge_score": "3",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3189,
+      "memory_title": "Session recall cache must invalidate on inactive memory IDs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides historical baseline metrics (111 runs, ~4.12 avg score, 15% low-score rate) but the current turn is actively analyzing live state with fresh exec commands showing 12 recent runs with 4.0 avg score, making the older summary stale and less actionable for the immediate debugging work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past 5x5 experiment workflow setup, but the current turn is focused on live debugging of specific recall failures (forge-signalsmith, bot-manager) and checking current daemon state\u2014not on running the experiment framework itself.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3198,
+      "memory_title": "YAAML 5x5 experiment workflow: orchestrated metrics runner and prompt"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past experiments log and lessons backlog, but the current turn is actively debugging live recall metrics and specific failures (forge-signalsmith, bot-manager score-3 case), making the historical experiment summary stale and not actionable for the immediate diagnostic work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's investigation of recall-quality issues and task/segment mismatch gates, though the stored memory documents a prior experiment rather than the live metrics being analyzed now.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's investigation of recall-quality issues and the stale segment/task mismatch problem, though the stored memory documents a prior experiment conclusion rather than actionable next steps for the current debugging session.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact recall quality regression pattern (wrong-context, task mismatch) that the current turn is actively investigating and fixing, including the specific examples (forge-signalsmith PR mismatch, bot-manager over-generalization) now being replayed.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes historical corpus statistics and past quality evidence, but the current turn is actively working through live metrics, recent recalls, and specific current failures (forge-signalsmith, bot-manager), making the stale historical summary mostly irrelevant to the immediate debugging work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past deliverable (persuasion doc for budget approval) with no direct relevance to the current turn's focus on diagnosing recall quality issues, fixing stale memory selection, and analyzing recent eval metrics.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3376,
+      "memory_title": "Memory techniques report: technical persuasion doc for internal eng buy-in"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3237,
+    "turn_ordinal": 372
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes overall project goals and completed features, but the current turn is about a specific UI feature implementation (hiding done sessions with toggle and search fallback), which is not mentioned in the memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1774,
+      "memory_title": "Node/Rust project (tbedor) active-thread goal: CLI agent dispatch, GitHub replies, run lifecycle, and notifications"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes bot-manager's architecture and features, but the current turn is about implementing specific UI filtering logic (hiding done sessions, hotkey toggle, search fallback), which is not addressed in the memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2673,
+      "memory_title": "bot-manager v1: Codex-session-first browser with ephemeral summarization"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a similar filtering pattern (hide by default, make resurfaceable via toggle/filter) but applies it to low-information sessions rather than done sessions, requiring minor adaptation to the current turn's context.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2683,
+      "memory_title": "Low-information sessions should be hidden from default view but remain resurfaceable"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact feature being discussed: hiding done sessions by default, toggling with 'D' hotkey, and search fallback to done sessions when no live matches exist.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3207,
+      "memory_title": "bot-manager TUI: done-session visibility, active status overlay, search navigation, and new-session creation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns KUI table header alignment (PR #14133), which is completely unrelated to the current turn's discussion about hiding done sessions, toggling visibility with hotkeys, and search fallback behavior in a TUI.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3226,
+      "memory_title": "KUI PR #14133 deep review and alignment patch complete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a PR about metadata-table implementation and KUI changes, which is completely unrelated to the current turn's discussion about hiding done sessions, hotkey toggles, and search fallback behavior in a TUI.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3235,
+      "memory_title": "PR #13972 updated from action-table experiment to metadata-table production implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the D toggle behavior, dynamic help text, and session refresh priorities that are central to implementing the current turn's requirements for hiding done sessions by default and toggling visibility.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3236,
+      "memory_title": "D toggle and session refresh behaviors in bot-manager TUI"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a PR about test refactoring and dependency reduction, which is completely unrelated to the current turn's discussion about TUI session visibility filtering, hotkeys, and search fallback behavior.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3237,
+      "memory_title": "PR #483601: Reduce AbstractSuspicionThresholdTest dependency via explicit rule config harness"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a metadata table UI implementation for recently-visited resources, which is completely unrelated to the current turn's focus on hiding/showing done sessions with hotkeys and search fallback behavior.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3239,
+      "memory_title": "Recently-visited metadata table won team feedback; update PR #13972 with new implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes an undo feature for done sessions, but the current turn is about hiding/showing done sessions and search fallback behavior\u2014different features with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3279,
+      "memory_title": "Undo done sessions feature added"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes UI help text formatting for the done toggle, which is tangential to the core feature request about hiding/showing done sessions and search fallback behavior.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3280,
+      "memory_title": "Dynamic help text for done toggle"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the implementation of done session visibility logic, but focuses on the definition/detection of done status rather than the UI filtering and toggle behavior being discussed in the current turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3287,
+      "memory_title": "Session done status definition unified across refresh paths"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents the D hotkey for show/hide done sessions, which is directly relevant to the current turn's feature implementation, though it doesn't contain implementation details needed for the actual coding work.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3288,
+      "memory_title": "TUI hotkey audit: p/P split, removed o alias, documented all normal-mode bindings"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses sorting behavior for done sessions, but the current turn focuses on visibility toggling and search fallback logic, making it tangentially related but not directly actionable.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3290,
+      "memory_title": "Recent done sessions sort by activity, old done sessions sink"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses sorting behavior for done sessions, but the current turn focuses on visibility toggling and search fallback logic, making it tangentially related but not directly actionable.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3293,
+      "memory_title": "Done session sorting: recent within 24h sorts normally"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR feedback resolution for recently visited resources is completely unrelated to the current turn's discussion about hiding done sessions, hotkey toggles, and search fallback behavior in a TUI.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3318,
+      "memory_title": "Recently visited resources PR feedback resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR #14151 (automated rule archival labeling) is completely unrelated to the current turn about hiding done sessions, hotkey toggles, and search fallback behavior in a TUI.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef013-6c3b-7220-86d0-6293caf814dc",
+    "source_run_id": 3248,
+    "turn_ordinal": 21
+  }
+}

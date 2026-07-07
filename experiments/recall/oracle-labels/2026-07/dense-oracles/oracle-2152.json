@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about offline signal production-use classification and Dumbo shadow logs is completely unrelated to the current discussion about p99 latency, signal generator performance, RPC metrics, and SLO misses.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2072,
+      "memory_title": "Offline signal production-use classification: Dumbo shadow logs + Sourcegraph layering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory on distinguishing transient spikes from real incidents is contextually relevant to the current p99 analysis, but requires filtering since the discussion is already focused on sustained 30-minute windows and low-volume bucket sensitivity rather than alert tuning.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2204,
+      "memory_title": "Short-lived blips vs. real incidents in provider latency: the 15-min sustained window filter"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a provider heartbeat monitoring setup with a 1000ms threshold, but the current turn discusses `payroll_connected_users` p99 latency (~5-9s) and RPC service performance, which are different systems and metrics with no direct overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2209,
+      "memory_title": "Provider heartbeat p99 monitoring: 1h change-shift with 1000ms absolute threshold"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant context about PR #482106's prerequisites and deployment status for the exact RPC services (Person, Roster) being investigated for p99 latency, but the current turn is focused on diagnosing existing performance metrics rather than deployment blockers.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2514,
+      "memory_title": "PR #482106 (java) merge blockers and deployment prerequisites"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the PR deployment, baseline metrics, and expected improvements, providing essential context for evaluating whether the current p99 of 5-9s represents acceptable post-deploy performance or indicates a regression.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2609,
+      "memory_title": "PR #482106 deployment to Mixtape production confirmed; latency/SLO metrics show improvement"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly provides the baseline context for the current turn: documents the post-deploy improvement from ~24s to ~5-9s p99, establishes that the current ~9s p99 is still elevated despite improvement, and identifies the specific metric and tags needed for ongoing investigation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2615,
+      "memory_title": "payroll_connected_users latency improved post-deploy 11:03 PDT; p99 ~24s \u2192 ~5-9s, SLO misses nearly eliminated"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory reports p99 of 4.3s with zero timeouts, but the current turn shows p99 has risen to 5-9s with recent SLO misses, making this outdated baseline data of limited actionable value for the present investigation.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2632,
+      "memory_title": "Served TD_11 payroll evaluation: no timeout errors, p99 latency 4.3s under 10s caller timeout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant baseline data on TD_11 payroll latency post-refactor, providing context for why p99 remains elevated and establishing that served path is stable while shadow path has timeout issues.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2641,
+      "memory_title": "TD_11 payroll current production latency and timeout state (post-refactor)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses staging validation and rollout safety for a mux cutover, but the current turn is focused on diagnosing why p99 latency remains high (~5-9s) post-deployment; the memory provides no actionable context for the latency investigation.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2791,
+      "memory_title": "Strong staging evidence for TD_11 Mux cutover; missing-signal fallback not observed; recommend percentage rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides directly relevant context about TD_11 payroll signal generation and Mux cutover strategy, but the current turn is focused on diagnosing elevated p99 latency (~5-9s) rather than the Mux feature flag rollout itself.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2801,
+      "memory_title": "RA Mux cutover for TD_11/payroll_run_update_connected_users: staged evidence is strong; percentage rollout strategy recommended"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses payroll_run_update flagging rates post-Mux cutover, which is orthogonal to the current discussion of p99 latency tail analysis for a signal generator across RPC services (Person, Roster, Duplograph).",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2816,
+      "memory_title": "TD_11 payroll_run_update flagging rate post-Mux cutover: stable within expected band"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the p99 latency investigation\u2014identifies a known timeout issue (Mux feature-fetch) on TD_11 that could explain the 5-10s tail, though the current turn focuses on RPC service breakdown rather than this specific root cause.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2820,
+      "memory_title": "Mux feature-fetch timeout causing DLQ backlog on TD_11 payroll_run_update"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a specific DLQ failure root cause (Mux timeout), but the current turn is about elevated p99 latency across all clusters in `td_11`; while both involve `td_11`, the memory addresses a discrete failure mode rather than the systemic tail latency issue being investigated.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2823,
+      "memory_title": "TD_11 payroll_run_update DLQ failure root cause: Mux feature-fetch timeout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant monitoring guidance for TD_11 p99 investigation, but requires filtering since the current turn is focused on RPC service breakdown rather than the repeated-polling procedure itself.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2859,
+      "memory_title": "TD_11 monitoring: repeated polling procedure and stale metric interpretation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns pyriskarbiter library refactoring and CLI consolidation, which is completely unrelated to the current turn's focus on p99 latency troubleshooting, RPC service performance, and signal generator metrics.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns deprecated signal inventory, ownership classification, and Dumbo cleanup gates\u2014entirely unrelated to the current discussion of p99 latency, RPC performance, and signal generator tail analysis.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3181,
+      "memory_title": "Deprecated signal audit: inventory, mapping, backfill evidence, ownership classification, and Dumbo cleanup gates"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory discusses Vertex infrastructure pain points and migration strategy, which is completely unrelated to the current turn's focus on p99 latency analysis for a signal generator service.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3276,
+      "memory_title": "Vertex pain motivating infrastructure migration: headless auth brittleness, expensive git/agent work, PR size limits, token expiry, slow Bazel, low throttle hiding capacity concerns"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019edcc8-cff6-77d1-8e48-04b9adabc032",
+    "source_run_id": 2152,
+    "turn_ordinal": 36
+  }
+}

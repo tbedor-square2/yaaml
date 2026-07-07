@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Slack job consolidation and duplicate publisher logic across two repositories, which is completely unrelated to the current query about batching behavior in hardlink/AVT connected-unit fetch flows.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1728,
+      "memory_title": "SSS Slack jobs consolidation: separate concerns, shared codebase"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses backlog batching and session boundaries for memory management, which is completely unrelated to the current query about whether hardlink/AVT fetch flows are batched in the codebase.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1803,
+      "memory_title": "Backlog memory formulation aligns on session boundaries with idle flush"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory describes batch endpoint optimizations and the feature flag mechanism, which provides useful context for understanding the refactored batching strategy, but the current turn focuses on whether hardlink and AVT flows themselves are batched together (they are not), which requires deeper architectural knowledge beyond what this memory captures.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1882,
+      "memory_title": "Batch endpoint optimization with feature flag for safe rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses refactoring patterns and legacy behavior preservation, but the current turn is asking about whether hardlink and AVT fetch flows are batched together\u2014a specific technical question about current implementation that this memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1886,
+      "memory_title": "Preserve legacy behavior in batching refactors via dual overloads or flag gates"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses batch API integration patterns and cache preservation, but the current turn is asking about whether hardlink and AVT fetch flows are batched together\u2014a question already answered in detail in the turn itself, making this memory tangential and not actionable for the immediate query.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1896,
+      "memory_title": "Batch endpoint API discovery and integration with cache-aware token classification"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the batching optimization work (MLP-2470) that the current turn is analyzing, including the exact batching strategy, requestedSignals filtering, and the two sequential `grabDuplograph` calls for hardlink and AVT that the assistant is explaining.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1899,
+      "memory_title": "Payroll Duplograph signal optimization: batch endpoints, requestedSignals filtering, tri-state rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses batch endpoint usage patterns and optimization techniques, but does not address the specific question about whether hardlink and AVT fetch flows are batched together or run sequentially.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1904,
+      "memory_title": "Batch endpoint usage with max constants and requested-signal optimization"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses batch API semantic scope and denylist handling in a shared batch client, but the current turn is asking about whether hardlink and AVT fetch flows are batched together\u2014a different architectural concern about flow sequencing and result sharing.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1967,
+      "memory_title": "PR #481583: Batch API semantic scope \u2013 avoid shared behavior changes"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the batching analysis\u2014explains the Person API batch size (100 tokens) and rate limits that constrain the hardlink/AVT fetch flows, though the current turn focuses on whether the two flows themselves are batched together rather than internal batch sizing.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2052,
+      "memory_title": "PersonService BatchGetByPersonToken rate limit: 6,000 tokens/sec per caller"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses offline signal production classification and Dumbo shadow logs, which is completely unrelated to the current query about batching behavior in hardlink/AVT fetch flows.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2072,
+      "memory_title": "Offline signal production-use classification: Dumbo shadow logs + Sourcegraph layering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's question about batching in hardlink/AVT flows, providing deployment context and latency improvements, though the stored memory lacks the specific technical details about sequential vs. concurrent execution that the current turn is investigating.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2615,
+      "memory_title": "payroll_connected_users latency improved post-deploy 11:03 PDT; p99 ~24s \u2192 ~5-9s, SLO misses nearly eliminated"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory reports overall p99 latency and timeout status but does not address the specific technical question about whether hardlink and AVT fetch flows are batched together or run sequentially.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2632,
+      "memory_title": "Served TD_11 payroll evaluation: no timeout errors, p99 latency 4.3s under 10s caller timeout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory documents production latency and timeout state, but the current turn asks about batching behavior of hardlink/AVT flows\u2014a different technical concern that the stored memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2641,
+      "memory_title": "TD_11 payroll current production latency and timeout state (post-refactor)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses RA Mux cutover strategy for a different payroll generator, not the hardlink/AVT batching question being asked in the current turn.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2801,
+      "memory_title": "RA Mux cutover for TD_11/payroll_run_update_connected_users: staged evidence is strong; percentage rollout strategy recommended"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a Mux feature-fetch timeout issue unrelated to the current query about batching of hardlink and AVT connected-unit fetch flows.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2820,
+      "memory_title": "Mux feature-fetch timeout causing DLQ backlog on TD_11 payroll_run_update"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns deprecated signal inventory, backfill evidence, and Dumbo cleanup gates\u2014entirely unrelated to the current query about batching behavior in hardlink/AVT connected-unit fetch flows.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3181,
+      "memory_title": "Deprecated signal audit: inventory, mapping, backfill evidence, ownership classification, and Dumbo cleanup gates"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory is about Blox hybrid migration architecture and has no relevance to the current query about batching behavior in hardlink/AVT fetch flows.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3245,
+      "memory_title": "Blox hybrid migration research: architecture, precedent, and spike plan"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory discusses Vertex infrastructure pain points and migration strategy, which is completely unrelated to the current query about batching behavior in hardlink/AVT connected-unit fetch flows.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3276,
+      "memory_title": "Vertex pain motivating infrastructure migration: headless auth brittleness, expensive git/agent work, PR size limits, token expiry, slow Bazel, low throttle hiding capacity concerns"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019edcc8-cff6-77d1-8e48-04b9adabc032",
+    "source_run_id": 2154,
+    "turn_ordinal": 37
+  }
+}

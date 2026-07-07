@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes metrics architecture from an earlier phase, but the current turn is focused on implementing deterministic segment-topic enrichment in memory formation and checking live repo state\u2014a different operational concern.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2311,
+      "memory_title": "Recall and memory-corpus metrics separation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses memory quality analysis and lifecycle states, but the current turn is focused on implementing deterministic segment-topic enrichment and checking live repo state\u2014different technical concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the segment-based architecture and topic-key enrichment strategy that the current turn is actively implementing and debugging.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a test plan for recall matching that is directly relevant to the current turn's focus on memory formation and retrieval enrichment, but requires minor filtering since the current turn has moved past initial testing into implementation of segment-topic enrichment.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes segment oracle architecture and memory formation patterns, which is directly relevant to the current turn's focus on memory enrichment with deterministic segment-topic keys, but requires filtering since the turn is specifically about adding topic key enrichment to memory creation rather than the full oracle design.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2692,
+      "memory_title": "Segment oracle architecture: tables, API, backfill design"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current work on memory formation and segment enrichment, but focuses on schema/migration details rather than the active topic of deterministic topic-key enrichment logic.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2693,
+      "memory_title": "Segment oracle schema changes and test impacts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the YAAML recall system's task-key matching, segment isolation, and health filtering\u2014exactly the mechanisms the current turn is inspecting and extending with deterministic segment-topic enrichment.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3138,
+      "memory_title": "YAAML recall: task-key matching, segment isolation, and health-based filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a regression test for session recall cache invalidation, which is tangentially related to memory formation but does not directly address the current turn's focus on segment-topic enrichment, memory key normalization, or the specific implementation gap being debugged.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3189,
+      "memory_title": "Session recall cache must invalidate on inactive memory IDs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the current eval state and failure modes that the assistant is actively using to guide the next improvement decision (segment-topic enrichment for memory formation).",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a 5x5 experiment workflow and metrics runner setup, but the current turn is focused on a specific technical implementation task (adding deterministic segment-topic enrichment to memory formation), which requires different context about memory creation paths and key normalization rather than experiment orchestration details.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3198,
+      "memory_title": "YAAML 5x5 experiment workflow: orchestrated metrics runner and prompt"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past experiment logs and lessons, but the current turn is focused on live implementation work (memory enrichment with topic keys, repo state verification), making it stale and mostly irrelevant to the immediate technical task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a prior 5x5 experiment on segment/task-fit recall strategies with detailed metrics, which is useful context for understanding past tradeoffs, but the current turn is focused on memory formation enrichment (adding topic keys to memories) rather than recall strategy tuning, so it requires filtering to extract only the relevant framing.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses task-fit gating and ranking experiments, but the current turn is focused on implementing deterministic segment-topic enrichment in memory formation and checking live repo state\u2014a different technical direction with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the hardcoded topic/tool-key extraction that the current turn is actively working to improve, but the turn has already moved past the initial refactoring phase into implementation of deterministic segment-topic enrichment, so the memory provides useful context with minor filtering needed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a prior recall quality regression diagnosis (wrong-context, not bloat) and recommends task-identifier gating, which is directly relevant context for the current turn's focus on deterministic segment-topic enrichment and memory formation improvements, though the current turn is now implementing a specific solution rather than still diagnosing.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the corpus state, eval metrics, and identified next steps (segment-aware retrieval, eval-gated consolidation) that are actively being addressed in the current turn's work on topic-key enrichment and memory formation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past deliverable (persuasion doc for budget approval), but the current turn is focused on live debugging of memory formation and segment-topic enrichment, making this historical context mostly irrelevant to the immediate technical work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3376,
+      "memory_title": "Memory techniques report: technical persuasion doc for internal eng buy-in"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3264,
+    "turn_ordinal": 397
+  }
+}

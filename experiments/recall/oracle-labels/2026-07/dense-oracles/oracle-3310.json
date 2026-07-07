@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about tmux for background processes is useful context since the current turn heavily involves tmux session management and launcher behavior, though the specific issue here is about detach/reattach semantics rather than background process persistence.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2082,
+      "memory_title": "Use tmux for long-running background processes; nohup and detached tool execution are unreliable"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Codex thread naming API is completely unrelated to the current turn's discussion of tmux detach behavior and launcher window selection logic.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2655,
+      "memory_title": "Codex app-server thread/name/set API for setting thread titles"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about setting Codex thread titles via JSON-RPC is unrelated to the current issue about tmux detach behavior and window selection in bot-manager.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2672,
+      "memory_title": "Codex thread title can be set via app-server JSON-RPC thread/name/set"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes working directory handling during session resume, which is tangentially related to session management but does not address the core issue of detaching from Codex exiting bot-manager or the launcher reattachment fix being discussed.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2697,
+      "memory_title": "Session join uses stored working directory for tmux and Codex"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly explains the root cause and fix for the exact issue being discussed\u2014double detach behavior when rejoining a tmux session\u2014and provides the specific technical solution already implemented.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2699,
+      "memory_title": "Double detach bug in tmux session rejoin fixed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes TUI features (done-session visibility, search navigation, new-session creation) but the current turn focuses on a tmux detach/reattach bug fix in the launcher, which are different architectural concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3207,
+      "memory_title": "bot-manager TUI: done-session visibility, active status overlay, search navigation, and new-session creation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about transcript scanning caps is unrelated to the current tmux detach/reattach behavior issue being debugged.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3229,
+      "memory_title": "Backlog transcript scan must process all files, not cap at 100"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes UI toggle behavior and refresh mechanics for done-sessions, which is unrelated to the current issue about detaching from Codex exiting bot-manager.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3236,
+      "memory_title": "D toggle and session refresh behaviors in bot-manager TUI"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly explains the tmux architecture and detach behavior that the current turn is debugging and fixing.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3278,
+      "memory_title": "Managed tmux workspace: global session with local attach windows"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about TUI hotkey bindings is unrelated to the current issue about tmux detach behavior and bot-manager session management.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3288,
+      "memory_title": "TUI hotkey audit: p/P split, removed o alias, documented all normal-mode bindings"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact issue being discussed\u2014detaching from Codex exits bot-manager\u2014and explains the implemented solution, making it immediately actionable context for understanding the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3289,
+      "memory_title": "Managed tmux reattach: select manager window when session is detached"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about closing tmux peek panes is tangentially related to tmux but addresses a different issue (peek window management) than the current turn's focus on detaching from Codex sessions and bot-manager window selection behavior.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3294,
+      "memory_title": "Close tmux peek panes with Ctrl-b x then y"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the fix for the exact issue being discussed: detaching from a Codex session and re-entering bot-manager, with the solution of checking window existence before selecting.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3301,
+      "memory_title": "bot-manager tmux launcher fixed for re-entry into existing managed sessions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about transcript backfill cutoff is unrelated to the current issue about tmux detach behavior and bot-manager window selection.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3302,
+      "memory_title": "bot-manager backfill cutoff for old inactive transcripts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes tmux session/window identity strategy for bot-manager, but the current turn focuses on a specific detach/reattach UX issue and launcher behavior changes, which are only tangentially related to the identity rules.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3327,
+      "memory_title": "Tmux session/window identity strategy for bot-manager"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the tmux session management issue being debugged, but describes a deduplication strategy rather than the specific detach-reattach fix currently being implemented.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3342,
+      "memory_title": "Tmux session deduplication strategy for bot-manager"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef013-6c3b-7220-86d0-6293caf814dc",
+    "source_run_id": 3310,
+    "turn_ordinal": 56
+  }
+}

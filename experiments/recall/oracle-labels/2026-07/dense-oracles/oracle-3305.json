@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about proto field removal and JSON/RPC parsing is unrelated to the current question about handoff transmission mechanisms via bbsubscriber API.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1666,
+      "memory_title": "Proto field removal: JSON vs binary RPC parsing differs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Slack job consolidation and codebase organization, which is completely unrelated to the current query about handoff transmission mechanisms via the bbsubscriber API.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1728,
+      "memory_title": "SSS Slack jobs consolidation: separate concerns, shared codebase"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about playpen routing for Console KUI is completely unrelated to the current query about handoff transmission via bbsubscriber API.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1744,
+      "memory_title": "Playpen routing for Console KUI: header-based vs GNS weight shifts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses artifact ordering and checkpoint management for partition-selection-history, but the current turn asks about handoff transmission via bbsubscriber API\u2014a different subsystem with no overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2281,
+      "memory_title": "Three-artifact update ordering: JSON first, then checkpoint and candidate notes"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses testing approaches for Prefect\u2013Blox connectivity, but the current turn is asking about the technical mechanism of handoff transmission, which is already comprehensively answered in the conversation history.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3059,
+      "memory_title": "Testing Prefect\u2013Blox without PR review"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory confirms bbsubscriber API mechanics and schema validity, providing useful validation context for the handoff transmission mechanism described in the current turn, though it's a test artifact rather than direct operational guidance.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3077,
+      "memory_title": "Manual no-op Blox routine completed: bbsubscriber reachable, run_as_service=sa-builderbot works from laptop"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant research on Blox handoff architecture with precedent examples and auth considerations, but the current turn has already received a detailed technical answer so this memory provides supporting context rather than filling a gap.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3245,
+      "memory_title": "Blox hybrid migration research: architecture, precedent, and spike plan"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a diagnostic run status but provides no technical details about handoff transmission mechanisms, making it mostly irrelevant to the current question about how handoffs are transmitted.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3258,
+      "memory_title": "Task checkpoint: blox-prefect-noop preprod diagnostic run in progress"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses KITT migration strategy and infrastructure setup, but the current turn asks specifically about handoff transmission mechanics (HTTP POST, payload format, inline vs. stored options), which is already thoroughly answered and unrelated to the migration path decision.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3272,
+      "memory_title": "KITT migration path: move entire Prefect flow from Vertex to KITT rather than split dispatcher+executor"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes Vertex pain points and migration motivation, but the current turn is asking about the technical mechanics of handoff transmission via bbsubscriber API\u2014a different architectural layer that doesn't require this historical context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3273,
+      "memory_title": "Vertex pain points motivating infrastructure migration: auth brittleness, GitHub PR generation fragility, token/cache issues, platform limits"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses KITT migration strategy and Prefect flow onboarding, but the current turn asks specifically about handoff transmission mechanics (HTTP POST, payload encoding, inline vs. stored options), which the memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3274,
+      "memory_title": "KITT migration path for signals-deprecate-and-delete-prefect: onboard \u2192 backend switch \u2192 data/auth resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes Vertex infrastructure pain points and migration rationale, but the current turn asks specifically about handoff transmission mechanics (HTTP POST, payload format, options), which this memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3276,
+      "memory_title": "Vertex pain motivating infrastructure migration: headless auth brittleness, expensive git/agent work, PR size limits, token expiry, slow Bazel, low throttle hiding capacity concerns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes KITT onboarding and Terraform PR generation, which is unrelated to the current query about handoff transmission mechanisms via the bbsubscriber API.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3282,
+      "memory_title": "KITT onboarding generates Terraform PR for Forge/Prefect access"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes migration strategy and staging approach, but the current turn asks specifically about handoff transmission mechanics (HTTP POST, payload format, inline vs. stored options), which the memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3296,
+      "memory_title": "Preferred KITT migration strategy for signalsmith"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about KITT secret-file auth patterns is unrelated to the current query about handoff transmission via the bbsubscriber API.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3300,
+      "memory_title": "KITT secret-file auth pattern: GitHub and Slack creds"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about KITT secret file auth patterns is unrelated to the current query about handoff transmission via bbsubscriber API.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3367,
+      "memory_title": "KITT secret file auth pattern for Prefect flows"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes WIF/infrastructure setup for KITT migration but does not address the current question about handoff transmission mechanics (HTTP POST to bbsubscriber, payload encoding, inline vs. stored options).",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3395,
+      "memory_title": "KITT migration for forge-signalsmith: WIF + preprod rollout \u2014 implementation in progress"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f0025-3f91-7922-81e4-7bc8cb3def79",
+    "source_run_id": 3305,
+    "turn_ordinal": 36
+  }
+}

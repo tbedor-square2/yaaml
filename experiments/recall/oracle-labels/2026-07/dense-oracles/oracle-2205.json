@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses LaunchDarkly flag states and rollout configurations, which is operationally relevant to RiskArbiter but does not directly address parity metrics (score deltas, flagging differences, missing-signal counts) that the current turn is focused on.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1881,
+      "memory_title": "RiskArbiter LaunchDarkly audit findings: mux rollout flag stuck in partial state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the Duplograph signal optimization work (batching, filtering, tri-state rollout) which is directly relevant context for understanding TD_11 parity metrics, though the current turn is asking for parity metric results rather than implementation details.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1899,
+      "memory_title": "Payroll Duplograph signal optimization: batch endpoints, requestedSignals filtering, tri-state rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the rollout pattern (OLD/PARITY_CHECK/NEW) that is directly relevant to understanding TD_11's parity metrics investigation, but lacks specific metric names, tag structures, or current state details needed to fully answer the query.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1902,
+      "memory_title": "Payroll signal generator optimization pattern: OLD/PARITY_CHECK/NEW rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant context about the payroll signal generator rolloff and mentions parity checking as part of the migration strategy, which directly relates to the current query about parity metrics, but lacks specific metric details or recent status.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1968,
+      "memory_title": "Linear rolloff ticket for payroll signal generator"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to parity metrics assessment, providing latency and timeout context for TD_11, though it focuses on served-path performance rather than parity-specific deltas or flagging differences.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2632,
+      "memory_title": "Served TD_11 payroll evaluation: no timeout errors, p99 latency 4.3s under 10s caller timeout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context on TD_11 latency and timeout behavior, but focuses on operational metrics rather than parity correctness deltas which is the current query focus.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2641,
+      "memory_title": "TD_11 payroll current production latency and timeout state (post-refactor)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to understanding TD_11 parity metrics and timeout behavior, but requires filtering since it explains deadline mechanics rather than current metric values.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2642,
+      "memory_title": "Payroll deadline structure: overall scoreable budget vs. parity-specific timeouts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context about TD_11 parity flag state and rollout percentage, but the stored memory is slightly stale regarding current rollout progress and doesn't include the recent parity metrics findings from the conversation.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2643,
+      "memory_title": "Payroll parity checking flag and current rollout state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses deadline-sharing trade-offs for parity checks, but the current turn is asking for actual parity metrics data and health status, which requires fresh metric queries rather than architectural context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2658,
+      "memory_title": "Async deadline sharing vs. parity-specific deadline trade-off"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly addresses the current query about parity metrics for TD_11, providing concrete staging evidence, production baselines, and specific metric names/values that are immediately actionable for evaluating the cutover readiness.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2791,
+      "memory_title": "Strong staging evidence for TD_11 Mux cutover; missing-signal fallback not observed; recommend percentage rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to TD_11 parity metrics context, providing staging/production baseline data and risk factors, but requires filtering since it focuses on Mux cutover readiness rather than current parity metric values.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2801,
+      "memory_title": "RA Mux cutover for TD_11/payroll_run_update_connected_users: staged evidence is strong; percentage rollout strategy recommended"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to TD_11 parity metrics context, but focuses on flagging rates rather than the score deltas and parity differences currently being queried.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2816,
+      "memory_title": "TD_11 payroll_run_update flagging rate post-Mux cutover: stable within expected band"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the Datadog monitoring workflow and metric interpretation strategy that the current turn is actively executing to evaluate TD_11 parity metrics.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2851,
+      "memory_title": "Datadog production monitoring workflow for TD_11 trigger post-cutover"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context on TD_11 parity/flagging behavior with baseline rates and operational health, but focuses on a specific historical incident rather than current metrics snapshot.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2853,
+      "memory_title": "TD_11 risk assessment monitoring: isolated flagging blip is normal and ages out cleanly"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly addresses the monitoring methodology and interpretation strategy needed to evaluate TD_11 parity metrics, including how to distinguish real issues from stale data and which safety checks to apply.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2859,
+      "memory_title": "TD_11 monitoring: repeated polling procedure and stale metric interpretation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to interpreting parity metrics for TD_11, but requires filtering to distinguish stale vs. active issues\u2014the stored memory provides a useful methodology that applies to the current analysis.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2861,
+      "memory_title": "TD_11 stale metric confirmation: zero job failures + zero ACL errors over time span"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant historical context on TD_11 parity issues and timeout failures, but from an earlier rollout window that the current turn explicitly separates from recent steady-state analysis.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2894,
+      "memory_title": "TD_11 Mux timeout/missing-signal failures during rollout monitoring"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses test expectations after parity checker removal, but the current turn is asking about live parity metrics status and operational health, which are unrelated concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2925,
+      "memory_title": "Test expectations shifted after removing parity checker"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019edcc8-cff6-77d1-8e48-04b9adabc032",
+    "source_run_id": 2205,
+    "turn_ordinal": 44
+  }
+}

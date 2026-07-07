@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the core issue being debugged: kind-aware recall gating and task-key extraction rules that prevent stale task_state memories from being recalled, which is exactly the weak recall case (TD_11 staging-rollout memory) identified in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes metric definitions and separation logic, but the current turn focuses on concrete recall rule changes (identity-bearing lessons as episodic) and extraction gaps, making this architectural context mostly irrelevant to the immediate debugging work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2311,
+      "memory_title": "Recall and memory-corpus metrics separation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed 5x5 experiment with recommendations for dynamic recall count, but the current turn is focused on debugging a specific recall quality issue (identity-bearing lesson memories) and post-fix eval results, making this historical experiment data tangential rather than actionable.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2350,
+      "memory_title": "Recall candidate families 5x5 experiment: top signals identified"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a recall testing plan for hybrid architectures, but the current turn is focused on diagnosing and fixing a specific recall quality issue (identity-bearing lessons being over-durable), making the stored memory stale and tangential to the immediate debugging work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's analysis of weak post-fix recall (TD_11 staging-rollout memory in production monitoring), providing a framework for understanding whether it's a recall quality issue or expected task-state drift.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2758,
+      "memory_title": "Recall quality failures are segment/task-state drift, not memory quality"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The memory addresses eval run hygiene and rerun tracking, which is tangentially related to the current turn's focus on post-fix eval inspection and quality assessment, but does not directly inform the immediate decision about identity-bearing lesson durability rules or the concrete recall gap being addressed.",
+      "judge_score": "3",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3089,
+      "memory_title": "Recall quality metric hygiene pattern"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's focus on filtered eval views and post-fix eval inspection, though the stored memory describes tooling capabilities rather than the specific eval results or recall rule changes being discussed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3091,
+      "memory_title": "YAAML stats and eval summary support --since filtering for recency-focused diagnostics"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed deduplication fixes from earlier commits, but the current turn is actively debugging a new recall quality issue (identity-bearing lesson memories) and planning further rule changes, making this historical context stale and not actionable for the immediate next steps.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past refactoring project (PR #543, pyriskarbiter consolidation) with no connection to the current turn's focus on eval filtering, recall quality assessment, and memory durability rules for task-identity-bearing lessons.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant summary of eval metrics and recall quality status that contextualizes the ongoing iteration work, though the stored snapshot may be slightly stale relative to the current turn's real-time eval progress.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the 5x5 experiment workflow and metrics infrastructure, which is directly relevant to the current turn's focus on eval runs, recall quality assessment, and iterative improvements, though the current turn is deeper into implementation details and specific rule changes rather than the high-level workflow.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3198,
+      "memory_title": "YAAML 5x5 experiment workflow: orchestrated metrics runner and prompt"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a historical experiments log and backfilled metrics from past runs, but the current turn is actively debugging a specific recall quality issue (identity-bearing lesson memories) and implementing a concrete fix, making the historical summary stale and not actionable for this immediate debugging step.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a past segment/task-fit experiment with specific metrics, but the current turn is focused on immediate post-fix eval inspection, daemon state, and a concrete rule gap about identity-bearing lessons\u2014different concerns than the historical 5x5 tradeoff analysis.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses segment/task-fit gating and ranking strategies from a prior experiment, but the current turn is focused on concrete recall rule changes (identity-bearing lessons as episodic) and extraction tightening for TD_11 keys, making the stored memory's high-level strategic direction largely stale and not actionable for the immediate debugging work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a refactoring to remove hardcoded rules from YAAML recall, which is directly relevant to the current turn's focus on eval quality and recall rule gaps, but requires filtering since the turn has moved to a specific concrete issue (identity-bearing lesson keys) rather than the broader hardcoded-phrase removal project.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly documents the exact recall quality regression and root cause (wrong-context same-project recalls) that the current turn is actively diagnosing and addressing through tightened durable rules for identity-bearing lessons.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant context about YAAML memory quality metrics and evaluation evidence, which directly relates to the current turn's focus on post-fix eval inspection and recall quality improvements, though it lacks specifics about the identity-key rule gap being addressed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3061,
+    "turn_ordinal": 308
+  }
+}

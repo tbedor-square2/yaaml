@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory provides useful debugging context for Prefect logs if needed during the diagnostic, but the current turn is focused on worktree setup and bbsubscriber testing, not log inspection.",
+      "judge_score": "3",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1724,
+      "memory_title": "Prefect logs on forge-signalsmith: local CLI + Vertex infra fallback"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the Prefect\u2013Blox integration architecture, auth challenges, and the exact two-step diagnostic approach (manual bbsubscriber curl, then Prefect preprod test) that the current turn is actively executing.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3058,
+      "memory_title": "Prefect\u2013Blox integration: architecture and auth unknowns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the three options being executed in the current turn, providing the exact rationale and sequence (option 1 then option 2 with worktrees) that the assistant is following.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3059,
+      "memory_title": "Testing Prefect\u2013Blox without PR review"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly confirms the manual no-op Blox routine succeeded and bbsubscriber is reachable, which is the prerequisite status the current turn references before proceeding with the worktree-based preprod diagnostic.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3077,
+      "memory_title": "Manual no-op Blox routine completed: bbsubscriber reachable, run_as_service=sa-builderbot works from laptop"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the spike plan being executed in the current turn, including the manual curl test and preprod worktree diagnostic approach with specific technical details about bbsubscriber, BuilderBot auth, and the exact parameter strategy being implemented.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3245,
+      "memory_title": "Blox hybrid migration research: architecture, precedent, and spike plan"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the bbsubscriber API calls being made in the current turn, but the conversation has already progressed past initial endpoint discovery and is now focused on worktree isolation and diagnostic parameter setup.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3252,
+      "memory_title": "Blox/Prefect integration: Vertex runtime requires internal mesh endpoint for bbsubscriber"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant\u2014stores the exact diagnostic worktree setup, deployment status, and current mesh endpoint test in progress that the user is proceeding with.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3253,
+      "memory_title": "Blox/Prefect integration validation: diagnostic run with mesh endpoint in progress"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly applicable\u2014the stored memory specifies the exact mesh endpoint and socket configuration needed for the Prefect-to-bbsubscriber diagnostic being set up in the worktree.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3256,
+      "memory_title": "Blox/Prefect/Vertex integration diagnostic: mesh endpoint required"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the worktree-based preprod diagnostic strategy, explaining that repeated deploys will rebuild the Docker image with new hashes; useful context for planning the diagnostic workflow, though the current turn is already proceeding with worktree isolation.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3257,
+      "memory_title": "Preprod deploy reruns append new dirty-worktree hash even with cached image"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly tracks the in-progress preprod diagnostic run that the current turn is actively monitoring and advancing, providing essential context for understanding the workflow state and next polling steps.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3258,
+      "memory_title": "Task checkpoint: blox-prefect-noop preprod diagnostic run in progress"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly actionable\u2014the stored memory provides the exact parameter syntax and endpoint override needed to execute the diagnostic testing strategy currently being implemented in the worktree.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3262,
+      "memory_title": "Blox endpoint override for Prefect diagnostic testing"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about gcloud/ADC reauth is stale and tangential; the current turn is actively executing a worktree-based preprod diagnostic with Blox/bbsubscriber, with no indication of GCP auth failures or image push issues.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3265,
+      "memory_title": "gcloud/ADC reauth required after Forge image push fails on GCP auth"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant\u2014documents the exact diagnostic being executed in the current turn (preprod worktree with mesh endpoint parameter) and provides the run ID and endpoint configuration needed to track and validate the ongoing test.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3267,
+      "memory_title": "Blox/Prefect/Vertex diagnostic: mesh endpoint param working"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a long-term KITT migration strategy, but the current turn is executing an immediate worktree-based diagnostic for the existing Prefect/Blox setup, making the migration path stale and not actionable for this turn.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3272,
+      "memory_title": "KITT migration path: move entire Prefect flow from Vertex to KITT rather than split dispatcher+executor"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a KITT migration strategy, but the current turn is executing a worktree-based preprod diagnostic using Blox/bbsubscriber on the existing Prefect setup, which is orthogonal to the KITT onboarding path.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3274,
+      "memory_title": "KITT migration path for signals-deprecate-and-delete-prefect: onboard \u2192 backend switch \u2192 data/auth resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes Vertex infrastructure pain points and migration rationale, but current turn is executing a specific worktree-based diagnostic for Prefect-to-bbsubscriber connectivity; the stored context is stale architectural background rather than actionable for the immediate task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3276,
+      "memory_title": "Vertex pain motivating infrastructure migration: headless auth brittleness, expensive git/agent work, PR size limits, token expiry, slow Bazel, low throttle hiding capacity concerns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context on the KITT migration architecture and WIF setup, but the current turn focuses on immediate worktree diagnostics and Blox testing rather than the broader migration strategy.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3395,
+      "memory_title": "KITT migration for forge-signalsmith: WIF + preprod rollout \u2014 implementation in progress"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f0025-3f91-7922-81e4-7bc8cb3def79",
+    "source_run_id": 3249,
+    "turn_ordinal": 24
+  }
+}

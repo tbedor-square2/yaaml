@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about project status reporting templates and is unrelated to the current discussion about UI status indicators and action fields for a test/session management system.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1868,
+      "memory_title": "Lookout project update template: Cycle 2 Status, Key Update, Blockers/Risks, Leadership Ask"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses `yaaml status` command output formatting and counter display, which is unrelated to the current discussion about `blocked` status semantics and actionable guidance for users.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2034,
+      "memory_title": "yaaml status command: separate transcript state from cumulative counters"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes TUI layout and navigation patterns, but the current turn is specifically about whether `blocked` status provides actionable guidance to users\u2014a content/data design question rather than a layout question.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2323,
+      "memory_title": "Hybrid TUI layout recommendation: table + detail pane over IDE-style or pure dashboard"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes SummaryBot service details and entry points, which is completely unrelated to the current discussion about status indicators, blocked states, and UI design for actionable feedback.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2645,
+      "memory_title": "SummaryBot service status and entry points"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about SummaryBot's leave/out-of-office representation is unrelated to the current discussion about `blocked` status indicators and the proposed `next_action` field for actionable guidance.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2648,
+      "memory_title": "SummaryBot leave/out-of-office representation is a prompt priority, not a UI gap"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about TUI screenshots and iteration preferences is unrelated to the current discussion about the `blocked` status field and what actionable guidance should be provided to users.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2677,
+      "memory_title": "User preference: TUI screenshots and iteration before stopping"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the current discussion about collapsing AttentionSignal into SessionStatus and enriching status with actionable context, providing the exact design decision being debated.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2684,
+      "memory_title": "Collapse AttentionSignal enum into SessionStatus for simpler model"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses table layout and column organization, while the current turn focuses on the semantic meaning of 'blocked' status and what actionable guidance users need\u2014different concerns that don't directly inform each other.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2686,
+      "memory_title": "Table layout: combine STATE/ATTN into one column, show REPO only, keep branch in details"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses mtime-based state inference and metadata refresh mechanics, which is tangential to the current discussion about what actionable guidance users receive when a session is `blocked`.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2732,
+      "memory_title": "bot-manager: quiet session metadata refresh instead of mtime-inferred states"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses `ci_failed` status validation rules, but the current turn focuses on what actionable guidance users get from `blocked` status and proposes adding a `next_action` field\u2014different concerns that don't directly inform the discussion.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2735,
+      "memory_title": "bot-manager: ci_failed status should require open PR association"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the implementation of the `next_action` field that was proposed in the current turn, making it highly actionable context for understanding what was built.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2902,
+      "memory_title": "bot-manager: next_action field added to session metadata"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about an ML model cleanup project's status template and blockers, which is completely unrelated to the current discussion about UI status indicators and action fields for a test/session management system.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2941,
+      "memory_title": "Online ML ModelFeatureRule cleanup project: Cycle 2 status template and blockers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes TUI navigation and session visibility features, but does not address the current question about what actionable guidance users receive when a session has 'blocked' status.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3207,
+      "memory_title": "bot-manager TUI: done-session visibility, active status overlay, search navigation, and new-session creation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses TUI toggle behaviors and session refresh mechanics, which is unrelated to the current discussion about status indicators and actionable guidance for blocked sessions.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3236,
+      "memory_title": "D toggle and session refresh behaviors in bot-manager TUI"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses session completion logic and done_at timestamps, which is unrelated to the current discussion about blocked status indicators and human-facing action guidance.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3287,
+      "memory_title": "Session done status definition unified across refresh paths"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses status override logic for working states, but the current query focuses on what actionable guidance users get when blocked\u2014a different concern about user-facing messaging and next_action fields.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3291,
+      "memory_title": "Working status overrides ci_failed and other action statuses"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR feedback resolution is completely unrelated to the current discussion about status indicators, action fields, and user guidance for blocked states.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3318,
+      "memory_title": "Recently visited resources PR feedback resolution"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019efc9f-ff22-7d32-bdac-00301bac40a8",
+    "source_run_id": 2997,
+    "turn_ordinal": 82
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes git workflow procedures (squashing, rebasing, force-pushing) but the current turn is focused on code review findings and factoring issues in a specific PR, making this context stale and mostly irrelevant to the immediate task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1722,
+      "memory_title": "forge-signalsmith PR workflow: squash, verify, then force-with-lease push"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about validation gating and repair budgets is useful context for the code review findings, but the current turn is focused on factoring/architecture issues in PR #517 (already merged) rather than validation or repair logic implementation.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1794,
+      "memory_title": "Gate deletion PRs on clean validation before creation; budget repair attempts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Jest/ESLint/Kochiku PR review workflow, but the current turn involves Python code review of Prefect lifecycle jobs with BigQuery/deprecation logic\u2014completely different tech stack and domain.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2231,
+      "memory_title": "PR review comment response workflow for code fixes"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses PR #480432 cleanup issues (inlining helpers, unused dependencies), but the current turn focuses on PR #517 code factoring review (deletion.py/deprecation.py duplication), making it contextually unrelated and not actionable.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2357,
+      "memory_title": "PR #480432 review feedback: inlining and unused dependency cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns MLP-4409/4410 PRs and LaunchDarkly rollout handling, while the current turn focuses on PR #517 code factoring review for deletion/deprecation lifecycle jobs\u2014completely different context and PRs.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant context about Dumbo usage classification and internal validation separation that directly relates to the PR #517 code review findings, but the current turn has already moved past the initial problem-solving phase into concrete factoring review, so the memory is useful for background but not immediately actionable for the current analysis.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2571,
+      "memory_title": "forge-signalsmith cleanup: Distinguish internal validation from blocking Dumbo usage"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a cleanup strategy for removing serving flags and generators in separate PRs, but the current turn is focused on code review findings for PR #517 regarding factoring issues in deletion.py and deprecation.py\u2014different scope and context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2901,
+      "memory_title": "Cleanup PR strategy: remove serving flag and generator in separate PRs to reduce rollback blast radius"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses payroll generator removal strategy, which is completely unrelated to the current turn's focus on PR #517 code factoring, deprecation/deletion lifecycle jobs, and BigQuery duplication issues.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2916,
+      "memory_title": "Remove payroll generator: single large PR vs phased approach trade-off"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about rule archival date PRs is completely unrelated to the current turn's focus on PR #517 code review findings, lifecycle job factoring, and deletion/deprecation workflow analysis.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3034,
+      "memory_title": "Draft PRs to open: tbedor/riskarbiter-rule-summary-archival-date and tbedor/kui-rule-archival-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents PR #521's refactoring of the lifecycle helpers and BigQuery parameter improvements that are the core subject of the current turn's code review findings.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3044,
+      "memory_title": "forge-signalsmith PR #521: lifecycle refactor with BigQuery parameters follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory concerns PR #483601 (ruleconfig test harness rebasing and BUILD deps), while current turn discusses PR #517 (lifecycle job factoring in forge-signalsmith); completely different projects and contexts.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns pyriskarbiter CLI refactoring and library consolidation (PR #543), while the current turn is debugging a lifecycle job in forge-signalsmith with code duplication issues in deletion/deprecation flows (PR #517)\u2014completely different projects and contexts.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a Homebrew formula migration for sq-riskarbiter and is completely unrelated to the current turn's focus on code factoring review for a Prefect lifecycle deployment PR (#517) involving deprecation/deletion workflows.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3157,
+      "memory_title": "homebrew-formulas PR #4844: sq-riskarbiter uvx wrapper migration\u2014mlds-core#545 blocker and publish workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes deprecated signal inventory and cleanup gates, but the current turn focuses on PR #517 code review findings about factoring issues in deletion.py and deprecation.py\u2014different scope and level of detail.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3181,
+      "memory_title": "Deprecated signal audit: inventory, mapping, backfill evidence, ownership classification, and Dumbo cleanup gates"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes feature archival policy timelines and PR lifecycle rules, but the current turn is focused on code review findings for PR #517 (deletion/deprecation factoring issues), making this memory stale and contextually misaligned.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3205,
+      "memory_title": "Feature archival policy timeline: 90+90 days, 7+3 day PR review/queue"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses infrastructure migration pain points and Vertex-on-Prefect operational issues, but the current turn is focused on concrete code review findings for PR #517 (deletion.py factoring), making the memory stale and contextually misaligned.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3276,
+      "memory_title": "Vertex pain motivating infrastructure migration: headless auth brittleness, expensive git/agent work, PR size limits, token expiry, slow Bazel, low throttle hiding capacity concerns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns Riskarbiter mux helper renaming and signal-generator cleanup, which is completely unrelated to the current turn's focus on PR #517 lifecycle job factoring, deprecation/deletion flows, and code duplication analysis.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f0025-3f91-7922-81e4-7bc8cb3def79",
+    "source_run_id": 3218,
+    "turn_ordinal": 12
+  }
+}

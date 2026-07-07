@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory describes a specific recall improvement approach that directly fits as one of the 5 candidate approaches for the 5x5 experiment workflow, but requires framing within the broader experimental procedure.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the 5x5 experiment's evaluation framework\u2014defines the metrics to collect and compare across approaches\u2014but requires integration with the broader orchestration workflow described in the current turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2311,
+      "memory_title": "Recall and memory-corpus metrics separation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant as a prior experimental result that informs which approaches to test in the new 5x5 iteration, but requires filtering since it describes completed work rather than actionable next steps.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2327,
+      "memory_title": "Eval-based health reranking improves but is symptom-level"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly documents a completed 5x5 experiment with concrete results, metrics, and recommendations that are immediately actionable for understanding what approaches were tested and which should be prioritized next.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2350,
+      "memory_title": "Recall candidate families 5x5 experiment: top signals identified"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a specific test plan for recall architectures, but the current turn is about establishing a 5x5 experimental workflow framework\u2014different scope and abstraction level.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses metric hygiene for rerun tracking, which is tangentially related to the eval infrastructure mentioned in the 5x5 workflow, but does not directly inform the current turn's clarification of the experimental procedure, iteration strategy, or approach selection logic.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3089,
+      "memory_title": "Recall quality metric hygiene pattern"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory provides essential architectural context on YAAML's recall system, metrics baseline, and known issues directly relevant to designing the 5x5 experiment, but lacks specific guidance on the experimental workflow itself.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3187,
+      "memory_title": "YAAML Rust memory recall system: architecture, filtering, health, schema v6, consolidation, and known issues"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Provides directly relevant baseline metrics (4.1 avg score, 15% low-score rate, failure modes) needed to establish the starting point for the 5x5 experiment workflow, though lacks recent diagnostic details for identifying specific improvement levers.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the 5x5 experiment framework and provides concrete findings from a prior iteration, but describes a completed experiment rather than actionable guidance for the current turn's workflow setup.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3195,
+      "memory_title": "Segment/task-fit reranking is limited; segment summaries needed for generation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the 5x5 workflow just clarified, but addresses a procedural detail (logging) not yet mentioned in the current turn; useful for implementation but requires minor filtering.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3196,
+      "memory_title": "5x5 prompt should require EXPERIMENTS_LOG.md updates on primary branch"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact 5x5 workflow the user just clarified, including the orchestration script, prompt location, and iteration procedure that matches their intent perfectly.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3198,
+      "memory_title": "YAAML 5x5 experiment workflow: orchestrated metrics runner and prompt"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the 5x5 experiment framework, metrics collection methodology, and durable lessons from prior iterations\u2014exactly what's needed to execute and learn from the current recall-improvement workflow.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant as a completed 5x5 experiment example showing methodology, metrics structure, and tradeoff analysis, but from a different domain (segment/task-fit) than the current recall-improvement focus.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the 5x5 experiment workflow as a concrete prior finding that identifies a failed approach (hard task-fit gates) and suggests promising next directions (segment-aware features, provenance re-ranking, context-weighted selection), providing actionable hypotheses for the next iteration round.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a specific recall quality regression and its root cause, which is marginally relevant as context for understanding current memory system behavior, but does not directly inform the 5x5 experimental workflow or approach selection being discussed in the current turn.",
+      "judge_score": "3",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past corpus analysis and evidence of memory quality issues, but does not directly inform the current turn's focus on implementing and executing a 5x5 experimental workflow for improving recall metrics.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed report artifact, but the current turn is about clarifying the 5x5 workflow methodology itself\u2014the memory provides no actionable context for understanding or implementing the experimental procedure.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3376,
+      "memory_title": "Memory techniques report: technical persuasion doc for internal eng buy-in"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3275,
+    "turn_ordinal": 411
+  }
+}

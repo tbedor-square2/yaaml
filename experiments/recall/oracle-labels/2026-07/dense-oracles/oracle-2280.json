@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses recall filtering and memory kind prioritization, which is tangential to the current turn's focus on segment lifecycle, creation thresholds, and segment-aware architecture design.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a related but distinct recall filtering implementation; it provides useful context on task-key matching and LLM reranking approaches, but addresses a narrower problem (kind-aware filtering) than the current turn's broader architectural questions about segment lifecycle, creation thresholds, and memory linkage.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2083,
+      "memory_title": "Kind-aware recall filtering with LLM reranking roadmap"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses model replay and feature backfilling for legacy systems, which is entirely unrelated to the current discussion about segment lifecycle, memory linkage, and recall matching strategies.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2247,
+      "memory_title": "Backfilled modern features for legacy model replay are viable if point-in-time correct and trained on high-fire windows"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a specific technical decision about eval-context embedding architecture, which is orthogonal to the current turn's focus on segment lifecycle, creation thresholds, and memory linkage design questions.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2261,
+      "memory_title": "Eval-context embedding architecture decision: rerank vs union retrieval"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses metrics for evaluating recall and memory corpus health, but the current turn focuses on open design questions about segment lifecycle, creation thresholds, and storage architecture\u2014different concerns that don't directly inform those decisions.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2311,
+      "memory_title": "Recall and memory-corpus metrics separation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The memory discusses eval data on bad memory retrieval and lifecycle states, which is tangentially relevant to question 11 (evaluation metrics) and 9 (segment sprawl policy), but doesn't directly address the open questions about segment mechanics, creation thresholds, or recall matching strategies being debated.",
+      "judge_score": "3",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the core design questions being discussed\u2014segment lifecycle, creation thresholds, task key authority, and storage considerations\u2014making it essential context for evaluating this direction.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses open question #6 (recall matching strategy) from the current turn, providing a concrete test plan for the hybrid approach the assistant was considering.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides concrete implementation details for several open questions (backfill, storage, recall reranking, segment lifecycle), but requires filtering since it describes a specific design rather than addressing all 12 open questions raised in the current turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2692,
+      "memory_title": "Segment oracle architecture: tables, API, backfill design"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides concrete implementation details on path evidence hierarchy and oracle design that directly address several open questions (segment lifecycle, creation threshold, storage cost), but requires filtering since it focuses on one specific aspect rather than the full strategic landscape.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2703,
+      "memory_title": "Segmentation strategy: path evidence hierarchy and oracle design"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory addresses task-key extraction filtering, which is tangential to the current discussion of segment lifecycle, concurrent segments, and recall matching\u2014it's a implementation detail rather than strategic direction guidance.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3098,
+      "memory_title": "Segment task-key extraction: filter tool output and prioritize identity keys"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to open question #6 (recall matching strategy) and #11 (evaluation metrics), providing empirical evidence that segment-aware reranking alone is insufficient and suggesting integration into generation/retrieval instead.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3195,
+      "memory_title": "Segment/task-fit reranking is limited; segment summaries needed for generation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past experiment logs and metrics, but the current turn asks about open design questions for a segment-based memory system\u2014different scope and not actionable for settling the 12 open questions being discussed.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant experimental data on segment-aware recall strategies that addresses open questions #6 (recall matching) and #11 (evaluation), but requires filtering since it reports past results rather than forward guidance.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses recall matching and segment-aware filtering strategies, which are relevant to open questions #6 and #11, but it documents a past experiment's negative result rather than providing actionable guidance for the current direction-setting discussion.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses a past refactoring decision about removing hardcoded phrases and tool keys, but the current turn is asking about open design questions for segment lifecycle and memory linkage\u2014different architectural concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past corpus analysis and quality metrics, but the current turn is asking about open design questions for a segment-aware memory system\u2014different scope and not actionable for settling those specific questions.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed persuasion document about memory techniques, but the current turn is asking about open technical questions for a specific direction (segment lifecycle, concurrent segments, etc.), making this historical artifact mostly irrelevant to the immediate design discussion.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3376,
+      "memory_title": "Memory techniques report: technical persuasion doc for internal eng buy-in"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 2280,
+    "turn_ordinal": 268
+  }
+}

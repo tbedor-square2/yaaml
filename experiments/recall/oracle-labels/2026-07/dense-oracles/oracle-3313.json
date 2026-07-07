@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past PR #521 refactor with BigQuery parameters, but the current turn is about next steps after a different PR (11416) merged into main for KITT/deprecation-job migration, making this context stale and tangential.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3044,
+      "memory_title": "forge-signalsmith PR #521: lifecycle refactor with BigQuery parameters follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about feature archival policy timelines is unrelated to the current turn's focus on KITT migration next steps for forge-signalsmith.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3205,
+      "memory_title": "Feature archival policy timeline: 90+90 days, 7+3 day PR review/queue"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Blox hybrid migration research and architecture, but the current turn is asking for next steps after a PR merge to forge-signalsmith for KITT migration, which is a different technical path and doesn't directly inform the immediate action items.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3245,
+      "memory_title": "Blox hybrid migration research: architecture, precedent, and spike plan"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly outlines the KITT migration strategy and concrete next steps that align perfectly with the current turn's request for what comes after the PR merge.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3272,
+      "memory_title": "KITT migration path: move entire Prefect flow from Vertex to KITT rather than split dispatcher+executor"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes historical pain points motivating a past infrastructure migration decision, but the current turn is asking for concrete next steps after a PR merge\u2014it needs actionable deployment and verification steps, not retrospective context about why the migration was chosen.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3273,
+      "memory_title": "Vertex pain points motivating infrastructure migration: auth brittleness, GitHub PR generation fragility, token/cache issues, platform limits"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly outlines the KITT migration path and next concrete steps for the signals-deprecate-and-delete-prefect job, which is exactly what the user is asking about after the PR merge.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3274,
+      "memory_title": "KITT migration path for signals-deprecate-and-delete-prefect: onboard \u2192 backend switch \u2192 data/auth resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes past pain points motivating the infrastructure migration, but the current turn is asking for immediate next steps after a PR merge\u2014the stored context is stale background rather than actionable guidance for what to do now.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3276,
+      "memory_title": "Vertex pain motivating infrastructure migration: headless auth brittleness, expensive git/agent work, PR size limits, token expiry, slow Bazel, low throttle hiding capacity concerns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes KITT onboarding Terraform PR generation, but the current turn is asking about next steps after a PR merge in forge-signalsmith itself, which is a different phase (migration PR creation and no-op KITT job validation) not covered by this memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3282,
+      "memory_title": "KITT onboarding generates Terraform PR for Forge/Prefect access"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Buildkite principal removal from Forge templates, which is tangential to the current turn's focus on next steps for KITT migration and verifying the merged PR's configuration.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3284,
+      "memory_title": "Buildkite principal removal in Forge template is intentional"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly aligns with the next steps being discussed (staged KITT migration with no-op first, then preprod validation before prod), but the current turn has already articulated those steps in detail, so the memory adds minor reinforcement rather than new actionable information.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3296,
+      "memory_title": "Preferred KITT migration strategy for signalsmith"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly confirms the PR merge state and Buildkite pipeline creation, which are the foundation for the next steps being discussed in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3297,
+      "memory_title": "Runway pipeline onboarded to forge-signalsmith"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past fix to duplicate YAML handling in Forge onboarding, but the current turn is asking about next steps after a PR merge\u2014it needs forward-looking action items, not historical context about a resolved YAML duplication issue.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3298,
+      "memory_title": "KITT Forge onboarding duplicate YAML fix: additive merge strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about KITT secret-file auth is tangentially related to the KITT migration path but doesn't address the immediate next steps of verifying the Buildkite pipeline, creating a no-op KITT job, or handling the Hermit/kittctl tooling decision.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3300,
+      "memory_title": "KITT secret-file auth pattern: GitHub and Slack creds"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about a recently-visited feature PR is entirely unrelated to the current turn's focus on KITT/deprecation-job migration next steps for forge-signalsmith.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3384,
+      "memory_title": "PR #13972: recently-visited feature addresses prod/staging distinction, timestamp milliseconds, and KITT URL deduplication"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to step 3 (proving KITT can run with the right identity and access resources), but the stored memory focuses on AWS identity validation while the current turn is asking about next steps after PR merge, requiring some filtering to apply it.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3394,
+      "memory_title": "KITT AWS identity confirmed + smoke tests validate path"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly documents the KITT migration implementation plan, WIF setup, and preprod rollout strategy that directly informs the next concrete steps being discussed in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3395,
+      "memory_title": "KITT migration for forge-signalsmith: WIF + preprod rollout \u2014 implementation in progress"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f0025-3f91-7922-81e4-7bc8cb3def79",
+    "source_run_id": 3313,
+    "turn_ordinal": 63
+  }
+}

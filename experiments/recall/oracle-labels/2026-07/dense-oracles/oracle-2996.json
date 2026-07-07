@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the Bazel verification failure mentioned in the current turn, providing actionable troubleshooting steps for the Bazelisk download issue and test verification workflow, though the current discussion has moved to code-level normalization of status metadata.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2379,
+      "memory_title": "Bazel verification for archival review RPC changes in java worktrees"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses optimization of local Bazel testing versus CI polling for large dependency graphs, but the current turn is about fixing a metadata status normalization bug where `ci_failed` is incorrectly assigned without an open PR association\u2014a different concern.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2536,
+      "memory_title": "Verify rebases and push via CI rather than local Bazel when test compile is slow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed PR review and freeze-related fixes, but the current turn is about a metadata status normalization issue (`ci_failed` without associated PRs); the memories are from different problem domains with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes bot-manager's architecture and session handling, which provides useful context for understanding how metadata status is applied and cached, though the current turn focuses on a specific bug fix for ci_failed normalization that requires more targeted implementation details.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2673,
+      "memory_title": "bot-manager v1: Codex-session-first browser with ephemeral summarization"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact issue and solution being discussed in the current turn: preventing `ci_failed` status from being assigned without an open PR association, and normalizing such cases to `blocked` instead.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2735,
+      "memory_title": "bot-manager: ci_failed status should require open PR association"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed rebase and BUILD dependency removal for PR #483601, which is unrelated to the current turn's focus on fixing `ci_failed` status normalization logic and metadata handling.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses task lifecycle metadata cleanup for retry fields, but the current turn focuses on session status normalization for CI failures\u2014different domains with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3135,
+      "memory_title": "Task lifecycle metadata fixes: clear stale retry fields on transitions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed refactoring of pyriskarbiter modules and PR #543, which is entirely unrelated to the current turn's issue about `ci_failed` status normalization and metadata handling for sessions with no open PRs.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes TUI visibility and navigation features, but the current turn focuses on fixing metadata status normalization logic for `ci_failed` classification\u2014unrelated concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3207,
+      "memory_title": "bot-manager TUI: done-session visibility, active status overlay, search navigation, and new-session creation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a UI component update (action-table to metadata-table) on an unrelated PR, while the current turn focuses on CI status normalization logic for session metadata\u2014different problem domain with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3235,
+      "memory_title": "PR #13972 updated from action-table experiment to metadata-table production implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a UI table implementation for metadata display, while the current turn focuses on fixing a status normalization bug for CI/PR associations\u2014different domains with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3239,
+      "memory_title": "Recently-visited metadata table won team feedback; update PR #13972 with new implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The memory describes status override logic for working states that is relevant to understanding the session status normalization being implemented, but the current turn focuses on preventing false ci_failed assignments rather than working-state overrides.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3291,
+      "memory_title": "Working status overrides ci_failed and other action statuses"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR #13972 feedback resolution is entirely unrelated to the current turn's discussion of archival review RPC draft PR, CI status normalization, and metadata status handling.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3318,
+      "memory_title": "Recently visited resources PR feedback resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes UI label and tooltip updates for rule archival eligibility, which is unrelated to the current turn's focus on CI status normalization, PR associations, and metadata status handling.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes PR refresh TTL and staleness logic, but the current turn focuses on fixing incorrect `ci_failed` status assignment when there are no open PRs\u2014a different concern about status normalization rules rather than refresh caching behavior.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3351,
+      "memory_title": "PR refresh TTL and staleness logic"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes TUI refresh warning visibility improvements, which is tangentially related to status handling but does not directly address the current issue of `ci_failed` status normalization or PR association validation.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3353,
+      "memory_title": "Refresh warning visibility"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR #13972's recently-visited feature is unrelated to the current turn's focus on archival review RPC, CI status normalization, and metadata handling.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3384,
+      "memory_title": "PR #13972: recently-visited feature addresses prod/staging distinction, timestamp milliseconds, and KITT URL deduplication"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019efc9f-ff22-7d32-bdac-00301bac40a8",
+    "source_run_id": 2996,
+    "turn_ordinal": 81
+  }
+}

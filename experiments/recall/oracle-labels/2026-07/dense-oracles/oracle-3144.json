@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past refactoring of the `yaaml status` command output format, which is unrelated to the current turn's focus on adding a new `yaaml eval requeue-stale` command for repairing stale recall evaluations.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2034,
+      "memory_title": "yaaml status command: separate transcript state from cumulative counters"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses eval-based health reranking and failure modes, but the current turn is focused on implementing a specific CLI command (`yaaml eval requeue-stale`) to repair stale `n/a` evals\u2014a tactical implementation task unrelated to the health reranking strategy or failure-mode diagnostics.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2327,
+      "memory_title": "Eval-based health reranking improves but is symptom-level"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns MLP-4410 PR #483111 (manual rule archival executor and change freeze handling), which is entirely unrelated to the current turn's focus on YAAML's recall/eval loop, stale `n/a` eval repair, and the new `yaaml eval requeue-stale` command.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past architectural decision (PreToolUse hook removal) that is stale and tangential to the current work on adding a `requeue-stale` command for eval repair.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2698,
+      "memory_title": "PreToolUse hook experiment removed: low recall quality + installation friction"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes task-state deactivation logic, which is orthogonal to the current turn's focus on implementing a stale eval repair command (`yaaml eval requeue-stale`).",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2928,
+      "memory_title": "Stale task-state deactivation completed and effective"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes filtering stale reruns from metrics, but the current turn focuses on adding a CLI command to queue stale evals for repair\u2014a different operational concern with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3088,
+      "memory_title": "Ignore superseded eval reruns in metrics"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes `--since` filtering for stats/summary commands, but the current turn focuses on implementing a new `yaaml eval requeue-stale` command for repairing stale `n/a` evals\u2014different operational concern with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3091,
+      "memory_title": "YAAML stats and eval summary support --since filtering for recency-focused diagnostics"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed deduplication fixes from earlier commits, but the current turn is focused on implementing a new `yaaml eval requeue-stale` command for stale `n/a` eval repair\u2014a different operational concern with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses task lifecycle metadata cleanup for retry fields, but the current turn focuses on implementing a new `yaaml eval requeue-stale` CLI command for stale eval repairs\u2014different operational concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3135,
+      "memory_title": "Task lifecycle metadata fixes: clear stale retry fields on transitions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes pyriskarbiter refactoring and library consolidation, which is completely unrelated to the current turn's focus on YAAML recall/eval loop improvements and the `yaaml eval requeue-stale` command implementation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past fix to eval summary limits, but the current turn focuses on implementing a new `requeue-stale` command for repairing stale `n/a` evals\u2014different operational concern with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3188,
+      "memory_title": "YAAML eval summary default limit expanded from 50 to 1000 runs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory reports historical eval metrics and aggregate quality statistics, but the current turn is focused on implementing a specific CLI command (`yaaml eval requeue-stale`) to repair stale `n/a` evals\u2014operational work that does not require or benefit from recall quality baseline data.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a 5x5 experiment workflow and metrics runner, but the current turn is focused on implementing a specific CLI command (`yaaml eval requeue-stale`) to repair stale eval tasks\u2014different scope and no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3198,
+      "memory_title": "YAAML 5x5 experiment workflow: orchestrated metrics runner and prompt"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past YAAML recall experiments and lessons, but the current turn is focused on implementing a specific CLI command (`yaaml eval requeue-stale`) to repair stale evaluations\u2014a different operational concern with no direct connection to the experimental findings.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past recall quality regression with root causes (wrong-context, topic drift) and proposes a solution (stricter same-project gating), but the current turn is focused on implementing a specific operational fix (stale `n/a` eval repair command) with no connection to the earlier diagnostic work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past corpus analysis and quality metrics, but the current turn is focused on implementing a specific CLI command (`yaaml eval requeue-stale`) to repair stale eval tasks\u2014a tactical engineering task with no direct connection to the historical memory quality evidence.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about a persuasion document for engineering buy-in on memory techniques, while the current turn is focused on implementing a specific CLI command (`yaaml eval requeue-stale`) to repair stale eval tasks\u2014completely different technical contexts with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3376,
+      "memory_title": "Memory techniques report: technical persuasion doc for internal eng buy-in"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3144,
+    "turn_ordinal": 332
+  }
+}

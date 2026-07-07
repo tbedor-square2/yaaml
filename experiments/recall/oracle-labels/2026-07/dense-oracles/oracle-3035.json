@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a historical LaunchDarkly audit finding about flag segmentation state, but the current turn is actively monitoring real-time metric changes after a flag flip, making the stale audit context minimally actionable for evaluating immediate post-flip behavior.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1881,
+      "memory_title": "RiskArbiter LaunchDarkly audit findings: mux rollout flag stuck in partial state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a Snowflake backfill job for partition-selection history, which is completely unrelated to the current turn's focus on flag-flip metric validation (legacy fetch cutover, Mux traffic, failure counters).",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2300,
+      "memory_title": "Partition-selection-history backfill: three-artifact durable state machine with strict reconciliation cycle"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about a Blockcell site for partition analysis is completely unrelated to the current turn's focus on flag flip metric changes and traffic cutover validation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2508,
+      "memory_title": "Blockcell site for removable partitions analysis with shareable trigger filters and cache-busted assets"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes baseline latency and timeout metrics for TD_11, but the current turn is asking about metric changes after a flag flip, requiring fresh real-time comparisons rather than historical baseline context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2632,
+      "memory_title": "Served TD_11 payroll evaluation: no timeout errors, p99 latency 4.3s under 10s caller timeout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory documents a completely different incident (DynamoDB RCU spike from td_45 eval-logger in June 2026) with no relevance to the current turn's flag flip metric validation for payroll_run_update_connected_users traffic routing.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2709,
+      "memory_title": "Risk Arbiter DynamoDB read spike investigation (2026-06-25)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the pre-flip analysis and rollout strategy for this exact flag flip, providing the baseline context needed to evaluate whether the post-flip metrics match the expected behavior.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2801,
+      "memory_title": "RA Mux cutover for TD_11/payroll_run_update_connected_users: staged evidence is strong; percentage rollout strategy recommended"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant post-cutover metric context showing flagging rates and guardrail status, but requires filtering since the current turn is asking about immediate metric changes around the flag flip rather than longer-term stability trends.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2816,
+      "memory_title": "TD_11 payroll_run_update flagging rate post-Mux cutover: stable within expected band"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact monitoring workflow being executed in the current turn: multi-window metric polling on TD_11, Mux fetch, payroll deadletters, and cross-checking logs for BatchGetByPersonToken UNAUTHENTICATED errors\u2014all of which appear in the assistant's metric analysis.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2830,
+      "memory_title": "Datadog monitoring workflow: repeated multi-window metric polling with log cross-checks"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact monitoring workflow being executed in the current turn: multi-window metric polling (60m/10m/2m), cross-checking logs for job failures and ACL errors, and verifying safety checks like deadletters and Mux failures after a flag flip.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2837,
+      "memory_title": "Production monitoring workflow: multi-window metric polling with log cross-check"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the monitoring pattern being applied in the current turn\u201460m/10m/2m windows, safety signals (deadletters, Mux failures, ACL errors), and baseline comparisons\u2014making it essential context for understanding and validating the metric analysis approach.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2840,
+      "memory_title": "Monitoring pattern for production flag rollout stability"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the monitoring workflow and metric interpretation patterns being applied in the current turn to evaluate the TD_11 flag flip, including specific metric windows, aggregation methods, and regression signal detection criteria.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2851,
+      "memory_title": "Datadog production monitoring workflow for TD_11 trigger post-cutover"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant monitoring methodology for the TD_11 service, but the current turn is already executing that pattern in detail with specific metric results, so the general guidance has minor gaps relative to the concrete analysis underway.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2852,
+      "memory_title": "Datadog monitoring pattern for production service health"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a past isolated flagging blip on TD_11, but the current turn is about metric changes after a flag flip (feature flag configuration change), which is a different operational context with different expected outcomes.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2853,
+      "memory_title": "TD_11 risk assessment monitoring: isolated flagging blip is normal and ages out cleanly"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant monitoring procedure for the exact scenario (TD_11 flag flip metric validation), but the stored memory is a general template while the current turn shows already-executed detailed analysis with specific timestamps and metric values that supersede the generic guidance.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2859,
+      "memory_title": "TD_11 monitoring: repeated polling procedure and stale metric interpretation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact monitoring procedure being executed in the current turn\u2014comparing flagging rates, checking job failures, verifying Mux fetch behavior, and inspecting deadletters\u2014making it highly actionable context for validating the flag flip results.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2863,
+      "memory_title": "TD_11 monitoring procedure: reusable Datadog query set for flagging trend verification"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact monitoring procedure being executed in the current turn\u2014querying flagging rates, failure counters, ACL errors, mux fetch failures, deadletter counts, and 15m timeseries views to validate the flag flip, matching the assistant's systematic metric comparison approach.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2864,
+      "memory_title": "TD_11 monitoring poll procedure: reusable query set and baseline comparison"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about Risk Arbiter partition metadata cleanup and evidence taxonomy, while the current turn is about monitoring metric changes after a feature flag flip; they address completely different operational contexts with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3151,
+      "memory_title": "Risk Arbiter no-traffic cleanup: partition metadata enrichment, evidence taxonomy, and execution status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about deprecated signal audit, inventory mapping, and Dumbo cleanup is entirely unrelated to the current turn's focus on metric changes after a flag flip (traffic shifts, failure counters, and real-time monitoring).",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3181,
+      "memory_title": "Deprecated signal audit: inventory, mapping, backfill evidence, ownership classification, and Dumbo cleanup gates"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ed6df-0d7b-7210-b6eb-9da62527d7f1",
+    "source_run_id": 3035,
+    "turn_ordinal": 17
+  }
+}

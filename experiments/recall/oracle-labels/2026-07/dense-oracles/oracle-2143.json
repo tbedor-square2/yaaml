@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory documents a related store interface design pattern (domain-specific params over generic queries) that is contextually relevant to the current discussion about indexed queries and query optimization, but doesn't directly address the specific indexing question being asked.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2328,
+      "memory_title": "Java Risk Arbiter PR 480432: Store interface for inactive rule queries should take domain-specific params"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses Rule History page performance and unfiltered queries, but the current turn is specifically about rule config table indexing strategy and query optimization for a targeted lookup\u2014different concern and codebase area.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2362,
+      "memory_title": "Rule History page performance: avoid broad unfiltered queries, require rule or trigger filter on standalone mount"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes general Riskarbiter datastore conventions but does not address the specific indexing question about the rule config table or the composite index KEY_RULE_CONFIGS_U_MN_RI_A that is directly relevant to the current turn.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2398,
+      "memory_title": "Datastore/query conventions in Riskarbiter: JooqDataStoreFetch override pattern"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes general Riskarbiter datastore patterns and conventions, which provides useful context for understanding the query structure and indexing approach, but the current turn already contains specific, actionable index details and code recommendations that directly answer the question.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2485,
+      "memory_title": "Riskarbiter store/query conventions: AutoValue + EqualityQuery + JooqDataStoreFetch override"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the rule config lookup strategy and indexing concern, but the current turn has already resolved the indexing question with specific index details; the memory's guidance on storing rule_config_id and validation logic is useful context for implementation but requires filtering to apply to the immediate query.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2610,
+      "memory_title": "PendingRuleArchival: track exact rule_config_id for archival targeting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the current turn's question about rule config table indexing and provides the exact composite index structure, query pattern, and implementation recommendation already discussed in the conversation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2611,
+      "memory_title": "Query-heavy refresh: prefer serial indexed lookups over bulk maps for admin paths"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the indexing strategy and query optimization for rule_config lookups, providing the exact composite index definition and recommending the `getUniqueOptional()` approach that answers the current turn's question about proper indexing.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2616,
+      "memory_title": "PendingRuleArchival: Add rule_config_id, keep metadata, use exact targeting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses code simplification via inlining ID sets into query builders, but the current turn focuses on index optimization and query performance\u2014different concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2621,
+      "memory_title": "Code simplification: inline single-use ID sets into query builders"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses RiskArbiter dependency probing and wildcard query performance, which is unrelated to the current turn's focus on rule config table indexing strategy and JOOQ query optimization.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2667,
+      "memory_title": "RiskArbiter dependency probing: concrete feature names vs. broad wildcards, model-mediated folding"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes KUI frontend architecture and RuleSummary proto schema, but current turn is about rule_config table indexing strategy and Java query optimization\u2014different layer and concern.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2987,
+      "memory_title": "KUI rules table source and architecture"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes rule archival eligibility policy and trigger exemptions, which is unrelated to the current discussion about database indexing strategy for the rule_config table.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3008,
+      "memory_title": "Rule archival eligibility policy for SQ Lending"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses rule archival date surfacing and data aggregation strategy, but the current turn is specifically about index optimization for rule config table queries\u2014different concern with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3011,
+      "memory_title": "Risk Arbiter rule archival date surfacing: use min pending date per model_name in RuleSummary"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses class design rationale for eligibility logic, which is completely unrelated to the current turn's focus on database indexing strategy and query optimization for the rule_configs table.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3018,
+      "memory_title": "AutomatedRuleArchivalTriggerEligibility helper class justification"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses UI presentation of archival dates, but the current turn is about database indexing strategy for rule config queries\u2014different concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3031,
+      "memory_title": "Rule archival state in KUI: min date per model_name, not repeated list"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses rule archival date surfacing and KUI display, but the current turn is specifically about indexing strategy for rule config table queries\u2014different concern with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3123,
+      "memory_title": "Rule archival date surfacing: backend proto field + KUI table/filter display"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses rule archival eligibility logic and proto field exposure, which is unrelated to the current query about database indexing strategy for the rule_config table.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3129,
+      "memory_title": "Rule archival eligibility: metadata-driven logic and proto exposure"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a high-level data pipeline and architecture for rule deduplication and caching, but contains no information about database indexing strategies, composite keys, query optimization, or the specific RuleConfigQuery implementation being discussed in the current turn.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3174,
+      "memory_title": "redundant-rules: Full architecture, data pipeline, and UI export"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef12b-5400-7f41-9c2c-7c82f7013391",
+    "source_run_id": 2143,
+    "turn_ordinal": 86
+  }
+}

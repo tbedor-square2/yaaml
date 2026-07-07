@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the core issue being debugged: kind-aware recall gating and task-key matching logic that the current turn is actively implementing and testing.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns completed PRs and LaunchDarkly rollout handling, which is entirely unrelated to the current turn's focus on memory recall quality, segment extraction, task-state specificity, and recall ranking improvements.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory is about a specific PR review and code changes (MLP-4410), completely unrelated to the current turn's focus on recall-quality improvements, segment extraction, task-state specificity, and memory ranking gates.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a specific PR refactor with BigQuery parameters, which is unrelated to the current turn's focus on recall-quality filtering, segment extraction, task-state specificity, and project fact gating logic.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3044,
+      "memory_title": "forge-signalsmith PR #521: lifecycle refactor with BigQuery parameters follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly documents the exact recall filter change being implemented in the current turn, providing the gate ID, threshold values, test results, and PR reference needed to understand and validate the work.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3047,
+      "memory_title": "YAAML recall filter: project facts need topical overlap without task-key match"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about a specific PR rebase is unrelated to the current turn's focus on recall-quality improvements, segment extraction, and memory ranking gates.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3065,
+      "memory_title": "PR #477833 tbedor/riskarbiter-trigger-traffic: rebased and pushed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a completed manual Blox routine test, which is unrelated to the current turn's focus on recall-quality improvements, segment extraction, task-state specificity, and memory ranking gates.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3077,
+      "memory_title": "Manual no-op Blox routine completed: bbsubscriber reachable, run_as_service=sa-builderbot works from laptop"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the ongoing recall-quality work and filtering strategy, showing prior fixes to suppress stale recalls and deduplicate reruns, though the current turn focuses on a different filtering mechanism (project facts with no task-key overlap).",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR #483601 rebase and BUILD dependencies is unrelated to the current turn's focus on memory recall quality, segment extraction, ranking paths, and recall filtering logic.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed pyriskarbiter refactoring PR, which is entirely unrelated to the current turn's focus on memory recall quality, segment extraction, task-state specificity, and recall ranking gate improvements.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant baseline metrics for the recall-quality work in progress, showing current performance and failure modes that align with the debugging effort described in the turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents experimental findings and durable lessons about recall quality improvements, which is directly relevant to the current turn's focus on fixing mediocre recall cases and refining the recall filter, though it lacks the specific current implementation details being discussed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant experimental baseline for the current recall-quality work, but the stored memory documents a prior 5x5 experiment while the current turn is implementing a new narrower filter for project facts\u2014useful context with some filtering needed to extract the applicable insights.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the recall-quality work and segment/task-state specificity problem being debugged, but describes a prior experiment (hard gates) rather than the current narrower approach (semantic-match thresholds for project facts).",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about Blox hybrid migration architecture and is completely unrelated to the current turn's focus on memory recall quality, segment extraction, task-key matching, and recall ranking filters.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3245,
+      "memory_title": "Blox hybrid migration research: architecture, precedent, and spike plan"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a specific Prefect flow diagnostic task, but the current turn focuses on recall-quality improvements and memory filtering logic with no connection to this preprod diagnostic run.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3258,
+      "memory_title": "Task checkpoint: blox-prefect-noop preprod diagnostic run in progress"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact problem being debugged in the current turn: wrong-context recalls from broad project facts without task-key specificity, and proposes the same solution (stricter task-identifier gating) that the assistant is now implementing.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3241,
+    "turn_ordinal": 373
+  }
+}

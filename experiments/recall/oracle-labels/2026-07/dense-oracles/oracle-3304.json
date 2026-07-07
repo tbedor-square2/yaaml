@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Slack job consolidation and shared utilities, but the current turn is about deprecation job handoff boundaries between KITT and Blox\u2014different architectural concern with no overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1728,
+      "memory_title": "SSS Slack jobs consolidation: separate concerns, shared codebase"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses PR #521's technical refactoring (BigQuery parameters, lifecycle helpers) but does not address the current turn's question about the handoff boundary between KITT/Prefect and Blox for the deprecation job architecture.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3044,
+      "memory_title": "forge-signalsmith PR #521: lifecycle refactor with BigQuery parameters follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory discusses testing Prefect\u2013Blox connectivity in preprod, but the current turn is asking about the handoff object structure and responsibility boundaries between KITT and Blox for the deprecation job\u2014a design question already answered in detail in the recall query itself.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3059,
+      "memory_title": "Testing Prefect\u2013Blox without PR review"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a successful manual Blox routine test, but the current turn is asking about handoff design and architecture\u2014the memory is a past operational validation artifact, not design context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3077,
+      "memory_title": "Manual no-op Blox routine completed: bbsubscriber reachable, run_as_service=sa-builderbot works from laptop"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to understanding deprecation batching strategy, but the stored memory focuses on signal-level granularity and PR grouping while the current turn discusses the KITT/Blox handoff boundary and orchestration details.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3202,
+      "memory_title": "Deprecation is applied per signal definition, batched by holder class into PRs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory covers deprecation eligibility timelines and PR lifecycle, but the current turn asks specifically about the handoff mechanism between KITT and Blox systems, which this memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3205,
+      "memory_title": "Feature archival policy timeline: 90+90 days, 7+3 day PR review/queue"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant research on Blox/Prefect handoff architecture and migration precedent, but stored memory is older research notes rather than the current turn's specific handoff object schema and batch-sizing discussion.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3245,
+      "memory_title": "Blox hybrid migration research: architecture, precedent, and spike plan"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory documents a diagnostic deployment test of Blox/Prefect integration, but the current turn discusses architectural handoff design and responsibility boundaries\u2014different concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3253,
+      "memory_title": "Blox/Prefect integration validation: diagnostic run with mesh endpoint in progress"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a specific preprod diagnostic run in progress, but the current turn discusses architectural design of the deprecation job handoff between KITT and Blox\u2014different contexts with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3258,
+      "memory_title": "Task checkpoint: blox-prefect-noop preprod diagnostic run in progress"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory discusses KITT migration infrastructure but doesn't address the current question about handoff boundaries between KITT decisioning and Blox repo mutation.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3272,
+      "memory_title": "KITT migration path: move entire Prefect flow from Vertex to KITT rather than split dispatcher+executor"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past Vertex pain points motivating migration, but the current turn is asking about the KITT/Blox handoff design itself\u2014the memory is stale context about why migration happened, not actionable for designing the handoff boundary.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3273,
+      "memory_title": "Vertex pain points motivating infrastructure migration: auth brittleness, GitHub PR generation fragility, token/cache issues, platform limits"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory covers the KITT migration strategy and handoff design philosophy, but the current turn asks specifically about the handoff boundary and object structure when deprecation runs on KITT\u2014which the memory addresses partially (mentions keeping entire job as one Prefect flow initially) but lacks the explicit handoff JSON schema and Prefect/Blox ownership split detailed in the recall query.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3274,
+      "memory_title": "KITT migration path for signals-deprecate-and-delete-prefect: onboard \u2192 backend switch \u2192 data/auth resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory discusses Snowflake/BigQuery data availability for deprecation eligibility, but current turn focuses on KITT-to-Blox handoff architecture and responsibility boundaries, which are orthogonal concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3275,
+      "memory_title": "Snowflake does not yet have feature-level usage tables; BigQuery remains source for deprecation eligibility, compact sync tables would bridge"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes Vertex pain points motivating infrastructure migration, but the current turn is asking about the specific handoff boundary and object schema between KITT and Blox for deprecation jobs\u2014a different architectural layer than the Vertex-vs-KITT operational comparison.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3276,
+      "memory_title": "Vertex pain motivating infrastructure migration: headless auth brittleness, expensive git/agent work, PR size limits, token expiry, slow Bazel, low throttle hiding capacity concerns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes migration staging strategy, but the current turn is asking about the technical handoff boundary and interface between KITT and Blox, which the memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3296,
+      "memory_title": "Preferred KITT migration strategy for signalsmith"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to KITT deprecation job setup, but focuses on infrastructure/WIF migration rather than the handoff design between KITT and Blox discussed in the current turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3395,
+      "memory_title": "KITT migration for forge-signalsmith: WIF + preprod rollout \u2014 implementation in progress"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f0025-3f91-7922-81e4-7bc8cb3def79",
+    "source_run_id": 3304,
+    "turn_ordinal": 35
+  }
+}

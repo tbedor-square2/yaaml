@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the task labeling and recall filtering problem discussed, proposing deterministic gating with strong/weak signal distinction, though it uses slightly different terminology (kind-aware vs. strong/weak signals).",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly implements the proposed solution from the current turn: splitting task keys into strong and weak signals with gating rules that prevent weak keys alone from boosting recall.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2062,
+      "memory_title": "Kind-aware recall gating strategy: preference/lesson/workflow cross-project if strong; task_state same-project only with task-key match"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses metrics for evaluating recall quality and memory corpus health, but the current turn focuses on fixing over-broad task labels and signal strength\u2014a different problem domain with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2311,
+      "memory_title": "Recall and memory-corpus metrics separation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses bad memory characteristics and lifecycle management, but the current turn is focused on fixing task label over-broadness through strong/weak signal splitting\u2014different problem scope.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses deterministic activation keys and strong signal-based recall, which directly relates to the current discussion about splitting task keys into strong/weak signals, but focuses on tool-triggered recall rather than the broader label taxonomy problem being discussed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2392,
+      "memory_title": "Tool-triggered recall: deterministic activation keys over semantic classifiers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses label sparsity and learned models, but the current turn focuses on over-broad task labels and signal strength discrimination\u2014different problems requiring different solutions.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2647,
+      "memory_title": "YAAML learned-model: feature model on 3200-row corpus shows label sparsity is the blocker"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the over-broad task label problem by proposing a nuanced filtering approach, but focuses on a specific implementation detail (health signals) rather than the broader strong/weak signal framework just discussed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3092,
+      "memory_title": "Same-project proven-useful workflow memories should bypass tool-key filter"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly addresses the core problem discussed in the current turn: how to extract and prioritize task keys to distinguish strong signals (PR, ticket, branch, path) from weak ones (generic tool labels), which is exactly the solution being proposed.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3098,
+      "memory_title": "Segment task-key extraction: filter tool output and prioritize identity keys"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses task label quality by filtering placeholder/generic tokens, supporting the discussion of over-broad labels, but focuses on rejection rather than the proposed strong/weak signal distinction.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3099,
+      "memory_title": "Reject placeholder task keys at extraction time (commit 076541d)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses task lifecycle metadata and database field cleanup, which is unrelated to the current discussion about over-broad task labels and signal strength in task key matching.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3135,
+      "memory_title": "Task lifecycle metadata fixes: clear stale retry fields on transitions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to task labeling quality issues; discusses limitations of task-fit signals and suggests that stronger task identity extraction (segment summaries, joint embeddings) is needed rather than post-hoc reranking, which aligns with the proposed strong/weak signal split strategy.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3195,
+      "memory_title": "Segment/task-fit reranking is limited; segment summaries needed for generation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes an experiments log and past findings about recall quality, but does not directly address the current discussion about over-broad task labels, strong vs. weak signals, or the specific fix being proposed.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant experimental data on task-fit strategies and label quality tradeoffs, but focuses on segment-aware gating rather than the strong/weak signal splitting approach just proposed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses task-fit gating and segment filtering approaches, which directly relates to the current discussion of over-broad task labels and strong/weak signal separation, but it focuses on a different solution direction (context-weighted ranking vs. strong/weak signal splitting).",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the exact problem discussed in the current turn: over-broad task labels, weak signals like `tool:just`, and the need to distinguish strong vs. weak task identity signals for better recall.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the over-broad task labels problem discussed in the current turn, proposing concrete solutions (removing tool:* keys, using structural extraction, statistical broadness classification) that align with the assistant's recommendation to split strong and weak signals.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3333,
+      "memory_title": "Remove hardcoded phrase taxonomy and tool-based task keys from core"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly diagnoses the over-broad task label problem and proposes the same solution (stricter task gating with concrete identifiers) that the current turn is discussing.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 2267,
+    "turn_ordinal": 259
+  }
+}

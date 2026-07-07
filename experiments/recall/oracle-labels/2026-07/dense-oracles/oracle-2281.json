@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a skill for PR and ticket review, but the current turn is specifically about setting thread titles via the Codex app-server JSON-RPC API\u2014a different technical concern with no overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1721,
+      "memory_title": "Codex skill creation: work-review-updates for PR and ticket review"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Rust TUI project for code review with agent dispatch and notifications, but the current turn is specifically about setting thread titles via Codex app-server JSON-RPC\u2014a different technical domain with no overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1774,
+      "memory_title": "Node/Rust project (tbedor) active-thread goal: CLI agent dispatch, GitHub replies, run lifecycle, and notifications"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes bot-manager's Rust architecture and tmux session handling, which is relevant context for understanding how to integrate thread title setting, but doesn't directly address the JSON-RPC API mechanics just discovered in the current turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2315,
+      "memory_title": "bot-manager Rust implementation strategy: cache-backed, testable CLI+TUI with credential-light integrations"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes YAAML hook infrastructure, but current turn is about thread/name/set API mechanics and JSON-RPC protocol\u2014different technical domain with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2504,
+      "memory_title": "Codex PreToolUse hook for YAAML is live and working end-to-end"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly answers the current query with verified API method, exact JSON-RPC shape, and working code examples for setting thread titles via local API.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2655,
+      "memory_title": "Codex app-server thread/name/set API for setting thread titles"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly answers the current query with verified method name, JSON-RPC protocol details, code examples, and implementation guidance for setting thread titles via local API.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2672,
+      "memory_title": "Codex thread title can be set via app-server JSON-RPC thread/name/set"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes session resumption and working directory handling, which is tangential to the current discussion about setting thread titles via local API calls.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2697,
+      "memory_title": "Session join uses stored working directory for tmux and Codex"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses removal of a PreToolUse hook experiment and service diagnostics, which is tangentially related to Codex tooling but does not address the current question about setting thread titles via local API calls.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2769,
+      "memory_title": "Codex PreToolUse hook removed due to installation friction and low quality scores"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about Blox routine execution and service identity testing, which is completely unrelated to the current query about setting thread titles via local JSON-RPC API calls.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3077,
+      "memory_title": "Manual no-op Blox routine completed: bbsubscriber reachable, run_as_service=sa-builderbot works from laptop"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes TUI features (session visibility, search, new-session creation) but the current turn is about setting thread titles via local JSON-RPC API, which is unrelated to bot-manager's UI layer.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3207,
+      "memory_title": "bot-manager TUI: done-session visibility, active status overlay, search navigation, and new-session creation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns transcript file scanning and backlog import limits, which is unrelated to the current query about setting thread titles via local API calls.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3229,
+      "memory_title": "Backlog transcript scan must process all files, not cap at 100"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about agent message prefixes is unrelated to the technical question about setting thread titles via local API calls.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3231,
+      "memory_title": "Agent message prefix requirement"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes tmux session management for bot-manager, but the current turn is specifically about setting thread titles via the local JSON-RPC API (`thread/name/set`), which is already answered with concrete protocol details and code examples.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3278,
+      "memory_title": "Managed tmux workspace: global session with local attach windows"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes tmux window management for bot-manager, but the current turn focuses on setting thread titles via the Codex app-server JSON-RPC API, which are orthogonal concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3301,
+      "memory_title": "bot-manager tmux launcher fixed for re-entry into existing managed sessions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about message prefixes is unrelated to the current query about setting thread titles via local API calls.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3303,
+      "memory_title": "Agent message prefix convention in bot-manager"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the thread ID retrieval problem mentioned at the end of the current turn, but focuses on tmux identity strategy rather than the JSON-RPC API call itself.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3327,
+      "memory_title": "Tmux session/window identity strategy for bot-manager"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses tmux session management and deduplication, but the current turn is specifically about setting thread titles via the local JSON-RPC API\u2014a different concern that the memory doesn't directly address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3342,
+      "memory_title": "Tmux session deduplication strategy for bot-manager"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019efc9f-ff22-7d32-bdac-00301bac40a8",
+    "source_run_id": 2281,
+    "turn_ordinal": 3
+  }
+}

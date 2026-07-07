@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Java Risk Arbiter PR code review patterns is completely unrelated to the current turn's focus on removing `square-risk-engineering` references from a markdown registry document.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1755,
+      "memory_title": "Java Risk Arbiter PR 480432: Review feedback patterns and code style preferences"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns PR #480432 code cleanup (inlining helpers, unused dependencies), while the current turn discusses removing `square-risk-engineering` references from a markdown document in PR #558\u2014completely different contexts and projects.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2357,
+      "memory_title": "PR #480432 review feedback: inlining and unused dependency cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about RiskArbiter code review patterns is unrelated to the current turn's focus on removing `square-risk-engineering` references from a markdown PR.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2566,
+      "memory_title": "RiskArbiter AGENTS.md: human review feedback patterns from 50 merged PRs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly actionable\u2014provides the specific channel replacement map for removing square-risk-engineering references that the current turn is actively implementing.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2606,
+      "memory_title": "RiskArbiter trigger Slack channel replacement map"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about rule archival date PRs and is unrelated to the current turn's focus on removing square-risk-engineering references from a gists PR.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3034,
+      "memory_title": "Draft PRs to open: tbedor/riskarbiter-rule-summary-archival-date and tbedor/kui-rule-archival-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a BigQuery refactor in forge-signalsmith PR #521, while the current turn discusses removing `square-risk-engineering` references from a markdown document in a different PR (#558), making them entirely unrelated contexts.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3044,
+      "memory_title": "forge-signalsmith PR #521: lifecycle refactor with BigQuery parameters follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory is about a different PR (#477833 for riskarbiter-trigger-traffic) and is completely unrelated to the current turn's focus on removing square-risk-engineering references from PR #558.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3065,
+      "memory_title": "PR #477833 tbedor/riskarbiter-trigger-traffic: rebased and pushed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory concerns a completely different PR (#483601) about rebase and BUILD dependencies, unrelated to the current turn's focus on removing square-risk-engineering references from a markdown document in PR #558.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns pyriskarbiter library refactoring and PR #543, which is completely unrelated to the current turn's focus on removing `square-risk-engineering` references from a markdown documentation PR #558.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory concerns Risk Arbiter rule cleanup design decisions and is completely unrelated to the current turn about removing square-risk-engineering references from a markdown PR.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Risk Arbiter partition metadata and cleanup workflows, which is unrelated to the current turn's focus on removing `square-risk-engineering` references from a PR about Slack channel recommendations.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3151,
+      "memory_title": "Risk Arbiter no-traffic cleanup: partition metadata enrichment, evidence taxonomy, and execution status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory concerns a Homebrew formula migration for sq-riskarbiter; current turn is about removing square-risk-engineering channel references from a gists PR\u2014completely different context and not actionable.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3157,
+      "memory_title": "homebrew-formulas PR #4844: sq-riskarbiter uvx wrapper migration\u2014mlds-core#545 blocker and publish workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a KUI component PR update unrelated to the current turn's focus on removing square-risk-engineering references from a gists markdown document.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3235,
+      "memory_title": "PR #13972 updated from action-table experiment to metadata-table production implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns PR #13972 with KITT recent-history and rule-history fixes, which is completely unrelated to the current turn's focus on removing square-risk-engineering references from a gists PR #558.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3318,
+      "memory_title": "Recently visited resources PR feedback resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory about Riskarbiter refactoring is unrelated to the current turn's focus on removing square-risk-engineering references from a PR about Slack channel recommendations.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Riskarbiter .editorconfig formatting is unrelated to the current turn's focus on removing square-risk-engineering references from a markdown PR.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3398,
+      "memory_title": "Riskarbiter .editorconfig formatting settings finalized and applied"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef19d-3024-7071-b441-8893b0ecdb99",
+    "source_run_id": 2841,
+    "turn_ordinal": 31
+  }
+}

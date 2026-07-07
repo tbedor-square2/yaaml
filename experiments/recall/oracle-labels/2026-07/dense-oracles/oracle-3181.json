@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes PR stacking via rebase and retargeting, which is directly relevant to the current turn's goal of rebasing the RiskArbiter branch onto the new Mixtape precursor branch, though the current context shows the user is using worktrees rather than direct rebasing.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1754,
+      "memory_title": "GitHub PR rebasing: stack PRs by rebasing and retargeting base"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses rebasing with manual conflict resolution for overlapping improvements, but the current turn is about creating a precursor worktree for Mixtape decoupling and rebasing on top of it\u2014a different workflow pattern with no apparent overlap in the specific technical approach or conflict scenarios.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2003,
+      "memory_title": "Rebase draft PR branches with manual conflict resolution for overlapping improvements"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about skipping CI checks in rule-archival work is actively harmful here\u2014the current turn explicitly requires blocking TODOs and careful sequencing of precursor branches for CI visibility, which directly contradicts the stored preference to skip CI verification.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2429,
+      "memory_title": "Commit and push without waiting for CI in rule-archival PR work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns MLP-4409/4410 PRs and LaunchDarkly rollout dates, which is completely unrelated to the current turn's focus on Mixtape signal generator decoupling, worktree management, and RiskArbiter branch rebasing.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about MLP-4411 notification job implementation is completely unrelated to the current turn's focus on creating a Mixtape precursor worktree, rebasing branches, and managing BUILD dependencies.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2486,
+      "memory_title": "MLP-4411 notification job implementation complete; draft PR ready without wiring scheduled sends"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes handling unrelated commits on PR branches, but the current turn is focused on creating a worktree, making Mixtape-specific changes, and rebasing\u2014different workflow concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2567,
+      "memory_title": "Java worktree branch management: force-correct remote PR branch when unrelated commits land locally"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past production deployment and its metrics, but the current turn is about creating a git worktree, rebasing branches, and making code changes to the Mixtape signal generator\u2014entirely different operational context with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2609,
+      "memory_title": "PR #482106 deployment to Mixtape production confirmed; latency/SLO metrics show improvement"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory about a past PR deployment window is unrelated to the current task of creating a worktree, making Mixtape precursor changes, and rebasing branches.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2614,
+      "memory_title": "PR #482106 missed auto-deploy by minutes; deployed next window at 11:03 PDT on Jun 24"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses RiskArbiter payroll signal generator removal, which is a different cleanup task than the current Mixtape signal generator decoupling work being executed.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2920,
+      "memory_title": "RiskArbiter payroll signal generator cutover complete; safe to remove in one PR"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about rule archival date PRs is unrelated to the current task of creating a Mixtape precursor branch, rebasing RiskArbiter cleanup, and marking blocking TODOs.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3034,
+      "memory_title": "Draft PRs to open: tbedor/riskarbiter-rule-summary-archival-date and tbedor/kui-rule-archival-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed rebase of a different branch (riskarbiter-trigger-traffic) but the current turn is about creating a new precursor branch for Mixtape decoupling and rebasing the RiskArbiter cleanup branch on top of it\u2014a different workflow with different branches and goals.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3065,
+      "memory_title": "PR #477833 tbedor/riskarbiter-trigger-traffic: rebased and pushed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different PR (#483601) with unrelated rebasing and BUILD dep work on ruleconfig-test-harness, not the current Mixtape signal-generator decoupling worktree task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about pyriskarbiter CLI refactoring and library consolidation, while the current turn is about git worktree operations, Mixtape signal generator decoupling, and branch rebasing\u2014completely different contexts with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about homebrew-formulas PR #4844 and pyriskarbiter is completely unrelated to the current turn's focus on creating a Mixtape signal generator decoupling worktree and rebasing a RiskArbiter cleanup branch.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3157,
+      "memory_title": "homebrew-formulas PR #4844: sq-riskarbiter uvx wrapper migration\u2014mlds-core#545 blocker and publish workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about a KUI UI component PR, while the current turn is about Java git worktree operations for Mixtape signal generator decoupling\u2014completely different contexts with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3235,
+      "memory_title": "PR #13972 updated from action-table experiment to metadata-table production implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Blox hybrid migration research is completely unrelated to the current turn's focus on creating a git worktree, rebasing branches, and managing a Mixtape precursor PR.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3245,
+      "memory_title": "Blox hybrid migration research: architecture, precedent, and spike plan"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory documents related signal-generator cleanup work (RiskArbiter rename, unused deps), providing useful context about the broader refactoring effort, but the current turn focuses on Mixtape precursor branching and worktree operations which require different immediate context.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ed6df-0d7b-7210-b6eb-9da62527d7f1",
+    "source_run_id": 3181,
+    "turn_ordinal": 162
+  }
+}

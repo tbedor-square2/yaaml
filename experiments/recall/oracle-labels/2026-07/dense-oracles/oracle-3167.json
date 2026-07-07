@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the kind-aware recall gating strategy being actively debugged and refined in the current turn, including specific implementation details, test cases, and the exact problem being solved.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the recall gating strategy being debugged and refined in the current turn, providing the exact filtering rules needed to understand the over-tightening problem and the proposed fix.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2062,
+      "memory_title": "Kind-aware recall gating strategy: preference/lesson/workflow cross-project if strong; task_state same-project only with task-key match"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes metric separation and corpus health tracking, which is useful context for understanding the backtest framework being used, but the current turn focuses on specific gate-tuning decisions and query construction changes that require more immediate operational details.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2311,
+      "memory_title": "Recall and memory-corpus metrics separation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the core problem being debugged\u2014distinguishing between inherently invalid memories versus over-retrieved or context-mismatched ones\u2014and provides actionable insights about metadata noise and lifecycle management that align with the current turn's investigation into recall gate tuning.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's focus on recall quality and gate tuning, as the stored memory explains the segment-based context architecture that underlies the recall ranking decisions being debugged.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a hybrid recall architecture test plan that is directly relevant to the current turn's focus on improving recall quality through gating and retrieval refinement, though it lacks the specific implementation details and backtest results being discussed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the recall quality bottleneck and segment-drift problem that the current turn is actively debugging and iterating on, including the exact failure patterns (task-state drift, non-empty result rates) and the gate-tightening approach being tested.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2751,
+      "memory_title": "Recall quality bottleneck: segment and task-state drift over session length"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a regression test for session recall cache invalidation, but the current turn focuses on tuning recall quality gates and ranking signals to reduce false positives\u2014a different concern than cache invalidation mechanics.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3189,
+      "memory_title": "Session recall cache must invalidate on inactive memory IDs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant baseline metrics for evaluating whether the stricter gate and query construction changes improve recall precision and reduce the 15% low-score rate.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's investigation of recall quality and gating strategies, though the stored memory documents a prior conclusion (reranking limitations) while the current turn is actively debugging and refining gate behavior.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3195,
+      "memory_title": "Segment/task-fit reranking is limited; segment summaries needed for generation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents experimental findings and durable lessons about recall quality improvements, which directly supports the current turn's focus on backtest-driven refinement of recall gates and context scoring, though it lacks the specific recent turn-by-turn results being discussed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a prior segment/task-fit experiment with quantified tradeoffs that directly informs the current turn's investigation of stricter gates and recall precision, though the current turn has moved beyond task-fit to focus on query construction and tool-output pollution.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the core tension in the current turn\u2014binary gating vs. context-weighted ranking\u2014and provides prior experimental findings that inform the decision to narrow rather than tighten the gate, though the current turn has moved beyond the stored memory's conclusions.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the core issue being debugged: removing hardcoded task keys and tool output pollution from recall, which is exactly what the current turn identifies as the root cause of false positives (Java/Datadog tool output contaminating YAAML queries).",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact problem the current turn is solving: wrong-context recalls from same-project topic drift, and proposes the stricter gating approach now being backtested and refined.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant corpus statistics and quality evidence that contextualizes the current turn's backtest work, though it lacks specifics about the gate tuning and path-key logic being debugged.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed persuasion document for budget approval, but the current turn is actively debugging recall gate tuning and backtest results\u2014different work streams with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3376,
+      "memory_title": "Memory techniques report: technical persuasion doc for internal eng buy-in"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3167,
+    "turn_ordinal": 337
+  }
+}

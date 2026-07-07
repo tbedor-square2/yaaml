@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the signal generator removal and mux handoff mechanics, but focuses on payroll-specific steps rather than the general dependency handoff architecture and provider validation the user is asking about.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2649,
+      "memory_title": "Payroll signal generator removal steps after Mux rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory lists outstanding generator removal tickets and generator inventory, but does not address the current turn's core questions about dependency handoff mechanics, mux provider registration, or signal migration logic.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2650,
+      "memory_title": "Outstanding signal generators migration status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the dependency handoff mechanism and mux provider coverage concern, but focuses on feature-domain wiring rather than the specific signal-by-signal validation and provider inventory check the current turn is asking about.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2790,
+      "memory_title": "RA-to-Mux migration requires feature-domain wiring but not additional work if staging is cut over"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the user's concern about signal handoff and missing signals post-generator removal, with concrete staging/production metrics and mux provider coverage evidence, though it focuses on TD_11 specifically rather than the general dependency handoff mechanism.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2791,
+      "memory_title": "Strong staging evidence for TD_11 Mux cutover; missing-signal fallback not observed; recommend percentage rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides directly relevant validation and rollout procedures for mux cutover, but the current turn asks about dependency handoff mechanics and provider updates for signals already migrated away from the generator\u2014requiring more technical depth on MuxMigrationUtil and provider inventory than this memory covers.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2794,
+      "memory_title": "Safe Mux cutover validation: staging evidence plus gradual rollout with metrics watch"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses mux provider handoff and signal migration for a specific trigger, but focuses on rollout strategy rather than the general dependency handoff mechanism and provider update requirements being asked about.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2801,
+      "memory_title": "RA Mux cutover for TD_11/payroll_run_update_connected_users: staged evidence is strong; percentage rollout strategy recommended"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Datadog monitoring patterns is unrelated to the current query about signal generator dependency handoff, mux provider registration, and signal migration logic.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2852,
+      "memory_title": "Datadog monitoring pattern for production service health"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the user's question about dependency handoff mechanics, signal migration from generator to mux, and the concrete steps needed to verify mux provider coverage after generator removal.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2891,
+      "memory_title": "Flag removal process for riskarbiter-should-fetch-generated-signals-from-mux"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant example of a successful signal handoff from generator to mux with verification metrics, but describes a completed past cutover rather than the current dependency handoff mechanism being asked about.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2900,
+      "memory_title": "Payroll generated signal (payroll_run_update_connected_users) cutover to Mux is complete and stable"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory confirms production readiness for mux cutover but doesn't address the current technical question about dependency handoff mechanics, signal migration logic, or mux provider updates needed.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2910,
+      "memory_title": "RiskArbiter Mux cutover is production-verified and ready for permanent removal"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the module binding and dependency handoff mechanics, but focuses on implementation cleanup rather than the specific mux provider coverage verification needed to confirm signals won't go missing.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2911,
+      "memory_title": "RiskArbiter signal-generator cleanup should be done in one PR; module bindings must be preserved or explicitly removed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses MuxParityChecker deletion and rollout scaffolding, but the current query focuses on dependency handoff mechanics, signal migration logic, and mux provider coverage\u2014topics the memory does not directly address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2924,
+      "memory_title": "MuxParityChecker became stale after generator migration; safe to delete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly explains the dependency handoff mechanism, mux provider validation logic, and addresses the exact concerns raised about signal coverage after generator removal.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2932,
+      "memory_title": "Signal generator removal: dependency handoff mechanism and mux provider validation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes PR #543's signal dependency analysis extraction and provider removal refactoring, which is directly relevant to understanding dependency handoff mechanics and mux provider registration, but lacks specific details about MuxMigrationUtil, generatedSignalToGenerator mapping, and the current signal validation logic needed to fully answer the query.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides comprehensive inventory and ownership classification of deprecated signals, but the current turn focuses on dependency handoff mechanics, mux provider registration, and MuxMigrationUtil logic\u2014requiring code-level tracing rather than audit metadata.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3181,
+      "memory_title": "Deprecated signal audit: inventory, mapping, backfill evidence, ownership classification, and Dumbo cleanup gates"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the signal-generator cleanup and mux provider handoff mechanism, but focuses on naming/refactoring rather than the specific dependency filtering logic and provider coverage verification the user is asking about.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to understanding the mux provider handoff mechanism post-signal-generator deletion, but focuses on a specific utility rename rather than the broader dependency handoff logic and provider coverage verification the user is asking about.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3361,
+      "memory_title": "riskarbiter Mux helper rename to reflect post-signal-generator deletion"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ed6df-0d7b-7210-b6eb-9da62527d7f1",
+    "source_run_id": 3142,
+    "turn_ordinal": 147
+  }
+}

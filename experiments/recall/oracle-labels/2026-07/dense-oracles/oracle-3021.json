@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory explains why the command shows zero archival counts (LD flag not set), providing useful context for interpreting the current results, though it doesn't directly answer what the command output means.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2380,
+      "memory_title": "riskarbiter pending rule archival flag default: empty string, not far-future date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to understanding why the staging command shows zero archival-eligible counts\u2014the LD flag default date (2126-01-01) explains the expected behavior, though the memory could be more explicit about the current flag state for TD_jlbh.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2406,
+      "memory_title": "LD flag for rule archival trigger rollout dates with Jan 1, 2126 default"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory discusses TD_45 exclusion logic, but current query is about TD_jlbh command output in staging; different trigger, limited relevance.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2407,
+      "memory_title": "TD_45 (SQ Lending) hardcoded trigger exclusion from archival"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory explains why the command shows zero eligible work (LD flag not set), directly supporting the assistant's interpretation, but requires minor filtering since it provides implementation details beyond what's needed for the current query.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2412,
+      "memory_title": "LD rollout-date flag for rule archival: riskarbiter-pending-rule-archival-trigger-rollout-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory discusses TD_45 exclusion logic, but current turn focuses on TD_jlbh staging command output and pending archival results, making this context stale and not actionable for the immediate question.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2472,
+      "memory_title": "TD_45 hardcoded trigger exclusion in rule archival"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory discusses TD_45 exclusion logic, but current query is about TD_jlbh command output in staging; different trigger, not directly applicable.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2483,
+      "memory_title": "TD_45 trigger hardcoded exclusion with clear documentation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly explains why the command shows zero counts for `TD_jlbh` in staging\u2014the LD rollout-date flag is unset (empty string), which causes the calculator to exclude that trigger from pending archival work.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2484,
+      "memory_title": "Pending rule archival rollout flag: empty string for unset, not far-future date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly explains why the command output shows all zero counts\u2014it clarifies that without the LD rollout flag set, no pending archival work is created, which matches the current turn's observation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2757,
+      "memory_title": "archival-candidates is pre-rollout discovery only"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory explains the command naming and dry-run/execute workflow, which provides useful context for understanding the `pending-archivals` command being used, but the current turn is asking for specific output interpretation rather than command mechanics.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2761,
+      "memory_title": "CLI command naming: pending-archivals vs run-archivals for dry-run + execute workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory explains the discovery helper's limitations and workflow, which contextualizes why the current command shows no pending work\u2014the LD flag hasn't been set yet\u2014but requires minor filtering since it describes a different command than the one being executed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2762,
+      "memory_title": "archival-candidates discovery helper is pre-flag only, does not check LD or pending rows"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact CLI command workflow being executed in the current turn, including the dry-run `pending-archivals` command against a trigger candidate in staging.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2780,
+      "memory_title": "CLI command workflow for pending rule archival verification after flag set"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses TD_11 mux cutover evidence and staging metrics, but the current turn is asking about a different trigger (TD_jlbh) and the pending-archivals command output, making this context stale and off-topic.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2791,
+      "memory_title": "Strong staging evidence for TD_11 Mux cutover; missing-signal fallback not observed; recommend percentage rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes rule archival eligibility logic and proto changes, but does not directly explain what the `pending-archivals` command output means or how to interpret the zero counts shown in the current turn.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3129,
+      "memory_title": "Rule archival eligibility: metadata-driven logic and proto exposure"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a UI feature addition for displaying archival eligibility in pyriskarbiter, but the current turn is about running a dry-run command and interpreting its output, which are unrelated concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3213,
+      "memory_title": "pyriskarbiter trigger archival eligibility display added to PR #553"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context about the archival rollout script and flag mechanism, but requires filtering since the stored memory explains why no pending rows exist (flag not yet set/date not yet reached) rather than showing current staging command output.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3368,
+      "memory_title": "Riskarbiter archival rollout: staged feature flag and script"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Slack channel configuration requirements for rule archival, but the current turn is asking about the output of a `pending-archivals` command in staging for a specific trigger (`TD_jlbh`), which is a different operational concern.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3373,
+      "memory_title": "Production rule archival notifications require Slack channel configuration"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a production audit of triggers with missing Slack channels, but the current turn is asking about staging command output for a specific test trigger (`TD_jlbh`), making this context stale and tangentially related at best.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3396,
+      "memory_title": "Production rule archival missing Slack channel audit result"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef566-2195-7d72-a3ad-cfb9ad00f810",
+    "source_run_id": 3021,
+    "turn_ordinal": 36
+  }
+}

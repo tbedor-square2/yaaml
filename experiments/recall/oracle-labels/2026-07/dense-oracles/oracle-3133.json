@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the current turn's core finding: implementing deterministic recall gating by memory kind and task-key matching to prevent wrong-context memories from being selected, which is exactly the 'hard recall gate for high-confidence bad memories' solution being pursued.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the current work: the stored memory describes a kind-aware recall gating strategy that aligns with the identified solution of implementing a hard recall gate for high-confidence bad memories with explicit task overlap requirements.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2062,
+      "memory_title": "Kind-aware recall gating strategy: preference/lesson/workflow cross-project if strong; task_state same-project only with task-key match"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current work on memory health and recall ranking, but the stored memory describes metric definitions rather than the specific design mismatch (health identification vs. application) being debugged in the current turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2311,
+      "memory_title": "Recall and memory-corpus metrics separation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly supports the current turn's core principle that 'empty recall is better than bad recall' and justifies the hard recall gate decision being implemented.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2312,
+      "memory_title": "Empty recall is abstention, not failure"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant\u2014the stored memory explains the root cause of bad recalls (wrong-context, stale, noisy metadata) that the current turn is actively investigating and designing a hard recall gate to address.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant experimental data on recall ranking strategies, but the current turn is focused on implementing a hard recall gate for bad memories, which is a different intervention than the dynamic_recall_count optimization previously tested.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2350,
+      "memory_title": "Recall candidate families 5x5 experiment: top signals identified"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a hybrid recall architecture test plan that is relevant context for the ongoing recall-quality improvement work, but the current turn has moved past testing architectures into specific implementation fixes (health gates, wrong-context filtering), so it provides useful background with minor gaps in immediate actionability.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the ongoing recall-quality work and segment-fix implementation being discussed, though the stored memory describes the original problem rather than the current state after fixes.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2751,
+      "memory_title": "Recall quality bottleneck: segment and task-state drift over session length"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant prior fix addressing recall quality and false positives, but the current turn is focused on a different mechanism (health-based gating for wrong-context memories) rather than source deduplication.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a regression test for session cache invalidation on inactive memory IDs, which is tangentially related to recall quality but does not directly address the current turn's focus on health-based recall gating, wrong-context memory filtering, or the design mismatch between memory health identification and recall application.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3189,
+      "memory_title": "Session recall cache must invalidate on inactive memory IDs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant baseline metrics for the ongoing recall-quality improvement work, though the stored snapshot may be slightly stale relative to the current live inspection being performed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past experiment logs and lessons, but the current turn is actively debugging a specific design mismatch in health-based recall filtering\u2014requiring live code inspection and immediate implementation, not historical experiment summaries.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant experimental data on recall ranking strategies and health-based filtering tradeoffs, though the stored memory predates the current session's findings about hard recall gates for bad memories.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the recall-ranking design space the current turn is exploring, but documents a prior negative result (hard gating ineffective) while the current turn is moving toward a hard gate for bad memories\u2014requiring careful reconciliation of the two approaches.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current work on recall quality and wrong-context memory filtering, but describes a past refactoring direction rather than the current live state being inspected.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly documents the exact recall quality regression and wrong-context problem the current turn is actively investigating and solving with a hard recall gate.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant corpus statistics and prior quality findings that contextualize the current recall-quality work, but the current turn has moved into specific implementation details (health gates, wrong-context filtering) that require more recent diagnostic data than this summary captures.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3133,
+    "turn_ordinal": 325
+  }
+}

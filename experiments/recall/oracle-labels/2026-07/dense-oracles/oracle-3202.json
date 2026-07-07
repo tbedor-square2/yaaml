@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses transcript handling and turn completion semantics, but the current turn is focused on debugging specific recall failures in YAAML and RiskArbiter sessions with ranking filters and replay analysis\u2014a different operational concern.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1818,
+      "memory_title": "Preference: incomplete transcript slices in live session context"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the core issue being debugged: kind-aware recall gating and task-state filtering to prevent stale cross-session recalls, which is exactly what the current turn is investigating in the RiskArbiter and YAAML sessions.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses model training and backfilling strategies for legacy systems, but the current turn focuses on debugging specific recall failures in YAAML and RiskArbiter sessions with concrete PR/turn numbers\u2014different problem domains with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2247,
+      "memory_title": "Backfilled modern features for legacy model replay are viable if point-in-time correct and trained on high-fire windows"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's investigation of bad RiskArbiter recalls and low-scoring memories, providing analytical framework for distinguishing stale/over-retrieved memories from inherently invalid ones, though the specific metrics and solutions are somewhat general.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the core architectural issue being debugged\u2014conversation segments as recall context\u2014and provides the schema/design rationale that explains why the current RiskArbiter failures are occurring across PR/git workflow turns, though it lacks specific details about the current replay failures.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a hybrid recall architecture test plan that is directly relevant to the current turn's focus on evaluating segment/stale-state fixes and recall quality metrics, though the current turn has progressed beyond the initial test plan into specific failure analysis and replay debugging.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly explains the root cause of the RiskArbiter recall failures currently being debugged\u2014planning diagnostics surviving via broad PR key matches\u2014and proposes the exact fix being tested in the current turn's replay analysis.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2966,
+      "memory_title": "Planning/diagnostic memories should not survive via broad example task keys"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's focus on recall filtering and eval improvements, though the stored memory describes completed fixes while the turn is actively debugging ongoing RiskArbiter session failures.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses segment task-key extraction and filtering logic that is relevant to the current turn's focus on recall quality and filtering bad memories, but the current turn is primarily about debugging specific RiskArbiter session failures and replay results rather than implementing or refining the extraction filters themselves.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3098,
+      "memory_title": "Segment task-key extraction: filter tool output and prioritize identity keys"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed pyriskarbiter refactoring (PR #543) with module extraction details, but the current turn is focused on debugging memory recall failures in a RiskArbiter session with specific turn numbers and ranking issues\u2014no direct connection to the refactoring work or its architectural changes.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes Risk Arbiter rule cleanup design decisions and implementation strategy, but the current turn is focused on debugging memory recall failures in YAAML and RiskArbiter sessions with specific issues around PR affinity matching and filter effectiveness\u2014not on Risk Arbiter rule cleanup implementation.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's investigation of recall quality and filtering effectiveness, though the stored memory predates the specific RiskArbiter session failures and segment/stale-state fixes being debugged.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3195,
+      "memory_title": "Segment/task-fit reranking is limited; segment summaries needed for generation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a historical experiment log and lessons backlog, but the current turn is actively debugging specific recall failures in RiskArbiter and YAAML sessions with concrete turn numbers and PR keys\u2014requiring live replay data and ranking analysis rather than past experiment summaries.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant experimental context on segment/task-fit recall strategies and their tradeoffs, which the current turn is actively investigating and iterating upon, though the stored memory is from an earlier run and the current turn has moved to RiskArbiter-specific failure analysis.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses recall filtering and ranking strategy decisions that are central to the current turn's investigation of bad recalls in RiskArbiter sessions, though it predates the specific segment/stale-state fixes and replay results now being analyzed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes refactoring YAAML recall to remove hardcoded phrases and tool keys, which is directly relevant to the current turn's focus on debugging RiskArbiter recall failures and evaluating whether recent segment/stale-state fixes improved outcomes, though it requires filtering to apply the structural-only context principles to the current failure analysis.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly diagnoses the exact problem the current turn is investigating: wrong-context recalls in RiskArbiter sessions where memories match on broad PR affinity rather than task relevance, and proposes the same solution (stricter task-identifier gating) being tested in the replay.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3202,
+    "turn_ordinal": 362
+  }
+}

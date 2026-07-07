@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a squash-and-push workflow, but the current turn is asking about what changes were made to the PR and its current status\u2014topics already fully addressed in the conversation history without needing this procedural guidance.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1722,
+      "memory_title": "forge-signalsmith PR workflow: squash, verify, then force-with-lease push"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a generic PR review workflow for code fixes in a JavaScript/testing context, but the current turn discusses a specific infrastructure/YAML configuration PR with no relevance to Jest, ESLint, or the described workflow steps.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2231,
+      "memory_title": "PR review comment response workflow for code fixes"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a cleanup strategy for removing serving flags and generators in separate PRs, which is unrelated to the current turn's question about whether changes to an automated PR were minimal and what the PR link is.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2901,
+      "memory_title": "Cleanup PR strategy: remove serving flag and generator in separate PRs to reduce rollback blast radius"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about a different PR (#521 for forge-signalsmith lifecycle refactor) while the current turn discusses PR #11416 for runway-pipeline-config, making it actively distracting and wrong-context.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3044,
+      "memory_title": "forge-signalsmith PR #521: lifecycle refactor with BigQuery parameters follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory is about a completely different PR (#477833 for riskarbiter-trigger-traffic) and provides no context for the current query about PR #11416 for runway-pipeline-config.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3065,
+      "memory_title": "PR #477833 tbedor/riskarbiter-trigger-traffic: rebased and pushed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about a completely different PR (#483601 involving ruleconfig rebasing and BUILD deps), unrelated to the current query about PR #11416 regarding Signalsmith pipeline configuration changes.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory is about pyriskarbiter library refactoring and PR #543, completely unrelated to the current query about runway-pipeline-config PR #11416 and Signalsmith configuration changes.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about a Homebrew formula PR for sq-riskarbiter, completely unrelated to the current turn's discussion about a runway-pipeline-config PR for Signalsmith configuration.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3157,
+      "memory_title": "homebrew-formulas PR #4844: sq-riskarbiter uvx wrapper migration\u2014mlds-core#545 blocker and publish workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses KITT migration strategy for a Prefect flow, while the current turn is about a specific PR (#11416) modifying Signalsmith Runway pipeline configuration\u2014completely different context and not actionable for the current question.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3272,
+      "memory_title": "KITT migration path: move entire Prefect flow from Vertex to KITT rather than split dispatcher+executor"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Vertex infrastructure pain points and migration strategy, which is completely unrelated to the current turn's question about PR #11416 changes and Signalsmith pipeline modifications.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3276,
+      "memory_title": "Vertex pain motivating infrastructure migration: headless auth brittleness, expensive git/agent work, PR size limits, token expiry, slow Bazel, low throttle hiding capacity concerns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes KITT onboarding Terraform PR generation, but the current turn discusses a specific Runway pipeline config PR (#11416) with different context and concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3282,
+      "memory_title": "KITT onboarding generates Terraform PR for Forge/Prefect access"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Buildkite principal removal in a different PR context, which is unrelated to the current turn's focus on PR #11416 changes to Signalsmith pipeline configuration files.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3284,
+      "memory_title": "Buildkite principal removal in Forge template is intentional"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly confirms the PR number, the minimal changes made, and the final state of the merged configuration, providing complete context for answering the user's questions about the PR and the extent of modifications.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3297,
+      "memory_title": "Runway pipeline onboarded to forge-signalsmith"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly answers both questions: it identifies the PR (11416) and explains that the changes were minimal\u2014an additive merge strategy that preserved existing structure while adding only missing keys.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3298,
+      "memory_title": "KITT Forge onboarding duplicate YAML fix: additive merge strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses PR #13972 addressing reviewer comments on a KITT recent-history feature, which is completely unrelated to the current query about PR #11416 and Signalsmith pipeline configuration changes.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3318,
+      "memory_title": "Recently visited resources PR feedback resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completely different PR (#13972 about recently-visited features) and is unrelated to the current query about PR #11416 regarding Signalsmith pipeline configuration changes.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3384,
+      "memory_title": "PR #13972: recently-visited feature addresses prod/staging distinction, timestamp milliseconds, and KITT URL deduplication"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f0025-3f91-7922-81e4-7bc8cb3def79",
+    "source_run_id": 3312,
+    "turn_ordinal": 61
+  }
+}

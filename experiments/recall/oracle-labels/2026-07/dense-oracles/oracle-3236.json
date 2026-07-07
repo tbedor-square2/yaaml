@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a GitHub PR review workflow for addressing comments, but the current turn is about conducting a deep PR review and making updates\u2014a different phase that requires understanding the PR's technical content, not the mechanics of responding to existing comments.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1978,
+      "memory_title": "PR review workflow: address comments with isolated patches and reply to threads"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about PR description review and preview link updates, but the current turn is a deep code review of a refactoring PR with focus on behavior parity, subsystem boundaries, and validation logic\u2014completely different context.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2185,
+      "memory_title": "PR description review workflow: verify accuracy and update preview links"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a JavaScript/Node.js PR workflow (Jest, ESLint, Kochiku), but the current turn involves a Python Prefect job reviewing a Java refactoring PR with different tooling and concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2231,
+      "memory_title": "PR review comment response workflow for code fixes"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses Java contract changes and frontend updates, but the current turn is about reviewing a Prefect lifecycle PR refactor with no Java contract involvement, making it stale and contextually misaligned.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2267,
+      "memory_title": "Deep PR review required after contract change"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different PR (#480432) with unrelated cleanup issues (inlining helpers, unused fields in Java code), whereas the current turn is a deep review of a Prefect lifecycle refactoring PR with Python file extraction and validation boundary concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2357,
+      "memory_title": "PR #480432 review feedback: inlining and unused dependency cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed and published PRs (MLP-4409/4410) with LaunchDarkly rollout handling, but the current turn is reviewing a different PR involving Prefect job refactoring for lifecycle PR creation\u2014different subsystem, different context, and no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory describes a completed PR review for MLP-4410 (rule archival executor), which is entirely unrelated to the current turn's deep PR review of a Prefect job refactoring lifecycle PR creation\u2014wrong context and actively distracting.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Snowflake manifest cleanup PR (#11871) with no relevance to the current deep PR review task, which concerns a Prefect job refactoring lifecycle PR creation for unused signals in `squareup/java`.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2705,
+      "memory_title": "Gap PR #11871: Snowflake Streamer manifest cleanup\u2014no runtime impact but doc gap"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the PR under review, captures the key refactoring changes, the BigQuery parameter follow-up recommendation, and the verification status\u2014all essential context for conducting the deep PR review requested in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3038,
+      "memory_title": "forge-signalsmith PR #521: lifecycle refactor with BigQuery parameters follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the PR under review, captures the key refactoring changes, the BigQuery parameter follow-up recommendation, and the verification status\u2014all essential context for conducting the deep PR review requested in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3044,
+      "memory_title": "forge-signalsmith PR #521: lifecycle refactor with BigQuery parameters follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completely different PR (#483601) about rebasing and BUILD dependency removals in a Java rules/config system, while the current turn is about deep reviewing a lifecycle refactoring PR with helper file extractions\u2014wrong context entirely.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different PR (#543) about pyriskarbiter rule tree consolidation, while the current turn is about a deep PR review of a Prefect job refactoring lifecycle PR creation\u2014no overlap in codebase, subsystem, or context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes feature archival policy timelines and PR lifecycle rules, but the current turn is focused on performing a deep code review of a specific PR's refactoring changes\u2014the memory provides operational context that is stale and not actionable for the immediate review task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3205,
+      "memory_title": "Feature archival policy timeline: 90+90 days, 7+3 day PR review/queue"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory is about a completely different PR (KUI #14133, table alignment) and provides no actionable context for the current turn's deep review of a Prefect lifecycle/deprecation refactoring PR.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3226,
+      "memory_title": "KUI PR #14133 deep review and alignment patch complete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completely different PR (KUI metadata-table component) unrelated to the current deep review of a Prefect lifecycle/deprecation refactoring PR, making it actively distracting.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3235,
+      "memory_title": "PR #13972 updated from action-table experiment to metadata-table production implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes infrastructure pain points motivating a future migration, but the current turn is executing an immediate deep PR review on an existing refactoring PR; the memory is stale context about long-term architectural concerns rather than actionable for the current review task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3276,
+      "memory_title": "Vertex pain motivating infrastructure migration: headless auth brittleness, expensive git/agent work, PR size limits, token expiry, slow Bazel, low throttle hiding capacity concerns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a completely different PR (#13972) about recent-history deduplication and UI table fixes, with no relevance to the current deep PR review of a Prefect lifecycle refactoring task.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3318,
+      "memory_title": "Recently visited resources PR feedback resolution"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f0025-3f91-7922-81e4-7bc8cb3def79",
+    "source_run_id": 3236,
+    "turn_ordinal": 18
+  }
+}

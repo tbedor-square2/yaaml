@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides directly relevant project context (mapping triggers to Slack channels with multiple evidence sources) that would help structure the current investigation, though the current turn is focused on identifying trigger owners rather than Slack channels.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1566,
+      "memory_title": "trigger_slack_channels project: Multi-source evidence gathering workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Slack channel mappings for triggers, but the current turn is focused on resolving trigger owners through usernames, Snowflake metadata, and People API lookups\u2014a different investigative path with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1572,
+      "memory_title": "trigger_slack_channels app-assignment evidence strength"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly answers the ownership question for TD_eynt trigger that the current turn is investigating, providing the correct team assignment and relevant communication channels.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1845,
+      "memory_title": "TD_eynt trigger ownership: Cash Support ML, not Franklin"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly answers the ownership question for TD_eynt trigger that the current turn is investigating through Snowflake queries and People API lookups.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1850,
+      "memory_title": "TD_eynt trigger ownership: Cash Support ML, not Franklin"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses Slack channel archival and trigger routing, but the current turn is focused on identifying rule owners and metadata through CSV/Snowflake queries\u2014a completely different problem domain with no overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1860,
+      "memory_title": "Slack channel archival and successor routing for Risk Arbiter triggers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about project update templates is unrelated to the current turn's technical debugging of data aggregation, CSV parsing, and Snowflake queries for trigger ownership.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1868,
+      "memory_title": "Lookout project update template: Cycle 2 Status, Key Update, Blockers/Risks, Leadership Ask"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Snowflake backfill process for partition selection history, which is completely unrelated to the current turn's focus on identifying rule/trigger owners through metadata lookups and People API resolution.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2300,
+      "memory_title": "Partition-selection-history backfill: three-artifact durable state machine with strict reconciliation cycle"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Blockcell site for partition analysis, but the current turn is about debugging tool failures and identifying rule owners through metadata queries\u2014different problem domains with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2508,
+      "memory_title": "Blockcell site for removable partitions analysis with shareable trigger filters and cache-busted assets"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a Slack channel remapping for RiskArbiter triggers, but the current turn is focused on identifying owners/leads of specific triggers through metadata queries and People API resolution\u2014a different problem domain with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2606,
+      "memory_title": "RiskArbiter trigger Slack channel replacement map"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a DynamoDB performance incident from June 2026, while the current turn is debugging a tool response parsing failure and investigating rule/trigger ownership metadata\u2014completely different contexts with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2709,
+      "memory_title": "Risk Arbiter DynamoDB read spike investigation (2026-06-25)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a specific TD_11 Mux cutover decision with staging/production metrics, while the current turn is debugging tool failures (unsupported content type, CSV parsing, Snowflake schema issues) and identifying rule owners\u2014completely different contexts with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2791,
+      "memory_title": "Strong staging evidence for TD_11 Mux cutover; missing-signal fallback not observed; recommend percentage rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a specific Risk Arbiter Mux cutover decision for a payroll trigger, while the current turn is debugging tool failures and data aggregation issues unrelated to that deployment decision.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2801,
+      "memory_title": "RA Mux cutover for TD_11/payroll_run_update_connected_users: staged evidence is strong; percentage rollout strategy recommended"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past pyriskarbiter refactoring (PR #543) and library consolidation, which is completely unrelated to the current turn's focus on debugging tool failures, CSV parsing issues, Snowflake queries, and identifying rule owners through metadata.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a Risk Arbiter partition metadata enrichment project and cleanup workflow, but the current turn is focused on resolving trigger ownership via rule-config updaters and People API lookups\u2014a different operational context with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3151,
+      "memory_title": "Risk Arbiter no-traffic cleanup: partition metadata enrichment, evidence taxonomy, and execution status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a redundant-rules detection system architecture, but the current turn is focused on resolving usernames to identify rule owners through People API and org context, which this memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3174,
+      "memory_title": "redundant-rules: Full architecture, data pipeline, and UI export"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses deprecated signal inventory and cleanup gates, which is contextually unrelated to the current turn's focus on troubleshooting tool failures, CSV parsing, and identifying rule-config updaters via Snowflake queries.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3181,
+      "memory_title": "Deprecated signal audit: inventory, mapping, backfill evidence, ownership classification, and Dumbo cleanup gates"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Snowflake feature usage tables and BigQuery deprecation eligibility, which is completely unrelated to the current turn's focus on identifying rule/trigger owners through metadata aggregation and People API resolution.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3275,
+      "memory_title": "Snowflake does not yet have feature-level usage tables; BigQuery remains source for deprecation eligibility, compact sync tables would bridge"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ed2b3-a775-79e2-90d3-49b186e2c313",
+    "source_run_id": 2655,
+    "turn_ordinal": 419
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses inactive rule query patterns and store interface design, but the current turn focuses on optimizing active rule config queries for pending archival rows\u2014different domain concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2328,
+      "memory_title": "Java Risk Arbiter PR 480432: Store interface for inactive rule queries should take domain-specific params"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Rule History page performance and unfiltered queries, but the current turn is about optimizing a specific archival job's database query pattern (serial/targeted vs. bulk loading), which are different performance contexts.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2362,
+      "memory_title": "Rule History page performance: avoid broad unfiltered queries, require rule or trigger filter on standalone mount"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes datastore conventions and query patterns for PendingRuleArchival, but the current turn is specifically about optimizing query strategy (serial/targeted vs. bulk loading) and whether RuleConfig is necessary\u2014topics the memory doesn't directly address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2410,
+      "memory_title": "RuleArchivalDateCalculator datastore/query conventions and review pattern"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses predicate helpers and state contracts for rule archival, but the current turn is specifically about query optimization (serial/targeted DB queries vs. bulk loading), which is orthogonal to the refactoring approach described.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2589,
+      "memory_title": "Rule archival refactoring: use predicate helpers for implicit state contracts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses method naming and lifecycle terms for rule archival, but the current turn focuses on query optimization strategy (serial/targeted queries vs. bulk loading), which is orthogonal to the naming conventions documented.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2593,
+      "memory_title": "Rule archival executor factoring: public method naming and lifecycle terms"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory covers naming/signature changes but doesn't address the current discussion about query optimization, RuleConfig loading strategy, or the bulk-map vs. targeted-query tradeoff.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2607,
+      "memory_title": "Rule archival refactor: executor naming and method signatures"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly addresses the core design question about why RuleConfig is needed and proposes storing rule_config_id as a snapshot, but the current turn has already moved past this to discuss query optimization strategy, so it's useful context with minor gaps in addressing the immediate optimization direction.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2610,
+      "memory_title": "PendingRuleArchival: track exact rule_config_id for archival targeting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly captures the exact design decision and tradeoff discussed in the current turn: preferring serial indexed lookups over bulk map construction for admin paths, with the specific RuleConfig query pattern and rationale for N smaller queries.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2611,
+      "memory_title": "Query-heavy refresh: prefer serial indexed lookups over bulk maps for admin paths"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly addresses the core design decision about storing rule_config_id and targeted querying instead of bulk loading, providing the exact architectural context needed to evaluate the user's question about serial/targeted queries versus big map construction.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2616,
+      "memory_title": "PendingRuleArchival: Add rule_config_id, keep metadata, use exact targeting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses a variable naming detail from a past discussion, but the current turn focuses on query optimization strategy and RuleConfig loading necessity, making this naming context largely irrelevant to the architectural decision being debated.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2620,
+      "memory_title": "MLP-4410 local variable naming: activePendingArchivalKeys"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses code style (inlining single-use sets) but the current turn focuses on query optimization strategy (serial/targeted vs bulk loading), so it has minimal relevance to the architectural decision being discussed.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2621,
+      "memory_title": "Code simplification: inline single-use ID sets into query builders"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses rule archival date surfacing and RuleSummary proto changes, but the current turn is about optimizing DB query patterns (serial/targeted vs bulk loading) and whether RuleConfig is necessary\u2014different architectural concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3011,
+      "memory_title": "Risk Arbiter rule archival date surfacing: use min pending date per model_name in RuleSummary"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses UI display of archival state in a rules table, while the current turn focuses on backend query optimization and RuleConfig loading logic\u2014different layers with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3012,
+      "memory_title": "KUI rules table archival state: show pending date and filter by archival status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses UI presentation of archival dates in KUI, while the current turn focuses on database query optimization and RuleConfig loading strategy\u2014different concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3031,
+      "memory_title": "Rule archival state in KUI: min date per model_name, not repeated list"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a different architectural concern (attaching pending archival reads to GetRulesSummaryAction) and doesn't address the current query about optimizing DB queries to be serial/targeted or the RuleConfig loading strategy.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3033,
+      "memory_title": "Backend implementation: attach pending archival read to GetRulesSummaryAction"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses surfacing archival dates in KUI, but the current turn is about optimizing database query patterns for pending row processing\u2014different architectural concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3123,
+      "memory_title": "Rule archival date surfacing: backend proto field + KUI table/filter display"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory provides relevant context on rule config handling and archival design decisions, but doesn't directly address the current query optimization about serializing DB queries and avoiding bulk map construction.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef12b-5400-7f41-9c2c-7c82f7013391",
+    "source_run_id": 2142,
+    "turn_ordinal": 85
+  }
+}

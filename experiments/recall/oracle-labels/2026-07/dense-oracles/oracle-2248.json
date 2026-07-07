@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The memory describes backlog memory formulation mechanics but does not address the current query about memory length correlation with recall eval scores or whether injection volume is appropriate.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1803,
+      "memory_title": "Backlog memory formulation aligns on session boundaries with idle flush"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the YAAML remember skill mechanics, but the current turn is analyzing recall eval statistics and memory length correlations\u2014it needs eval data and length metrics, not skill documentation.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1814,
+      "memory_title": "YAAML remember skill for manual memory creation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the framework for separating recall metrics from corpus health metrics, which is directly relevant context for understanding how to evaluate memory length trade-offs, though the current turn has already executed detailed analysis and moved beyond framework discussion.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2311,
+      "memory_title": "Recall and memory-corpus metrics separation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The memory discusses empty recall abstention policy, which is tangential to the current query about memory length correlation with eval scores and injection volume.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2312,
+      "memory_title": "Empty recall is abstention, not failure"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly addresses the core finding from the current turn\u2014that bad recall is a matching/relevance problem, not a length problem\u2014and provides actionable diagnostic detail (over-retrieval, stale context, noisy metadata) that validates and extends the assistant's conclusion.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant experimental data on recall volume and candidate selection, but the stored memory focuses on a specific 5x5 experiment while the current turn analyzes broader stats and length correlations\u2014useful context with minor filtering needed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2350,
+      "memory_title": "Recall candidate families 5x5 experiment: top signals identified"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses memory activation mechanisms and deterministic command keys, but the current turn is analyzing recall eval statistics and memory length correlations\u2014different technical concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2388,
+      "memory_title": "YAAML memory activation: use deterministic command keys, not semantic situation classifiers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses tool-triggered recall mechanisms and activation keys, but the current turn is asking for analysis of memory length correlation with eval scores\u2014a different technical concern that doesn't require this implementation detail.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2392,
+      "memory_title": "Tool-triggered recall: deterministic activation keys over semantic classifiers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses conversation segment architecture and recall organization, but the current turn is asking for analysis of memory length correlation with eval scores\u2014a different analytical concern that requires eval data, not schema design.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a test plan for recall matching architectures, but the current turn is asking for analysis of existing recall eval results and memory length metrics\u2014different concerns that don't require this test design context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly provides the baseline eval statistics and quality metrics that the current turn is analyzing in depth, making it essential context for the memory-length discussion.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly documents the experimental findings, metrics, and durable lessons about memory length and recall quality that the current turn is asking to evaluate.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant experimental data on memory length and recall quality tradeoffs, but focuses on segment/task-fit strategies rather than the length-by-score analysis just completed in the current turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to memory recall quality and filtering strategy, but addresses a different angle (segment gating) than the current turn's focus on memory length and injection volume.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses removing hardcoded recall rules and phrase taxonomy, but the current turn analyzes memory length correlation with eval scores and injection volume\u2014orthogonal concerns with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly addresses the current turn's analysis of recall eval quality and memory length, providing complementary findings on root causes (wrong-context vs. bloat) and concrete recommendations for improvement.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This stored memory directly summarizes corpus statistics, eval outcomes, and quality findings that are the exact foundation the user is asking about\u2014it provides the high-level evidence needed to answer questions on memory length, injection volume, and recall performance.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past deliverable (persuasion doc for budget approval) but provides no data, analysis, or insights relevant to the current question about memory length correlation with recall eval scores.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3376,
+      "memory_title": "Memory techniques report: technical persuasion doc for internal eng buy-in"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 2248,
+    "turn_ordinal": 255
+  }
+}

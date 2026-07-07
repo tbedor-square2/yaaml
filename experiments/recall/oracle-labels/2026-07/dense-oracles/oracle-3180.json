@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a general architecture for conversation segmentation and memory organization, but the current turn is a concrete task completion report with no need for architectural guidance on how to structure memories.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a test plan for recall matching architectures, but the current turn is about completing and committing a diagnostic recall feature (`--no-eval` flag); these are unrelated work streams with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about schema changes and segment oracle is unrelated to the current turn, which focuses on completing a diagnostic recall eval fix (--no-eval flag, tests, commit); it would distract from the active task.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2693,
+      "memory_title": "Segment oracle schema changes and test impacts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses recall eval quality and task-state drift issues, but the current turn is about completing a specific YAAML diagnostic recall implementation and commit\u2014different context and problem domain.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2758,
+      "memory_title": "Recall quality failures are segment/task-state drift, not memory quality"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed database optimization for task-state deactivation, but the current turn is about committing a diagnostic recall eval fix\u2014different feature, different commit, no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2928,
+      "memory_title": "Stale task-state deactivation completed and effective"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes past recall-quality fixes (source-overlap and rerun deduplication), but the current turn is about completing a different diagnostic recall eval feature (`--no-eval` flag), making it stale and contextually misaligned.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns task lifecycle metadata and database migrations, while the current turn is about completing a YAAML diagnostic recall feature commit\u2014entirely different codebases and concerns with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3135,
+      "memory_title": "Task lifecycle metadata fixes: clear stale retry fields on transitions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a regression test for session recall cache invalidation with inactive memory IDs, which is tangentially related to recall functionality but not directly relevant to the current turn's focus on committing a diagnostic recall eval fix.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3189,
+      "memory_title": "Session recall cache must invalidate on inactive memory IDs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes historical eval metrics for YAAML recall quality, but the current turn is completing a specific code implementation task with no need for past performance statistics or quality thresholds.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a 5x5 experiment workflow and metrics runner setup, but the current turn is focused on completing a specific diagnostic recall eval fix (--no-eval flag) that has already been implemented and committed; the experiment infrastructure is not directly relevant to this immediate task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3198,
+      "memory_title": "YAAML 5x5 experiment workflow: orchestrated metrics runner and prompt"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past experiment logs and recall strategy lessons, but the current turn is about completing a specific YAAML code change (diagnostic recall eval fix), making the historical experiment data stale and not actionable for this immediate task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past segment/task-fit experiment with recall strategy tradeoffs, which is completely unrelated to the current turn's focus on committing a diagnostic recall eval fix (--no-eval flag implementation).",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses recall ranking strategy and segment filtering experiments, but the current turn is completing a committed diagnostic recall feature (`--no-eval` flag); the memory is stale context from a prior research direction and not actionable for the immediate task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a refactoring to remove hardcoded phrases and tool keys from YAAML recall, but the current turn shows completion of a different feature (diagnostic recall with --no-eval flag), making this context stale and not actionable for the immediate task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses recall quality regression and wrong-context issues in a different project context (KITT/Vertex/Forge), while the current turn is completing a specific YAAML diagnostic recall feature implementation with no apparent connection to the quality regression analysis.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past corpus analysis and quality metrics, but the current turn is executing a completed YAAML diagnostic recall feature commit\u2014different context with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed technical report on memory techniques for internal buy-in, which is unrelated to the current turn's focus on implementing and committing a diagnostic recall eval fix to the YAAML codebase.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3376,
+      "memory_title": "Memory techniques report: technical persuasion doc for internal eng buy-in"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3180,
+    "turn_ordinal": 351
+  }
+}

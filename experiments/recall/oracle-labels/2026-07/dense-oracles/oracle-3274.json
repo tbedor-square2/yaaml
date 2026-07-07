@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses backlog batching and session boundaries, but the current query is about token consumption in a specific goal\u2014different concerns that don't directly address why a goal accumulated high token usage.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1803,
+      "memory_title": "Backlog memory formulation aligns on session boundaries with idle flush"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes daemon ingestion bugs and parser fixes, which is unrelated to the current discussion about token consumption and goal accounting across turns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1811,
+      "memory_title": "Daemon ingestion bugs: incomplete turns and session identity"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses transcript handling and recall design, but the current query is about token consumption accounting for a specific goal\u2014a different technical concern with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1818,
+      "memory_title": "Preference: incomplete transcript slices in live session context"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a refactoring of yaaml status output formatting, but the current query asks about token consumption in a goal\u2014different concerns with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2034,
+      "memory_title": "yaaml status command: separate transcript state from cumulative counters"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses stats segmentation and eval metrics structure, but the current query is about why a specific goal consumed many tokens\u2014a different topic about goal accounting and cumulative usage tracking.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2478,
+      "memory_title": "Stats segmentation keeps legacy top-level metrics while adding origin/tool breakdowns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses stats aggregation and recall run counting methodology, which is tangentially related to token usage accounting but doesn't directly address why a goal's token consumption was high across multiple turns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2939,
+      "memory_title": "Stats aggregation must count eval runs, not unique turns, for metric coherence"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a specific bugfix about eval reruns and metrics, but the current query asks about token consumption patterns for a goal\u2014different technical concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3088,
+      "memory_title": "Ignore superseded eval reruns in metrics"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to understanding token consumption across goal persistence and cumulative accounting, though the stored memory focuses on filtering/metrics tools rather than the root cause explanation already provided.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3091,
+      "memory_title": "YAAML stats and eval summary support --since filtering for recency-focused diagnostics"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed deduplication fixes for recall quality, but the current query asks about token consumption in a specific earlier goal, which this memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses recall quality metrics and corpus stability, but the current query is about token consumption in a specific goal\u2014different technical concern with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3170,
+      "memory_title": "Recall quality pass: corpus is stable, transient lows cleaned up via replay superseding"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant as the stored memory documents the 50-eval summary bug mentioned in the recall query, providing implementation details and commit reference, though the query focuses on token consumption rather than the bug itself.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3188,
+      "memory_title": "YAAML eval summary default limit expanded from 50 to 1000 runs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes YAAML recall quality metrics and evaluation statistics, but the current turn asks about token consumption for a specific earlier goal, which requires different contextual information about that goal's implementation history and token accounting.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents YAAML recall experiments and metrics, but the current query asks about token consumption in a specific goal\u2014a different technical concern unrelated to recall quality experiments or lessons.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses segment-aware recall strategies and experimental tradeoffs, which is unrelated to the current query about token consumption in a goal's cumulative usage accounting.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses segment provenance and recall ranking strategies, which is unrelated to the current turn's focus on token consumption accounting and goal persistence across turns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses recall quality metrics and wrong-context issues, but the current turn is asking about token consumption in a specific goal\u2014different technical concern with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses YAAML memory quality metrics and corpus evidence, but the current turn is asking about token consumption in a specific earlier goal\u2014different technical concern with no direct overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3274,
+    "turn_ordinal": 408
+  }
+}

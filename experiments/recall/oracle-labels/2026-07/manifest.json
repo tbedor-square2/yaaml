@@ -1,0 +1,33 @@
+{
+  "anchors_files": [
+    "experiments/recall/anchor-libraries/2026-07-screening.tsv",
+    "experiments/recall/anchor-libraries/2026-07-holdout.tsv"
+  ],
+  "date": "2026-07-07",
+  "dense_oracle_dir": "experiments/recall/oracle-labels/2026-07/dense-oracles",
+  "input_dir": "target/anchor-refresh-2026-07",
+  "kind": "dense_oracle_labels",
+  "labels_path": "experiments/recall/oracle-labels/2026-07/labels.jsonl",
+  "missing_memories": 0,
+  "model": "claude-haiku-4-5-20251001",
+  "prompt_source": "scripts/judge-calibration.py adjudicator (query+memory+rubric)",
+  "query_chars": 4000,
+  "scored_this_run": 2803,
+  "stats": {
+    "anchors": 300,
+    "anchors_with_any_label": 299,
+    "anchors_with_useful": 281,
+    "labels": 5007,
+    "low_labels": 3167,
+    "score_histogram": {
+      "1": 1083,
+      "2": 2084,
+      "3": 32,
+      "4": 1018,
+      "5": 790
+    },
+    "useful_labels": 1808
+  },
+  "strategy_label": "anchor-refresh",
+  "top_k": 16
+}

@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses cancellation safety in `updateExistingPendingArchivals`, but the current turn focuses on function naming, factoring structure, and code organization\u2014different concerns that don't require this operational constraint context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2428,
+      "memory_title": "RuleArchivalDateCalculator cancellation scope risk mitigated by operational constraints"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a completed notification job PR and mentions next work items, but provides no information about function naming, factoring, or code structure that the current turn is asking to evaluate.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2490,
+      "memory_title": "MLP-4411 notification job PR #482948 complete; MLP-4418 archival execution job next"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents project sequencing and ticket dependencies, but the current turn asks for code review of function factoring and naming\u2014different concerns that require examining actual code structure, not project timeline.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2519,
+      "memory_title": "Automated rule archival project sequencing: MLP-4409 complete; MLP-4410 (dry-run RPC) in progress; MLP-4411+ follow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses predicate helpers for state contracts, but the current turn focuses on function naming, factoring structure, and code organization\u2014different concerns that this memory doesn't directly address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2589,
+      "memory_title": "Rule archival refactoring: use predicate helpers for implicit state contracts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This stored memory directly addresses the current turn's focus on function naming, factoring, and lifecycle terminology by providing concrete standardization decisions for the exact classes and methods under review.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2593,
+      "memory_title": "Rule archival executor factoring: public method naming and lifecycle terms"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides directly relevant context about the executor naming and method signatures, but the current turn's detailed analysis goes much deeper into specific function names and refactoring recommendations that aren't captured in the memory summary.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2607,
+      "memory_title": "Rule archival refactor: executor naming and method signatures"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes data model design for PendingRuleArchival, but the current turn is asking for a code review of function naming and factoring\u2014different concerns that don't overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2616,
+      "memory_title": "PendingRuleArchival: Add rule_config_id, keep metadata, use exact targeting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past refactor of notification response fields, but the current turn asks about function naming and factoring across all created functions\u2014a broader architectural review that requires current code inventory, not historical context about a specific response message change.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2618,
+      "memory_title": "MLP-4410 rule archival response: simplify notification fields; remove skip counts/reasons"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses a specific local variable rename in one method, but the current turn is a broad code review of function factoring and naming across the entire codebase; this single variable rename is too narrow and already resolved to be useful context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2620,
+      "memory_title": "MLP-4410 local variable naming: activePendingArchivalKeys"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a completed PR review with factoring decisions and naming rationale, providing useful context for the current factoring/naming discussion, though it predates the current turn's detailed rename recommendations.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns CLI command organization and nesting, while the current turn focuses on code factoring, function naming, and architectural structure\u2014completely different domains with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2754,
+      "memory_title": "CLI command organization: nest archival commands under 'rule' subcommand, not top-level 'archival'"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses class factoring for eligibility predicates, but the current turn focuses on function naming clarity and redundancy in archival/executor classes\u2014different factoring concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3001,
+      "memory_title": "Keep AutomatedRuleArchivalTriggerEligibility as its own class, not a method on calculator"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a specific helper class design decision, but the current turn is asking for a broad review of function factoring and naming across all created functions\u2014the memory addresses only one narrow design choice and doesn't help evaluate the overall function inventory or naming issues.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3018,
+      "memory_title": "AutomatedRuleArchivalTriggerEligibility helper class justification"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a specific backend implementation detail (attaching pending archival reads to GetRulesSummaryAction) that is unrelated to the current turn's focus on function factoring, naming conventions, and code organization.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3033,
+      "memory_title": "Backend implementation: attach pending archival read to GetRulesSummaryAction"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed feature (date surfacing in KUI) unrelated to the current turn's focus on function factoring, naming conventions, and code organization.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3123,
+      "memory_title": "Rule archival date surfacing: backend proto field + KUI table/filter display"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses pyriskarbiter refactoring and CLI consolidation, which is completely unrelated to the current turn's code review of function naming and factoring in archival/executor classes.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory covers Risk Arbiter rule cleanup design decisions and implementation strategy, but the current turn is asking about function factoring and naming in the codebase\u2014a different architectural concern with no overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes notification validation and routing logic, but the current turn focuses on function naming, factoring, and code organization\u2014different concerns that this memory doesn't address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3374,
+      "memory_title": "RuleArchivalExecutor notification validation and routing logic"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef12b-5400-7f41-9c2c-7c82f7013391",
+    "source_run_id": 2174,
+    "turn_ordinal": 111
+  }
+}

@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses cost label clarification for retained storage in a cleanup context, which is completely unrelated to the variable naming discussion about retainedActiveKeys and activePendingArchivalKeys.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1642,
+      "memory_title": "Ambiguous cost labels: clarify what 'retained storage' means for deleted scope"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses RuleArchivalDateCalculator refactoring and code style updates, which is completely unrelated to the current query about renaming `retainedActiveKeys` to `activePendingArchivalKeys`.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2458,
+      "memory_title": "RuleArchivalDateCalculator: review feedback applied to stream collection and logging"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses MLP-4410 archival job refactoring and is unrelated to the variable naming discussion about `retainedActiveKeys` vs `activePendingArchivalKeys`.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2581,
+      "memory_title": "MLP-4410 refactored to single unscheduled manual job with dry_run flag; old PR closed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses predicate helpers and state contracts for rule archival, but does not contain information about the variable name `retainedActiveKeys` or its suggested replacement `activePendingArchivalKeys`.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2589,
+      "memory_title": "Rule archival refactoring: use predicate helpers for implicit state contracts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses executor naming and method signatures for rule archival, but does not contain information about the `retainedActiveKeys` variable or its suggested rename to `activePendingArchivalKeys`.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2607,
+      "memory_title": "Rule archival refactor: executor naming and method signatures"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses PendingRuleArchival schema and validation logic, but the current turn is asking about a variable naming suggestion (retainedActiveKeys \u2192 activePendingArchivalKeys) which is not addressed in the memory.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2610,
+      "memory_title": "PendingRuleArchival: track exact rule_config_id for archival targeting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses query optimization strategies for admin archival refresh, but the current turn asks about a specific variable name suggestion (`activePendingArchivalKeys`), which is unrelated to the datastore query approach covered in the memory.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2611,
+      "memory_title": "Query-heavy refresh: prefer serial indexed lookups over bulk maps for admin paths"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses PendingRuleArchival schema and validation logic, but does not contain information about the variable name suggestion (retainedActiveKeys \u2192 activePendingArchivalKeys) that the current turn is asking about.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2616,
+      "memory_title": "PendingRuleArchival: Add rule_config_id, keep metadata, use exact targeting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses PendingArchivalCandidateEntry proto field simplification, which is unrelated to the current query about renaming retainedActiveKeys to activePendingArchivalKeys.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2617,
+      "memory_title": "PendingArchivalCandidateEntry: owner_resolution_status field is redundant"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly answers the current query by providing the exact variable name suggestion (activePendingArchivalKeys) and its purpose, matching the conversation context perfectly.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2620,
+      "memory_title": "MLP-4410 local variable naming: activePendingArchivalKeys"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about `archival-candidates` command behavior is completely unrelated to the current query about renaming `retainedActiveKeys` to `activePendingArchivalKeys`.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2757,
+      "memory_title": "archival-candidates is pre-rollout discovery only"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the archival-candidates discovery helper tool, which is unrelated to the variable naming discussion about retainedActiveKeys vs activePendingArchivalKeys.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2762,
+      "memory_title": "archival-candidates discovery helper is pre-flag only, does not check LD or pending rows"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses UI changes to a rules table archival display, while the current turn asks about a variable name suggestion (`activePendingArchivalKeys`), making them contextually unrelated.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3012,
+      "memory_title": "KUI rules table archival state: show pending date and filter by archival status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses partition selection key-level removal candidates and is completely unrelated to the variable naming discussion about retainedActiveKeys vs activePendingArchivalKeys.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3067,
+      "memory_title": "Partition selection key-level removal candidates status (as of 2023-12-28 export)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Risk Arbiter rule cleanup and design decisions, which is completely unrelated to the current query about renaming `retainedActiveKeys` to `activePendingArchivalKeys`.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses session recall cache invalidation for inactive memory IDs, which is unrelated to the current query about renaming `retainedActiveKeys` to `activePendingArchivalKeys`.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3189,
+      "memory_title": "Session recall cache must invalidate on inactive memory IDs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses automated archival eligibility fields in a trigger model, which is unrelated to the variable naming discussion about `retainedActiveKeys` vs `activePendingArchivalKeys`.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3277,
+      "memory_title": "Automated archival eligibility field added to KUI trigger model"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses automated archival eligibility field implementation, which is unrelated to the variable naming discussion about retainedActiveKeys/activePendingArchivalKeys in the current turn.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3309,
+      "memory_title": "Automated archival eligibility field implementation scope"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef12b-5400-7f41-9c2c-7c82f7013391",
+    "source_run_id": 2163,
+    "turn_ordinal": 100
+  }
+}

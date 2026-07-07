@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses batch endpoint optimization and feature flags for the payroll signal generator, but the current turn is specifically about timeout calculations, Mux RPC behavior, and deadline buffers\u2014different technical concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1882,
+      "memory_title": "Batch endpoint optimization with feature flag for safe rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns Duplograph signal optimization and batching, while the current turn discusses Mux RPC timeout calculations and deadline buffers\u2014completely different technical domains with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1899,
+      "memory_title": "Payroll Duplograph signal optimization: batch endpoints, requestedSignals filtering, tri-state rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly explains the Mux timeout calculation baseline (10s default, LD cap applied), which is exactly what the current turn is asking about\u2014whether 5s is the maximum buffer and whether the Mux call or overall job is timing out.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2630,
+      "memory_title": "TD_11 payroll Mux timeout computation: default 10s baseline, LD cap applied on top"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant baseline latency data (p99 ~4.3s) that directly supports the current discussion about timeout buffer sizing and whether 5s is appropriate, though it focuses on the served path rather than the shadow path where timeouts were observed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2632,
+      "memory_title": "Served TD_11 payroll evaluation: no timeout errors, p99 latency 4.3s under 10s caller timeout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly explains the root cause of the timeout issue and the fix strategy that the current turn is asking about in detail.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2639,
+      "memory_title": "RiskArbiter TD_11 payroll Mux fetch timeout: root cause is missing scoreable deadline"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly explains the deadline structure, timeout calculation logic, and the relationship between the 5s buffer and Mux RPC timeout\u2014precisely what the user is asking about.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2642,
+      "memory_title": "Payroll deadline structure: overall scoreable budget vs. parity-specific timeouts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant context about deadline sharing and parity timeout trade-offs, but the current turn focuses on specific calculation details and buffer sizing (5s) which are more directly addressed in the conversation history than in this memory.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2658,
+      "memory_title": "Async deadline sharing vs. parity-specific deadline trade-off"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses flag separation and routing concerns, but the current turn is specifically about timeout calculations, buffer sizing, and whether the Mux call or overall job is timing out\u2014topics not addressed in the stored memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2785,
+      "memory_title": "Mux cutover flag vs. parity flag are separate concerns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses TD_11 payroll Mux cutover strategy and staging evidence, but the current turn is asking about timeout calculations, buffer sizing, and whether the 5s is added to the Mux call itself\u2014topics not addressed in the stored memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2801,
+      "memory_title": "RA Mux cutover for TD_11/payroll_run_update_connected_users: staged evidence is strong; percentage rollout strategy recommended"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This stored memory directly addresses the user's questions about timeout calculations, the 5s buffer role, and whether the Mux call or overall job is timing out, with concrete examples and the exact scenario being discussed.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2820,
+      "memory_title": "Mux feature-fetch timeout causing DLQ backlog on TD_11 payroll_run_update"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly explains the root cause of the Mux timeout issue, the governing flag mechanism, and current timeout values\u2014exactly what the user is asking about regarding calculations and whether the Mux call or job overall is timing out.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2823,
+      "memory_title": "TD_11 payroll_run_update DLQ failure root cause: Mux feature-fetch timeout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly explains the Mux timeout root cause, the LaunchDarkly flag configuration, and current timeout values (15s default for TD_11), which are precisely what the user is asking about regarding whether 5s is the maximum buffer and whether the Mux call or overall job is timing out.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2824,
+      "memory_title": "TD_11 stale DLQ item root cause: Mux GetFeatures timeout on retry loop"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly explains the LaunchDarkly flag mechanism and timeout configuration that the current turn is asking about, providing essential context for understanding the 5s buffer calculation and Mux timeout behavior.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2827,
+      "memory_title": "RiskArbiter TD_11 timeout behavior: riskarbiter-mux-max-timeout-millis LaunchDarkly flag"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the LaunchDarkly flag configuration and timeout values discussed in the current turn, providing essential context about the 15s vs 25s variants and their tradeoffs.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2844,
+      "memory_title": "LaunchDarkly timeout flag riskarbiter-mux-max-timeout-millis: TD_11 currently at fallthrough 15s, available 25s variant"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly addresses the user's questions about the 5s buffer calculation, Mux timeout behavior, and the relationship between the flag value and actual timeout, providing essential context for understanding the PR changes.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2846,
+      "memory_title": "TD_11 Mux timeout flag and Mixtape latency context"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly provides the LaunchDarkly flag configuration and observed timeout values that are central to answering the user's questions about the 5s buffer, Mux timeout calculations, and whether 15s or 25s is appropriate for TD_11.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2854,
+      "memory_title": "LaunchDarkly timeout flag for TD_11 rule: riskarbiter-mux-max-timeout-millis"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the user's question about whether the Mux call or overall job is timing out, providing concrete evidence that Mux fetch failures occurred despite timeout increases, which is directly relevant to understanding the timeout behavior being discussed.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2894,
+      "memory_title": "TD_11 Mux timeout/missing-signal failures during rollout monitoring"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses production cutover status and legacy cleanup, but the current turn is asking about timeout calculations, buffer sizing, and Mux RPC timeout mechanics\u2014topics not addressed in the stored memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2910,
+      "memory_title": "RiskArbiter Mux cutover is production-verified and ready for permanent removal"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019edcc8-cff6-77d1-8e48-04b9adabc032",
+    "source_run_id": 2226,
+    "turn_ordinal": 47
+  }
+}

@@ -133,6 +133,14 @@ while IFS=$'\t' read -r run_id session_id turn_ordinal case_label; do
   oracle_file="$out_dir/oracle-$run_id.json"
   recall_file="$out_dir/$label.recall-$run_id.json"
 
+  if [[ ! -s "$oracle_file" && -n "${BACKTEST_ORACLE_DIR:-}" ]]; then
+    if [[ -s "$BACKTEST_ORACLE_DIR/oracle-$run_id.json" ]]; then
+      cp "$BACKTEST_ORACLE_DIR/oracle-$run_id.json" "$oracle_file"
+    else
+      echo "BACKTEST_ORACLE_DIR is set but has no oracle-$run_id.json" >&2
+      exit 1
+    fi
+  fi
   if [[ ! -s "$oracle_file" ]]; then
   run_with_retry "$oracle_bin" eval show "$run_id" --json >"$oracle_file" 2>"$oracle_file.stderr"
   fi

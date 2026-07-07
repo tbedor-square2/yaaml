@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR screenshot guidelines is tangentially related but doesn't address the current issue of making the OOO text visible in the screenshot itself.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1713,
+      "memory_title": "Console repo PR review guidelines require screenshot section in PR body"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about GitHub PR rebasing and stacking is completely unrelated to the current turn, which focuses on fixing a screenshot visibility issue for an OOO (out-of-office) section in a PR.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1754,
+      "memory_title": "GitHub PR rebasing: stack PRs by rebasing and retargeting base"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses PR comment management and artifact workflows, but the current turn is focused on replacing a screenshot image due to visibility issues\u2014a different problem domain with no overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1791,
+      "memory_title": "PR comment management: Preview SHA links and artifact canary workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns MLP-4409/4410 PRs and LaunchDarkly rollout dates, while the current turn is entirely about fixing a screenshot visibility issue for an OOO (out-of-office) section in a different PR\u2014no overlap or relevance.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the current turn's core issue: regenerating Storybook screenshots after code changes to avoid stale cached images, which is exactly what the user and assistant are executing.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2575,
+      "memory_title": "Console dev review: inspect Storybook renders after code changes; old screenshots become stale after rebase"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes OOO narrative formatting conventions, but the current turn is focused on troubleshooting a screenshot visibility issue and replacing images\u2014not on how to format OOO text content.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2661,
+      "memory_title": "OOO narrative text: concise format without source attribution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly explains the caching strategy being executed in the current turn\u2014using new filenames to bypass GitHub/CloudFront caching when updating PR screenshots.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2662,
+      "memory_title": "PR screenshot caching: use new filenames after content changes"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact workflow being executed in the current turn: starting Storybook, screenshotting a story, inspecting locally, and updating the PR with a fresh image URL to avoid caching issues.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3051,
+      "memory_title": "PR screenshot refresh workflow with Storybook"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR #483601 (rebase and BUILD dep removals) is completely unrelated to the current turn, which concerns fixing OOO text visibility in a screenshot for a different PR.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about KUI table alignment in PR #14133, while the current turn is about a completely different issue: capturing and uploading a clearer screenshot of an OOO (out-of-office) section that wasn't visible in a previous screenshot.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3226,
+      "memory_title": "KUI PR #14133 deep review and alignment patch complete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different PR (#13972 about action-table vs metadata-table) and is unrelated to the current turn's focus on fixing OOO screenshot visibility in a PR.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3235,
+      "memory_title": "PR #13972 updated from action-table experiment to metadata-table production implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about a metadata table implementation in PR #13972 is unrelated to the current turn, which focuses on fixing OOO screenshot visibility in a different PR.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3239,
+      "memory_title": "Recently-visited metadata table won team feedback; update PR #13972 with new implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about PR #14133 table header alignment fixes, while the current turn is about replacing a screenshot to show OOO text in a different PR\u2014completely unrelated context.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3241,
+      "memory_title": "KUI PR #14133 table header alignment: review addressed, CI green"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about action-table label cleanup for recently-visited resources, while the current turn is about fixing OOO screenshot visibility in a PR\u2014completely different contexts with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3248,
+      "memory_title": "Action-table label cleanup for recently-visited resources"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR #13972 feedback resolution is completely unrelated to the current turn, which focuses on fixing OOO screenshot visibility in a PR image.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3318,
+      "memory_title": "Recently visited resources PR feedback resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes PR #14151 about automated rule archival eligibility labels and tooltips, which is completely unrelated to the current turn's focus on fixing OOO (out-of-office) screenshot visibility issues.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a recently-visited feature PR with environment columns and timestamp fixes, which is completely unrelated to the current turn's focus on capturing and uploading a clearer OOO screenshot for a different PR.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3384,
+      "memory_title": "PR #13972: recently-visited feature addresses prod/staging distinction, timestamp milliseconds, and KITT URL deduplication"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019efb4b-6c80-7460-a7f2-3fb36ffab019",
+    "source_run_id": 2911,
+    "turn_ordinal": 5
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a different flag (`riskarbiter-should-fetch-generated-signals-from-mux`) and stale flags, while the current turn focuses specifically on `riskarbiter-features-to-typecast` with detailed production targeting information already retrieved.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1881,
+      "memory_title": "RiskArbiter LaunchDarkly audit findings: mux rollout flag stuck in partial state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different LaunchDarkly flag (`riskarbiter-pending-rule-archival-trigger-rollout-date`) unrelated to the current query about `riskarbiter-features-to-typecast` flag values.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2394,
+      "memory_title": "LaunchDarkly flag binding: riskarbiter-pending-rule-archival-trigger-rollout-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different LaunchDarkly flag (`riskarbiter-pending-rule-archival-trigger-rollout-date`) unrelated to the current query about `riskarbiter-features-to-typecast` flag values.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2400,
+      "memory_title": "Rule archival LaunchDarkly flag binding and default"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different LaunchDarkly flag (`riskarbiter-pending-rule-archival-trigger-rollout-date`) unrelated to the current query about `riskarbiter-features-to-typecast` and its production values.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2430,
+      "memory_title": "LaunchDarkly feature flag for rule archival trigger rollout dates"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different flag (`riskarbiter-pending-rule-archival-trigger-rollout-date`) unrelated to the current query about `riskarbiter-features-to-typecast` flag values.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2456,
+      "memory_title": "LD flag for archival rollout dates"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different flag (`riskarbiter-pending-rule-archival-trigger-rollout-date`) and its default value handling, whereas the current turn is specifically about whether `riskarbiter-features-to-typecast` has actual values in LaunchDarkly production.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2484,
+      "memory_title": "Pending rule archival rollout flag: empty string for unset, not far-future date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different LaunchDarkly flag (`riskarbiter-pending-rule-archival-trigger-rollout-date`) unrelated to the current query about `riskarbiter-features-to-typecast` flag values.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2783,
+      "memory_title": "LaunchDarkly flag for rule archival rollout: riskarbiter-pending-rule-archival-trigger-rollout-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about a different LaunchDarkly flag (riskarbiter-mux-max-timeout-millis) and does not address the current query about whether riskarbiter-features-to-typecast has values.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2844,
+      "memory_title": "LaunchDarkly timeout flag riskarbiter-mux-max-timeout-millis: TD_11 currently at fallthrough 15s, available 25s variant"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a different flag (`riskarbiter-mux-max-timeout-millis`) and is not relevant to the current query about whether `riskarbiter-features-to-typecast` has values.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2854,
+      "memory_title": "LaunchDarkly timeout flag for TD_11 rule: riskarbiter-mux-max-timeout-millis"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a different flag (`riskarbiter-should-fetch-generated-signals-from-mux`) and its removal process, while the current query asks about `riskarbiter-features-to-typecast` and whether it has active values\u2014a distinct flag with different concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2891,
+      "memory_title": "Flag removal process for riskarbiter-should-fetch-generated-signals-from-mux"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly answers the current query by confirming the flag has active production values with specific targeting details (TD_1, TD_2, TD_3, TD_81) and feature lists, which is exactly what the user is asking about.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2944,
+      "memory_title": "riskarbiter-features-to-typecast flag is live in production"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents deprecated signal inventory and cleanup gates, but the current turn is specifically about LaunchDarkly flag values for `riskarbiter-features-to-typecast`\u2014a different concern with no overlap in the audit details provided.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3181,
+      "memory_title": "Deprecated signal audit: inventory, mapping, backfill evidence, ownership classification, and Dumbo cleanup gates"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a different flag migration pattern (rule archival exemption) and is stale context; the current turn is specifically about whether `riskarbiter-features-to-typecast` has active values in production, which has already been answered with detailed targeting info.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3339,
+      "memory_title": "LaunchDarkly flag migration: old string list to boolean trigger-keyed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents the mux helper rename and cleanup work, which provides useful context about the codebase changes, but the current turn is specifically asking about LaunchDarkly flag values and targeting\u2014a distinct operational/configuration question that the memory doesn't directly address.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a related refactoring of Mux helper classes and removal of stale signal-generator comments, which provides useful context for understanding the codebase structure, but the current turn is specifically asking about LaunchDarkly flag values and whether to keep `getTypecastMuxFeatures`, so the memory has minor gaps in directly addressing the flag's active production targeting.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3361,
+      "memory_title": "riskarbiter Mux helper rename to reflect post-signal-generator deletion"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different LaunchDarkly flag (`riskarbiter-pending-rule-archival-trigger-rollout-date`) and archival rollout script, not the `riskarbiter-features-to-typecast` flag being queried, making it actively distracting rather than useful.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3368,
+      "memory_title": "Riskarbiter archival rollout: staged feature flag and script"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f238c-5422-79c2-a123-61ec3ef40b27",
+    "source_run_id": 3345,
+    "turn_ordinal": 7
+  }
+}

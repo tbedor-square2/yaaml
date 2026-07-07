@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes backlog memory formulation and session boundaries, but the current turn focuses on implementing segment/topic-key inheritance in the daemon's metadata hook and running quality gates\u2014different architectural concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1803,
+      "memory_title": "Backlog memory formulation aligns on session boundaries with idle flush"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a test plan for recall architectures, but the current turn is focused on completing segment/topic-key implementation, running quality gates, and finishing a specific code change\u2014not on evaluating or designing recall matching strategies.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes past schema changes and migration patterns, but the current turn focuses on topic-key labeling in the metadata hook and quality gate execution, making this context stale and tangentially relevant at best.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2693,
+      "memory_title": "Segment oracle schema changes and test impacts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed recall-quality fixes and deduplication work, but the current turn is focused on segment/topic-key memory formation and metadata hook patching\u2014different subsystems with no direct overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns task lifecycle metadata fixes in a database layer, while the current turn focuses on segment/topic-key memory formation in a daemon's metadata hook\u2014completely different subsystems with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3135,
+      "memory_title": "Task lifecycle metadata fixes: clear stale retry fields on transitions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past PR consolidation effort for pyriskarbiter, while the current turn focuses on ongoing segment/topic-key memory-formation work in a daemon codebase\u2014different projects and concerns with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides detailed context on YAAML's recall system, validation, and architecture that is relevant to understanding the memory-formation path being patched, but the current turn focuses on specific code changes to segment/topic-key inheritance in the daemon metadata hook, which requires more granular implementation details than this overview supplies.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3144,
+      "memory_title": "YAAML Rust implementation: recall system, validation, metrics, and architecture"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes session recall cache invalidation for inactive memory IDs, which is tangentially related to memory management but not directly relevant to the current turn's focus on segment/topic-key patching, metadata hook modifications, and quality gate execution.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3189,
+      "memory_title": "Session recall cache must invalidate on inactive memory IDs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory reports YAAML recall quality metrics, but the current turn is focused on implementing segment/topic-key memory formation and running quality gates\u2014not on evaluating or debugging recall performance itself.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a YAAML 5x5 experiment workflow for metrics testing, but the current turn is focused on segment/topic-key memory formation, daemon metadata hooks, and quality gate testing\u2014different technical domains with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3198,
+      "memory_title": "YAAML 5x5 experiment workflow: orchestrated metrics runner and prompt"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past YAAML recall experiments and lessons, but the current turn is actively implementing segment/topic-key memory labeling changes and running quality gates\u2014different work phases with no direct actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a past experiment on segment/task-fit recall strategies, but the current turn is actively implementing segment/topic-key memory labeling in the daemon code and running quality gates\u2014different scope and phase than the historical experiment results.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses task-fit gating and recall ranking experiments, but the current turn focuses on implementing segment/topic-key labeling in the daemon's metadata hook and passing quality gates\u2014a different technical direction with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the refactoring direction and design principles for removing hardcoded topic phrases, which directly relates to the current turn's work on segment/topic-key patching and metadata hook modifications, though the current turn shows implementation details that go beyond the stored memory's scope.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses recall quality regression and topic drift issues, but the current turn is focused on implementing segment/topic-key memory formation in code\u2014a different technical layer with no direct connection to the evaluation findings.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past quality evidence and measurement findings, but the current turn is actively executing code changes to the memory-formation path and running quality gates\u2014it needs real-time test results and code context, not historical corpus analysis.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed technical report for internal buy-in, but the current turn is actively executing code changes, testing, and quality gates for segment/topic-key work\u2014different scope and phase.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3376,
+      "memory_title": "Memory techniques report: technical persuasion doc for internal eng buy-in"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3265,
+    "turn_ordinal": 398
+  }
+}

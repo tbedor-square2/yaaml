@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about tool availability is unrelated to the current query about unused library percentages (online vs. offline).",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1567,
+      "memory_title": "Slack/Drive/Glean tool availability and fallback strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about research compilation preferences is unrelated to the current query about unused percentage statistics for online/offline features.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1582,
+      "memory_title": "User preference: compile research into concise briefs from linked sources"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes user's preference for planning docs over code and a past FEM project update, but current turn is asking about unused percentage statistics (online/offline data), which is unrelated to documentation preferences or that specific project.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1601,
+      "memory_title": "User prefers planning docs over code; update FEM brief on Slack changes"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Rust TUI code review project, which is completely unrelated to the current turn's question about unused library percentages (online vs. offline/Dumbo data).",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1774,
+      "memory_title": "Node/Rust project (tbedor) active-thread goal: CLI agent dispatch, GitHub replies, run lifecycle, and notifications"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR comment browsing shortcuts is unrelated to the current query about unused percentage statistics for online/offline features.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1778,
+      "memory_title": "tuicr PR comment browsing and agent dispatch shortcuts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about traffic-drafts being a standalone gist script is unrelated to the current turn's question about unused percentage calculations for online/offline features.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1835,
+      "memory_title": "traffic-drafts is a standalone gist script, not a pyriskarbiter CLI command"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a methodology for classifying offline signal usage, but the current turn asks for a simple percentage calculation that has already been answered in the conversation history; the memory provides no new data or context for the specific percentages being discussed.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2072,
+      "memory_title": "Offline signal production-use classification: Dumbo shadow logs + Sourcegraph layering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR linkage strategy is unrelated to the current query about unused percentage metrics (online vs. offline data).",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2324,
+      "memory_title": "PR linkage strategy: branch names, body refs, explicit links, Linear/GitHub metadata all together"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about RiskArbiter PR review patterns is unrelated to the current query about unused library percentages (online vs. offline) and AGENTS.md repository structure.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2566,
+      "memory_title": "RiskArbiter AGENTS.md: human review feedback patterns from 50 merged PRs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Graphite/Bazel testing workflow is completely unrelated to the current query about unused library percentages (online vs. offline).",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3015,
+      "memory_title": "Graphite + Bazel testing workflow: use subagents for test runs, stage only relevant files"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses deprecated signal inventory and Dumbo cleanup gates, but the current turn asks about percentage unused in online/offline contexts\u2014a different analytical question with no direct overlap in the stored content.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3181,
+      "memory_title": "Deprecated signal audit: inventory, mapping, backfill evidence, ownership classification, and Dumbo cleanup gates"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a workflow for creating agent guidance documentation, but the current turn is asking about percentage calculations for unused features/library coverage\u2014completely different domain with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3218,
+      "memory_title": "Agent guidance documentation workflow for Risk Arbiter and KUI"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about agent message prefixes is completely unrelated to the current query about unused percentages (online/offline library coverage metrics).",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3231,
+      "memory_title": "Agent message prefix requirement"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns Blox hybrid migration architecture and is completely unrelated to the current turn's question about unused library percentages (online 19.7%, offline TBD).",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3245,
+      "memory_title": "Blox hybrid migration research: architecture, precedent, and spike plan"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Vertex infrastructure pain points and migration strategy, which is completely unrelated to the current turn's question about unused library percentages (online vs. offline).",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3276,
+      "memory_title": "Vertex pain motivating infrastructure migration: headless auth brittleness, expensive git/agent work, PR size limits, token expiry, slow Bazel, low throttle hiding capacity concerns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about agent message prefixes is completely unrelated to the current query about unused percentages (online/offline library coverage metrics).",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3303,
+      "memory_title": "Agent message prefix convention in bot-manager"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef19d-3024-7071-b441-8893b0ecdb99",
+    "source_run_id": 3004,
+    "turn_ordinal": 50
+  }
+}

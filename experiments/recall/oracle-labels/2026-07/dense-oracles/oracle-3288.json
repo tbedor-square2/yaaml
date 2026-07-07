@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a two-PR implementation split for backend and frontend work, but the current query seeks specific PR links for CLAUDE.md guidance updates, which this memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1738,
+      "memory_title": "Two-PR approach: Risk Arbiter backend, then KUI frontend"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents code review patterns from a different Risk Arbiter PR (480432), but the current query seeks specific PR links for CLAUDE.md/AGENTS.md updates, which have already been found (java#483149 and square-console#13950); this memory adds no actionable context for the current turn.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1755,
+      "memory_title": "Java Risk Arbiter PR 480432: Review feedback patterns and code style preferences"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant guidance content from the CLAUDE.md file but lacks the specific PR links and metadata (PR numbers, dates, file paths) that directly answer the user's query about locating the PRs.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1792,
+      "memory_title": "Square-console CLAUDE.md guidance compliance"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This stored memory directly documents the Risk Arbiter AGENTS.md PR (java#483149) that the user is asking about, including its purpose, content, and merge date.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2566,
+      "memory_title": "RiskArbiter AGENTS.md: human review feedback patterns from 50 merged PRs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes future draft PRs to open for rule archival features, but the current query seeks past PRs that already updated CLAUDE.md/AGENTS.md files with PR guidance\u2014different scope and timeline.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3034,
+      "memory_title": "Draft PRs to open: tbedor/riskarbiter-rule-summary-archival-date and tbedor/kui-rule-archival-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory documents a rebase and BUILD dependency cleanup in ruleconfig-test-harness, which is unrelated to the user's query about CLAUDE.md/AGENTS.md PR guidance updates in riskarbiter and square-console.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns pyriskarbiter refactoring and CLI consolidation, which is unrelated to the user's query about CLAUDE.md and AGENTS.md PRs in riskarbiter and square-console.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about a Homebrew formula PR for sq-riskarbiter uvx wrapper migration, completely unrelated to the current query about CLAUDE.md and AGENTS.md PRs in riskarbiter and square-console repositories.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3157,
+      "memory_title": "homebrew-formulas PR #4844: sq-riskarbiter uvx wrapper migration\u2014mlds-core#545 blocker and publish workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a backend/frontend sync for an automated archival date feature, which is unrelated to the current query about CLAUDE.md PR guidance updates in riskarbiter and square-console.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3217,
+      "memory_title": "KUI PR #14118 backend/frontend sync verified; frontend safe to merge before backend deploy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact PRs and workflow the user is asking about, including PR numbers, repositories, file paths, and merge dates.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3218,
+      "memory_title": "Agent guidance documentation workflow for Risk Arbiter and KUI"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the Square Console CLAUDE.md PR (#14133) mentioned in the current turn, but focuses on implementation details rather than the PR guidance capture itself.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3226,
+      "memory_title": "KUI PR #14133 deep review and alignment patch complete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the Square Console CLAUDE.md PR (#14133) mentioned in the current turn, providing recent status and technical details, though the user's primary query was already answered with PR links and descriptions.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3241,
+      "memory_title": "KUI PR #14133 table header alignment: review addressed, CI green"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents PR #13972 addressing KITT recent-history feedback, which is unrelated to the user's query about CLAUDE.md updates in riskarbiter/square-console.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3318,
+      "memory_title": "Recently visited resources PR feedback resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory is about a UI component PR (#14151) for automated rule archival labeling, which is completely unrelated to the user's query about CLAUDE.md and AGENTS.md guidance documentation PRs.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a recently-visited feature PR (#13972) unrelated to CLAUDE.md or AGENTS.md guidance documentation; it addresses a different feature entirely and is actively distracting from the current query.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3384,
+      "memory_title": "PR #13972: recently-visited feature addresses prod/staging distinction, timestamp milliseconds, and KITT URL deduplication"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about `.editorconfig` formatting settings is unrelated to the current query about CLAUDE.md PR guidance updates in riskarbiter and square-console.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3398,
+      "memory_title": "Riskarbiter .editorconfig formatting settings finalized and applied"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f19af-052a-7641-a9d1-d1671cbcd3b6",
+    "source_run_id": 3288,
+    "turn_ordinal": 2
+  }
+}

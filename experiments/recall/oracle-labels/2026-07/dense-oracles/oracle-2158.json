@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses future approval/objection state tracking for rule archival, which is tangentially related to the current work on rule_config_id migration but not directly actionable for the immediate schema/code changes being performed.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2413,
+      "memory_title": "Future rule archival amendments: approval/objection state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a LaunchDarkly flag configuration for rule archival, which is tangential to the current turn's focus on database schema migration, jOOQ code generation, and calculator/executor logic updates.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2484,
+      "memory_title": "Pending rule archival rollout flag: empty string for unset, not far-future date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed work on MLP-4411 (notification job) and mentions MLP-4418 (archival execution job) as next, which aligns with the current turn's focus on rule config ID integration and executor updates, but lacks specific details about the current schema/code changes being made.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2490,
+      "memory_title": "MLP-4411 notification job PR #482948 complete; MLP-4418 archival execution job next"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a past cherry-pick conflict resolution for proto defaults, while the current turn is actively working through database schema migrations and jOOQ code generation for rule_config_id\u2014completely different context.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2587,
+      "memory_title": "Cherry-pick conflict resolution in MLP-4410: keep master's deletion of obsolete RunPendingRuleArchivals proto"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses predicate helpers for candidate state contracts, but the current turn focuses on database schema migration, jOOQ model generation, and rule_config_id implementation\u2014different architectural concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2589,
+      "memory_title": "Rule archival refactoring: use predicate helpers for implicit state contracts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant naming and lifecycle conventions for the executor being actively modified, but the current turn is focused on database schema changes and field indexing rather than method refactoring.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2593,
+      "memory_title": "Rule archival executor factoring: public method naming and lifecycle terms"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant context about executor naming and method signatures that directly relates to the ongoing refactor, though the current turn focuses on `rule_config_id` field addition and jOOQ model updates rather than the executor's public API.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2607,
+      "memory_title": "Rule archival refactor: executor naming and method signatures"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact design pattern being implemented in the current turn: storing rule_config_id as the authoritative target while maintaining denormalized metadata for scoping and validation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2610,
+      "memory_title": "PendingRuleArchival: track exact rule_config_id for archival targeting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact schema changes, validation logic, and archival targeting strategy being implemented in the current turn's conversation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2616,
+      "memory_title": "PendingRuleArchival: Add rule_config_id, keep metadata, use exact targeting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses removing a redundant field from PendingArchivalCandidateEntry, but the current turn focuses on database schema migration, jOOQ model generation, and rule_config_id implementation\u2014different concerns with no direct overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2617,
+      "memory_title": "PendingArchivalCandidateEntry: owner_resolution_status field is redundant"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes response field simplification for rule archival notifications, but the current turn focuses on database schema migration and jOOQ model generation with `rule_config_id`, which are unrelated concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2618,
+      "memory_title": "MLP-4410 rule archival response: simplify notification fields; remove skip counts/reasons"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a local variable naming convention in a specific method, but the current turn is focused on schema migration, jOOQ model generation, and calculator/executor logic updates\u2014different concerns with no direct overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2620,
+      "memory_title": "MLP-4410 local variable naming: activePendingArchivalKeys"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed PR review and schema migration for rule archival, while the current turn is actively working through a different schema normalization task involving `rule_config_id` field addition and jOOQ model reconciliation\u2014different scope and context.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses rule archival date surfacing and RuleSummary proto changes, which is tangentially related to rule config management but not directly relevant to the current turn's focus on `rule_config_id` normalization, migration, and calculator/executor updates.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3011,
+      "memory_title": "Risk Arbiter rule archival date surfacing: use min pending date per model_name in RuleSummary"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses archival date calculation and RPC extension, but the current turn focuses on database schema migration, jOOQ code generation, and calculator/executor refactoring\u2014different architectural layers with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3033,
+      "memory_title": "Backend implementation: attach pending archival read to GetRulesSummaryAction"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes rule archival date surfacing in KUI, but the current turn is focused on database schema migration and jOOQ code generation for adding `rule_config_id`\u2014different technical concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3123,
+      "memory_title": "Rule archival date surfacing: backend proto field + KUI table/filter display"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents high-level design decisions and strategy for rule cleanup/reactivation, but the current turn is focused on low-level database schema migration details (adding `rule_config_id`, updating constraints, patching generated jOOQ code), which are implementation mechanics not covered in the stored memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef12b-5400-7f41-9c2c-7c82f7013391",
+    "source_run_id": 2158,
+    "turn_ordinal": 94
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses backlog batching and session boundaries, but the current turn focuses on ingestion batch definitions, segment lifecycle (ended vs merged), and specific architectural decisions that are not addressed in this memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1803,
+      "memory_title": "Backlog memory formulation aligns on session boundaries with idle flush"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes past ingestion bugs and fixes, but the current turn is a detailed technical discussion about segment definitions, batch processing, and memory formation architecture\u2014different concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1811,
+      "memory_title": "Daemon ingestion bugs: incomplete turns and session identity"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses transcript handling and turn completion semantics, but the current turn is asking about ingestion batch definitions and segment management logic, which are distinct architectural concerns not covered by this memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1818,
+      "memory_title": "Preference: incomplete transcript slices in live session context"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses turn context metadata persistence and multi-project session handling, which is tangentially related to ingestion batches and segmentation but does not directly address the core definitions and design decisions being discussed in the current turn.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1821,
+      "memory_title": "Per-turn context metadata persisted for multi-project session recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Snowflake backfill process for partition selection history, which is completely unrelated to the current turn's discussion about ingestion batches, segment definitions, and memory formation architecture.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2300,
+      "memory_title": "Partition-selection-history backfill: three-artifact durable state machine with strict reconciliation cycle"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses eval stats and segmentation metrics, but the current turn focuses on ingestion batch definitions, segment lifecycle (ended vs merged), and memory formation architecture\u2014different concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2478,
+      "memory_title": "Stats segmentation keeps legacy top-level metrics while adding origin/tool breakdowns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the user's question about what defines an ingestion batch and provides the exact conceptual framework (segment oracle, batch processing, topic-based segmentation) that the assistant elaborated on in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory on provenance tracking is useful context for understanding consolidation and lineage management, but the current turn focuses on ingestion batch definitions and segment state transitions, requiring minor filtering to extract relevant consolidation concepts.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2652,
+      "memory_title": "Memory provenance graph for consolidation tracking"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a test plan for hybrid recall architectures that is relevant context for the ongoing discussion about segment design and memory formation, but requires filtering since the current turn focuses on specific segment definitions and ingestion batch mechanics rather than the evaluation methodology itself.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the user's question about what defines an ingestion batch and provides the exact architectural context needed to answer it.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2692,
+      "memory_title": "Segment oracle architecture: tables, API, backfill design"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the schema changes and implementation details for the segment oracle system that the current turn is actively discussing and deciding upon.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2693,
+      "memory_title": "Segment oracle schema changes and test impacts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly answers the user's question about what defines an ingestion batch and provides the exact segmentation strategy framework being discussed in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2703,
+      "memory_title": "Segmentation strategy: path evidence hierarchy and oracle design"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses a specific implementation detail about segment rollover and task-state expiration, but the current turn is asking fundamental definitional questions about ingestion batches and segment lifecycle (ended vs merged), which are already comprehensively answered in the conversation context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2965,
+      "memory_title": "Stale task-state lifespan: force segment rollover for long non-identity sessions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses segment/task-fit reranking limitations and retrieval quality, but the current turn is asking about ingestion batch definitions and segment state management (ended vs merged), which are orthogonal concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3195,
+      "memory_title": "Segment/task-fit reranking is limited; segment summaries needed for generation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past experiment logs and lessons but does not directly address the current turn's technical questions about ingestion batch definitions, segment state management, or implementation decisions.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses segment-aware recall strategies and experimental tradeoffs, but the current turn is asking clarifying questions about ingestion batch definitions and segment state management\u2014topics the memory does not directly address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses segment gating and ranking strategies, but the current turn is a direct question about ingestion batch definition and segment mechanics that is already answered in detail in the conversation history itself.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 2910,
+    "turn_ordinal": 271
+  }
+}

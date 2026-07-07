@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes YAAML's architecture and CLI mechanisms that the current turn is actively investigating for report-building, evidence collection, and memory health recommendations.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1678,
+      "memory_title": "YAAML: Yet Another Agent Memory Layer package"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns offline signal production-use classification via Dumbo shadow logs and Sourcegraph, which is unrelated to the current turn's focus on YAAML memory recall mechanisms, contributor identification, and memory health metrics.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2072,
+      "memory_title": "Offline signal production-use classification: Dumbo shadow logs + Sourcegraph layering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the report-building task's consolidation and memory health analysis, but requires filtering since the current turn focuses on contributor evidence and YAAML lessons rather than provenance tracking mechanics.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2652,
+      "memory_title": "Memory provenance graph for consolidation tracking"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes specific recall-quality fixes and deduplication logic, but the current turn is focused on building a report about YAAML memory systems, contributor evidence, and lifecycle/measurement lessons\u2014different scope and context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes pyriskarbiter CLI refactoring and library extraction, which is unrelated to the current turn's focus on YAAML memory systems, Goose internal memory, and contributor identification for a report-building task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns Risk Arbiter partition metadata cleanup and evidence taxonomy, which is entirely unrelated to the current turn's focus on YAAML memory systems, Goose internal memory, and contributor identification for a report-building task.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3151,
+      "memory_title": "Risk Arbiter no-traffic cleanup: partition metadata enrichment, evidence taxonomy, and execution status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory is about deprecated signal auditing, inventory mapping, and Dumbo cleanup gates\u2014entirely unrelated to the current turn's focus on YAAML memory recall mechanisms, health-aware reranking, and contributor evidence collection.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3181,
+      "memory_title": "Deprecated signal audit: inventory, mapping, backfill evidence, ownership classification, and Dumbo cleanup gates"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's focus on YAAML metrics, eval workflows, and measurement-backed memory health, though the stored memory emphasizes experimental workflow orchestration rather than the specific data model and contributor evidence being collected now.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3198,
+      "memory_title": "YAAML 5x5 experiment workflow: orchestrated metrics runner and prompt"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant: the stored memory documents YAAML recall experiment findings and durable lessons that the current turn is actively extracting and mapping onto internal systems.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant experimental data on segment/task-fit recall strategies that the current turn is explicitly evaluating as a concrete YAAML lesson to transfer to other memory systems.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory is about Blox hybrid migration for a signals deprecation workload and is entirely unrelated to the current turn's focus on YAAML memory systems, recall strategies, and contributor identification.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3245,
+      "memory_title": "Blox hybrid migration research: architecture, precedent, and spike plan"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes Vertex infrastructure pain points and migration rationale, but the current turn is focused on building a report about memory recall strategies by analyzing YAAML, Goose, and Moneybot implementations\u2014a different technical domain with no direct connection.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3276,
+      "memory_title": "Vertex pain motivating infrastructure migration: headless auth brittleness, expensive git/agent work, PR size limits, token expiry, slow Bazel, low throttle hiding capacity concerns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant\u2014the current turn is collecting contributor evidence and mapping memory system opportunities across Goose/Moneybot/KGoose, and this memory provides concrete implementation details, ownership context (squareup/cash-server, moneybench), and recall mechanics that are essential for the report-building task.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3325,
+      "memory_title": "kgoose-memory-store: Backend service for Kgoose/Moneybot persistent user memory"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the report-building task's focus on memory health metrics and eval-backed measurement, though the current turn is specifically extracting YAAML lessons rather than immediately applying Moneybench.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3326,
+      "memory_title": "Moneybench: Eval harness for Moneybot/Kgoose testing and memory quality measurement"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the report-building task on memory systems and consolidation strategies, but the stored memory describes only KGoose's current approach rather than providing actionable recommendations or comparative insights needed for the broader analysis.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3345,
+      "memory_title": "Kgoose memory consolidation is model-driven, not batch-scheduled"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant\u2014the stored memory provides concrete YAAML corpus evidence (3,369 memories, 66.5% low-score rate, task checkpoint metrics) and measurement findings that the current turn is actively synthesizing into a report on recall strategy and memory health recommendations.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed report on memory techniques with measured impacts and experiment artifacts, which is directly relevant context for the current turn's evidence-backed report-building task, though it documents a prior deliverable rather than providing actionable data for the current analysis.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3376,
+      "memory_title": "Memory techniques report: technical persuasion doc for internal eng buy-in"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f1f84-7db1-7903-a7a7-d39a8da17ddb",
+    "source_run_id": 3337,
+    "turn_ordinal": 7
+  }
+}

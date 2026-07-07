@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory discusses RiskArbiter audit interceptors and Squawk/Datadog logging, which is unrelated to the current turn's focus on rule archival notifications to Slack channels and whether Nathan receives a direct notification.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1797,
+      "memory_title": "RiskArbiter audit paths: @DangerousRpc (Slack) vs @AuditLogged (Squawk/Datadog) are separate interceptors"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses archived Slack channels and trigger routing, which is unrelated to the current turn's question about whether Nathan receives a direct notification from rule archival execution.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1860,
+      "memory_title": "Slack channel archival and successor routing for Risk Arbiter triggers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes interactive Slack posting workflow procedures, but the current turn has already concluded with a direct answer about notification behavior (no DM to Nathan, only channel post), making the procedural guidance mostly irrelevant to what was just discussed.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1861,
+      "memory_title": "Interactive Slack posting workflow for no-traffic trigger notifications"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes PR implementation details and architecture decisions, but the current turn is asking about specific notification behavior (whether Nathan receives a DM), which the memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2486,
+      "memory_title": "MLP-4411 notification job implementation complete; draft PR ready without wiring scheduled sends"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant context about the notification job implementation and architecture, but the current turn is asking a specific question about whether Nathan receives a direct notification, which requires examining the actual notification logic rather than just the PR summary.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2490,
+      "memory_title": "MLP-4411 notification job PR #482948 complete; MLP-4418 archival execution job next"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses internal method naming and lifecycle patterns for rule archival, but the current turn is asking about notification recipients and message content, which requires understanding the actual notification logic rather than method structure.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2593,
+      "memory_title": "Rule archival executor factoring: public method naming and lifecycle terms"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a refactoring of notification response fields, but the current turn is about notification behavior and routing logic, which are unrelated to response field structure.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2618,
+      "memory_title": "MLP-4410 rule archival response: simplify notification fields; remove skip counts/reasons"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the CLI workflow for pending archival commands, but the current turn has moved past command execution to discussing notification recipient details, which this memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2780,
+      "memory_title": "CLI command workflow for pending rule archival verification after flag set"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes notification idempotency mechanics, but the current turn is asking whether Nathan receives a direct notification, which is answered by the assistant's code inspection showing only channel posting\u2014this memory is stale context about DB marking that doesn't address the user's question.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2964,
+      "memory_title": "Rule archival notification idempotency via DB marking"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Slack approval draft generator tool, which is unrelated to the current discussion about rule archival notifications and whether Nathan receives a DM.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3150,
+      "memory_title": "Slack approval draft generator: trigger-only mode with filtering and static messaging"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR #14151's UI label and tooltip changes is unrelated to the current discussion about notification routing, Slack channels, and whether Nathan receives direct notifications.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the LaunchDarkly flag setup and rollout script, but the current turn is asking about notification behavior to a specific person (Nathan), which requires understanding the RuleArchivalExecutor notification logic\u2014not covered in this memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3368,
+      "memory_title": "Riskarbiter archival rollout: staged feature flag and script"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses production notification requirements and missing Slack channels, but the current turn is about staging behavior for a specific rule (TD_30xx) that already has a configured channel, making this context stale and not actionable.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3373,
+      "memory_title": "Production rule archival notifications require Slack channel configuration"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes general notification routing across environments but does not address the specific question about whether Nathan receives a direct notification or DM, which the current turn already answered with detailed code inspection.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3374,
+      "memory_title": "RuleArchivalExecutor notification validation and routing logic"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses missing-channel validation behavior in production/staging, but the current turn is about notification routing to a specific person (Nathan) in an already-configured channel, making this context stale and not directly applicable.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3387,
+      "memory_title": "RuleArchivalExecutor production missing-channel validation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses production triggers with missing Slack channels, but the current turn is about a staging setup with a properly configured channel (#tbedor-test-foo2), making this audit result largely irrelevant to the immediate question.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3396,
+      "memory_title": "Production rule archival missing Slack channel audit result"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes notification routing by environment, but the current turn has already resolved the specific question about whether Nathan receives a direct notification (he doesn't), making this context stale and not actionable for the immediate discussion.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3397,
+      "memory_title": "Rule archival notification delivery guards by environment"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef566-2195-7d72-a3ad-cfb9ad00f810",
+    "source_run_id": 3032,
+    "turn_ordinal": 47
+  }
+}

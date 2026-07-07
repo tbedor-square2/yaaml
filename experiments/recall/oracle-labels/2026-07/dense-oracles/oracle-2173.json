@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses inlining helpers and removing unused dependencies from PR #480432, but the current turn focuses on removing pointless notification wrapper methods and refactoring tests\u2014different cleanup concerns with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2357,
+      "memory_title": "PR #480432 review feedback: inlining and unused dependency cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Bazel verification procedures is unrelated to the current turn's discussion of removing pointless wrapper methods and refactoring test calls to use public entry points.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2379,
+      "memory_title": "Bazel verification for archival review RPC changes in java worktrees"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed PRs and backport work unrelated to the current turn's focus on removing pointless wrapper methods and refactoring test calls.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed notification job implementation and PR status, but the current turn focuses on removing pointless wrapper methods and refactoring test calls\u2014a different technical concern with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2486,
+      "memory_title": "MLP-4411 notification job implementation complete; draft PR ready without wiring scheduled sends"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed notification job work (PR #482948), but the current turn focuses on removing pointless wrapper methods from an executor class during refactoring\u2014a different, narrower task with no direct connection to the notification job implementation details.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2490,
+      "memory_title": "MLP-4411 notification job PR #482948 complete; MLP-4418 archival execution job next"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes high-level project sequencing and ticket dependencies, but the current turn is about removing specific pointless wrapper methods from code\u2014a tactical refactoring detail unrelated to the roadmap context.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2519,
+      "memory_title": "Automated rule archival project sequencing: MLP-4409 complete; MLP-4410 (dry-run RPC) in progress; MLP-4411+ follow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the refactoring pattern being applied: removing thin wrapper methods and consolidating notification logic into production entry points, which is exactly what the current turn is executing.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2593,
+      "memory_title": "Rule archival executor factoring: public method naming and lifecycle terms"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the executor's method signatures, notification lifecycle naming, and the executeChanges flag behavior\u2014all core context for understanding and validating the current refactoring of notification wrapper methods.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2607,
+      "memory_title": "Rule archival refactor: executor naming and method signatures"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current refactoring work on notification methods, but the stored memory focuses on response field removal while the current turn addresses removing pointless wrapper methods\u2014related but distinct aspects of the same PR.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2618,
+      "memory_title": "MLP-4410 rule archival response: simplify notification fields; remove skip counts/reasons"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed PR review and fixes from a prior session, but the current turn shows active refactoring of notification wrapper methods with ongoing test adjustments\u2014different scope and phase than the finalized state documented in memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory is about a different PR (#477833 on riskarbiter-trigger-traffic) and contains no relevant context for the current refactoring of notification wrapper methods.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3065,
+      "memory_title": "PR #477833 tbedor/riskarbiter-trigger-traffic: rebased and pushed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed rebase and BUILD dependency cleanup for PR #483601, which is entirely unrelated to the current turn's discussion of removing pointless notification wrapper methods and refactoring test calls.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed refactoring of pyriskarbiter library modules and CLI consolidation, which is entirely unrelated to the current turn's discussion of removing pointless wrapper methods from a Java executor class and adjusting test calls.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory is about KUI table alignment in a TypeScript/React codebase, while current turn discusses Java notification wrapper methods in an executor\u2014completely different codebases and domains.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3226,
+      "memory_title": "KUI PR #14133 deep review and alignment patch complete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different PR (#483601) about test harness refactoring, while the current turn discusses removing pointless notification wrapper methods from an executor\u2014completely unrelated contexts.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3237,
+      "memory_title": "PR #483601: Reduce AbstractSuspicionThresholdTest dependency via explicit rule config harness"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns UI label/tooltip changes in a React component (PR #14151), while the current turn discusses Java code refactoring to remove notification wrapper methods\u2014completely different contexts and codebases.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns Riskarbiter mux helper renaming and signal-generator cleanup, which is completely unrelated to the current turn's discussion of removing pointless notification wrapper methods from an executor class.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes notification validation and routing logic across environments, but the current turn focuses on removing pointless wrapper methods and refactoring test calls to use the public executor entry point\u2014a different concern with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3374,
+      "memory_title": "RuleArchivalExecutor notification validation and routing logic"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef12b-5400-7f41-9c2c-7c82f7013391",
+    "source_run_id": 2173,
+    "turn_ordinal": 110
+  }
+}

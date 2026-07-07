@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about backfill status tracking is unrelated to the current turn's focus on filling a lifecycle-state table in a Google Docs document.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1609,
+      "memory_title": "Documented resumable backfill state in BACKFILL_STATUS.md"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Snowflake backfill process unrelated to the current turn, which focuses on filling a Google Docs lifecycle-state table.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2300,
+      "memory_title": "Partition-selection-history backfill: three-artifact durable state machine with strict reconciliation cycle"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns TUI table layout for a session/attention display, while the current turn is about filling a lifecycle-state table in a Google Docs document\u2014completely different contexts and tools.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2686,
+      "memory_title": "Table layout: combine STATE/ATTN into one column, show REPO only, keep branch in details"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses PR #521 lifecycle refactoring and BigQuery parameters, but the current turn is focused on filling a Google Docs table with lifecycle states\u2014a different task with no overlap in technical context or actionable guidance.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3044,
+      "memory_title": "forge-signalsmith PR #521: lifecycle refactor with BigQuery parameters follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR #483601 rebase and BUILD dependencies is completely unrelated to the current turn's focus on filling a Google Docs lifecycle-state table.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns task lifecycle database fixes and retry field cleanup, which is completely unrelated to the current turn's focus on Google Docs table insertion and Beacon signal lifecycle documentation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3135,
+      "memory_title": "Task lifecycle metadata fixes: clear stale retry fields on transitions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns pyriskarbiter library refactoring and CLI consolidation, which is completely unrelated to the current turn's focus on Google Docs table editing and lifecycle state documentation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns Risk Arbiter partition metadata cleanup and evidence taxonomy, which is completely unrelated to the current turn's focus on filling a Google Docs lifecycle-state table for Beacon signal states.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3151,
+      "memory_title": "Risk Arbiter no-traffic cleanup: partition metadata enrichment, evidence taxonomy, and execution status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a Homebrew formula PR migration and PyPI publishing workflow, which is completely unrelated to the current turn's focus on Google Docs table editing and lifecycle state documentation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3157,
+      "memory_title": "homebrew-formulas PR #4844: sq-riskarbiter uvx wrapper migration\u2014mlds-core#545 blocker and publish workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns KUI table alignment in a PR, which is completely unrelated to the current turn's focus on Google Docs/Drive tooling and filling a lifecycle-state table in a document.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3226,
+      "memory_title": "KUI PR #14133 deep review and alignment patch complete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a KUI component PR update unrelated to the current task of filling a Google Docs lifecycle-state table.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3235,
+      "memory_title": "PR #13972 updated from action-table experiment to metadata-table production implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a metadata table UI component and PR #13972, while the current turn focuses on filling a Google Docs lifecycle-state table with specific content\u2014completely different contexts with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3239,
+      "memory_title": "Recently-visited metadata table won team feedback; update PR #13972 with new implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a Kubernetes UI PR with table header alignment fixes, which is completely unrelated to the current turn's focus on filling a Google Docs lifecycle-state table.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3241,
+      "memory_title": "KUI PR #14133 table header alignment: review addressed, CI green"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about action-table label cleanup is unrelated to the current turn's focus on filling a lifecycle-state table in a Google Docs document.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3248,
+      "memory_title": "Action-table label cleanup for recently-visited resources"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about table display optimization for a 'Recently Visited' UI is unrelated to the current task of filling a lifecycle-state table in a Google Docs document.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3255,
+      "memory_title": "Table Display Optimization for Recently Visited"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about KUI table header alignment is unrelated to the current task of filling a Google Docs lifecycle-state table with beacon signal states.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3268,
+      "memory_title": "KUI table header alignment fix: centered cells require explicit headerAlign meta"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR #14151 (UI label and tooltip changes) is completely unrelated to the current turn's focus on filling a Google Docs lifecycle-state table with Beacon signal states.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef19d-3024-7071-b441-8893b0ecdb99",
+    "source_run_id": 2985,
+    "turn_ordinal": 43
+  }
+}

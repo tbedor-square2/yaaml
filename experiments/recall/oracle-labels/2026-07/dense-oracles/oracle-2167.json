@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses LDAP audit concerns in RPC responses, while the current turn focuses on notification skip logging and metrics handling\u2014different architectural concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1674,
+      "memory_title": "Audit LDAP identity should stay in interceptor, not RPC response"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Slack job consolidation and code duplication across repositories, which is entirely unrelated to the current discussion about notification skip handling, logging, metrics, and RPC response design.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1728,
+      "memory_title": "SSS Slack jobs consolidation: separate concerns, shared codebase"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents general code style preferences from a past PR review, but the current turn is about a specific architectural decision regarding notification skip logging and RPC response structure, which is not addressed in the stored context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1755,
+      "memory_title": "Java Risk Arbiter PR 480432: Review feedback patterns and code style preferences"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses preserving legacy RPC behavior and error handling in batch optimization, which is unrelated to the current discussion about logging skip counts versus exposing them in RPC responses.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1883,
+      "memory_title": "Preserve legacy RPC behavior and error handling in optimization"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses extracting common utility code and keeping duplicate-handling logic decentralized, which is tangentially related to the current discussion about logging vs. exposing skip counts, but does not directly address the specific architectural decision being debated about RPC response structure and metrics placement.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2194,
+      "memory_title": "Share only the smallest necessary piece in refactored utility code"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes RPC design decisions for MLP-4410 including structured output and explicit overrides, which provides useful context for the current discussion about notification logging vs. RPC response exposure, though it lacks specific details about the skip-handling and metrics strategy being debated.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2449,
+      "memory_title": "MLP-4410 review RPC design: no-write path, structured output, explicit overrides"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the notification job implementation and PR status, which provides useful context about the overall feature, but the current turn is specifically discussing a design decision about logging vs. exposing skip counts in the RPC response\u2014a detail not covered in the stored memory.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2486,
+      "memory_title": "MLP-4411 notification job implementation complete; draft PR ready without wiring scheduled sends"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes PR completion and project status but does not contain the specific technical discussion about logging vs. exposing skip counts in RPC responses that the current turn references.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2490,
+      "memory_title": "MLP-4411 notification job PR #482948 complete; MLP-4418 archival execution job next"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes project sequencing and ticket dependencies for rule archival, but the current turn discusses notification skip handling, logging strategy, and RPC response structure\u2014different technical concerns with no overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2519,
+      "memory_title": "Automated rule archival project sequencing: MLP-4409 complete; MLP-4410 (dry-run RPC) in progress; MLP-4411+ follow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses RPC naming conventions for a different feature (rule archival), while the current turn focuses on notification skip handling and RPC response structure design; minimal topical overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2594,
+      "memory_title": "RPC method naming: execute_changes instead of dry_run"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact design decision being recalled: removing skip counts from the RPC response and keeping skip handling internal with logging/metrics instead.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2618,
+      "memory_title": "MLP-4410 rule archival response: simplify notification fields; remove skip counts/reasons"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses PR #483111 code review and architectural decisions, but the current turn is specifically about notification skip handling and RPC response design\u2014different aspects of the same codebase with no direct overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses code factoring preferences for helper methods, but the current turn is about architectural decisions regarding skip logging vs. RPC exposure\u2014different concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2638,
+      "memory_title": "Code factoring preference: small helper methods acceptable if they encode domain predicates or readability gates; avoid wrappers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses PR strategy for removing a serving flag and generator, which is unrelated to the current discussion about notification skip logging and RPC response structure.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2901,
+      "memory_title": "Cleanup PR strategy: remove serving flag and generator in separate PRs to reduce rollback blast radius"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes DB-based idempotency mechanics for notification cycles, but the current turn discusses logging strategy and RPC response structure\u2014different architectural concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2964,
+      "memory_title": "Rule archival notification idempotency via DB marking"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns Risk Arbiter rule cleanup and archival design, which is completely unrelated to the current discussion about notification skip logging and RPC response structure.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Snowflake/BigQuery data architecture for feature usage tables and deprecation eligibility, which is completely unrelated to the current turn's discussion about notification logging, metrics, and RPC response design.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3275,
+      "memory_title": "Snowflake does not yet have feature-level usage tables; BigQuery remains source for deprecation eligibility, compact sync tables would bridge"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses eligibility helper class design and coupling concerns, which is unrelated to the current turn's focus on notification skip logging versus RPC response exposure.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3331,
+      "memory_title": "Shared eligibility helper design decision: own class vs calculator method"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef12b-5400-7f41-9c2c-7c82f7013391",
+    "source_run_id": 2167,
+    "turn_ordinal": 104
+  }
+}

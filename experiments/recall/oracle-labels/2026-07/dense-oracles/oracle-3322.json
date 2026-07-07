@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current task of capturing KUI screenshots, but the user is already committed to using the canary preview URL approach rather than Storybook, so this memory requires filtering/judgment to apply.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1617,
+      "memory_title": "Prefer Storybook for KUI visual samples over live dev server"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses playpen routing and header-based testing strategies, but the current turn is about kicking off a canary job and capturing screenshots from a preview URL\u2014different testing infrastructure entirely.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1744,
+      "memory_title": "Playpen routing for Console KUI: header-based vs GNS weight shifts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Storybook screenshot management and rebase drift, but the current turn is about kicking off a canary job and capturing KUI console screenshots from a preview URL\u2014a different workflow and context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2575,
+      "memory_title": "Console dev review: inspect Storybook renders after code changes; old screenshots become stale after rebase"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Useful context about KUI implementation location, but the current turn is already focused on square-console PR #14151 and canary preview workflows, so this memory has minor gaps in immediate actionability.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3029,
+      "memory_title": "KUI: active implementation is in square-console, not java/knowledge-ui"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Storybook-based screenshot workflow, but the current turn involves a KUI canary preview workflow with a different architecture (Kochiku builds, Console auth, preview URLs), making it mostly irrelevant despite both involving screenshots.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3051,
+      "memory_title": "PR screenshot refresh workflow with Storybook"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory is about PR #14118 and backend/frontend sync for a different feature (RuleSummary archival dates), while the current turn is about PR #14151 and taking canary preview screenshots\u2014completely different context.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3217,
+      "memory_title": "KUI PR #14118 backend/frontend sync verified; frontend safe to merge before backend deploy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses PR #14133 (KUI table alignment), but the current turn is about PR #14151 (square-console canary preview screenshots), making it contextually unrelated despite both involving KUI and screenshots.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3226,
+      "memory_title": "KUI PR #14133 deep review and alignment patch complete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes PR #13972 with metadata-table changes, but the current turn is about PR #14151 with canary job screenshots\u2014different PR, different context, not actionable.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3235,
+      "memory_title": "PR #13972 updated from action-table experiment to metadata-table production implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about PR #14133 (table header alignment fixes), but the current turn is working on PR #14151 (canary job screenshots); different PRs with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3241,
+      "memory_title": "KUI PR #14133 table header alignment: review addressed, CI green"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the exact PR (#14151) and changes being worked on, providing useful context about what was modified, though it doesn't directly help with the current canary/screenshot workflow task.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3277,
+      "memory_title": "Automated archival eligibility field added to KUI trigger model"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes KUI's route canonicalization and metadata capture for recently visited resources, but the current turn is focused on kicking off a canary job, capturing screenshots, and debugging CORS/artifact propagation issues\u2014topics unrelated to route handling or resource metadata caching.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3306,
+      "memory_title": "KUI recently visited resources: route canonicalization and metadata capture"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses browser session state issues, but the current turn is focused on canary artifact retrieval and PR verification, not screenshot capture execution.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3308,
+      "memory_title": "Agent-browser screenshot capture: state isolation and recovery"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes KUI route canonicalization and graph metadata capture, but the current turn is focused on kicking off a canary job and capturing screenshots of a PR preview\u2014different concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3315,
+      "memory_title": "KUI recently visited resources: route canonicalization and graph metadata"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR #13972 feedback resolution is unrelated to the current turn's focus on PR #14151, canary job workflows, and screenshot capture procedures.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3318,
+      "memory_title": "Recently visited resources PR feedback resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly identifies PR #14151 and describes its changes (label updates, tooltip additions, constants centralization), which is exactly the PR context needed to understand the current turn's canary job and screenshot workflow.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes PR #13972 (recently-visited feature), but the current turn is about PR #14151 (canary job screenshots); completely different PR context with no actionable relevance.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3384,
+      "memory_title": "PR #13972: recently-visited feature addresses prod/staging distinction, timestamp milliseconds, and KITT URL deduplication"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f1e66-ef64-7f11-a61b-eadf3719af96",
+    "source_run_id": 3322,
+    "turn_ordinal": 1
+  }
+}

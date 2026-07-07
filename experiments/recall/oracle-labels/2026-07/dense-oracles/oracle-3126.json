@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a related cleanup workflow with existing Linear tickets and project structure, useful for understanding the cleanup ticket pattern and project context, though it addresses a different domain (rules) than the current payroll signal generator cleanup.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1870,
+      "memory_title": "Rule archival and reactivation workflow for square-console-kui-trigger-traffic"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes a LaunchDarkly audit for RiskArbiter flags, but current turn is about searching for cleanup tickets and creating rollout tickets in Linear\u2014different system and context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1881,
+      "memory_title": "RiskArbiter LaunchDarkly audit findings: mux rollout flag stuck in partial state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly actionable: the stored memory identifies the existing ticket MLP-2470 that the user wants to search for, provides its project context, and includes critical implementation details (timeout issues, feature flag) needed to create related rollout tickets.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1968,
+      "memory_title": "Linear rolloff ticket for payroll signal generator"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides directly relevant workflow guidance for reconciling PRs to tickets and managing Linear state, including API patterns and deduplication strategy, though the current turn is already executing this workflow and needs real-time ticket search results rather than procedural context.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1982,
+      "memory_title": "PR-to-ticket reconciliation workflow and Linear state management"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Java package splitting project with specific Linear tickets (MLP-4457, MLP-4456, MLP-4455, MLP-4458), but the current turn is about searching for cleanup tickets and creating rollout tickets, which are unrelated to Java package splitting.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2001,
+      "memory_title": "Java package splitting project with three issues and audit-log follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant project context with ticket IDs and status, but user is asking about searching for cleanup tickets and creating rollout tickets\u2014this memory provides existing ticket references (MLP-2470, MLP-4412, etc.) that should be checked before creating new ones, though it doesn't contain the full rollout ticket creation details needed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2354,
+      "memory_title": "Online ML Model/Feature Rule Cleanup project status and phase"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes completed PRs and backport work (MLP-4409/4410), but current turn focuses on searching for cleanup tickets and creating rollout tickets, which is a different workflow phase.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed notification job implementation (MLP-4411), but the current turn is about searching for cleanup tickets and creating rollout tickets\u2014different work items with no direct connection to this notification feature.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2486,
+      "memory_title": "MLP-4411 notification job implementation complete; draft PR ready without wiring scheduled sends"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly actionable\u2014provides the exact cleanup steps, file paths, and verification commands needed to create rollout tickets and track the payroll signal generator removal work.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2649,
+      "memory_title": "Payroll signal generator removal steps after Mux rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly useful: provides the Linear project ID (MLP), known ticket MLP-2470 assigned to user, and exact command to search for existing cleanup tickets before creating new ones.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2650,
+      "memory_title": "Outstanding signal generators migration status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the cleanup rollout planning, providing context on the phased vs. monolithic approach trade-offs that should inform ticket creation strategy, though it doesn't contain specific ticket IDs or Linear workflow details needed for immediate execution.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2916,
+      "memory_title": "Remove payroll generator: single large PR vs phased approach trade-off"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Provides relevant context about the cleanup project's status template and current blockers, useful for understanding what tickets to search for and create, but doesn't directly list existing ticket IDs or rollout requirements.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2941,
+      "memory_title": "Online ML ModelFeatureRule cleanup project: Cycle 2 status template and blockers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory documents ticket progress from a past cycle (week of 2026-06-22) but does not directly address the current request to search for existing cleanup tickets or create rollout tickets; the ticket IDs and PRs listed are stale context from a different initiative.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2942,
+      "memory_title": "MLP Cycle 2: ticket progress mapping (week of 2026-06-22)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed pyriskarbiter refactoring (PR #543) and extraction roadmap, but the current turn is about searching for and creating Linear tickets for a cleanup/rollout\u2014different project context with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Risk Arbiter cleanup project with partition metadata and evidence taxonomy, but the current turn is about searching for existing tickets and creating rollout tickets in Linear\u2014a different operational context with no direct connection to the Risk Arbiter cleanup details.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3151,
+      "memory_title": "Risk Arbiter no-traffic cleanup: partition metadata enrichment, evidence taxonomy, and execution status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context about the cleanup work (renames, removals, unused deps) that informs what tickets should be created for the rollout, though it doesn't contain existing ticket IDs beyond MLP-2470 already found in the conversation.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ed6df-0d7b-7210-b6eb-9da62527d7f1",
+    "source_run_id": 3126,
+    "turn_ordinal": 139
+  }
+}

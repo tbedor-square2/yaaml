@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a related recall filtering strategy with task-key matching logic, directly relevant to the current turn's work on excluding tool keys from task identity, but requires filtering since the current turn has moved beyond the initial gating design into implementation details.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes metrics architecture for recall and memory-corpus evaluation, but the current turn is focused on fixing tool-key matching behavior in ranking logic and updating tests\u2014a different technical concern with no direct overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2311,
+      "memory_title": "Recall and memory-corpus metrics separation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past 5x5 experiment on recall candidate families, but the current turn is focused on fixing tool-key matching behavior in ranking code and updating tests\u2014a different technical problem with no overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2350,
+      "memory_title": "Recall candidate families 5x5 experiment: top signals identified"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses deterministic command-key activation for memory recall, but the current turn is focused on fixing tool-key ranking behavior in an existing matcher\u2014a different problem with overlapping terminology but distinct implementation context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2388,
+      "memory_title": "YAAML memory activation: use deterministic command keys, not semantic situation classifiers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a test plan for hybrid recall architectures, but the current turn is focused on fixing tool-key matching behavior in an existing ranking system, which is a different problem domain.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a nuanced exception to tool-key filtering based on health signals, but the current turn is focused on implementing the core behavior of excluding tool keys from recall identity matching and updating tests\u2014a different phase that precedes health-signal logic.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3092,
+      "memory_title": "Same-project proven-useful workflow memories should bypass tool-key filter"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed deduplication fixes from earlier work, but the current turn is focused on excluding tool keys from recall task matching\u2014a different problem with different solutions.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes task-key extraction and filtering logic, but the current turn is focused on excluding tool keys from recall task matching and updating tests\u2014a different concern than filtering tool output from prose.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3098,
+      "memory_title": "Segment task-key extraction: filter tool output and prioritize identity keys"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed pyriskarbiter refactoring PR, while the current turn is debugging a recall ranking system's tool-key matching behavior\u2014entirely different domains with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides directly relevant baseline metrics and failure-mode context for the ongoing recall-quality improvement task, though it is slightly stale relative to the current code changes being made.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses segment/task-fit reranking limitations from a past evaluation, but the current turn is focused on fixing tool-key matching behavior in the recall ranking code\u2014a different, more immediate technical issue.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3195,
+      "memory_title": "Segment/task-fit reranking is limited; segment summaries needed for generation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past experiment logs and lessons, but the current turn is actively debugging and modifying recall ranking code in real-time, making historical experiment summaries tangential rather than actionable for the immediate technical work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past experiment on segment/task-fit strategies, but the current turn is focused on fixing tool-key ranking behavior in the recall matcher\u2014a different, more immediate code change with no overlap to the experimental results.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses segment/task-fit gating and context-weighted ranking experiments, but the current turn is focused on a specific bug fix (tool keys acting as false task identity) and implementation details of the matcher, making the stored memory's higher-level strategic direction largely orthogonal to the immediate debugging work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact refactoring being executed in the current turn: removing tool:* keys from recall task matching, excluding them from ranking bonuses, and updating tests to reflect this structural-only behavior.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact problem being solved in the current turn: wrong-context recalls from same-project task drift, and the solution of stricter task-identity gating rather than tool/topic overlap.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes past corpus analysis and measurement findings, but the current turn is focused on a specific code change to exclude tool keys from recall task matching and updating tests\u2014different scope and level of detail than the historical evidence summary.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3051,
+    "turn_ordinal": 300
+  }
+}

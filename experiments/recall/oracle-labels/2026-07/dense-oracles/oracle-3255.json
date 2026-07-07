@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses recall gating and filtering strategy, but the current turn is focused on memory health diagnostics, apply-health policy mechanics, and a specific product fix for home-root project memories\u2014different concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly explains the metrics framework being used to evaluate memory health and recall quality in the current turn, though the turn has already moved past initial metric definitions into specific policy decisions.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2311,
+      "memory_title": "Recall and memory-corpus metrics separation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current diagnostic work on memory health and eval failures, though the stored memory focuses on past experiment results while the current turn is actively investigating apply-health policy and root causes.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2327,
+      "memory_title": "Eval-based health reranking improves but is symptom-level"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed 5x5 experiment on recall candidate families with specific recommendations (dynamic_recall_count/top_2), which is contextually relevant to the current turn's focus on recall quality improvements, but requires filtering since the current session has moved into memory lifecycle and health policy analysis rather than candidate family optimization.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2350,
+      "memory_title": "Recall candidate families 5x5 experiment: top signals identified"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a test plan for recall architectures, but the current turn is focused on diagnosing memory health issues, apply-health policy constraints, and a specific product fix for home-root project memories\u2014a different problem domain with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's focus on inspecting eval failures and memory-health diagnostics with recency filtering, though the stored memory describes a tool feature rather than actionable diagnostic results.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3091,
+      "memory_title": "YAAML stats and eval summary support --since filtering for recency-focused diagnostics"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes past fixes to recall quality and deduplication, but the current turn is focused on diagnosing memory-health policy and deciding on a specific product fix for home-root project memories, making this historical context mostly stale and tangential.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's focus on recall quality improvements and memory health, documenting a completed implementation that addresses similar concerns, though the turn is now investigating apply-health policy rather than recall selection mechanics.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3105,
+      "memory_title": "YAAML recall: top-2 cap + recency cooldown + topical gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's inspection of eval failures and memory-health diagnostics, as it explains a metrics reporting gap that could affect the accuracy of the low-score analysis being performed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3188,
+      "memory_title": "YAAML eval summary default limit expanded from 50 to 1000 runs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant baseline metrics for the current turn's focus on eval failures and memory-health diagnostics, though slightly stale compared to the more recent 4.47 average mentioned in the turn itself.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a 5x5 experiment workflow and metrics runner setup, but the current turn is focused on diagnosing memory health policies and applying targeted fixes to prevent home-root project memories from receiving project-affinity benefits\u2014a different operational concern with no clear connection to the experiment framework.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3198,
+      "memory_title": "YAAML 5x5 experiment workflow: orchestrated metrics runner and prompt"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents experimental findings and durable lessons about recall quality improvements, which directly relates to the current turn's focus on inspecting eval failures and memory-health diagnostics to identify targeted fixes, though it lacks the specific current diagnostic data being pulled.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past experiment on segment/task-fit strategies, but the current turn is focused on diagnosing and fixing an immediate apply-health policy issue with home-root project memories, making the historical experiment results tangential rather than actionable.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses past segment/task-fit experiments and ranking approaches, but the current turn is focused on immediate memory health policy, apply-health eligibility criteria, and a specific product fix for home-root project memories\u2014different concerns than the stored memory's strategic direction.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly documents the exact recall quality regression and root cause (wrong-context, not bloat) that the current turn is investigating through eval failures and memory-health diagnostics.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's focus on eval failures and memory-health diagnostics, providing corpus-level context on recall quality issues and recommended next steps, though the stored memory is slightly stale relative to the ongoing investigation.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past deliverable (persuasion document for budget approval) but the current turn is focused on diagnosing specific memory-health policy issues and implementing targeted fixes, making this historical context mostly irrelevant to the immediate technical work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3376,
+      "memory_title": "Memory techniques report: technical persuasion doc for internal eng buy-in"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3255,
+    "turn_ordinal": 389
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to rollout date configuration but adds a critical constraint (empty string default) that refines the current guidance about setting future dates.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2380,
+      "memory_title": "riskarbiter pending rule archival flag default: empty string, not far-future date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context about the LaunchDarkly flag mechanism for setting rollout dates, though it lacks the specific calculation logic and examples already provided in the current turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2394,
+      "memory_title": "LaunchDarkly flag binding: riskarbiter-pending-rule-archival-trigger-rollout-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to rollout date configuration for rule archival, but stored memory describes the LD flag implementation detail rather than the user-facing guidance on how to set rollout dates strategically.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2406,
+      "memory_title": "LD flag for rule archival trigger rollout dates with Jan 1, 2126 default"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the rollout-date mechanism discussed, but the stored memory provides implementation details (flag name, default value, exclusion logic) rather than the user-facing guidance already covered in the current turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2412,
+      "memory_title": "LD rollout-date flag for rule archival: riskarbiter-pending-rule-archival-trigger-rollout-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory discusses internal calculator implementation details and cancellation safety, but the current turn focuses on practical rollout date configuration and notification timing\u2014different concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2428,
+      "memory_title": "RuleArchivalDateCalculator cancellation scope risk mitigated by operational constraints"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context about the rollout date mechanism and feature flag implementation, though the stored memory provides implementation details rather than the decision logic already covered in the current turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2430,
+      "memory_title": "LaunchDarkly feature flag for rule archival trigger rollout dates"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Provides specific LaunchDarkly flag configuration details relevant to setting rollout dates, but requires filtering to extract the actionable flag key and default value from the broader context.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2456,
+      "memory_title": "LD flag for archival rollout dates"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to rollout date configuration but focuses on the flag default value change rather than the practical guidance for setting dates in the current turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2484,
+      "memory_title": "Pending rule archival rollout flag: empty string for unset, not far-future date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes pre-rollout discovery mechanics for archival-candidates, but the current turn focuses on setting rollout dates and notification cadence timing, which are unrelated concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2757,
+      "memory_title": "archival-candidates is pre-rollout discovery only"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a discovery helper tool, but the current turn is focused on rollout date configuration and notification cadence timing, which are unrelated topics.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2762,
+      "memory_title": "archival-candidates discovery helper is pre-flag only, does not check LD or pending rows"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the LaunchDarkly flag (`riskarbiter-pending-rule-archival-trigger-rollout-date`) and its mechanics, which is the exact mechanism being discussed for solving the rollout date problem in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2783,
+      "memory_title": "LaunchDarkly flag for rule archival rollout: riskarbiter-pending-rule-archival-trigger-rollout-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly explains the archival timing gates and notification cadence logic that the current turn is discussing, including the formula for expected archival date and how rollout date affects notification eligibility windows.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2796,
+      "memory_title": "Rule archival timing gates and notification cadence"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory explains notification idempotency mechanics, but the current turn is asking about setting rollout dates to control notification timing\u2014a different concern that the memory doesn't directly address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2964,
+      "memory_title": "Rule archival notification idempotency via DB marking"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses implementation details of surfacing archival dates in a UI, which is tangentially related to archival date calculation but does not directly address the current turn's focus on setting rollout dates to control notification cadence and archival timing.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3011,
+      "memory_title": "Risk Arbiter rule archival date surfacing: use min pending date per model_name in RuleSummary"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes KUI table display and filtering for archival dates, but current turn focuses on rollout date configuration logic and notification cadence\u2014different concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3123,
+      "memory_title": "Rule archival date surfacing: backend proto field + KUI table/filter display"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes frontend/backend sync for archival date fields, but current turn focuses on rollout date configuration logic and notification cadence timing, which are distinct concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3221,
+      "memory_title": "Backend/frontend sync: RuleSummary archival dates (PR #484157 & #14118)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context about the rollout date mechanism and staged rollout strategy, though the stored memory focuses on implementation details (script, LaunchDarkly flags, groups) rather than the core principle being discussed in the current turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3368,
+      "memory_title": "Riskarbiter archival rollout: staged feature flag and script"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef566-2195-7d72-a3ad-cfb9ad00f810",
+    "source_run_id": 3189,
+    "turn_ordinal": 50
+  }
+}

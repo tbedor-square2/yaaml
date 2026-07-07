@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns completed PRs for archival storage and rollout dates, while the current turn focuses on fixing OOO (out-of-office) summary behavior for long leave periods\u2014entirely different features with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses screenshot staleness after rebasing, but the current turn has shifted focus from screenshot wording to fixing the actual OOO behavior for long leave periods, making this context mostly stale and tangential.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2575,
+      "memory_title": "Console dev review: inspect Storybook renders after code changes; old screenshots become stale after rebase"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact gap being addressed in the current turn: OOO/leave data exists but doesn't surface in summaries, and the fix involves making OOO explicitly appear in the output narrative.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2628,
+      "memory_title": "SummaryBot leave/out-of-office representation gap"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a completely different PR (MLP-4410 #483111) about rule archival and change freeze logic, with no relevance to the current turn's discussion about OOO (out-of-office) summary generation and parental leave handling.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides useful architectural context about how leave/OOO data flows through the system and the decision to prioritize prompt changes, but the current turn has shifted focus to fixing the empty-summary case for long leave periods, which requires more specific implementation details than this memory captures.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2648,
+      "memory_title": "SummaryBot leave/out-of-office representation is a prompt priority, not a UI gap"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly captures the user's core preference that leave/OOO should be explicitly represented in summaries even when activity is sparse, which is exactly what the current turn is addressing after the user clarified their intent with the parental leave example.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2659,
+      "memory_title": "SummaryBot leave/OOO representation preference"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant guidance on OOO narrative formatting that aligns with the current turn's shift toward handling long OOO periods in summaries, but lacks specifics about the empty-summary edge case being debugged.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2661,
+      "memory_title": "OOO narrative text: concise format without source attribution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a BigQuery parameter refactoring PR (#521) and is completely unrelated to the current turn's discussion about OOO (out-of-office) summary generation and parental leave handling.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3044,
+      "memory_title": "forge-signalsmith PR #521: lifecycle refactor with BigQuery parameters follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a screenshot refresh workflow, but the current turn has shifted focus from updating screenshot copy to fixing the underlying API behavior for long OOO periods\u2014making this procedural memory stale and no longer actionable for the actual problem being solved.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3051,
+      "memory_title": "PR screenshot refresh workflow with Storybook"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about a completely unrelated PR (BUILD file rebasing and dependency removals), while the current turn discusses OOO (out-of-office) summary functionality and parental leave handling\u2014no overlap in context or actionability.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about pyriskarbiter CLI refactoring and library consolidation, while the current turn discusses OOO (out-of-office) summary generation for parental leave\u2014completely different domains with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns KUI table alignment in PR #14133, which is completely unrelated to the current turn's discussion about OOO (out-of-office) summary generation for parental leave periods.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3226,
+      "memory_title": "KUI PR #14133 deep review and alignment patch complete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different PR (#13972 about action-table vs metadata-table) unrelated to the current turn's focus on OOO (out-of-office) summary behavior and parental leave handling.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3235,
+      "memory_title": "PR #13972 updated from action-table experiment to metadata-table production implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns PR #13972 about recently visited resources and KITT deduplication, which is entirely unrelated to the current turn's focus on OOO (out-of-office) summary handling and parental leave detection.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3318,
+      "memory_title": "Recently visited resources PR feedback resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns automated rule archival eligibility UI changes, which is completely unrelated to the current turn's focus on OOO (out-of-office) summary behavior for long leave periods.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a recently-visited feature PR with environment columns and timestamp fixes, which is completely unrelated to the current turn's focus on OOO (out-of-office) summary handling for long leave periods.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3384,
+      "memory_title": "PR #13972: recently-visited feature addresses prod/staging distinction, timestamp milliseconds, and KITT URL deduplication"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019efb4b-6c80-7460-a7f2-3fb36ffab019",
+    "source_run_id": 2250,
+    "turn_ordinal": 4
+  }
+}

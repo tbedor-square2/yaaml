@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a rule tree logic extraction refactor, but the current turn focuses on CLI commands for showing pending archivals and renaming the `run-archivals` command\u2014different concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1759,
+      "memory_title": "pyriskarbiter rule tree logic extraction (PR #534 draft)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to understanding the flag behavior for pending archivals, but the current turn focuses on CLI command naming and implementation rather than the flag default value itself.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2484,
+      "memory_title": "Pending rule archival rollout flag: empty string for unset, not far-future date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes notification job implementation and PR status, but the current turn focuses on CLI command naming for pending archivals display\u2014different concern with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2486,
+      "memory_title": "MLP-4411 notification job implementation complete; draft PR ready without wiring scheduled sends"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes database schema and validation logic for PendingRuleArchival, but the current turn focuses on CLI command naming and testing for showing pending archivals\u2014different layers of the same feature with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2616,
+      "memory_title": "PendingRuleArchival: Add rule_config_id, keep metadata, use exact targeting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents the backend RPC implementation and change-freeze guards for pending archival execution, which provides useful context for understanding the constraints on the CLI command being renamed, but the current turn focuses on CLI naming/structure rather than backend RPC details.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2622,
+      "memory_title": "RiskArbiter rule archival manual RPC requires change-freeze guard on both code paths"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a completed PR review and freeze annotation fix for the same `RunPendingRuleArchivals` RPC being discussed, providing useful context on the backend implementation and dry-run behavior, though it doesn't directly address the current turn's CLI command naming and help-text updates.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory clarifies the distinction between discovery (`archival-candidates`) and execution (`rule pending-archivals`), which is directly relevant to the user's clarification about CLI commands showing pending archivals after flag-setting, though it references the old command name that was just renamed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2757,
+      "memory_title": "archival-candidates is pre-rollout discovery only"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's discussion of CLI commands for pending archivals, but the stored memory is about the discovery helper (archival-candidates) rather than the pending-archivals command being actively worked on.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2762,
+      "memory_title": "archival-candidates discovery helper is pre-flag only, does not check LD or pending rows"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact CLI workflow the user is asking about\u2014showing pending archivals after flag set with dry-run and execute modes\u2014and matches the final solution implemented in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2780,
+      "memory_title": "CLI command workflow for pending rule archival verification after flag set"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a backend design decision about pending archival reads that is relevant context for the current turn's discussion of CLI commands for showing pending archivals, but the current turn has already moved past this architectural question to implementation details (renaming commands, testing).",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3033,
+      "memory_title": "Backend implementation: attach pending archival read to GetRulesSummaryAction"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory references draft PRs to open but provides no actionable context for the current turn, which focuses on CLI command renaming and testing for pending archivals\u2014a different phase of work already in progress.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3034,
+      "memory_title": "Draft PRs to open: tbedor/riskarbiter-rule-summary-archival-date and tbedor/kui-rule-archival-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed refactoring work (PR #543) and library extraction, but the current turn focuses on renaming a specific CLI command for pending archivals and testing it\u2014different scope and timeline.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents design decisions and implementation strategy for Risk Arbiter rule cleanup, which provides useful context for understanding the broader system architecture, but the current turn is focused on a specific CLI command rename for pending-archivals display and doesn't directly require the design decision details.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the feature flag and eligibility logic for rule archival, which is directly relevant to the user's request for CLI commands to show pending archivals after setting the flag, but lacks specific details about the CLI command naming or implementation approach being discussed in the current turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3191,
+      "memory_title": "MLP-4608: Rule archival eligibility via chaining metadata + feature flag exempt list"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes trigger archival eligibility display changes, but the current turn focuses on CLI commands for showing pending archivals after flag-setting, which is a different feature area with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3213,
+      "memory_title": "pyriskarbiter trigger archival eligibility display added to PR #553"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns UI label updates for rule archival eligibility in a triggers table/details page, while the current turn focuses on CLI command naming and backend RPC behavior for pending archivals\u2014entirely different contexts with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the feature flag and rollout strategy being discussed, but focuses on the LaunchDarkly flag setup rather than the CLI command naming/implementation that is the current turn's focus.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3368,
+      "memory_title": "Riskarbiter archival rollout: staged feature flag and script"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef566-2195-7d72-a3ad-cfb9ad00f810",
+    "source_run_id": 3019,
+    "turn_ordinal": 35
+  }
+}

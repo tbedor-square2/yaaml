@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns past PR review cleanup (inlining helpers, removing unused dependencies) while the current turn focuses on designing metadata capture for resource tracking\u2014entirely different technical contexts with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2357,
+      "memory_title": "PR #480432 review feedback: inlining and unused dependency cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Storybook screenshot staleness is unrelated to the current turn's focus on resource metadata capture strategy and implementation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2575,
+      "memory_title": "Console dev review: inspect Storybook renders after code changes; old screenshots become stale after rebase"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a specific PR rebase and deployment activity, which is completely unrelated to the current turn's focus on scanning resource types and determining metadata capture strategy.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3065,
+      "memory_title": "PR #477833 tbedor/riskarbiter-trigger-traffic: rebased and pushed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about a completed PR rebase and BUILD dependency removals is unrelated to the current turn's focus on scanning resource types and capturing metadata for a recently-visited system.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns task lifecycle metadata fixes in a database layer, while the current turn is about scanning resource types and determining what metadata to capture for a recently-visited system\u2014completely different contexts with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3135,
+      "memory_title": "Task lifecycle metadata fixes: clear stale retry fields on transitions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the Recently Visited feature implementation, resource types, metadata capture strategy, and route-matching logic that the current turn is actively refining and extending.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3137,
+      "memory_title": "KUI Recently Visited Feature: Implementation, Route Matching, and Home Page Integration"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a past refactoring project (PR #543) with completed module extractions and library consolidation, but the current turn is actively planning metadata capture strategy for a recently-visited resource system with no connection to pyriskarbiter consolidation work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed UI table alignment PR fix, which is entirely unrelated to the current turn's focus on resource metadata capture strategy and implementation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3226,
+      "memory_title": "KUI PR #14133 deep review and alignment patch complete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed PR implementation detail, but the current turn is actively planning resource metadata capture strategy and implementation approach, making this historical PR context stale and not actionable for the ongoing design decisions.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3235,
+      "memory_title": "PR #13972 updated from action-table experiment to metadata-table production implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a completed implementation decision and PR details that provide useful context for understanding the metadata capture strategy, but the current turn is actively working through resource inventory and capture criteria decisions that go beyond what the memory covers.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3239,
+      "memory_title": "Recently-visited metadata table won team feedback; update PR #13972 with new implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed PR review and CI fix, while the current turn focuses on designing metadata capture for resource pages\u2014different contexts with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3241,
+      "memory_title": "KUI PR #14133 table header alignment: review addressed, CI green"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past UI cleanup task for action-table labels, but the current turn is focused on designing metadata capture strategy for resource types\u2014different scope and phase of work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3248,
+      "memory_title": "Action-table label cleanup for recently-visited resources"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the metadata capture strategy and implementation decisions that the current turn is actively executing, including resource types, field selection criteria, and the exact design pattern (metadata merge helper, opt-in payloads, no placeholders) being applied.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3254,
+      "memory_title": "Recently Visited Metadata Capture Strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents prior PR feedback resolution on the recently visited resources feature, providing useful context about past decisions and implementations, but the current turn is focused on forward-looking resource inventory and metadata capture strategy rather than resolving those specific issues.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3318,
+      "memory_title": "Recently visited resources PR feedback resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past testing strategy for recently visited resources, but the current turn is actively implementing metadata capture decisions and resource inventory analysis with no mention of testing concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3319,
+      "memory_title": "Test strategy for feature changes: minimize integration, cover helpers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a specific PR about rule archival labeling and tooltips, which is unrelated to the current turn's focus on scanning resource types, determining metadata capture strategy, and implementing a metadata recorder system.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed PR with environment/timestamp/deduplication fixes, but the current turn is actively designing metadata capture strategy and resource inventory\u2014different scope and phase than the prior implementation details.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3384,
+      "memory_title": "PR #13972: recently-visited feature addresses prod/staging distinction, timestamp milliseconds, and KITT URL deduplication"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef68c-243f-7541-9fb6-ccd845bcf6d6",
+    "source_run_id": 3307,
+    "turn_ordinal": 24
+  }
+}

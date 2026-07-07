@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses eval data quality and memory lifecycle management in general terms, but the current turn is focused on a specific technical fix for stale `n/a` eval handling and requeue logic, making this memory tangentially related but not actionable for the immediate debugging task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a conversation segmentation architecture design, but the current turn is focused on debugging a specific eval hygiene issue (stale `n/a` handling and requeue logic), making this memory contextually misaligned and not actionable for the immediate problem.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a test plan for recall architectures, but the current turn is focused on debugging eval hygiene issues (stale `n/a` handling and requeue logic), which is orthogonal to the hybrid recall matching strategy.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes segment oracle architecture and design patterns, but the current turn focuses on debugging stale `n/a` eval handling and requeue logic\u2014a different operational concern not addressed by this architectural overview.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2692,
+      "memory_title": "Segment oracle architecture: tables, API, backfill design"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the segment/task-state drift failure mode that the current turn is actively investigating and fixing, though the turn has now progressed to specific implementation details (stale `n/a` eval handling) beyond the memory's scope.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2751,
+      "memory_title": "Recall quality bottleneck: segment and task-state drift over session length"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly identifies segment/task-state drift as the root cause, which matches the current turn's investigation trajectory and provides actionable context for the ongoing debugging of stale `n/a` eval handling and requeue logic.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2758,
+      "memory_title": "Recall quality failures are segment/task-state drift, not memory quality"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed task-state deactivation fix, but the current turn is focused on eval hygiene, stale `n/a` handling, and requeue logic\u2014a different problem domain with no direct connection to task-state memory deactivation.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2928,
+      "memory_title": "Stale task-state deactivation completed and effective"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses segment rollover and task-state lifespan management, but the current turn is focused on eval hygiene, stale `n/a` handling, and requeue logic\u2014a different failure mode that doesn't directly benefit from this segment-rollover context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2965,
+      "memory_title": "Stale task-state lifespan: force segment rollover for long non-identity sessions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the ongoing recall-quality investigation, documenting prior fixes for false positives and stale eval handling, though the current turn is now focused on a different aspect (n/a requeue logic and rerun blocking).",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides directly relevant baseline metrics on recall quality and failure modes that contextualize the current debugging session's focus on eval hygiene and stale `n/a` handling.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses segment/task-fit reranking limitations from a past evaluation, but the current turn focuses on fixing stale `n/a` eval hygiene and requeue logic\u2014a different problem domain with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3195,
+      "memory_title": "Segment/task-fit reranking is limited; segment summaries needed for generation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past experiments log and lessons backlog, but the current turn is actively debugging a specific eval hygiene issue (stale `n/a` handling and requeue logic), making the historical experiment summary tangential rather than actionable.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a past segment/task-fit experiment with baseline metrics, but the current turn is focused on a specific eval hygiene bug (stale `n/a` handling and requeue logic) unrelated to the 5x5 tradeoff analysis.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses segment/task-fit gating and ranking strategies from a prior experiment, but the current turn is focused on a specific operational issue (stale `n/a` eval handling and requeue logic), making the memory stale and tangential rather than actionable.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses YAAML recall refactoring and hardcoded phrase removal, but the current turn focuses on eval hygiene, stale `n/a` handling, and requeue logic\u2014distinct technical problems with no direct overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses recall quality issues and wrong-context problems that are relevant to the current turn's focus on eval hygiene and ranking failures, though the current turn has progressed to specific `n/a` handling and segment drift rather than the broader wrong-context issue.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past corpus analysis and measurement findings, but the current turn is focused on a specific live debugging issue (stale `n/a` eval handling in run 3084), making the historical evidence mostly stale and not actionable for the immediate problem.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed persuasion document for internal buy-in, but the current turn is actively debugging a specific eval hygiene issue (stale `n/a` handling and requeue logic), which requires technical implementation details rather than high-level impact reporting.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3376,
+      "memory_title": "Memory techniques report: technical persuasion doc for internal eng buy-in"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3110,
+    "turn_ordinal": 318
+  }
+}

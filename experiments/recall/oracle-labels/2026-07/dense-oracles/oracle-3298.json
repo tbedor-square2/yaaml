@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current task of updating PR screenshots, though the conversation shows the user is already executing the work and may have their own screenshot approach in progress.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1617,
+      "memory_title": "Prefer Storybook for KUI visual samples over live dev server"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is useful context since the current turn explicitly mentions 'update the pr and screenshots', and the memory provides specific guidance on where and how to include screenshots in the PR body, though it requires minor filtering to apply the template format correctly.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1713,
+      "memory_title": "Console repo PR review guidelines require screenshot section in PR body"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes tuicr dashboard navigation fixes, which is completely unrelated to the current turn's focus on converting a home card to KUI's TanStack table with filtering and updating PR screenshots.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1776,
+      "memory_title": "tuicr dashboard and PR review navigation redesign"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed MLP-4409/4410 PRs with LaunchDarkly rollout handling, which is unrelated to the current turn's focus on converting a home card table to KUI's TanStack/KuiTable path with screenshots.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the current task of updating PR screenshots after code changes, providing specific guidance on regenerating Storybook renders and comparing against old images to identify actual UI changes.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2575,
+      "memory_title": "Console dev review: inspect Storybook renders after code changes; old screenshots become stale after rebase"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the current turn's explicit request to 'update the pr and screenshots' by providing the exact workflow (Storybook, agent-browser, S3 upload, GitHub comment) needed to refresh PR screenshots after code changes.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3051,
+      "memory_title": "PR screenshot refresh workflow with Storybook"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed KUI table alignment PR, but the current turn is about converting a home card to use KuiTable with resource-type filtering and updating screenshots\u2014a different scope and PR.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3226,
+      "memory_title": "KUI PR #14133 deep review and alignment patch complete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the previous metadata-table implementation and team decision, which provides useful context for understanding the refactoring to KUI's TanStack/KuiTable path, but lacks details about the new standardized approach being implemented.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3233,
+      "memory_title": "Square Console KUI recently-visited feature: metadata table direction won team feedback"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the PR branch, component migration, and test status that the current turn is actively updating with new screenshots and refinements.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3235,
+      "memory_title": "PR #13972 updated from action-table experiment to metadata-table production implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context about PR #13972 and the metadata table implementation, but the stored memory describes the earlier Fluent Table approach while the current turn is refactoring to KUI's TanStack/KuiTable path\u2014useful background but requires filtering for the new direction.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3239,
+      "memory_title": "Recently-visited metadata table won team feedback; update PR #13972 with new implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a different PR (#14133) about table header alignment and Kochiku CI, while the current turn focuses on converting a home card table to KUI's TanStack path with filtering and screenshots\u2014distinct scope and context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3241,
+      "memory_title": "KUI PR #14133 table header alignment: review addressed, CI green"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes past label cleanup work on a resource table, but the current turn focuses on converting to KUI's TanStack table path with filtering and sorting\u2014different scope and implementation details.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3248,
+      "memory_title": "Action-table label cleanup for recently-visited resources"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the recently-visited feature's prior design (Fluent table with dropdown), which is directly relevant context for understanding the current refactor to KUI's TanStack/KuiTable path, but lacks details about the new implementation specifics being executed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3250,
+      "memory_title": "KUI recently-visited feature: switch to metadata table with client-side tracking"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes PR #13972 feedback resolution for a recently-visited resources feature, but the current turn is about converting a home card table to use KUI's TanStack/KuiTable with resource-type filtering\u2014a different scope and implementation approach with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3318,
+      "memory_title": "Recently visited resources PR feedback resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns PR #14151 about automated rule archival eligibility labels, while the current turn is about converting a home card table to KUI's TanStack/KuiTable path with resource-type filtering\u2014completely different features and PRs with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different PR (#13972) focused on environment columns and timestamp fixes, while the current turn is about converting the home card to use KUI's TanStack table with resource-type filtering\u2014distinct scope and implementation.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3384,
+      "memory_title": "PR #13972: recently-visited feature addresses prod/staging distinction, timestamp milliseconds, and KITT URL deduplication"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef68c-243f-7541-9fb6-ccd845bcf6d6",
+    "source_run_id": 3298,
+    "turn_ordinal": 19
+  }
+}

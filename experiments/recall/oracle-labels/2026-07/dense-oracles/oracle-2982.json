@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a work-review skill for PR/ticket analysis, but the current turn is about creating a specific Linear ticket with a policy document\u2014different context and no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1721,
+      "memory_title": "Codex skill creation: work-review-updates for PR and ticket review"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses best practices for organizing work tracking links in design docs, but the current turn is about creating a Linear ticket with specific project/doc references\u2014a different operational context that doesn't require the consolidation or GraphQL retrieval strategy described.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1729,
+      "memory_title": "Work tracking links strategy: consolidate into PR/doc section, retrieve from Linear GraphQL"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a PR-to-ticket reconciliation workflow, but the current turn is about creating a single Linear ticket for a signal lifecycle policy\u2014a straightforward ticket creation task with no PR reconciliation involved.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1767,
+      "memory_title": "Work-review-updates workflow: PR-to-ticket reconciliation process"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Lookout project status templates is unrelated to creating a Linear ticket for signal lifecycle policy documentation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1868,
+      "memory_title": "Lookout project update template: Cycle 2 Status, Key Update, Blockers/Risks, Leadership Ask"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different rule management workflow (archival/reactivation) in a different domain (square-risk-engineering), while the current turn is about creating a signal lifecycle policy ticket; minimal overlap beyond both being in the same MLP project.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1870,
+      "memory_title": "Rule archival and reactivation workflow for square-console-kui-trigger-traffic"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory describes a specific signal generator rolloff ticket (MLP-2470) with migration patterns, but the current turn is about creating a new ticket for signal lifecycle policy documentation\u2014different scope and project, making this context mostly irrelevant.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1968,
+      "memory_title": "Linear rolloff ticket for payroll signal generator"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes PR-to-ticket reconciliation and Linear state management workflows, but the current turn is a straightforward ticket creation task that doesn't require reconciliation logic, snapshot collection, or deduplication strategies.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1982,
+      "memory_title": "PR-to-ticket reconciliation workflow and Linear state management"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory describes a PR-to-ticket reconciliation workflow, but the current turn is about creating a single Linear ticket for a signal lifecycle policy\u2014a straightforward ticket creation task with no PR review or reconciliation involved.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1996,
+      "memory_title": "PR-to-ticket reconciliation workflow: use work-review-updates skill with 14-day snapshot"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is useful context about Linear issue creation capabilities and attachment support, but the current turn already successfully completed the ticket creation, making the memory marginally less actionable now than it would have been before execution.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1998,
+      "memory_title": "Linear GraphQL project creation available; issue creation via save-issue supports attachments"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Java package splitting project unrelated to the current turn's signal lifecycle policy ticket creation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2001,
+      "memory_title": "Java package splitting project with three issues and audit-log follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a deprecated signal inventory analysis, which is tangentially related to signal lifecycle but focuses on historical inventory parsing rather than the current task of writing and announcing a signal lifecycle policy.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2275,
+      "memory_title": "Full deprecated signal inventory: parser output validation and evidence sourcing"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Provides relevant project context and status, but the stored memory describes past phases while the current turn is creating a new ticket for signal lifecycle policy announcement\u2014useful background but requires filtering to the specific new task.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2354,
+      "memory_title": "Online ML Model/Feature Rule Cleanup project status and phase"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed notification job implementation (MLP-4411), which is unrelated to the current task of creating a ticket for signal lifecycle policy documentation.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2486,
+      "memory_title": "MLP-4411 notification job implementation complete; draft PR ready without wiring scheduled sends"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory discusses signal generator migration/removal tickets in a different Linear project (MLP), not directly relevant to creating a signal lifecycle policy ticket in the cleanup project.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2650,
+      "memory_title": "Outstanding signal generators migration status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes Cycle 2 status reporting templates and blockers for the cleanup project, but the current turn is about creating a specific ticket for signal lifecycle policy\u2014different scope and not actionable for this task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2941,
+      "memory_title": "Online ML ModelFeatureRule cleanup project: Cycle 2 status template and blockers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly references MLP-4562 (the ticket just created) and provides context on its current status and related work, though it's slightly stale and doesn't contain actionable next steps for the policy writing itself.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2942,
+      "memory_title": "MLP Cycle 2: ticket progress mapping (week of 2026-06-22)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns pyriskarbiter library refactoring and CLI consolidation, which is completely unrelated to creating a Linear ticket for signal lifecycle policy documentation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef19d-3024-7071-b441-8893b0ecdb99",
+    "source_run_id": 2982,
+    "turn_ordinal": 40
+  }
+}

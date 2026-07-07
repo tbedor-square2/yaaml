@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes PR workflow mechanics (squash, rebase, push), but the current turn is a deep code review analyzing correctness issues in setup_runway.py; the workflow procedural details are not actionable for evaluating the review findings.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1722,
+      "memory_title": "forge-signalsmith PR workflow: squash, verify, then force-with-lease push"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses deletion PR validation and repair budgeting, which is orthogonal to the current deep PR review of squareup/karl-app#2386 focused on Forge pipeline config deduplication and non-additive drift handling.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1794,
+      "memory_title": "Gate deletion PRs on clean validation before creation; budget repair attempts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about PR description review and preview link updates, but the current turn is executing a deep code review of PR #2386 with specific findings about pipeline config handling and drift\u2014completely different context.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2185,
+      "memory_title": "PR description review workflow: verify accuracy and update preview links"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Jest/ESLint/Kochiku workflow for web code fixes, but the current turn is a deep PR review of Python Forge onboarding code with dependency tracing and correctness findings\u2014completely different context and tooling.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2231,
+      "memory_title": "PR review comment response workflow for code fixes"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns PR #480432 with inlining and dependency cleanup, while the current turn is a deep PR review of squareup/karl-app#2386 focused on Forge onboarding pipeline config issues\u2014completely different PR, codebase context, and review findings.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2357,
+      "memory_title": "PR #480432 review feedback: inlining and unused dependency cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns MLP-4409/4410 stack and LaunchDarkly rollout handling, which is completely unrelated to the current deep PR review of squareup/karl-app#2386 (Forge onboarding pipeline config deduplication).",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about backporting changes in stacked PRs is stale and contextually misaligned; the current turn is executing a deep PR review on a specific PR (squareup/karl-app#2386) with concrete findings about pipeline config handling, not about managing stacked PR workflows.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2492,
+      "memory_title": "Backport changes from child PRs to parent PRs to reduce reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about stacked PR back-propagation discipline is unrelated to the current deep PR review of squareup/karl-app#2386, which focuses on Forge pipeline configuration correctness issues.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2495,
+      "memory_title": "Back-propagation discipline: evaluate each stacked PR for changes that reduce reviewer churn in parent PRs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes unrelated draft PRs about rule archival dates, while the current turn is actively conducting a deep PR review on squareup/karl-app#2386 focused on Forge onboarding pipeline config issues.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3034,
+      "memory_title": "Draft PRs to open: tbedor/riskarbiter-rule-summary-archival-date and tbedor/kui-rule-archival-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a different PR (#521, forge-signalsmith lifecycle refactor) and is unrelated to the current deep PR review of squareup/karl-app#2386 (Forge pipeline config handling), making it actively distracting rather than useful.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3044,
+      "memory_title": "forge-signalsmith PR #521: lifecycle refactor with BigQuery parameters follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a completely different PR (#483601) about ruleconfig rebasing and BUILD dependencies, with no relevance to the current deep PR review of squareup/karl-app#2386 focused on Forge onboarding pipeline config issues.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns pyriskarbiter library refactoring and CLI consolidation, which is completely unrelated to the current deep PR review of squareup/karl-app#2386 focusing on Forge onboarding pipeline configuration issues.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a Homebrew formula migration for sq-riskarbiter and is entirely unrelated to the current deep PR review of squareup/karl-app#2386's Forge onboarding pipeline configuration issues.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3157,
+      "memory_title": "homebrew-formulas PR #4844: sq-riskarbiter uvx wrapper migration\u2014mlds-core#545 blocker and publish workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses infrastructure migration pain points for Vertex/Prefect, but the current turn is a deep PR review of a specific Karl-app PR (#2386) about Forge pipeline config handling\u2014different context and not actionable for this review.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3276,
+      "memory_title": "Vertex pain motivating infrastructure migration: headless auth brittleness, expensive git/agent work, PR size limits, token expiry, slow Bazel, low throttle hiding capacity concerns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past successful onboarding event, but the current turn is actively performing a deep PR review of issue #2386 with specific correctness findings about duplicate pipeline configs and non-additive drift\u2014different scope and context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3297,
+      "memory_title": "Runway pipeline onboarded to forge-signalsmith"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact PR (squareup/karl-app#2386) and issue being deep-reviewed in the current turn, including the duplicate YAML problem, fix strategy, and additive merge approach that are central to the review findings.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3298,
+      "memory_title": "KITT Forge onboarding duplicate YAML fix: additive merge strategy"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f1eca-af3a-7b80-bb51-f919f44fb758",
+    "source_run_id": 3318,
+    "turn_ordinal": 4
+  }
+}

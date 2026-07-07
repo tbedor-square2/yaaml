@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a recall filtering strategy with task-key matching that directly relates to the current turn's focus on backfilling topic keys and improving memory recall quality, though it addresses a complementary (not identical) aspect of the recall system.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses backfilling modern features for legacy models with point-in-time correctness, which is directly relevant to the current turn's focus on backfilling segment topic keys into existing memories, though the memory addresses a broader model replay context rather than the specific task-key update being implemented.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2247,
+      "memory_title": "Backfilled modern features for legacy model replay are viable if point-in-time correct and trained on high-fire windows"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed 5x5 experiment on recall candidate families, but the current turn focuses on backfilling existing memories with segment topic keys and extending the metadata refresh logic\u2014a different technical task with no overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2350,
+      "memory_title": "Recall candidate families 5x5 experiment: top signals identified"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a test plan for recall quality evaluation using hybrid architectures, which is directly relevant to the current turn's focus on improving recall quality and backfilling existing memories with segment topic keys, though it lacks specifics about the current implementation details being discussed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about eval rerun deduplication is tangentially related to metrics/testing but does not address the current turn's focus on backfilling memory task keys and segment topic keys into the existing corpus.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3088,
+      "memory_title": "Ignore superseded eval reruns in metrics"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed recall-quality fixes from past commits, but the current turn is actively working on a different recall improvement (topic-key backfilling for existing memories), making this historical context mostly stale and tangential.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes eval metrics filtering for rerun siblings, which is tangentially related to recall quality work but does not directly address the current turn's focus on backfilling segment topic keys or extending the metadata refresh path.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3109,
+      "memory_title": "YAAML: eval metrics hygiene\u2014ignore superseded rerun siblings (commit 416f44e)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed refactoring of pyriskarbiter CLI modules into library code, which is entirely unrelated to the current turn's focus on memory recall quality, segment topic keys, backfill operations, and YAAML testing.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides directly relevant baseline metrics for evaluating the recall quality improvements being implemented in the current turn, though it lacks specifics about which exact changes are being tested.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses segment/task-fit reranking limitations from a past evaluation, but the current turn focuses on backfilling existing memories with topic keys and extending the metadata refresh logic\u2014different technical concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3195,
+      "memory_title": "Segment/task-fit reranking is limited; segment summaries needed for generation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a 5x5 experiment workflow and metrics runner setup, but the current turn focuses on backfilling memory task keys and patching the metadata refresh logic\u2014different technical concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3198,
+      "memory_title": "YAAML 5x5 experiment workflow: orchestrated metrics runner and prompt"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents experimental findings and metrics on recall quality improvements, which is directly relevant to the current turn's focus on recall quality and backfilling memories with topic keys, though it lacks specific details about the current backfill implementation work.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a past experiment on segment/task-fit recall strategies, but the current turn is focused on implementing a backfill mechanism for topic keys in existing memories\u2014a different technical task with no direct overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses past experiments with task-fit gates and segment ranking, but the current turn is focused on implementing a backfill mechanism for topic keys in existing memories\u2014a different technical problem with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a refactoring to remove hardcoded topic phrases and tool task keys, which is directly related to the current turn's work on backfilling segment topic keys and improving recall quality, though the current turn focuses on implementation details rather than the design rationale.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a past recall quality regression and its root causes, but the current turn is focused on implementing a backfill mechanism for topic keys in the memory system\u2014a different technical concern with no direct overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant context about corpus quality metrics and measurement findings that inform the ongoing recall quality work, though it lacks specifics about the current backfill implementation details being discussed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3267,
+    "turn_ordinal": 399
+  }
+}

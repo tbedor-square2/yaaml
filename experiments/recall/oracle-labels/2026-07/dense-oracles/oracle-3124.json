@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context about the mux rollout flag's partial state and stale rules, though the current turn focuses on a specific payroll generator risk assessment rather than the broader audit findings.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1881,
+      "memory_title": "RiskArbiter LaunchDarkly audit findings: mux rollout flag stuck in partial state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly provides the concrete removal steps and validation procedures needed to execute the decision just confirmed in the current turn about removing the payroll generator.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2649,
+      "memory_title": "Payroll signal generator removal steps after Mux rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Useful context clarifying the distinction between routing and parity flags, though the current turn focuses on confidence about missing Mux feature/domain/schema rather than flag mechanics.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2785,
+      "memory_title": "Mux cutover flag vs. parity flag are separate concerns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the core question about Mux feature/domain/schema confidence by explaining that no additional feature-domain work is needed if staging is already cut over, and provides the exact technical mechanism (MuxMigrationUtil routing, fallback logic) that validates the current turn's conclusion that the risk is low for payroll_run_update_connected_users.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2790,
+      "memory_title": "RA-to-Mux migration requires feature-domain wiring but not additional work if staging is cut over"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly provides staging evidence and production metrics that validate the confidence claim about Mux feature/domain/schema being present and working for TD_11, with specific failure rates and fallback behavior data supporting the risk assessment.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2791,
+      "memory_title": "Strong staging evidence for TD_11 Mux cutover; missing-signal fallback not observed; recommend percentage rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides directly relevant validation procedures for Mux cutover safety, though the current turn focuses on confidence assessment for an existing generator rather than enabling a new one.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2794,
+      "memory_title": "Safe Mux cutover validation: staging evidence plus gradual rollout with metrics watch"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the current turn's discussion about confidence in the Mux feature/domain/schema for TD_11/payroll_run_update_connected_users, providing concrete staging evidence, production metrics, and a recommended rollout strategy that aligns with the conversation's risk assessment.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2801,
+      "memory_title": "RA Mux cutover for TD_11/payroll_run_update_connected_users: staged evidence is strong; percentage rollout strategy recommended"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the core confidence question about Mux feature/domain/schema being in place for TD_11 payroll, providing the foundational evidence that the flag flip should work without additional domain configuration.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2802,
+      "memory_title": "Cutover flag only changes RA routing; feature domain is a separate concern but already in place for TD_11 payroll"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to assessing confidence in the Mux migration for TD_11 payroll_run_update, providing quantitative stability data that supports the low-risk conclusion, though it focuses on flagging rates rather than the feature/domain/schema path existence already established in the current turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2816,
+      "memory_title": "TD_11 payroll_run_update flagging rate post-Mux cutover: stable within expected band"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the Mux feature/domain/schema discussion for TD_11 payroll_run_update, providing concrete evidence of Mux service interaction and timeout behavior, though the stored memory focuses on timeout mechanics rather than feature path existence.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2820,
+      "memory_title": "Mux feature-fetch timeout causing DLQ backlog on TD_11 payroll_run_update"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to TD_11 Mux feature/domain/schema confidence assessment, providing concrete failure data and monitoring context, though it focuses on timeout/missing-signal failures rather than the feature path existence already established in the current turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2894,
+      "memory_title": "TD_11 Mux timeout/missing-signal failures during rollout monitoring"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly summarizes the exact evidence and conclusion being discussed in the current turn regarding Mux cutover confidence and low feature/domain/schema risk for payroll_run_update_connected_users.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2900,
+      "memory_title": "Payroll generated signal (payroll_run_update_connected_users) cutover to Mux is complete and stable"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly summarizes the exact evidence and conclusion being discussed in the current turn about Mux feature/domain/schema confidence for the payroll generator.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2910,
+      "memory_title": "RiskArbiter Mux cutover is production-verified and ready for permanent removal"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the cleanup mechanics discussion (stale parity/metrics removal), but the stored memory describes a completed deletion while the current turn is still evaluating whether to proceed with similar cleanup in a follow-up PR.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2924,
+      "memory_title": "MuxParityChecker became stale after generator migration; safe to delete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory documents related cleanup work (renaming, removing stale comments, unused deps) from the same Mux migration effort, providing useful context on parallel refactoring decisions and follow-up patterns, though it doesn't directly address the current turn's confidence assessment about the missing mux feature/domain/schema risk.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a related refactoring (renaming MuxSignalGeneratorMigrationUtil to MuxFeatureTypecastUtil) that provides useful context about the post-signal-generator-deletion cleanup effort, but the current turn focuses on risk assessment for the payroll generator specifically rather than the helper utility rename itself.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3361,
+      "memory_title": "riskarbiter Mux helper rename to reflect post-signal-generator deletion"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ed6df-0d7b-7210-b6eb-9da62527d7f1",
+    "source_run_id": 3124,
+    "turn_ordinal": 138
+  }
+}

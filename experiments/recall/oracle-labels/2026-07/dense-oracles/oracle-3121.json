@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses FlowModule migration blockers and production dependencies, which is unrelated to the current discussion about trigger field extraction principles and freeze registration architecture.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1571,
+      "memory_title": "FlowModule migration blockers identified"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses audit response shape and RPC categorization by trigger count, but the current turn focuses on architectural principles for trigger field extraction and module-level vs. class-level placement decisions, which are orthogonal concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1672,
+      "memory_title": "Multi-trigger RPC capability determines audit response shape"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses refactoring ChangeUtil responsibilities into a dedicated service, which is architecturally unrelated to the current discussion about whether to move trigger-field extractors into action classes versus keeping them module-level.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1673,
+      "memory_title": "ChangeUtil mixed responsibilities should extract to dedicated service"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses RuleNameReferenceUtil package placement and shared response mapping, which is orthogonal to the current discussion about whether to blanket move trigger field extractors into action classes versus keeping them module-level.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1676,
+      "memory_title": "RuleNameReferenceUtil location is correct for shared RPC response mapping"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses reusing existing filter types across operations, but the current turn focuses on whether to move trigger extraction logic into classes versus keeping it module-level\u2014a different architectural concern.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2195,
+      "memory_title": "Reuse existing filter/helper types across similar operations"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the architectural decision being discussed\u2014whether to move trigger extraction into action classes versus keeping it at module level\u2014and provides the exact principle-based guidance (simple scalar vs. nested field vs. domain state discovery) that the current turn is explaining.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2889,
+      "memory_title": "PR #483904: Code freeze allowlist factoring concern"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly explains the deferToBody pattern and principles that the current turn is discussing as a solution for trigger extraction complexity.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2958,
+      "memory_title": "Riskarbiter code freeze allowlist: deferToBody naming and semantics"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses trigger eligibility mapper injection patterns, which is orthogonal to the current discussion about whether to move trigger field extraction logic into action classes versus keeping it module-level.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2985,
+      "memory_title": "Trigger eligibility mapper must stay injected in feed and RPC paths"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses separation of concerns for eligibility logic, which shares a similar architectural principle with the current discussion about not blanket-moving extraction logic into classes, but addresses a different domain (archival eligibility vs. trigger field extraction).",
+      "judge_score": "3",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2994,
+      "memory_title": "Keep eligibility logic separate from calculator"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses proto serialization reuse and field dependencies, which is tangential to the current discussion about where to place trigger extraction logic (module-level vs. class-level) and the principles for deciding between them.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2995,
+      "memory_title": "TriggerDefsFeedImpl reuses ListTriggerDefsRpc.toProto for TriggerDef serialization"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses architectural coupling for a specific eligibility class, while the current turn addresses a general principle for trigger field extraction placement\u2014different concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3001,
+      "memory_title": "Keep AutomatedRuleArchivalTriggerEligibility as its own class, not a method on calculator"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses proto mapper splitting to avoid feed dependencies, which is orthogonal to the current discussion about whether to move trigger extraction logic into action classes versus keeping it module-level.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3003,
+      "memory_title": "Split proto mappers to avoid unwanted feed dependencies"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a similar architectural principle (keeping logic separate to avoid unnecessary coupling and dependencies) that parallels the current discussion about where to place trigger extraction logic, though it addresses a different component.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3018,
+      "memory_title": "AutomatedRuleArchivalTriggerEligibility helper class justification"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses rule archival eligibility and proto field exposure, which is unrelated to the current discussion about trigger field extraction principles and module-level vs. class-level lambda placement.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3129,
+      "memory_title": "Rule archival eligibility: metadata-driven logic and proto exposure"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Risk Arbiter rule cleanup and reactivation design, which is entirely unrelated to the current turn's discussion about trigger field extraction patterns and freeze infrastructure architecture.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a different design decision (eligibility helper class vs calculator method) that is tangentially related to code organization but does not directly address the current discussion about whether to move trigger extraction logic into action classes versus keeping it module-level.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3331,
+      "memory_title": "Shared eligibility helper design decision: own class vs calculator method"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f1415-a86f-7a43-af57-cece721883d4",
+    "source_run_id": 3121,
+    "turn_ordinal": 5
+  }
+}

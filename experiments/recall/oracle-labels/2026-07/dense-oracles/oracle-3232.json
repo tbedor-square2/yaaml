@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes unrelated PR cleanup (inlining helpers, removing unused fields) while the current turn focuses on decoupling BigQuery-specific code from generic verification logic\u2014different architectural concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2357,
+      "memory_title": "PR #480432 review feedback: inlining and unused dependency cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed PRs for archival storage and dry-run features, which is unrelated to the current discussion about decoupling BigQuery-specific code and making the verification layer generic.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed PR review for manual rule archival (MLP-4410), which is entirely unrelated to the current discussion about decoupling BigQuery-specific code and making the verification layer generic.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the refactoring work being discussed\u2014decoupling BigQuery-specific code from generic verification logic\u2014and shows the exact solution approach (generic parameter model in verification layer, BigQuery SDK imports isolated to adapter) that was implemented.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3026,
+      "memory_title": "forge-signalsmith: PR #521 refactors lifecycle PR generation shared helpers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact refactoring work being discussed\u2014decoupling BigQuery-specific code by moving SDK imports to the adapter and using generic SQL parameters in the verification layer, which is precisely what the current turn is requesting.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3044,
+      "memory_title": "forge-signalsmith PR #521: lifecycle refactor with BigQuery parameters follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about a completely different PR (riskarbiter-trigger-traffic) involving Datadog metrics and Kochiku builds, while the current turn discusses decoupling BigQuery-specific code in usage_verification.py\u2014no overlap or relevance.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3065,
+      "memory_title": "PR #477833 tbedor/riskarbiter-trigger-traffic: rebased and pushed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about a completely different PR (BUILD dependency removals and rebasing) with no relevance to the current turn's discussion about decoupling BigQuery-specific code and creating generic SQL parameters.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past refactoring of pyriskarbiter modules and CLI consolidation, but the current turn is about decoupling BigQuery-specific code from verification logic\u2014a different architectural concern in a different codebase.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a Homebrew formula migration and PyPI publishing workflow, which is completely unrelated to the current turn's discussion about decoupling BigQuery-specific code and creating generic SQL parameter abstractions.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3157,
+      "memory_title": "homebrew-formulas PR #4844: sq-riskarbiter uvx wrapper migration\u2014mlds-core#545 blocker and publish workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about deprecated signal audit workflows and Dumbo cleanup gates, which is unrelated to the current turn's discussion about decoupling BigQuery-specific code and creating generic SQL parameter abstractions.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3181,
+      "memory_title": "Deprecated signal audit: inventory, mapping, backfill evidence, ownership classification, and Dumbo cleanup gates"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a frontend/backend sync for an archival date field, while the current turn discusses decoupling BigQuery-specific code from verification logic\u2014completely different contexts and projects.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3217,
+      "memory_title": "KUI PR #14118 backend/frontend sync verified; frontend safe to merge before backend deploy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about a KUI table alignment PR and is completely unrelated to the current turn's discussion about decoupling BigQuery-specific code and creating generic SQL parameters.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3226,
+      "memory_title": "KUI PR #14133 deep review and alignment patch complete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a UI component PR update (action-table to metadata-table) which is completely unrelated to the current turn's discussion about decoupling BigQuery-specific code and creating generic SQL parameters.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3235,
+      "memory_title": "PR #13972 updated from action-table experiment to metadata-table production implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about UI table header alignment in a different PR, completely unrelated to the current discussion about decoupling BigQuery-specific code and creating generic SQL parameters.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3241,
+      "memory_title": "KUI PR #14133 table header alignment: review addressed, CI green"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes Vertex infrastructure pain points and migration rationale, but the current turn is about decoupling BigQuery-specific code from verification logic\u2014different architectural concern with no overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3276,
+      "memory_title": "Vertex pain motivating infrastructure migration: headless auth brittleness, expensive git/agent work, PR size limits, token expiry, slow Bazel, low throttle hiding capacity concerns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR #14151 (UI label and tooltip updates) is completely unrelated to the current turn's discussion about decoupling BigQuery-specific code and creating generic SQL parameter abstractions.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory is about Riskarbiter mux helper renaming and signal-generator cleanup, completely unrelated to the current discussion about decoupling BigQuery-specific code and making verification logic generic.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f0025-3f91-7922-81e4-7bc8cb3def79",
+    "source_run_id": 3232,
+    "turn_ordinal": 15
+  }
+}

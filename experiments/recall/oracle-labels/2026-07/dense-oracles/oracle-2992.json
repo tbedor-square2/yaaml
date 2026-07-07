@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses labeling clarity for cost/storage reporting, but the current turn is asking about percentage of unused features/library coverage\u2014different metrics and contexts.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1642,
+      "memory_title": "Ambiguous cost labels: clarify what 'retained storage' means for deleted scope"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Envoy control-plane service-discovery logs is completely unrelated to the current query about unused library percentages (online vs. offline).",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1879,
+      "memory_title": "Envoy-control service-discovery endpoint watch logs indicate control-plane churn, not app slowness"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes Datadog metric structure and query mechanics, but the current turn asks for percentage calculations already provided in prior context; this technical infrastructure detail does not help answer the specific '%unused' question.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2011,
+      "memory_title": "Dumbo Datadog metric structure and timebound queries"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant methodology for classifying offline production usage, but the current turn asks for a direct percentage answer that has already been provided in the conversation context.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2072,
+      "memory_title": "Offline signal production-use classification: Dumbo shadow logs + Sourcegraph layering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory provides relevant catalog baseline (4.14M extensions, ~814k unused) and cost context, but the current turn asks specifically about percentage unused online/offline which the assistant already answered directly; memory adds supporting context but requires filtering to extract the relevant unused-count metric.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2229,
+      "memory_title": "Beacon/Dumbo spend estimates and catalog baselines"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes deprecated signal inventory parsing and categorization, which is unrelated to the current query about unused library percentages (online vs. offline).",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2275,
+      "memory_title": "Full deprecated signal inventory: parser output validation and evidence sourcing"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Dumbo availability metadata and fraud-regime continuity, but the current turn is asking for specific percentage calculations of unused features (19.7% online, 20.4% offline traffic), which the memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2277,
+      "memory_title": "Dumbo as primary backfill availability source, with fraud-regime continuity as separate concern"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Blockcell site for partition analysis and is entirely unrelated to the current query about unused percentages for online/offline feature-extension coverage.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2508,
+      "memory_title": "Blockcell site for removable partitions analysis with shareable trigger filters and cache-busted assets"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about TD_11 payroll latency and timeouts is completely unrelated to the current query about unused library percentages (online vs. offline).",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2632,
+      "memory_title": "Served TD_11 payroll evaluation: no timeout errors, p99 latency 4.3s under 10s caller timeout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about TD_11 payroll latency and timeouts is completely unrelated to the current query about unused library percentages (online vs. offline).",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2641,
+      "memory_title": "TD_11 payroll current production latency and timeout state (post-refactor)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly explains the methodological distinction between Datadog caller traffic and BigQuery feature-extension coverage that the assistant is using to justify why 20.4% traffic-share cannot be reported as '% library unused offline.'",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2737,
+      "memory_title": "Dumbo offline usage data: BigQuery join needed, not Datadog caller traffic"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly provides the feature-extension-level Dumbo unused percentage (~64%) that the current turn is asking about, with matching methodology and timeframe context.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2738,
+      "memory_title": "Offline Dumbo feature coverage: ~64% unused at featureExtId grain (90d, known external callers only)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context explaining why feature-extension vs. signal-definition grain matters for interpreting unused percentages, though the stored memory's specific numbers (22% offline, 64% online) differ from the current turn's figures and require reconciliation.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2739,
+      "memory_title": "Feature coverage metrics have two grains: featureExtId (inflated by variants) vs signalDefinition (policy-language appropriate)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about TD_11 monitoring procedures and metric interpretation is unrelated to the current query about unused library percentages (online vs. offline).",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2859,
+      "memory_title": "TD_11 monitoring: repeated polling procedure and stale metric interpretation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns Risk Arbiter partition metadata and cleanup workflows, which is entirely unrelated to the current query about unused library percentages (online vs. offline feature-extension coverage).",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3151,
+      "memory_title": "Risk Arbiter no-traffic cleanup: partition metadata enrichment, evidence taxonomy, and execution status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes deprecated signal inventory and cleanup gates, but the current turn asks about percentage unused, which the assistant already answered directly (19.7% online, 20.4% offline traffic); this memory provides infrastructure context unrelated to the specific percentages being discussed.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3181,
+      "memory_title": "Deprecated signal audit: inventory, mapping, backfill evidence, ownership classification, and Dumbo cleanup gates"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory discusses Snowflake data availability and bridge options, but the current turn asks for specific unused percentages already answered in the conversation context; the memory is stale infrastructure context, not actionable for the immediate question.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3275,
+      "memory_title": "Snowflake does not yet have feature-level usage tables; BigQuery remains source for deprecation eligibility, compact sync tables would bridge"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef19d-3024-7071-b441-8893b0ecdb99",
+    "source_run_id": 2992,
+    "turn_ordinal": 48
+  }
+}

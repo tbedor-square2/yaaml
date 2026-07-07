@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory is about EmailAge Beacon-to-Mux migration preconditions, completely unrelated to the current discussion about MuxMigrationUtil's remaining responsibilities and whether duplicate SignalDef resolution is still needed.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1662,
+      "memory_title": "Mixtape EmailAge Beacon-to-Mux migration precondition"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes payroll signal generator removal steps, but current turn focuses on MuxMigrationUtil's remaining responsibilities and whether duplicate SignalDef resolution is still needed\u2014different scope and not actionable for this discussion.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2649,
+      "memory_title": "Payroll signal generator removal steps after Mux rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses flag semantics and routing cutover concerns, which is tangential to the current discussion about MuxMigrationUtil's remaining responsibilities and whether duplicate SignalDef resolution is still relevant post-migration.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2785,
+      "memory_title": "Mux cutover flag vs. parity flag are separate concerns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes cutover flag behavior and fallback mechanics, but the current turn is focused on what responsibilities should remain in MuxMigrationUtil after generated signals are gone\u2014a different concern than partial-signal fallback during cutover.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2786,
+      "memory_title": "Mux cutover has partial-signal fallback behavior"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses cutover flag mechanics and feature-domain wiring, but the current turn is asking whether duplicate SignalDef resolution is still relevant after generated signals are gone\u2014a different analytical question about remaining responsibilities.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2790,
+      "memory_title": "RA-to-Mux migration requires feature-domain wiring but not additional work if staging is cut over"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory is about mux cutover staging evidence and rollout risk; current turn is about refactoring MuxMigrationUtil's remaining responsibilities\u2014different contexts with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2791,
+      "memory_title": "Strong staging evidence for TD_11 Mux cutover; missing-signal fallback not observed; recommend percentage rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Mux cutover validation and rollout procedures, but the current turn is focused on refactoring `MuxMigrationUtil`'s responsibilities and whether it's still needed after generated signals are gone\u2014a different concern than deployment validation.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2794,
+      "memory_title": "Safe Mux cutover validation: staging evidence plus gradual rollout with metrics watch"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses flag removal and generator mapping safety checks, which is tangentially related to MuxMigrationUtil but doesn't directly address the current question about what responsibilities remain or whether duplicate SignalDef resolution is still relevant post-migration.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2890,
+      "memory_title": "Flag removal safety: preserve generatedSignalToGenerator mapping check"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current discussion about MuxMigrationUtil's remaining responsibilities and the removal of generated-signal handling, but requires filtering since the stored memory focuses on flag removal mechanics rather than the conceptual responsibility question being asked.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2891,
+      "memory_title": "Flag removal process for riskarbiter-should-fetch-generated-signals-from-mux"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses signal-generator cleanup and module bindings, which is tangentially related to signal handling but does not directly address the current question about MuxMigrationUtil's remaining responsibilities or whether duplicate SignalDef resolution is still relevant post-migration.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2911,
+      "memory_title": "RiskArbiter signal-generator cleanup should be done in one PR; module bindings must be preserved or explicitly removed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Discusses a different stale utility (MuxParityChecker) rather than the current focus on MuxMigrationUtil's remaining responsibilities and whether it should be renamed or inlined.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2924,
+      "memory_title": "MuxParityChecker became stale after generator migration; safe to delete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses signal generator removal and dependency handoff mechanisms, which is tangential to the current question about MuxMigrationUtil's remaining responsibilities and whether duplicate SignalDefs are still relevant after generated signals are gone.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2932,
+      "memory_title": "Signal generator removal: dependency handoff mechanism and mux provider validation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly confirms that MuxMigrationUtil was deleted as part of resolving the strict-deps error, which is the current context of the conversation about what remains for its responsibility.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2945,
+      "memory_title": "Strict-deps error on MuxMigrationUtilTest was resolved by deleting the test and util"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about deprecated signal inventory, Dumbo cleanup gates, and ownership classification\u2014completely unrelated to MuxMigrationUtil's remaining responsibilities and the current discussion about duplicate SignalDef resolution.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3181,
+      "memory_title": "Deprecated signal audit: inventory, mapping, backfill evidence, ownership classification, and Dumbo cleanup gates"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the naming and cleanup of MuxMigrationUtil post-migration, but the stored memory reflects a completed rename to MuxFeatureTypecastUtil while the current turn is still debating whether to rename or inline, creating minor misalignment.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly addresses the exact refactoring discussed in current turn: renaming stale migration util to reflect post-signal-generator deletion, with concrete details on what the util actually does now and how call sites were updated.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3361,
+      "memory_title": "riskarbiter Mux helper rename to reflect post-signal-generator deletion"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ed6df-0d7b-7210-b6eb-9da62527d7f1",
+    "source_run_id": 3143,
+    "turn_ordinal": 150
+  }
+}

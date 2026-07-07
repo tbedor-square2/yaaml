@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses recall gating and filtering strategy, but the current turn is focused on fixing a metric bug where debug/diagnostic recall commands are being incorrectly evaluated\u2014a different problem layer that doesn't require the kind-aware filtering logic described.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a metrics framework separation, but the current turn focuses on fixing a specific eval-queueing bug in the recall command (debug-ranking should not trigger evals), which is a narrow implementation issue unrelated to the metrics taxonomy.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2311,
+      "memory_title": "Recall and memory-corpus metrics separation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses memory quality analysis and lifecycle management, but the current turn is focused on fixing a specific metric bug in recall eval task enqueueing for debug commands, which is a different technical problem.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes eval summary output structure, but the current turn is focused on fixing a metric bug where debug recall commands are incorrectly being evaluated; the memory is stale context about output format rather than actionable for the current debugging task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2555,
+      "memory_title": "YAAML eval summary now exposes queued recall metadata"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses conversation segment architecture for recall context, but the current turn focuses on fixing a metric bug in debug recall evaluation\u2014different problem domains with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a test plan for recall matching architectures, but the current turn is focused on fixing a metric bug in eval task enqueueing for debug recall commands\u2014a different problem domain with no overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes segment oracle architecture and design patterns, but the current turn focuses on fixing a metric bug in recall eval task enqueueing for debug commands\u2014a distinct implementation concern with no overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2692,
+      "memory_title": "Segment oracle architecture: tables, API, backfill design"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns task-state lifespan and segment rollover mechanics, which is unrelated to the current turn's focus on fixing recall eval metric bugs and diagnostic command filtering.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2965,
+      "memory_title": "Stale task-state lifespan: force segment rollover for long non-identity sessions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about session recall cache invalidation is stale and tangential to the current turn's focus on fixing eval task enqueueing for debug-ranking commands and diagnostic recall paths.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3189,
+      "memory_title": "Session recall cache must invalidate on inactive memory IDs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses segment/task-fit reranking limitations from a past experiment, but the current turn focuses on fixing a metric bug where debug/diagnostic recall commands are being incorrectly evaluated\u2014a different problem domain with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3195,
+      "memory_title": "Segment/task-fit reranking is limited; segment summaries needed for generation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past experiment logs and lessons, but the current turn is actively debugging and fixing a specific metric bug in the recall eval pipeline\u2014requiring immediate code inspection and changes, not historical experiment data.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past experiment on segment/task-fit recall strategies, but the current turn is focused on fixing a metric bug in eval task enqueueing for debug recall commands\u2014a different problem domain with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses segment/task-fit gating experiments and ranking strategies, but the current turn is focused on fixing a specific metric bug where debug recall commands are incorrectly being evaluated; the memory's strategic direction on recall ranking is stale relative to this tactical debugging work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses removing hardcoded phrases and tool task keys from YAAML recall, but the current turn focuses on fixing a metric bug where debug/diagnostic recall commands are being incorrectly evaluated\u2014a distinct problem unrelated to phrase taxonomy or task-key extraction.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses recall quality regression and wrong-context issues from a previous analysis period, but the current turn is focused on fixing a specific metric bug where debug/diagnostic recall commands are being incorrectly evaluated as user-facing recall\u2014a different root cause and solution path.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes past corpus analysis and quality metrics, but the current turn is focused on a specific bug fix (preventing debug recall commands from being evaluated), which requires different technical context about the recall command implementation rather than historical quality evidence.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past persuasion document for budget approval, but the current turn is actively debugging and fixing a metric bug in recall eval logic\u2014different problem domain with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3376,
+      "memory_title": "Memory techniques report: technical persuasion doc for internal eng buy-in"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3179,
+    "turn_ordinal": 350
+  }
+}

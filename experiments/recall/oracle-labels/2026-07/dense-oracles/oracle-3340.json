@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Risk Arbiter's SCC cycle-breaking strategy and architectural refactoring, but the current turn is about a specific draft PR for renaming `MuxSignalGeneratorMigrationUtil` to `MuxFeatureTypecastUtil`\u2014different scope and context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2017,
+      "memory_title": "Risk Arbiter: Cycle-breaking strategy uses SCC measurement to validate architectural splits"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about Bazel verification for RPC changes in Java worktrees, but the current turn is about a draft PR for a riskarbiter Mux helper rename cleanup\u2014different scope and context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2379,
+      "memory_title": "Bazel verification for archival review RPC changes in java worktrees"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about review feedback patterns is stale context; the current turn is focused on a specific draft PR scope for MuxSignalGeneratorMigrationUtil rename and cleanup, which has already been discussed and actioned.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2566,
+      "memory_title": "RiskArbiter AGENTS.md: human review feedback patterns from 50 merged PRs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different cleanup task (PayrollDuplographSignalGenerator removal) unrelated to the current turn's focus on MuxSignalGeneratorMigrationUtil rename and draft PR scope.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2649,
+      "memory_title": "Payroll signal generator removal steps after Mux rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant context about the RiskArbiter cleanup scope and module binding constraints, but the current turn is specifically asking about the draft PR's purpose for the Mux helper rename, which is a narrower scope than the broader signal-generator cleanup discussed in the memory.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2911,
+      "memory_title": "RiskArbiter signal-generator cleanup should be done in one PR; module bindings must be preserved or explicitly removed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory identifies two specific draft PRs to open (riskarbiter and kui rule archival), which is relevant context for the current turn about draft PR scope, but the current turn is specifically about a different draft PR (the Mux helper rename cleanup), so it requires filtering to extract the general pattern rather than direct application.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3034,
+      "memory_title": "Draft PRs to open: tbedor/riskarbiter-rule-summary-archival-date and tbedor/kui-rule-archival-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different PR (#477833 about riskarbiter-trigger-traffic) unrelated to the current discussion about a draft PR for MuxSignalGeneratorMigrationUtil renaming.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3065,
+      "memory_title": "PR #477833 tbedor/riskarbiter-trigger-traffic: rebased and pushed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed rebase and BUILD dep removal for PR #483601, but the current turn is about a different draft PR focused on riskarbiter Mux helper renaming (`MuxSignalGeneratorMigrationUtil` \u2192 `MuxFeatureTypecastUtil`), making it stale and mostly irrelevant context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed refactoring series (PR #543) for pyriskarbiter consolidation, but the current turn is about a specific draft PR for a narrow Mux helper rename cleanup in riskarbiter, which is a different scope and context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Risk Arbiter rule cleanup design decisions and implementation strategy, but the current turn is asking about a specific draft PR for a narrow Mux helper rename refactoring (MuxSignalGeneratorMigrationUtil \u2192 MuxFeatureTypecastUtil), which is unrelated to the archived rule cleanup context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes Risk Arbiter partition metadata cleanup and evidence taxonomy, but the current turn is asking about a specific draft PR for a narrow riskarbiter Mux helper rename (`MuxSignalGeneratorMigrationUtil` \u2192 `MuxFeatureTypecastUtil`), which is unrelated to partition metadata or no-traffic rule removal.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3151,
+      "memory_title": "Risk Arbiter no-traffic cleanup: partition metadata enrichment, evidence taxonomy, and execution status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about a Homebrew formula PR for sq-riskarbiter uvx wrapper migration, while the current turn is asking about a draft PR for a narrow riskarbiter code cleanup (Mux helper rename), which are different contexts with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3157,
+      "memory_title": "homebrew-formulas PR #4844: sq-riskarbiter uvx wrapper migration\u2014mlds-core#545 blocker and publish workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact draft PR scope the user is asking about\u2014the riskarbiter Mux helper rename cleanup with specific files, changes, and test status.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact draft PR scope the user is asking about\u2014the riskarbiter Mux helper rename with all relevant details on what changed and why.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3361,
+      "memory_title": "riskarbiter Mux helper rename to reflect post-signal-generator deletion"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a worktree setup pattern for Riskarbiter code analysis, but the current turn is about a specific draft PR for renaming `MuxSignalGeneratorMigrationUtil` to `MuxFeatureTypecastUtil`\u2014different scope and context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3363,
+      "memory_title": "Categorize Riskarbiter code script uses temporary sparse worktree for analysis"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about .editorconfig formatting settings is stale and tangential to the current turn, which focuses on the scope and purpose of a specific draft PR for riskarbiter Mux helper renaming.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3398,
+      "memory_title": "Riskarbiter .editorconfig formatting settings finalized and applied"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f238c-5422-79c2-a123-61ec3ef40b27",
+    "source_run_id": 3340,
+    "turn_ordinal": 2
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the Git/Graphite workflow mentioned in AGENTS.md (squash commits when merging), with practical implementation details that complement the instructions but require minor filtering for the current context.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1722,
+      "memory_title": "forge-signalsmith PR workflow: squash, verify, then force-with-lease push"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Prefect logs is stale and irrelevant to the current AGENTS.md instructions, which focus on build commands, architecture, code style, and Git workflows for the forge-signalsmith project.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1724,
+      "memory_title": "Prefect logs on forge-signalsmith: local CLI + Vertex infra fallback"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Prefect log discovery is stale and irrelevant to the current turn, which documents build commands, architecture, and code style for the forge-signalsmith project\u2014Prefect has been replaced by Signalsmith/Databricks Workflows.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1725,
+      "memory_title": "Prefect log discovery: use deployment ID + tags, not --flow-name"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory discusses Graphite workflow and testing strategy, but the current turn is about AGENTS.md instructions for a specific project (forge-signalsmith) with different tooling (Poetry/pytest, not Bazel), making it only marginally relevant.",
+      "judge_score": "3",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3015,
+      "memory_title": "Graphite + Bazel testing workflow: use subagents for test runs, stage only relevant files"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a past manual Blox test result, but the current turn is requesting project documentation and agent instructions for forge-signalsmith, making this historical test log mostly irrelevant to the immediate context needed.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3077,
+      "memory_title": "Manual no-op Blox routine completed: bbsubscriber reachable, run_as_service=sa-builderbot works from laptop"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a workflow for creating AGENTS.md guidance files by collating PR feedback, which is directly relevant to the current turn's AGENTS.md documentation, though it focuses on methodology rather than specific technical content.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3218,
+      "memory_title": "Agent guidance documentation workflow for Risk Arbiter and KUI"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly captures a key instruction from the current turn that specifies how the agent should format outgoing messages, making it immediately actionable for any future communication tasks.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3231,
+      "memory_title": "Agent message prefix requirement"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory discusses Blox hybrid migration research for a different workload (signals-deprecate-and-delete), not directly actionable for the current turn which is about AGENTS.md instructions and project structure for forge-signalsmith.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3245,
+      "memory_title": "Blox hybrid migration research: architecture, precedent, and spike plan"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Vertex/Prefect mesh endpoints is stale and contextually unrelated to the current AGENTS.md instructions for the forge-signalsmith project, which focuses on build commands, architecture, and code style.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3256,
+      "memory_title": "Blox/Prefect/Vertex integration diagnostic: mesh endpoint required"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a KITT migration strategy for a Prefect flow, but the current turn is requesting general project documentation and build/lint/test commands for forge-signalsmith, which are unrelated to this specific migration decision.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3272,
+      "memory_title": "KITT migration path: move entire Prefect flow from Vertex to KITT rather than split dispatcher+executor"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a KITT migration strategy for a specific Prefect flow, but the current turn is requesting general project documentation and agent instructions for forge-signalsmith, making this memory stale and contextually misaligned.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3274,
+      "memory_title": "KITT migration path for signals-deprecate-and-delete-prefect: onboard \u2192 backend switch \u2192 data/auth resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory discusses Vertex infrastructure pain points and migration rationale, but current turn is about AGENTS.md project documentation and build/deployment commands for forge-signalsmith, which are unrelated contexts.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3276,
+      "memory_title": "Vertex pain motivating infrastructure migration: headless auth brittleness, expensive git/agent work, PR size limits, token expiry, slow Bazel, low throttle hiding capacity concerns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past onboarding event but lacks actionable details for the current turn's focus on AGENTS.md instructions and project architecture.",
+      "judge_score": "3",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3297,
+      "memory_title": "Runway pipeline onboarded to forge-signalsmith"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about KITT secret-file auth patterns is unrelated to the current turn, which is about project documentation, build commands, and architecture for forge-signalsmith.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3300,
+      "memory_title": "KITT secret-file auth pattern: GitHub and Slack creds"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly matches and reinforces the agent message prefix convention (\ud83e\udd16) explicitly stated in the current turn's AGENTS.md instructions.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3303,
+      "memory_title": "Agent message prefix convention in bot-manager"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant context about an ongoing KITT migration project with specific PR details and implementation status, but requires filtering since the current turn is requesting general AGENTS.md instructions rather than migration-specific guidance.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3395,
+      "memory_title": "KITT migration for forge-signalsmith: WIF + preprod rollout \u2014 implementation in progress"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f0025-3f91-7922-81e4-7bc8cb3def79",
+    "source_run_id": 2900,
+    "turn_ordinal": 0
+  }
+}

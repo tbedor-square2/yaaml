@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses implementation patterns for PendingRuleArchival queries and code review conventions, but the current turn focuses on the high-level schema design decision (storing rule_config_id vs. denormalized fields), which is orthogonal to the stored memory's technical implementation details.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2410,
+      "memory_title": "RuleArchivalDateCalculator datastore/query conventions and review pattern"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses future approval/objection state tracking for rule archival, but the current turn focuses on the immediate schema design (narrowing PendingRuleArchival to store only rule_config_id and deriving other fields), which is orthogonal to the approval workflow design.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2413,
+      "memory_title": "Future rule archival amendments: approval/objection state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses cancellation safety constraints for RuleArchivalDateCalculator, but the current turn focuses on schema design for PendingRuleArchival (narrowing columns via rule_config_id foreign keys), which are orthogonal concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2428,
+      "memory_title": "RuleArchivalDateCalculator cancellation scope risk mitigated by operational constraints"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed refactoring of the archival job architecture, but the current turn discusses schema design for PendingRuleArchival table structure\u2014different concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2581,
+      "memory_title": "MLP-4410 refactored to single unscheduled manual job with dry_run flag; old PR closed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses method naming and lifecycle terms for the archival executor, but the current turn focuses on schema design (narrowing PendingRuleArchival columns and fetch patterns), which is orthogonal to the naming/lifecycle conventions documented.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2593,
+      "memory_title": "Rule archival executor factoring: public method naming and lifecycle terms"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the exact design decision being discussed in the current turn: storing rule_config_id as the authoritative target with derivable fields, the tradeoffs of this approach, and how to handle missing/deleted associated rows.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2610,
+      "memory_title": "PendingRuleArchival: track exact rule_config_id for archival targeting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the exact design decision being discussed in the current turn\u2014using rule_config_id as the archival target with denormalized fields for scoping\u2014and provides the rationale, validation logic, and state-machine semantics needed to implement it.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2616,
+      "memory_title": "PendingRuleArchival: Add rule_config_id, keep metadata, use exact targeting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses class design for eligibility predicates, while the current turn focuses on database schema design for PendingRuleArchival; they address different architectural concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3001,
+      "memory_title": "Keep AutomatedRuleArchivalTriggerEligibility as its own class, not a method on calculator"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes rule archival eligibility policies and exclusion criteria, but the current turn focuses on database schema design and fetching strategies for PendingRuleArchival, which are orthogonal concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3008,
+      "memory_title": "Rule archival eligibility policy for SQ Lending"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses surfacing archival dates in RuleSummary UI, while the current turn focuses on the internal schema design of PendingRuleArchival table itself\u2014different concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3011,
+      "memory_title": "Risk Arbiter rule archival date surfacing: use min pending date per model_name in RuleSummary"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses UI display of archival status, while the current turn discusses database schema design and fetching strategies for the archival system\u2014different layers with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3012,
+      "memory_title": "KUI rules table archival state: show pending date and filter by archival status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses class design rationale for eligibility logic, while the current turn focuses on database schema design for PendingRuleArchival; they address different architectural concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3018,
+      "memory_title": "AutomatedRuleArchivalTriggerEligibility helper class justification"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses UI presentation of archival dates, while the current turn focuses on database schema design and fetching strategy for the pending archival table\u2014different concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3031,
+      "memory_title": "Rule archival state in KUI: min date per model_name, not repeated list"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a related implementation detail (attaching pending archival reads to GetRulesSummaryAction) that provides useful context for the broader archival system design, but doesn't directly address the current discussion about PendingRuleArchival table schema and fetch strategy.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3033,
+      "memory_title": "Backend implementation: attach pending archival read to GetRulesSummaryAction"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses surfacing archival dates in KUI UI, while the current turn focuses on database schema design for PendingRuleArchival table structure and fetching patterns\u2014different architectural layers with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3123,
+      "memory_title": "Rule archival date surfacing: backend proto field + KUI table/filter display"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses rule archival eligibility logic and proto exposure, while the current turn focuses on database schema design for PendingRuleArchival; they address different aspects of the same system but lack direct actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3129,
+      "memory_title": "Rule archival eligibility: metadata-driven logic and proto exposure"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the RuleSummary archival date sync mechanism, which is relevant context for understanding how pending archival rows are exposed to the frontend, but the current turn focuses on the internal schema design of PendingRuleArchival itself rather than the RuleSummary contract.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3221,
+      "memory_title": "Backend/frontend sync: RuleSummary archival dates (PR #484157 & #14118)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes exemption logic for rule archival eligibility, but the current turn discusses database schema design for the PendingRuleArchival table itself\u2014different concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3330,
+      "memory_title": "Rule archival exemption logic: feature flag + rule chaining"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef12b-5400-7f41-9c2c-7c82f7013391",
+    "source_run_id": 2147,
+    "turn_ordinal": 90
+  }
+}

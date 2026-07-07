@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the core issue being diagnosed: stale durable memories surviving task-state expiry, and proposes the kind-aware filtering and task-key matching approach that aligns with the current turn's investigation of `project_fact/workflow` recall quality and data-model changes.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the core issue being diagnosed: stale durable memories surviving task-state expiry, and proposes the exact filtering/ranking strategy needed to resolve the recall-quality problem identified in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2062,
+      "memory_title": "Kind-aware recall gating strategy: preference/lesson/workflow cross-project if strong; task_state same-project only with task-key match"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the metrics framework and separation of recall vs. corpus health, which is directly relevant to the current turn's focus on diagnosing stale memory recalls and evaluating memory quality, though it lacks the specific failure patterns and ranking logic being discussed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2311,
+      "memory_title": "Recall and memory-corpus metrics separation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the core diagnostic insight the current turn is reaching: stale/over-broad durable memories survive because they remain valid in isolation but are recalled after task context changes, and the solution involves lifecycle/ranking changes rather than threshold tweaks.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the core issue being diagnosed\u2014stale durable memories surviving task-state expiry\u2014and proposes a structural solution (conversation segments with explicit task_keys) that addresses the root cause of over-broad context_score matching, though implementation details would need alignment with current YAAML architecture.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a testing plan for recall architectures, but the current turn is focused on diagnosing and fixing stale durable memory issues in the existing system, making this memory stale and tangential rather than actionable.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the core failure mode the current turn is investigating: stale durable memories surviving after task-state expiry and being recalled in wrong contexts, which is exactly what the assistant is diagnosing and planning to fix.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2755,
+      "memory_title": "YAAML recall quality: task/segment drift is main failure mode, not bad memories"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the exact recall-quality issue being diagnosed in the current turn: stale durable memories surviving after task-state expiry, with concrete examples and a recommended fix that aligns with the ongoing investigation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2768,
+      "memory_title": "YAAML recall quality: task-state and segment drift are primary failure modes"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the ongoing recall-quality diagnosis\u2014documents prior fixes for stale recalls and deduplication, providing context for understanding what has already been addressed versus remaining issues.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes task-key extraction and filtering logic, but the current turn is focused on diagnosing stale durable memories and `context_score` ranking issues in recall\u2014a different layer of the problem that requires eval history and memory health data, not extraction rules.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3098,
+      "memory_title": "Segment task-key extraction: filter tool output and prioritize identity keys"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the session recall cache invalidation mechanism being debugged, but the stored memory documents a regression test rather than the current diagnostic findings about stale durable memories and context_score ranking.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3189,
+      "memory_title": "Session recall cache must invalidate on inactive memory IDs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant summary of YAAML recall quality metrics and failure modes that the current turn is actively investigating and using to frame data-model changes.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents experimental findings and durable lessons about recall quality issues, which directly relates to the current turn's focus on diagnosing stale/over-broad durable memories and ranking changes, though it lacks specific details about the current failure patterns being investigated.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant experimental data on task-fit recall strategies and durable memory ranking tradeoffs, though the stored memory predates the current diagnostic phase and may need cross-validation with newer eval results.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the core issue being investigated\u2014stale durable memories and ranking strategies\u2014but the current turn has moved beyond binary gating experiments to focus on data-model changes and eval-history inspection, requiring some filtering to extract actionable guidance.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the ongoing recall-quality diagnosis\u2014addresses durable memory ranking and task-identity carryover issues, though the stored memory focuses on phrase/topic hardcoding rather than the specific context_score and task-key overlap problem currently being investigated.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the exact problem being diagnosed in the current turn: stale durable memories surviving task-state expiry and being recalled inappropriately due to high context_score from shared project context rather than active task match, with the same recommendation to implement stricter task-identifier gating.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant corpus statistics and eval evidence on memory quality issues, though the stored summary is slightly stale relative to the current turn's ongoing diagnostic work on durable memory ranking and task-state expiry.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3059,
+    "turn_ordinal": 304
+  }
+}

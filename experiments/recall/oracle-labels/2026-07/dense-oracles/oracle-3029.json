@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context about the LD flag mechanism and archival date calculation, though the stored memory describes the flag infrastructure rather than the current query result verification.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2400,
+      "memory_title": "Rule archival LaunchDarkly flag binding and default"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to understanding the flag mechanism and archival trigger logic, but the stored memory describes the flag infrastructure while the current turn shows it's already working in practice with TD_30xx.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2406,
+      "memory_title": "LD flag for rule archival trigger rollout dates with Jan 1, 2126 default"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes TD_45 exclusion logic, but current turn focuses on TD_30xx rules appearing in archival query, making this context stale and irrelevant.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2407,
+      "memory_title": "TD_45 (SQ Lending) hardcoded trigger exclusion from archival"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Provides relevant context about the LD flag mechanism and default behavior, but lacks specific details about TD_30xx configuration or how the pending archival query filters by trigger token.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2412,
+      "memory_title": "LD rollout-date flag for rule archival: riskarbiter-pending-rule-archival-trigger-rollout-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory discusses TD_45 exclusion logic, but current turn is about TD_30xx rules appearing in pending archival query\u2014different trigger, different context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2472,
+      "memory_title": "TD_45 hardcoded trigger exclusion in rule archival"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory discusses TD_45 exclusion logic, but current turn focuses on TD_30xx flag verification and archival query results, making this context stale and off-topic.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2483,
+      "memory_title": "TD_45 trigger hardcoded exclusion with clear documentation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context about the LD flag mechanism and how empty strings vs. dates control trigger inclusion, with minor gap that it doesn't address the specific TD_30xx query result shown.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2484,
+      "memory_title": "Pending rule archival rollout flag: empty string for unset, not far-future date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly explains the PendingRuleArchival schema and validation logic that governs whether rules appear in the pending archival query, making it useful context for understanding the query result, though the current turn's question is already answered.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2616,
+      "memory_title": "PendingRuleArchival: Add rule_config_id, keep metadata, use exact targeting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a discovery helper tool that is explicitly not relevant to the current turn, which is about verifying that a flag has been set and checking pending archival query results.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2762,
+      "memory_title": "archival-candidates discovery helper is pre-flag only, does not check LD or pending rows"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact CLI workflow the user just executed, providing actionable command syntax and context for the pending archival query verification they're asking about.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2780,
+      "memory_title": "CLI command workflow for pending rule archival verification after flag set"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly explains the LaunchDarkly flag mechanism (`riskarbiter-pending-rule-archival-trigger-rollout-date`) that the user just set for `TD_30xx`, including how it controls trigger inclusion in pending archival queries and date interpretation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2783,
+      "memory_title": "LaunchDarkly flag for rule archival rollout: riskarbiter-pending-rule-archival-trigger-rollout-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact workflow the user is executing\u2014setting the LD flag for TD_30xx and running the pending archival dry-run query\u2014making it highly actionable context for understanding and validating the current turn's results.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2787,
+      "memory_title": "Rule archival CLI workflow: pending-archivals command with trigger setup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes rule archival eligibility logic and proto changes, but does not directly address the current query about whether TD_30xx's rules appear in the pending archival query results.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3129,
+      "memory_title": "Rule archival eligibility: metadata-driven logic and proto exposure"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory explains the exemption logic for rule archival, which is relevant context for understanding why TD_30xx rules appear in the pending archival query, but the current turn has already confirmed the rules show up, so the memory provides useful background rather than directly actionable next steps.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3330,
+      "memory_title": "Rule archival exemption logic: feature flag + rule chaining"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the archival rollout script, flag configuration, and rollout dates that are actively being used in the current turn to verify TD_30xx rule appearance in pending archival queries.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3368,
+      "memory_title": "Riskarbiter archival rollout: staged feature flag and script"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is useful context about production archival notification requirements and blocking guards, but the current turn is focused on staging verification of TD_30xx rules in a dry-run query, which is a different environment/phase than the production blocking issue described.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3373,
+      "memory_title": "Production rule archival notifications require Slack channel configuration"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses production trigger audit results for missing Slack channels, but the current turn is about verifying that TD_30xx rules appear in a pending archival dry-run query\u2014different scope and context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3396,
+      "memory_title": "Production rule archival missing Slack channel audit result"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef566-2195-7d72-a3ad-cfb9ad00f810",
+    "source_run_id": 3029,
+    "turn_ordinal": 45
+  }
+}

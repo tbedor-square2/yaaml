@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the current turn's Bazel 404 issue and provides the exact solution: use `bin/bazel` from repo root instead of the system Bazel wrapper.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1901,
+      "memory_title": "Bazel workflow in squareup/java: Hermit-managed bin/bazel, strict-deps, and buildozer"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the current Bazel 404 issue and provides exact troubleshooting steps (binary fallback, cache verification, explicit path invocation) that match the immediate problem in the turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2379,
+      "memory_title": "Bazel verification for archival review RPC changes in java worktrees"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides useful context about the MLP-4409/4410 PR stack status and backport work, but the current turn is focused on active test execution and worktree troubleshooting, so the memory requires minor filtering to extract relevant details.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes MLP-4411 notification job implementation, but the current turn is focused on MLP-4410 manual job PR work with proto wording, audit ordering, Slack dev guard, and test execution\u2014different PR with different scope.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2486,
+      "memory_title": "MLP-4411 notification job implementation complete; draft PR ready without wiring scheduled sends"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed PR (#482948) for a different task (MLP-4411 notifications), while the current turn is actively working on a different PR (java-mlp-4410-manual-job) with distinct concerns (proto wording, audit ordering, Slack dev guard, test fixes), making it stale and contextually misaligned.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2490,
+      "memory_title": "MLP-4411 notification job PR #482948 complete; MLP-4418 archival execution job next"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about RiskArbiter code review patterns is unrelated to the current turn's focus on Java PR worktree setup, Bazel build issues, and test execution.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2566,
+      "memory_title": "RiskArbiter AGENTS.md: human review feedback patterns from 50 merged PRs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant context about PR #483111 completion and freeze-guard fixes, but the current turn shows ongoing test execution and Bazel path issues that post-date the memory's summary state.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes future PR work to open, but the current turn shows active in-progress work on an existing PR worktree with test fixes and Bazel issues\u2014not the planning stage for opening new PRs.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3034,
+      "memory_title": "Draft PRs to open: tbedor/riskarbiter-rule-summary-archival-date and tbedor/kui-rule-archival-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about a Python/BigQuery PR refactor (forge-signalsmith #521) and is completely unrelated to the current turn's Java worktree debugging with Bazel, Slack tests, and audit ordering.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3044,
+      "memory_title": "forge-signalsmith PR #521: lifecycle refactor with BigQuery parameters follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about PR #477833 (riskarbiter-trigger-traffic), but the current turn is about PR #4410 (java-mlp-4410-manual-job) with completely different changes (Slack tests, audit ordering, executor tests), making it actively distracting and wrong-context.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3065,
+      "memory_title": "PR #477833 tbedor/riskarbiter-trigger-traffic: rebased and pushed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about PR #483601 (ruleconfig-test-harness rebase), while the current turn is about PR #4410 (java-mlp manual job with Slack/audit changes)\u2014completely different PRs with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about pyriskarbiter Python library refactoring and PR #543, while the current turn is about a Java PR worktree with Bazel build issues and test execution\u2014completely different projects and contexts.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a Homebrew formula PR for sq-riskarbiter uvx wrapper migration, which is completely unrelated to the current turn's focus on Java PR #4410 with Slack tests, audit ordering, and Bazel build issues.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3157,
+      "memory_title": "homebrew-formulas PR #4844: sq-riskarbiter uvx wrapper migration\u2014mlds-core#545 blocker and publish workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a separate PR (#14118) about backend/frontend sync for an archival date field, which is unrelated to the current turn's focus on fixing formatting, audit assertions, and test execution in the java-mlp-4410 PR worktree.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3217,
+      "memory_title": "KUI PR #14118 backend/frontend sync verified; frontend safe to merge before backend deploy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a KUI/TypeScript PR about UI components, while the current turn is about a Java backend PR (java-mlp-4410) involving Slack tests, audit ordering, and Bazel builds\u2014completely different projects and contexts.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3235,
+      "memory_title": "PR #13972 updated from action-table experiment to metadata-table production implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes UI/frontend work on PR #14151 (label and tooltip changes), while the current turn focuses on backend Java code changes in PR #4410 (archival audit ordering, Slack testing, Bazel build issues)\u2014different PRs with no overlapping context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns Riskarbiter mux helper renaming and signal-generator cleanup, which is completely unrelated to the current turn's focus on a Java MLP PR with Slack test fixes, audit ordering, and Bazel build issues.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about .editorconfig formatting is stale and tangential; the current turn focuses on completing a specific PR (java-mlp-4410-manual-job) with test fixes and Bazel execution, not on formatting configuration.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3398,
+      "memory_title": "Riskarbiter .editorconfig formatting settings finalized and applied"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef12b-5400-7f41-9c2c-7c82f7013391",
+    "source_run_id": 2915,
+    "turn_ordinal": 120
+  }
+}

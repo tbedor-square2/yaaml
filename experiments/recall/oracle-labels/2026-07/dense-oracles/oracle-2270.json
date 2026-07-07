@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Elroy's Git branch model is unrelated to the current query about Codex session project summaries and metadata.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1545,
+      "memory_title": "Elroy branch model: four distinct refs for self-improvement workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a work-review-updates skill for PR/ticket review, but the current query asks about Codex's built-in features for summarizing what project a session is working on\u2014different scope and not actionable for this turn.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1721,
+      "memory_title": "Codex skill creation: work-review-updates for PR and ticket review"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the query about project summarization in Codex sessions, but describes internal metadata architecture rather than user-facing features or commands.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1821,
+      "memory_title": "Per-turn context metadata persisted for multi-project session recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The memory describes bot-manager's architecture and session handling, which is directly relevant to the user's question about summarizing what project a session is working on, though it focuses on implementation details rather than the specific Codex integration answer already provided.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2315,
+      "memory_title": "bot-manager Rust implementation strategy: cache-backed, testable CLI+TUI with credential-light integrations"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context about bot-manager's architecture and session handling, but the current turn is specifically asking about Codex's built-in project summary features rather than bot-manager's implementation.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2322,
+      "memory_title": "bot-manager: Rust CLI/TUI for Linear tickets, GitHub PRs, agent sessions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Codex PreToolUse hook for YAAML session recall, which is about memory injection infrastructure, not about Codex's built-in features for summarizing project context in sessions.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2504,
+      "memory_title": "Codex PreToolUse hook for YAAML is live and working end-to-end"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the architectural approach for tracking project/task context in sessions, but focuses on conversation segments rather than Codex's built-in features, requiring some filtering to apply to the current question.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the assistant's recommendation about naming/identifying sessions, but the stored memory focuses on thread naming via app-server API rather than the session-level project summary features already discussed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2655,
+      "memory_title": "Codex app-server thread/name/set API for setting thread titles"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the assistant's recommendation about setting project context via `/goal` or naming conventions, and provides a complementary programmatic method (`thread/name/set`) for bot-manager to label sessions, though it focuses on thread naming rather than session summarization.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2672,
+      "memory_title": "Codex thread title can be set via app-server JSON-RPC thread/name/set"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The memory describes session resumption mechanics (working directory handling) but doesn't address the core question about project summaries or metadata fields in Codex sessions.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2697,
+      "memory_title": "Session join uses stored working directory for tmux and Codex"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes bot-manager TUI features (session visibility, search, creation) but does not address the core question about Codex's built-in mechanisms for summarizing what project a session is working on.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3207,
+      "memory_title": "bot-manager TUI: done-session visibility, active status overlay, search navigation, and new-session creation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about transcript file processing limits and backlog import logic, which is unrelated to the current query about Codex session project summaries and metadata fields.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3229,
+      "memory_title": "Backlog transcript scan must process all files, not cap at 100"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes TUI toggle behavior and refresh mechanics, but the current query asks about Codex's built-in features for summarizing project context in sessions\u2014different concerns that don't overlap meaningfully.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3236,
+      "memory_title": "D toggle and session refresh behaviors in bot-manager TUI"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes tmux workspace management for bot-manager, but the current query is specifically about Codex features for summarizing project/session context (like `/goal`, `/status`, `/title`), which this memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3278,
+      "memory_title": "Managed tmux workspace: global session with local attach windows"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes bot-manager's transcript refresh behavior, which is tangential to the current query about Codex session project summaries and is not actionable for answering the user's question.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3281,
+      "memory_title": "Priority refresh after session return"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The memory describes a tmux window management fix but doesn't address the core question about Codex's project summary capabilities or session metadata features.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3301,
+      "memory_title": "bot-manager tmux launcher fixed for re-entry into existing managed sessions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses tmux session identity and window management for bot-manager, but the current turn asks about Codex's built-in project summary features (like `/goal`, `/status`, `/title`), which are orthogonal concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3327,
+      "memory_title": "Tmux session/window identity strategy for bot-manager"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses tmux session management and deduplication, but the current query is about Codex's built-in features for summarizing project/session context (like `/goal`, `/status`, `/title`), which are orthogonal concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3342,
+      "memory_title": "Tmux session deduplication strategy for bot-manager"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019efc9f-ff22-7d32-bdac-00301bac40a8",
+    "source_run_id": 2270,
+    "turn_ordinal": 1
+  }
+}

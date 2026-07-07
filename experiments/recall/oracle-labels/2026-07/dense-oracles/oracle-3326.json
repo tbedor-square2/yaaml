@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is useful context showing the established pattern of replying to all PR threads, which directly relates to the current turn where the user points out a missing reply and the assistant corrects course to address it, though the memory could have prevented the initial oversight.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1747,
+      "memory_title": "PR review feedback workflow: always leave replies on addressed threads"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides useful context about an ongoing Rust TUI project with GitHub integration, agent dispatch, and PR reply functionality, which aligns with the current turn's discussion of PR replies and GitHub interactions, though it lacks specific details about the current PR #13972 and the immediate task status.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1774,
+      "memory_title": "Node/Rust project (tbedor) active-thread goal: CLI agent dispatch, GitHub replies, run lifecycle, and notifications"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory contains general development guidelines for the square-console repo, but the current turn is about a specific GitHub PR discussion thread reply that has already been completed, making this guidance marginally relevant and mostly stale for the immediate context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1792,
+      "memory_title": "Square-console CLAUDE.md guidance compliance"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a PR review workflow that is directly relevant to the current turn's context of addressing GitHub PR comments and replying to threads, though the current turn shows the workflow already being executed rather than needing instruction.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1978,
+      "memory_title": "PR review workflow: address comments with isolated patches and reply to threads"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a PR review workflow that is relevant to the current turn's context of handling PR comments and replies, but the current turn shows the workflow is already in progress/completed rather than needing the procedural guidance.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2231,
+      "memory_title": "PR review comment response workflow for code fixes"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about SummaryBot service status is unrelated to the current conversation about PR reviews, GitHub comments, and task completion.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2645,
+      "memory_title": "SummaryBot service status and entry points"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about KUI implementation location is stale and irrelevant to the current turn, which focuses on PR reviews, GitHub comments, and task completion status.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3029,
+      "memory_title": "KUI: active implementation is in square-console, not java/knowledge-ui"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Blox routine test and bbsubscriber API verification, which is completely unrelated to the current turn's focus on GitHub PR replies and push status.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3077,
+      "memory_title": "Manual no-op Blox routine completed: bbsubscriber reachable, run_as_service=sa-builderbot works from laptop"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a different PR (#483601 with ruleconfig changes) and is unrelated to the current turn's discussion about PR #13972 (square-console) and GitHub comment replies.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about terminal iterations and TUI work preferences is stale and not relevant to the current turn, which focuses on PR status updates and GitHub comment replies.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3228,
+      "memory_title": "User preference: terminal iterations before stopping on TUI work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant context about PR #13972's technical changes and status, but the current turn focuses on a specific GitHub comment reply issue that requires more immediate/granular context than the memory provides.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3235,
+      "memory_title": "PR #13972 updated from action-table experiment to metadata-table production implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a Prefect flow diagnostic run, while the current turn focuses on GitHub PR replies and code review comments\u2014completely different contexts with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3258,
+      "memory_title": "Task checkpoint: blox-prefect-noop preprod diagnostic run in progress"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact workflow being executed in the current turn: fast-forwarding, patching code, submitting via Graphite, and replying to review threads with proper sequencing.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3270,
+      "memory_title": "Rebase and review comment response: fast-forward, patch, submit, then reply"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant context about PR #13972 and its feedback resolution, which directly relates to the current turn's discussion of the same PR, though it lacks details about the specific GitHub discussion thread being referenced.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3318,
+      "memory_title": "Recently visited resources PR feedback resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes worktree setup and PR workflow procedures, but the current turn focuses on replying to specific GitHub PR comments and checking reply status, which are unrelated to the technical setup details provided.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3337,
+      "memory_title": "Worktree and PR workflow for square-console"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides useful context about PR #13972's scope and recent changes, but the current turn focuses on a specific unresolved GitHub comment thread that requires immediate action rather than background knowledge about the PR's features.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3384,
+      "memory_title": "PR #13972: recently-visited feature addresses prod/staging distinction, timestamp milliseconds, and KITT URL deduplication"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f1f5f-7e51-79f2-a539-75b8b2709eb5",
+    "source_run_id": 3326,
+    "turn_ordinal": 4
+  }
+}

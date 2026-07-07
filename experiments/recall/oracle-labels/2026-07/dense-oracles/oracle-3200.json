@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory discusses future approval/objection state design for rule archivals, but current turn is focused on immediate backend shape for reading pending archivals into RuleSummary\u2014a separate concern from approval workflows.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2413,
+      "memory_title": "Future rule archival amendments: approval/objection state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Provides useful context on the RunPendingRuleArchivals RPC design and implementation, but the current turn is asking about integrating pending archival *reads* into RuleSummary rather than the operational job itself, requiring minor filtering.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2581,
+      "memory_title": "MLP-4410 refactored to single unscheduled manual job with dry_run flag; old PR closed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly useful: the stored memory documents the exact read-only helper (`getPendingRuleArchivals`) and lifecycle methods the current turn is discussing for integrating pending archival data into `RuleSummary`/`GetRulesSummaryAction`.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2593,
+      "memory_title": "Rule archival executor factoring: public method naming and lifecycle terms"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the current discussion about PendingRuleArchival schema design, rule_config_id targeting, and how to integrate pending archival data into the existing RuleSummary/rules table backend.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2610,
+      "memory_title": "PendingRuleArchival: track exact rule_config_id for archival targeting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant\u2014the stored memory documents the exact schema design (rule_config_id + denormalized fields) and validation logic that the current turn is deciding whether to expose in RuleSummary for the KUI rules table.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2616,
+      "memory_title": "PendingRuleArchival: Add rule_config_id, keep metadata, use exact targeting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes CLI tooling for pending archival inspection, but current turn focuses on backend RPC design and RuleSummary schema integration\u2014different architectural layer with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2963,
+      "memory_title": "Risk Arbiter archival CLI: rule pending-archivals command is general-purpose; candidate discovery is rollout-specific"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly identifies the KUI rules table backend (GetRulesSummaryAction \u2192 RuleSummary) that the current turn is asking about extending with pending archival data.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2987,
+      "memory_title": "KUI rules table source and architecture"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly addresses the current turn's core decision: it confirms the RuleSummary extension approach, documents the min-date-per-model design choice, and provides the exact proto field and implementation path (GetRulesSummaryAction + RuleArchivalDateCalculator helper) that the user is asking about.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3011,
+      "memory_title": "Risk Arbiter rule archival date surfacing: use min pending date per model_name in RuleSummary"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly captures the exact design decision and implementation scope being discussed: integrating pending archival state into the existing RuleSummary/rules table path rather than creating a parallel endpoint.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3012,
+      "memory_title": "KUI rules table archival state: show pending date and filter by archival status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly resolves the design decision about how to represent pending archival data in RuleSummary\u2014the stored memory confirms the user's preference for a single collapsed field (min date) rather than the repeated list structure proposed in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3031,
+      "memory_title": "Rule archival state in KUI: min date per model_name, not repeated list"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly captures the decided backend implementation approach for the exact feature being discussed in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3033,
+      "memory_title": "Backend implementation: attach pending archival read to GetRulesSummaryAction"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the implementation plan (two-PR stack) that the current turn is actively designing and deciding upon, making it essential context for tracking what needs to be built next.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3034,
+      "memory_title": "Draft PRs to open: tbedor/riskarbiter-rule-summary-archival-date and tbedor/kui-rule-archival-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly addresses the current turn's question about integrating pending rule archival data into RuleSummary/existing rule table, with concrete proto design and implementation details already decided.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3123,
+      "memory_title": "Rule archival date surfacing: backend proto field + KUI table/filter display"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory covers design decisions and implementation strategy for rule archival/cleanup, which is directly relevant to the current discussion about pending rule archivals and RuleSummary integration, but lacks specific details about the RPC structure and backend shape being debated in this turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes redundant-rules detection architecture and data pipeline, but the current turn discusses pending rule archival RPC design and RuleSummary schema extension\u2014different subsystems with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3174,
+      "memory_title": "redundant-rules: Full architecture, data pipeline, and UI export"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly documents the exact implementation decision (adding archival dates to RuleSummary) that the current turn is debating, including proto schema, field naming, and deployment safety\u2014making it immediately actionable for resolving the open question.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3221,
+      "memory_title": "Backend/frontend sync: RuleSummary archival dates (PR #484157 & #14118)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed UI feature for displaying archival eligibility, but the current turn is asking about backend RPC design for reading pending rule archivals and integrating with RuleSummary\u2014a different architectural concern.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3277,
+      "memory_title": "Automated archival eligibility field added to KUI trigger model"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory provides relevant context about automated archival eligibility infrastructure, but the current turn focuses on pending archival RPC design and RuleSummary extension, which requires different backend details than what's documented here.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3336,
+      "memory_title": "Automated archival eligibility frontend feature"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef566-2195-7d72-a3ad-cfb9ad00f810",
+    "source_run_id": 3200,
+    "turn_ordinal": 58
+  }
+}

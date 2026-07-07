@@ -25,3 +25,14 @@ Retrieval is the binding ceiling on this screening library: more known-useful mi
 
 - `manifest.json` records inputs and summary metrics.
 - `cases.jsonl` records per-anchor useful IDs, pool membership, selected membership, and miss class.
+
+## Addendum (2026-07-07)
+
+The interpretation above was overturned by the retrieval-miss diagnosis
+(`experiments/recall/2026-07-06-retrieval-miss-diagnosis/REPORT.md`): 98 of
+104 raw retrieval-miss instances refer to memories that are now inactive and
+intentionally excluded from production recall. On currently active useful
+memories, selection is the larger gap (see the active-only results in
+`experiments/recall/2026-07-06-production-active-pool-oracle/REPORT.md`).
+Do not use this report's raw-miss split to prioritize candidate-generation
+work.

@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a batch endpoint optimization with a feature flag, but the current turn focuses on Mux-side timeouts and MLP-2470 issue investigation, making this optimization context tangential and not directly actionable for the immediate debugging task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1882,
+      "memory_title": "Batch endpoint optimization with feature flag for safe rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes MLP-2470 and the payroll Duplograph signal optimization work that is the exact subject of the current turn's investigation into Mux-side timeouts.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1899,
+      "memory_title": "Payroll Duplograph signal optimization: batch endpoints, requestedSignals filtering, tri-state rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant: confirms PR #482106 deployment status, post-deploy latency improvements, and absence of Mux-side timeout errors\u2014exactly what the current turn is investigating after the deploy.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2609,
+      "memory_title": "PR #482106 deployment to Mixtape production confirmed; latency/SLO metrics show improvement"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly actionable context explaining the exact Mux timeout computation mechanism (10s default, LD cap, reserved evaluation time) that the current turn is investigating for the payroll timeout issue.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2630,
+      "memory_title": "TD_11 payroll Mux timeout computation: default 10s baseline, LD cap applied on top"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly useful: provides current p99 latency (4.3s), timeout status (zero errors), and confirms the refactor resolved the original 10s timeout issue that the user is investigating in MLP-2470.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2632,
+      "memory_title": "Served TD_11 payroll evaluation: no timeout errors, p99 latency 4.3s under 10s caller timeout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly explains the root cause of the Mux timeout issue (missing scoreable deadline in PayrollRunUpdateJobHandler) and provides the exact fix needed, which is precisely what the current turn is investigating.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2639,
+      "memory_title": "RiskArbiter TD_11 payroll Mux fetch timeout: root cause is missing scoreable deadline"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly explains the deadline/timeout architecture (requestDeadline, muxMaxTimeoutMillis, reservedEvaluationTime) that the current turn is actively investigating for the Mux-side timeout issue on MLP-2470.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2642,
+      "memory_title": "Payroll deadline structure: overall scoreable budget vs. parity-specific timeouts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses staging evidence for TD_11 Mux cutover and rollout recommendations, but the current turn is focused on investigating Mux-side timeouts on a specific Linear issue (MLP-2470) with detailed log/metric analysis already in progress\u2014the memory's high-level rollout guidance is stale relative to the immediate timeout debugging context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2791,
+      "memory_title": "Strong staging evidence for TD_11 Mux cutover; missing-signal fallback not observed; recommend percentage rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant staging/production evidence for TD_11 Mux cutover strategy, but current turn is focused on investigating Mux-side timeouts post-deploy rather than cutover readiness.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2801,
+      "memory_title": "RA Mux cutover for TD_11/payroll_run_update_connected_users: staged evidence is strong; percentage rollout strategy recommended"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to post-deploy Mux stability for TD_11 payroll signals, but focuses on flagging rates rather than timeout metrics/logs that the current turn is investigating.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2816,
+      "memory_title": "TD_11 payroll_run_update flagging rate post-Mux cutover: stable within expected band"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the current turn's focus on Mux-side timeouts for TD_11 payroll, providing specific metrics, configuration details, and root cause analysis that are immediately actionable for diagnosing and resolving the issue.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2820,
+      "memory_title": "Mux feature-fetch timeout causing DLQ backlog on TD_11 payroll_run_update"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly actionable: stored memory identifies the exact root cause (Mux timeout on TD_11), the governing LaunchDarkly flag, and the mitigation path that the current turn is investigating.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2823,
+      "memory_title": "TD_11 payroll_run_update DLQ failure root cause: Mux feature-fetch timeout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly actionable: stored memory identifies the exact root cause (Mux timeout on TD_11 via LaunchDarkly flag 'riskarbiter-mux-max-timeout-millis') that the current turn is investigating, with specific metrics (17750ms vs 14975ms deadline) and the configuration knob needed to resolve it.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2824,
+      "memory_title": "TD_11 stale DLQ item root cause: Mux GetFeatures timeout on retry loop"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly actionable: the stored memory identifies the exact LaunchDarkly flag (`riskarbiter-mux-max-timeout-millis`) and current configuration (15s fallthrough, 25s variant available) that controls the Mux-side timeout behavior the user is investigating, with clear remediation path (target TD_11 to 25s).",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2827,
+      "memory_title": "RiskArbiter TD_11 timeout behavior: riskarbiter-mux-max-timeout-millis LaunchDarkly flag"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly actionable: stored memory identifies the exact LaunchDarkly flag (riskarbiter-mux-max-timeout-millis) and current TD_11 configuration (15s fallthrough vs. 25s variant) that the user is investigating for Mux-side timeouts, with concrete next steps for remediation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2844,
+      "memory_title": "LaunchDarkly timeout flag riskarbiter-mux-max-timeout-millis: TD_11 currently at fallthrough 15s, available 25s variant"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly actionable context: provides the exact LaunchDarkly flag name, current/available timeout values, and explains why TD_11 is timing out (15s deadline vs 17.7-20.2s observed latency), enabling immediate diagnosis and potential remediation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2846,
+      "memory_title": "TD_11 Mux timeout flag and Mixtape latency context"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly actionable: the stored memory identifies the exact LaunchDarkly flag (`riskarbiter-mux-max-timeout-millis`) and current configuration (15s fallthrough, TD_11 not targeted) that controls the Mux timeout behavior the user is investigating, with specific variation options (25s) and monitoring guidance.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2854,
+      "memory_title": "LaunchDarkly timeout flag for TD_11 rule: riskarbiter-mux-max-timeout-millis"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant\u2014stored memory documents the exact TD_11 Mux timeout failures and monitoring context the user is referencing, including root cause (GATEWAY_TIMEOUT), the muxMaxTimeoutMillis flag already set to 25s, and the timeline that matches the current investigation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2894,
+      "memory_title": "TD_11 Mux timeout/missing-signal failures during rollout monitoring"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019edcc8-cff6-77d1-8e48-04b9adabc032",
+    "source_run_id": 2179,
+    "turn_ordinal": 39
+  }
+}

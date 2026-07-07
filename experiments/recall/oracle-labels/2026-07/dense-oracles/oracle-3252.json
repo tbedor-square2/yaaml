@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's focus on recall quality improvements and the two remaining score-3 cases, providing a concrete next optimization strategy for kind-aware filtering that aligns with the stated goal of inspecting borderline recalls.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's discussion of recall quality metrics and eval system, though the stored memory focuses on metric definitions rather than the specific current scores being analyzed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2311,
+      "memory_title": "Recall and memory-corpus metrics separation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's discussion of eval metrics and recall quality, particularly the distinction between clean abstentions and missed useful cases mentioned in the assistant's analysis.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2312,
+      "memory_title": "Empty recall is abstention, not failure"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's discussion of recall quality metrics and remaining work; provides actionable insight into why low-score recalls occur and how to handle them, though the current turn has already moved past the low-score phase.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's discussion of recall quality metrics and remaining work, providing historical context on eval-based improvements and diagnostic findings that inform next steps.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2327,
+      "memory_title": "Eval-based health reranking improves but is symptom-level"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past 5x5 experiment with specific recommendations, but the current turn is focused on verifying repo state, summarizing completed work, and planning next steps\u2014not on evaluating or implementing recall candidate families.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2350,
+      "memory_title": "Recall candidate families 5x5 experiment: top signals identified"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's eval system discussion and recall quality metrics, though the specific abstention categorization issue appears to be a known technical detail rather than an immediate blocker for the summarized work.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3048,
+      "memory_title": "YAAML eval replay metrics: align empty recall categories with production abstentions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a specific eval metrics classification issue that was already addressed in the current turn's summary (which shows clean abstention/missed useful abstention distinction is now working), making it stale context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3080,
+      "memory_title": "YAAML eval metrics: empty replay recalls should record abstention quality, not neutral"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past implementation detail about eval rerun deduplication, but the current turn is focused on summarizing completed work, current repo state, and remaining tasks\u2014not on understanding or debugging eval rerun logic.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3088,
+      "memory_title": "Ignore superseded eval reruns in metrics"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's discussion of YAAML health metrics and eval data inspection, though the stored memory describes a feature implementation rather than current state/results.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3091,
+      "memory_title": "YAAML stats and eval summary support --since filtering for recency-focused diagnostics"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's discussion of recall quality improvements and recent metrics cleanup, though the stored memory describes an earlier fix while the current turn shows even more recent progress (avg 4.47 with different breakdown).",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes an older eval snapshot (~4.1 avg, 15% low-score rate) that is now stale compared to the current turn's much healthier metrics (4.47 avg, 0% low-score rate, 83% useful-run rate).",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a 5x5 experiment workflow and metrics runner, but the current turn is summarizing completed implementation work and remaining tasks\u2014not planning or executing new experiments.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3198,
+      "memory_title": "YAAML 5x5 experiment workflow: orchestrated metrics runner and prompt"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's focus on recall quality metrics and implementation decisions, though the stored memory documents past experiments rather than current state.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past experiment on segment/task-fit recall strategies, but the current turn is focused on verifying repo state, summarizing implementation progress, and planning next steps\u2014not on evaluating or revisiting segment-aware recall tradeoffs.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses past segment/task-fit experiments and rejected approaches, but the current turn is focused on verifying repo state, summarizing completed work, and planning remaining tasks\u2014not on exploring new recall ranking directions.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past recall quality regression (wrong-context issue from 24h ago), but the current turn shows the metrics have already improved significantly (4.47 avg score, 83% useful rate, 0% low-score examples), making this historical diagnosis stale and not actionable for the present work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes historical corpus evidence (3,369 memories, 66.5% low-score rate) that is now stale relative to the current turn's fresh metrics (1,001 active memories, 4.47 average score, 83% useful rate), making it outdated and potentially misleading for the current context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3252,
+    "turn_ordinal": 380
+  }
+}

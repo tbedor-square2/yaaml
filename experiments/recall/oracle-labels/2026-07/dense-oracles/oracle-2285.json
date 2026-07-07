@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant as a concrete alternative to unsupported memory APIs, though the stored memory lacks implementation details needed to fully answer the current turn's question about hidden endpoints.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1678,
+      "memory_title": "YAAML: Yet Another Agent Memory Layer package"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant as a supported alternative to hidden API endpoints for memory creation, but requires filtering since the current turn concludes that direct memory creation is unsupported and recommends this exact approach.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1814,
+      "memory_title": "YAAML remember skill for manual memory creation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses YAAML memory corpus reset procedures and transcript preservation, but the current turn asks about hidden API endpoints for surfacing/creating memories\u2014different concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1826,
+      "memory_title": "YAAML memory corpus reset is safe with transcript preservation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes internal metrics for recall and memory-corpus health, but the current turn asks about hidden API endpoints for memory operations\u2014a different technical concern with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2311,
+      "memory_title": "Recall and memory-corpus metrics separation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes bot-manager's Rust implementation architecture but does not address the current query about hidden API endpoints for memory surface/creation, making it stale and contextually irrelevant.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2315,
+      "memory_title": "bot-manager Rust implementation strategy: cache-backed, testable CLI+TUI with credential-light integrations"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory discusses memory quality evaluation and lifecycle management, but is unrelated to the current query about hidden API endpoints for surfacing or creating memories.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes YAAML hook infrastructure and session recall, but the current query asks about hidden API endpoints for memory CRUD operations\u2014a different technical concern that the memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2504,
+      "memory_title": "Codex PreToolUse hook for YAAML is live and working end-to-end"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes an internal architecture for conversation segmentation and memory organization, but the current turn asks about hidden API endpoints for surfacing/creating memories\u2014a different concern that requires schema inspection and endpoint discovery, not segment design philosophy.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses internal memory consolidation and provenance tracking design, which is not relevant to the current query about supported vs. unsupported API endpoints for surfacing or creating memories.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2652,
+      "memory_title": "Memory provenance graph for consolidation tracking"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes thread naming API, which is tangentially related to app-server endpoints but does not address the current query about memory-specific hidden endpoints or memory CRUD operations.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2655,
+      "memory_title": "Codex app-server thread/name/set API for setting thread titles"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes segment oracle architecture and internal memory formation patterns, but the current query asks about hidden API endpoints for surfacing/creating memories\u2014a different concern that requires API schema analysis rather than segment implementation details.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2692,
+      "memory_title": "Segment oracle architecture: tables, API, backfill design"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a regression test for session recall cache invalidation, which is tangentially related to memory internals but does not address the current query about hidden API endpoints for surfacing or creating memories.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3189,
+      "memory_title": "Session recall cache must invalidate on inactive memory IDs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents experiment logging and recall quality lessons, but does not address the current query about hidden API endpoints for memory operations.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completely different system (Kgoose/Moneybot's DynamoDB-backed memory service) unrelated to the Codex app-server schema being investigated in the current turn.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3325,
+      "memory_title": "kgoose-memory-store: Backend service for Kgoose/Moneybot persistent user memory"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a testing/benchmarking tool (Moneybench) for memory quality measurement, but the current turn asks about hidden API endpoints for surfacing/creating memories in Codex\u2014a different system with different concerns, making this context stale and off-topic.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3326,
+      "memory_title": "Moneybench: Eval harness for Moneybot/Kgoose testing and memory quality measurement"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes internal memory consolidation mechanics, but the current turn focuses on discovering hidden API endpoints for memory operations, which this memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3345,
+      "memory_title": "Kgoose memory consolidation is model-driven, not batch-scheduled"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses memory quality metrics and evaluation evidence, but the current turn asks about hidden API endpoints for memory operations\u2014a different technical concern that requires schema inspection and endpoint discovery, not quality assessment.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes internal memory techniques and evaluation methodology, but the current turn asks about hidden API endpoints for memory operations\u2014a different technical concern that requires schema inspection and endpoint discovery, not memory quality techniques.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3376,
+      "memory_title": "Memory techniques report: technical persuasion doc for internal eng buy-in"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019efc9f-ff22-7d32-bdac-00301bac40a8",
+    "source_run_id": 2285,
+    "turn_ordinal": 5
+  }
+}

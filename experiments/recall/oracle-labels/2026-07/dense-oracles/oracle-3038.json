@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses monitor validation methodology via backtesting, but the current turn is focused on diagnosing why a specific production metric isn't dropping after job retries\u2014a different operational concern requiring immediate troubleshooting rather than monitor refinement.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2203,
+      "memory_title": "Validating monitor improvements via production backtest before PR update"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about provider heartbeat p99 monitoring is unrelated to the current discussion about riskarbiter mux_fetch failures, circuit breaker issues, and deadletter job queue metrics.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2209,
+      "memory_title": "Provider heartbeat p99 monitoring: 1h change-shift with 1000ms absolute threshold"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses alert threshold tuning methodology for heartbeat latency, but the current turn focuses on debugging a specific deadletter backlog metric that isn't decreasing after retries\u2014different problem domain with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2218,
+      "memory_title": "Backtest alert monitors over 1-month windows before PR merge; validate exact threshold tradeoffs with real incident data"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes TD_11 Mux timeout mechanics and payroll job configuration, but current turn is focused on deadletter backlog gauge behavior and why retries aren't clearing the monitor metric\u2014a different diagnostic layer.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2634,
+      "memory_title": "RiskArbiter payroll TD_11 Mux timeout mechanics: hardcoded 10s default dominates flag cap"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes TD_11 payroll_run_update flagging rates post-cutover as stable, but the current turn is focused on new failures and a non-decreasing deadletter backlog metric despite retries\u2014different concerns that this memory doesn't directly address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2816,
+      "memory_title": "TD_11 payroll_run_update flagging rate post-Mux cutover: stable within expected band"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant\u2014the stored memory explains the root cause (Mux timeout on TD_11) of the current failures being investigated, and clarifies why retries aren't clearing the DLQ backlog (the underlying timeout issue persists).",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2820,
+      "memory_title": "Mux feature-fetch timeout causing DLQ backlog on TD_11 payroll_run_update"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a multi-window metric polling pattern for production monitoring that is directly applicable to the current investigation of failures and metric behavior, though it focuses on riskarbiter TD_11 while the current turn involves payroll_run_update deadletter metrics\u2014requiring minor contextual filtering.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2826,
+      "memory_title": "Production monitoring workflow: multi-window metric polling with log cross-check"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the exact monitoring workflow and metric-polling patterns being executed in the current turn, but lacks specific details about the circuit-breaker findings and deadletter gauge behavior that are now central to the user's follow-up question.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2830,
+      "memory_title": "Datadog monitoring workflow: repeated multi-window metric polling with log cross-checks"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a multi-window metric polling pattern for riskarbiter TD_11 production monitoring that directly aligns with the current turn's investigation of failures and metric behavior, though it requires filtering to focus on the specific deadletter backlog gauge issue rather than the broader workflow.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2837,
+      "memory_title": "Production monitoring workflow: multi-window metric polling with log cross-check"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant Datadog monitoring methodology and metric interpretation patterns (backlog gauges vs. event counters, windowing strategies, stale vs. fresh signal distinction) that directly apply to the user's current issue of retries not clearing the deadletter metric, but requires minor filtering since it focuses on TD_11 cutover rather than the current payroll_run_update deadletter investigation.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2851,
+      "memory_title": "Datadog production monitoring workflow for TD_11 trigger post-cutover"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a past TD_11 flagging blip and its benign behavior, but the current turn is focused on active `riskarbiter.mux_fetch.fail` failures, circuit breaker opens, and a non-dropping deadletter backlog metric\u2014different failure modes and timeframes that make this historical context mostly stale and tangential.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2853,
+      "memory_title": "TD_11 risk assessment monitoring: isolated flagging blip is normal and ages out cleanly"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant monitoring procedure for TD_11 and deadletter metrics, but the current turn focuses on payroll_run_update job retries and monitor 111080589 specifically, requiring some filtering to apply the stored guidance.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2859,
+      "memory_title": "TD_11 monitoring: repeated polling procedure and stale metric interpretation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a monitoring strategy for TD_11 rollout stability, but the current turn is focused on diagnosing why a specific deadletter metric isn't dropping after retries\u2014a different operational concern that requires understanding monitor definitions and backlog gauge behavior rather than sampling strategy.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2860,
+      "memory_title": "TD_11 monitoring: repeated sample windows and baseline for drift detection"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The memory addresses stale metric detection, which is tangentially relevant to the user's observation that retrying jobs isn't reducing the metric, but it doesn't directly explain why a backlog gauge persists after retries or guide next steps for the current deadletter situation.",
+      "judge_score": "3",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2861,
+      "memory_title": "TD_11 stale metric confirmation: zero job failures + zero ACL errors over time span"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a general TD_11 monitoring procedure with reusable queries, but the current turn has moved past initial failure investigation into a specific metric interpretation issue (why `jobqueue.sharded.dead_letter_jobs.peak` isn't dropping after retries), which requires understanding the monitor definition itself rather than the monitoring procedure.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2863,
+      "memory_title": "TD_11 monitoring procedure: reusable Datadog query set for flagging trend verification"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a monitoring procedure for TD_11, but the current turn has moved past initial failure diagnosis to a specific metric-not-dropping issue with monitor 111080589, which requires investigation of that particular monitor's definition and underlying metric behavior rather than a general polling procedure.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2864,
+      "memory_title": "TD_11 monitoring poll procedure: reusable query set and baseline comparison"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's investigation of `riskarbiter.mux_fetch.fail` and `MuxFeatureFetchingException` in TD_11, providing historical context on root causes (timeouts, missing signals) and prior mitigation attempts, though the stored memory is from an earlier poll window and may need filtering for current state.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2894,
+      "memory_title": "TD_11 Mux timeout/missing-signal failures during rollout monitoring"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ed6df-0d7b-7210-b6eb-9da62527d7f1",
+    "source_run_id": 3038,
+    "turn_ordinal": 20
+  }
+}

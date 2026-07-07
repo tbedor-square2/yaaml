@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes YAAML's overall architecture and commands, but does not contain specific information about how `project_descriptor` is set, derived, or used in the codebase.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1678,
+      "memory_title": "YAAML: Yet Another Agent Memory Layer package"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes YAAML's architecture and recall mechanism, but does not address how `project_descriptor` is specifically set or derived.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1679,
+      "memory_title": "YAAML design: file-backed recall as sidecar"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes recall file storage locations and ownership, which is orthogonal to how `project_descriptor` itself gets set or derived.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1801,
+      "memory_title": "Global per-project recall files owned by daemon"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses skill invocation rules and discoverability, which is unrelated to the technical mechanism of how `project_descriptor` gets set in the codebase.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1806,
+      "memory_title": "YAAML skill discoverability: explicit invocation rule, not passive conditional"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses parser bugs and session identity issues, but does not contain information about how `project_descriptor` is set or derived.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1811,
+      "memory_title": "Daemon ingestion bugs: incomplete turns and session identity"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the `yaaml remember` command's interface and safeguards, but the current turn asks specifically how `project_descriptor` gets set, which requires technical implementation details already provided in the conversation history.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1814,
+      "memory_title": "YAAML remember skill for manual memory creation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory about SQLite contention and daemon logging is unrelated to how project_descriptor gets set; it addresses database and logging infrastructure.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1817,
+      "memory_title": "SQLite contention and daemon logging fixes in yaaml"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses turn context metadata persistence and multi-project session handling, but the current query specifically asks how `project_descriptor` gets set\u2014which requires implementation details about derivation logic and LLM prompting, not turn-level context metadata architecture.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1821,
+      "memory_title": "Per-turn context metadata persisted for multi-project session recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses recall gating and filtering strategies, but the current turn asks specifically how `project_descriptor` gets set\u2014a different technical concern about initialization and derivation logic.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses deterministic activation keys and tool-triggered recall mechanisms, which is orthogonal to how `project_descriptor` gets set; it addresses memory retrieval strategy rather than descriptor initialization.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2392,
+      "memory_title": "Tool-triggered recall: deterministic activation keys over semantic classifiers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses conversation segments and task identity architecture, which is tangentially related to project organization but does not directly address how `project_descriptor` is set or its implementation details.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses evidence-gathering strategy for path and identifier signals, but the current turn asks specifically how `project_descriptor` gets set\u2014which requires implementation details about derivation logic and LLM prompting, not signal strength ranking.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2653,
+      "memory_title": "Path and external identifier evidence gathering strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes schema changes and segment oracle implementation details, which is unrelated to how project_descriptor gets set in the daemon or YAAML.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2693,
+      "memory_title": "Segment oracle schema changes and test impacts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a 5x5 experiment workflow and metrics runner, which is unrelated to how `project_descriptor` gets set in the codebase.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3198,
+      "memory_title": "YAAML 5x5 experiment workflow: orchestrated metrics runner and prompt"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents experimental findings and metrics about recall strategies, but does not contain technical information about how `project_descriptor` is set or its implementation details.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses removing hardcoded phrase taxonomy and tool-key extraction from YAAML recall, which is orthogonal to the current question about how project_descriptor gets set mechanically.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses removing hardcoded phrase taxonomy and tool-based task keys, which is tangentially related to project descriptor design but does not directly address how project_descriptor gets set or its derivation logic.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3333,
+      "memory_title": "Remove hardcoded phrase taxonomy and tool-based task keys from core"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses overall memory quality metrics and evaluation statistics, but does not address the technical mechanism of how `project_descriptor` is set, which is the direct subject of the current query.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 2273,
+    "turn_ordinal": 262
+  }
+}

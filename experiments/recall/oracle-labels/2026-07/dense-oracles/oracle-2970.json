@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Bazel verification is stale and contextually misaligned; the current turn is focused on git operations (pushing, squashing commits) for a PR, not on running Bazel tests or proto compilation.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2379,
+      "memory_title": "Bazel verification for archival review RPC changes in java worktrees"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed PRs and backport work from a previous context, but the current turn is actively working on squashing commits and pushing changes to a PR in progress, making this historical summary stale and not actionable.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed refactoring (MLP-4410) with a different implementation approach, but the current turn is focused on fixing a specific test assertion for `failedArchivalAuditStillCountsArchivedRule` and squashing commits on the current PR\u2014neither of which are addressed in the stored memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2581,
+      "memory_title": "MLP-4410 refactored to single unscheduled manual job with dry_run flag; old PR closed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR #482106 deployment timing is unrelated to the current turn's focus on test assertions, commit squashing, and PR history rewriting.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2614,
+      "memory_title": "PR #482106 missed auto-deploy by minutes; deployed next window at 11:03 PDT on Jun 24"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed PR review and freeze-related fixes, but the current turn is focused on pushing and squashing commits\u2014different operational phase with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about a DynamoDB read spike investigation is completely unrelated to the current turn's focus on test assertions, PR commits, and git operations.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2709,
+      "memory_title": "Risk Arbiter DynamoDB read spike investigation (2026-06-25)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Cloud CD canary cleanup is completely unrelated to the current turn's focus on test assertions, PR squashing, and git operations.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2723,
+      "memory_title": "Cloud CD canary cleanup: retry deploy rather than manual kubectl delete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Cloud CD canary cleanup is completely unrelated to the current turn, which focuses on test assertions for a `failedArchivalAuditStillCountsArchivedRule` and PR commit squashing.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2729,
+      "memory_title": "Cloud CD stuck canary cleanup: use retrigger deploy or manual kubectl delete as last resort"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about a PersonService ACL production canary failure is completely unrelated to the current turn's focus on test assertions for failedArchivalAuditStillCountsArchivedRule and PR commit squashing.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2781,
+      "memory_title": "Production canary failure root cause: PersonService.BatchGetByPersonToken ACL missing for mixtape"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory is about a different PR (#477833 riskarbiter-trigger-traffic) and describes completed rebase/push actions, while current turn is actively working on squashing commits for the failedArchivalAuditStillCountsArchivedRule PR.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3065,
+      "memory_title": "PR #477833 tbedor/riskarbiter-trigger-traffic: rebased and pushed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed rebase and BUILD dependency cleanup from an earlier PR state, but the current turn is focused on squashing commits on the current PR branch, making this stale context mostly irrelevant to the immediate task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed refactoring PR (#543) for pyriskarbiter, but the current turn is actively working on a different issue (failedArchivalAuditStillCountsArchivedRule test assertions) and squashing commits on the current PR, making this context stale and irrelevant.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about a Homebrew formula PR for sq-riskarbiter migration, completely unrelated to the current turn's focus on fixing a failedArchivalAuditStillCountsArchivedRule test assertion and squashing commits on a Java PR.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3157,
+      "memory_title": "homebrew-formulas PR #4844: sq-riskarbiter uvx wrapper migration\u2014mlds-core#545 blocker and publish workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about deprecated signal audit and Dumbo cleanup is completely unrelated to the current turn's focus on pushing commits, squashing PR history, and verifying the PR state.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3181,
+      "memory_title": "Deprecated signal audit: inventory, mapping, backfill evidence, ownership classification, and Dumbo cleanup gates"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed backend/frontend sync verification for a different PR feature (RuleSummary.next_automated_archival_utc_date), while the current turn focuses on squashing commits for the failedArchivalAuditStillCountsArchivedRule test assertion\u2014completely different context and actively distracting.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3217,
+      "memory_title": "KUI PR #14118 backend/frontend sync verified; frontend safe to merge before backend deploy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about riskarbiter canary deployment is completely unrelated to the current turn's focus on fixing a test assertion for failedArchivalAuditStillCountsArchivedRule and squashing PR commits.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3232,
+      "memory_title": "riskarbiter canary deploy (build 7692) status and blockers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about LaunchDarkly feature flag rollout is unrelated to the current turn's focus on fixing test assertions for `failedArchivalAuditStillCountsArchivedRule` and squashing PR commits.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3368,
+      "memory_title": "Riskarbiter archival rollout: staged feature flag and script"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef12b-5400-7f41-9c2c-7c82f7013391",
+    "source_run_id": 2970,
+    "turn_ordinal": 124
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The current turn query is empty, making it impossible to determine relevance; this memory about RiskArbiter rule archival RPC changes cannot be evaluated against a non-existent information need.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2622,
+      "memory_title": "RiskArbiter rule archival manual RPC requires change-freeze guard on both code paths"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The recall query is empty, making it impossible to determine relevance; the stored memory about a specific PR implementation cannot be evaluated against a non-existent information need.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2637,
+      "memory_title": "MLP-4410 PR #483111 complete: manual pending rule archival executor with dry-run, audit, and notifications"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef12b-5400-7f41-9c2c-7c82f7013391",
+    "source_run_id": 2969,
+    "turn_ordinal": 122
+  }
+}

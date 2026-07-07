@@ -1,0 +1,18 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The current turn is empty with no query or context, making this metadata-focused technical memory about bot-manager retry logic impossible to evaluate for relevance.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2690,
+      "memory_title": "bot-manager metadata stickiness: retry failed title generation when real user messages exist"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019efc9f-ff22-7d32-bdac-00301bac40a8",
+    "source_run_id": 3128,
+    "turn_ordinal": 90
+  }
+}

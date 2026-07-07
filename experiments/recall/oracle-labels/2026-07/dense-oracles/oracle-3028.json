@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses trigger-Slack channel mappings and data quality, but the current turn is about whether updating Slack channel metadata sends notifications in staging\u2014a different operational concern.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1572,
+      "memory_title": "trigger_slack_channels app-assignment evidence strength"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses TTY/confirmation requirements for trigger updates, but the current turn has already completed the staging update successfully and is now focused on notification behavior verification, making this constraint information stale and not actionable.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1847,
+      "memory_title": "Risk Arbiter trigger metadata updates require TTY and production confirmation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant context about updating Slack channels for triggers, but the current turn is specifically about staging metadata updates and notification behavior, which requires more detailed executor/notification path knowledge than the stored memory covers.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1860,
+      "memory_title": "Slack channel archival and successor routing for Risk Arbiter triggers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes interactive Slack posting workflow procedures, but the current turn is about whether a metadata update sends notifications in staging\u2014a different concern that the memory doesn't address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1861,
+      "memory_title": "Interactive Slack posting workflow for no-traffic trigger notifications"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to understanding notification job behavior and staging execution paths, but the stored memory is about PR implementation details rather than the specific staging metadata update and notification triggering mechanics being discussed in the current turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2486,
+      "memory_title": "MLP-4411 notification job implementation complete; draft PR ready without wiring scheduled sends"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a production trigger-to-Slack-channel mapping project, but the current turn is about staging metadata updates and notification behavior for a specific trigger (TD_30xx), making this reference list mostly irrelevant to the immediate question.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2606,
+      "memory_title": "RiskArbiter trigger Slack channel replacement map"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the CLI workflow for pending rule archival verification, which is directly relevant to the current turn's discussion of staging notifications and the `sq riskarbiter rule pending-archivals` commands, though the current turn has already progressed beyond the initial flag-setting phase into execution planning.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2780,
+      "memory_title": "CLI command workflow for pending rule archival verification after flag set"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory about TD_11 Mux cutover staging evidence is completely unrelated to the current turn's question about updating Slack channel metadata and notification behavior in staging.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2791,
+      "memory_title": "Strong staging evidence for TD_11 Mux cutover; missing-signal fallback not observed; recommend percentage rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a Mux cutover strategy for TD_11/payroll_run_update_connected_users, which is completely unrelated to the current turn about updating Slack channel metadata for TD_30xx and notification behavior in staging.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2801,
+      "memory_title": "RA Mux cutover for TD_11/payroll_run_update_connected_users: staged evidence is strong; percentage rollout strategy recommended"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory explains notification idempotency and DB marking mechanisms that are directly relevant to understanding when Slack notifications fire in staging, but the current turn has already moved past the conceptual phase into execution and verification.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2964,
+      "memory_title": "Rule archival notification idempotency via DB marking"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Slack approval draft generator script, which is unrelated to the current turn's focus on updating trigger metadata and understanding notification behavior in staging.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3150,
+      "memory_title": "Slack approval draft generator: trigger-only mode with filtering and static messaging"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a LaunchDarkly rollout script and feature flag management, which is tangential to the current turn's focus on Slack channel metadata updates and notification behavior in staging.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3368,
+      "memory_title": "Riskarbiter archival rollout: staged feature flag and script"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to understanding notification behavior differences between staging and production, though the current turn focuses on staging metadata updates rather than production blocking issues.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3373,
+      "memory_title": "Production rule archival notifications require Slack channel configuration"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant context about notification routing across environments (production, staging, non-prod), which directly relates to the user's question about whether updating the Slack channel sends notifications in staging, but it lacks specific details about the metadata update path versus execution path that the current turn is actively discussing.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3374,
+      "memory_title": "RuleArchivalExecutor notification validation and routing logic"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes production validation behavior for missing Slack channels, but current turn is about staging metadata updates and notification execution paths, which are only tangentially related.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3387,
+      "memory_title": "RuleArchivalExecutor production missing-channel validation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a production audit of missing Slack channels, but the current turn is about updating staging metadata for a specific trigger (TD_30xx) with a Slack channel already set, making this production-focused audit largely irrelevant to the staging workflow.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3396,
+      "memory_title": "Production rule archival missing Slack channel audit result"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides useful context about notification delivery guards across environments, confirming staging routes to a specific channel, but the current turn has already resolved the core question (metadata update doesn't send notifications) and is moving to implementation details.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3397,
+      "memory_title": "Rule archival notification delivery guards by environment"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef566-2195-7d72-a3ad-cfb9ad00f810",
+    "source_run_id": 3028,
+    "turn_ordinal": 43
+  }
+}

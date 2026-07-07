@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about LaunchAgent error handling is relevant context for the current turn's service hardening work, though the turn shows this issue was already addressed in the commit rather than being a pending task.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1809,
+      "memory_title": "YAAML service/daemon status command needs error handling for uninstalled LaunchAgent"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about SQLite contention and daemon logging is stale and unrelated to the current turn's focus on removing the Codex PreToolUse hook and verifying the clean state.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1817,
+      "memory_title": "SQLite contention and daemon logging fixes in yaaml"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a refinement to `yaaml status` output formatting, which is tangential to the current turn's focus on removing the Codex PreToolUse hook, committing changes, and verifying the working tree state.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2034,
+      "memory_title": "yaaml status command: separate transcript state from cumulative counters"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses deterministic activation keys for tool-triggered recall, but the current turn is a completed task summary about removing a Codex PreToolUse hook and committing changes\u2014no active recall or tool-triggering decision is being made.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2392,
+      "memory_title": "Tool-triggered recall: deterministic activation keys over semantic classifiers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the hook as 'live and working end-to-end,' but the current turn shows the hook was just removed and committed as obsolete due to quality issues.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2504,
+      "memory_title": "Codex PreToolUse hook for YAAML is live and working end-to-end"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses tool-hook eval anchoring and turn_id resolution, but the current turn documents completion of hook removal and final verification\u2014these are orthogonal concerns with no actionable connection.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2525,
+      "memory_title": "Tool-hook eval anchoring: optional turn_id for deferred resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a service error-handling fix that was implemented and verified as part of the current troubleshooting session, providing useful context about the hardening work mentioned in the turn, though the turn itself has already moved past this detail to final verification and commit.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2759,
+      "memory_title": "Service error handling must check exit status; silent launchctl failures mask problems"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents a service hardening fix that was implemented and verified in the current turn, providing useful context about the change, but requires minor filtering since the turn also covers broader hook removal and documentation updates.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2764,
+      "memory_title": "Service status hardening: launchctl errors now fail explicitly"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the completed work shown in the current turn\u2014the removal of the Codex PreToolUse hook, commit details, verification steps, and service hardening\u2014making it essential context for understanding the outcome and decisions made.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2769,
+      "memory_title": "Codex PreToolUse hook removed due to installation friction and low quality scores"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed Blox routine test unrelated to the current turn's focus on removing a Codex PreToolUse hook, cleaning YAAML config, and committing changes.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3077,
+      "memory_title": "Manual no-op Blox routine completed: bbsubscriber reachable, run_as_service=sa-builderbot works from laptop"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a `--since` filtering feature for stats/eval commands, but the current turn is about completing a hook removal commit with no indication that filtering or diagnostics are needed.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3091,
+      "memory_title": "YAAML stats and eval summary support --since filtering for recency-focused diagnostics"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes JSON parsing fixes in LLM integration, which is unrelated to the current turn's focus on removing a Codex PreToolUse hook, committing changes, and verifying service state.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3163,
+      "memory_title": "Hardened provider JSON parsing in YAAML LLM integration"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a 5x5 experiment workflow and metrics runner setup, but the current turn is about completing a hook removal commit and verification\u2014different context with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3198,
+      "memory_title": "YAAML 5x5 experiment workflow: orchestrated metrics runner and prompt"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past recall experiment findings and lessons, but the current turn is about completing a specific tool-hook removal task with verification steps already in progress\u2014not about recall strategy or experiment design.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is useful context confirming that `just quality` is a required gate before committing, which the current turn explicitly verifies passed, but the memory adds no new actionable information for the immediate next step.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3223,
+      "memory_title": "yaaml repo requires `just quality` gate before committing code"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses refactoring recall classification to remove hardcoded phrases and tool-specific logic, but the current turn shows completion of a different task (removing a Codex PreToolUse hook), making this context stale and tangentially related at best.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns removing hardcoded phrase taxonomy and tool-based task keys from core code, while the current turn documents a completed commit removing the Codex PreToolUse hook\u2014different technical concerns with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3333,
+      "memory_title": "Remove hardcoded phrase taxonomy and tool-based task keys from core"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 2995,
+    "turn_ordinal": 281
+  }
+}

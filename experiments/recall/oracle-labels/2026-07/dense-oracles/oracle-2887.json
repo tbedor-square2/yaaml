@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about CI validation is weakly relevant to instructions about AI agent markers and monorepo structure, but doesn't directly address the current turn's focus on coding guidelines and file operations.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1707,
+      "memory_title": "Java monorepo CI validation is the default; skip local Bazel testing"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory describes a Rust TUI project (tuicr), but current turn is about Java monorepo instructions (AGENTS.md) for a different project path (/Users/tbedor/Development/java), making it actively distracting and wrong-context.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1774,
+      "memory_title": "Node/Rust project (tbedor) active-thread goal: CLI agent dispatch, GitHub replies, run lifecycle, and notifications"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Square-console CLAUDE.md guidance is for a different project (console) than the current context (Java monorepo at /Users/tbedor/Development/java), making it mostly irrelevant despite some overlapping conventions like the \ud83e\udd16 prefix.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1792,
+      "memory_title": "Square-console CLAUDE.md guidance compliance"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Useful context about Bazel workflow and strict-deps rules that applies to the Java monorepo, though the current turn focuses on AI usage tracking and agent instructions rather than immediate build operations.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1901,
+      "memory_title": "Bazel workflow in squareup/java: Hermit-managed bin/bazel, strict-deps, and buildozer"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Bazel verification is stale and contextually misaligned\u2014the current turn is about AGENTS.md instructions and AI usage tracking rules for a Java monorepo, not about troubleshooting Bazel builds or RPC changes.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2379,
+      "memory_title": "Bazel verification for archival review RPC changes in java worktrees"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Useful context for Java development in this repo, but the current turn is focused on AI agent marker writing and citation rules rather than Bazel workflows.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2716,
+      "memory_title": "Java Bazel workflow: use bin/bazel from repo root, respect strict-deps, avoid bare bazel command"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Graphite + Bazel testing workflow is contextually relevant to the AGENTS.md instructions being reviewed, particularly regarding testing strategy and subagent coordination, but requires filtering since the current turn is focused on AI usage marker requirements and general monorepo structure rather than active testing execution.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3015,
+      "memory_title": "Graphite + Bazel testing workflow: use subagents for test runs, stage only relevant files"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory references a specific testing workflow for rule archival changes, but the current turn is about general AGENTS.md instructions and AI usage tracking policies with no indication the user needs to run those specific tests.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3024,
+      "memory_title": "Bazel testing via subagent for rule archival changes"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about draft PRs is unrelated to the current turn, which contains AGENTS.md instructions and project documentation for a Java monorepo.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3034,
+      "memory_title": "Draft PRs to open: tbedor/riskarbiter-rule-summary-archival-date and tbedor/kui-rule-archival-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Bazel test verification is stale and irrelevant to the current turn, which is about AI agent instructions and code change tracking markers for a Java monorepo.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3119,
+      "memory_title": "Bazel test verification: discover exact targets, run with --test_output=errors, build minimal changed packages only"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed PR rebase and build dependency removals, which is stale context unrelated to the current turn's focus on AGENTS.md instructions and AI usage tracking guidelines for the Java monorepo.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Python project (pyriskarbiter) refactoring, while the current turn is about Java monorepo coding standards and AI agent marker requirements\u2014completely different contexts with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes Risk Arbiter rules, data pipelines, and UI exports, which is completely unrelated to the current turn's focus on AGENTS.md instructions for AI-assisted code change tracking in a Java monorepo.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3174,
+      "memory_title": "redundant-rules: Full architecture, data pipeline, and UI export"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the workflow for creating and maintaining AGENTS.md guidance files, which is exactly what the current turn is showing\u2014an AGENTS.md file with detailed instructions for AI agents working in a Java monorepo.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3218,
+      "memory_title": "Agent guidance documentation workflow for Risk Arbiter and KUI"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Bazel package splitting is stale and contextually irrelevant to the current turn, which focuses on AI agent usage tracking and code change markers in a Java monorepo.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3219,
+      "memory_title": "Build performance improvements via Bazel package splitting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR #14151 UI changes is completely unrelated to the current turn's AGENTS.md instructions for Java development, AI usage tracking, and repository structure guidelines.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019eff96-f581-7d10-a2b2-e9d2a5bfbb14",
+    "source_run_id": 2887,
+    "turn_ordinal": 0
+  }
+}

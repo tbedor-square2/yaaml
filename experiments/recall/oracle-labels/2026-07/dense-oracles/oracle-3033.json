@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses transcript slice handling and turn completion, but the current turn is focused on debugging segment identity extraction and path key filtering for non-authoritative sources\u2014a different problem domain.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1818,
+      "memory_title": "Preference: incomplete transcript slices in live session context"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed infrastructure setup (PreToolUse hook), but the current turn is focused on debugging segment identity extraction and path key filtering logic, which are orthogonal concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2504,
+      "memory_title": "Codex PreToolUse hook for YAAML is live and working end-to-end"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the segment identity and extraction architecture that the current turn is actively debugging and refining\u2014specifically addressing how path keys should be validated and when segments should be created.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a test plan for hybrid recall architectures, but the current turn is focused on debugging segment identity extraction and filtering path keys from tool output\u2014a different operational concern than the high-level test design.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes segment oracle architecture and design patterns, but the current turn is focused on debugging specific segment extraction failures (non-authoritative path keys like 'help/tests/body') and implementing targeted filters\u2014requiring operational context rather than architectural overview.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2692,
+      "memory_title": "Segment oracle architecture: tables, API, backfill design"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the segment-based task-state expiry solution being actively debugged and refined in the current turn, including the exact failure mode (non-authoritative path keys, task-state drift) and the implementation approach being tested.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2763,
+      "memory_title": "YAAML recall quality next steps: segment-based task-state expiry"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact problem being debugged in the current turn: task-state and segment drift causing false recalls, with the recommended fix (segment-based suppression) being actively implemented and tested.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2768,
+      "memory_title": "YAAML recall quality: task-state and segment drift are primary failure modes"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the current turn's focus on segment identity extraction pollution and path-key normalization, providing implemented solutions and context for the exact problem being debugged.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2811,
+      "memory_title": "Segment path keys need aggressive normalization and capping"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current debugging work on segment identity extraction pollution, though the stored memory is a general principle rather than specific to the current Java path-key issue being traced.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2927,
+      "memory_title": "Segment context suppression blocks must match recall query suppression"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current debugging work on segment/task-state drift, as it documents prior fixes that are being validated and built upon in the current turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the exact problem being debugged in the current turn: segment identity extraction from non-task context (tool output, code fixtures) is polluting segment keys, and the memory provides the specific filtering rules and implementation details needed to harden path key extraction.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3098,
+      "memory_title": "Segment task-key extraction: filter tool output and prioritize identity keys"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides historical eval metrics that are now stale context; the current turn is actively debugging segment identity extraction and path key filtering, which requires fresh execution traces rather than past aggregate scores.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past experiment logs and lessons, but the current turn is actively debugging segment identity extraction and path key filtering in real-time, which requires fresh execution traces and current eval data rather than historical experiment summaries.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a past experiment on segment/task-fit tradeoffs, but the current turn is actively debugging segment identity extraction issues and planning a code fix for path-key filtering, making the historical experiment results not actionable for the immediate debugging work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses segment/task-state recall challenges and prior gating experiments, providing useful context for the current debugging work on segment identity extraction and filtering strategy, though the current turn has moved to a more specific path-key hardening fix.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses hardcoded phrase/tool-key removal, but the current turn focuses on segment identity extraction and path-key filtering for non-task context, which are distinct problems.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the same problem (wrong-context recalls and segment/task-state drift) that the current turn is actively debugging, providing quantified baseline metrics and root-cause analysis that would inform the next filtering decision.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes past corpus analysis and general quality findings, but the current turn is focused on debugging a specific segment identity extraction bug (path keys from tool output), which requires different context than historical eval statistics.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3033,
+    "turn_ordinal": 294
+  }
+}

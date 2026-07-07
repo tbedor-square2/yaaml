@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents general code review patterns from a different PR (480432), but the current turn is addressing a specific technical change (removing an enum field from a proto) in PR 483111, making the stored patterns only tangentially relevant and unlikely to guide the immediate task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1755,
+      "memory_title": "Java Risk Arbiter PR 480432: Review feedback patterns and code style preferences"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns PR #480432 cleanup issues (inlining helpers, unused dependencies), while the current turn addresses PR #483111 review feedback (removing an enum field from proto); different PRs with unrelated technical contexts.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2357,
+      "memory_title": "PR #480432 review feedback: inlining and unused dependency cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different PR (#482948) and task (MLP-4411 notification job), while the current turn addresses PR #483111 with a specific code review comment about removing an owner-resolution enum field.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2490,
+      "memory_title": "MLP-4411 notification job PR #482948 complete; MLP-4418 archival execution job next"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents general code review patterns for RiskArbiter PRs, but the current turn is addressing a specific technical change (removing an enum field from a proto) with concrete implementation details already in progress, making the generic checklist guidance largely irrelevant to this immediate task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2566,
+      "memory_title": "RiskArbiter AGENTS.md: human review feedback patterns from 50 merged PRs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact refactoring task being executed in the current turn\u2014removing the redundant owner_resolution_status enum and field from the proto, keeping only owner_user_name, and updating all call sites and tests accordingly.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2617,
+      "memory_title": "PendingArchivalCandidateEntry: owner_resolution_status field is redundant"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the completion and resolution of PR #483111, including the specific changes made, test results, and the freeze annotation fix\u2014all directly actionable context for the current turn addressing the same PR.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes draft PRs for rule archival date surfacing, which is unrelated to the current turn's focus on addressing a specific GitHub review comment about removing an owner-resolution enum field.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3034,
+      "memory_title": "Draft PRs to open: tbedor/riskarbiter-rule-summary-archival-date and tbedor/kui-rule-archival-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about PR #477833 (riskarbiter-trigger-traffic rebase), while the current turn addresses PR #483111 (owner-resolution enum removal)\u2014completely different PRs with no overlapping context.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3065,
+      "memory_title": "PR #477833 tbedor/riskarbiter-trigger-traffic: rebased and pushed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns PR #483601 (rebase and BUILD deps), while the current turn addresses PR #483111 (proto field removal for owner-resolution); completely different PRs and contexts.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes pyriskarbiter library refactoring and PR #543 consolidation work, which is completely unrelated to the current turn's focus on addressing a specific GitHub review comment about removing an owner-resolution enum field from a proto in the Java repository.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a Homebrew formula migration and PyPI publishing workflow, while the current turn addresses a specific GitHub PR code review comment about removing a proto enum field\u2014completely different contexts with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3157,
+      "memory_title": "homebrew-formulas PR #4844: sq-riskarbiter uvx wrapper migration\u2014mlds-core#545 blocker and publish workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about a KUI table alignment PR (#14133), while the current turn addresses a completely different GitHub PR (#483111) in a Java repository involving proto field removal\u2014no contextual overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3226,
+      "memory_title": "KUI PR #14133 deep review and alignment patch complete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes PR #483601 about test harness refactoring, while the current turn is addressing PR #483111 about removing an owner-resolution enum field from a proto\u2014completely different PRs and concerns.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3237,
+      "memory_title": "PR #483601: Reduce AbstractSuspicionThresholdTest dependency via explicit rule config harness"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes PR #13972 addressing KITT recent-history and rule-history feedback, which is completely unrelated to the current turn's focus on PR #483111 addressing an owner-resolution enum removal in a proto API.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3318,
+      "memory_title": "Recently visited resources PR feedback resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about PR #14151 (UI label/tooltip changes for rule archival), while the current turn addresses PR #483111 (proto field removal for owner resolution), making them completely unrelated contexts.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a separate refactoring (Mux helper rename and signal-generator cleanup) unrelated to the current turn's focus on removing an owner-resolution enum field from a proto in PR #483111.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about .editorconfig formatting is stale and tangential; the current turn focuses on addressing a specific PR review comment about removing an enum field from a proto, which has no connection to formatting settings.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3398,
+      "memory_title": "Riskarbiter .editorconfig formatting settings finalized and applied"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef12b-5400-7f41-9c2c-7c82f7013391",
+    "source_run_id": 2161,
+    "turn_ordinal": 98
+  }
+}

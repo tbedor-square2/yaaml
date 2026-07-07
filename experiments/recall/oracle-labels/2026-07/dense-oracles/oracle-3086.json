@@ -1,0 +1,18 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The recall query is empty, making it impossible to assess relevance; this memory about transcript handling is contextually orphaned and cannot be evaluated against a non-existent information need.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1818,
+      "memory_title": "Preference: incomplete transcript slices in live session context"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3086,
+    "turn_ordinal": 315
+  }
+}

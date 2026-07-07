@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes startup timing analysis and readiness metrics infrastructure, but the current turn is investigating a specific JVM native-library failure (`profiler_java_agent.so` / `libre2.so.10`) in production canary vs. staging\u2014a different problem domain that doesn't benefit from the deployment startup timing framework.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1757,
+      "memory_title": "Deploy startup analysis: granular timing breakdown with metrics and logs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a deployment analysis tool's auto-detection feature, but the current turn is actively investigating a specific production vs. staging failure comparison with concrete findings already in progress\u2014this tool context is stale and not actionable for the immediate diagnostic work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1758,
+      "memory_title": "just deploy-startup-analysis: auto-detect latest prod rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Dumbo shadow logs and feature classification is completely unrelated to the current turn's investigation of a JVM initialization failure in staging versus production.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2072,
+      "memory_title": "Offline signal production-use classification: Dumbo shadow logs + Sourcegraph layering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about a Snowflake backfill process is completely unrelated to the current turn's investigation of a JVM/profiler failure in staging vs. production environments.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2300,
+      "memory_title": "Partition-selection-history backfill: three-artifact durable state machine with strict reconciliation cycle"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns payroll latency metrics and a successful deploy, while the current turn is investigating a JVM/native library failure in staging\u2014completely different problem domain with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2615,
+      "memory_title": "payroll_connected_users latency improved post-deploy 11:03 PDT; p99 ~24s \u2192 ~5-9s, SLO misses nearly eliminated"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a DynamoDB read spike investigation from June 2026, which is completely unrelated to the current turn's focus on JVM initialization failures with native library loading (`profiler_java_agent.so`, `libre2.so.10`) and staging environment comparison.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2709,
+      "memory_title": "Risk Arbiter DynamoDB read spike investigation (2026-06-25)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Cloud CD canary cleanup procedures is stale and irrelevant to the current turn, which is focused on comparing staging vs. production failure signatures and pod states.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2723,
+      "memory_title": "Cloud CD canary cleanup: retry deploy rather than manual kubectl delete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Cloud CD canary cleanup is stale and irrelevant to the current turn, which is focused on comparing production and staging failure signatures for a specific JVM/profiler issue.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2729,
+      "memory_title": "Cloud CD stuck canary cleanup: use retrigger deploy or manual kubectl delete as last resort"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a PersonService ACL authorization failure, but the current turn is investigating a native library loading failure (`profiler_java_agent.so` / `libre2.so.10`) that is production-specific and absent in staging\u2014a completely different root cause.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2781,
+      "memory_title": "Production canary failure root cause: PersonService.BatchGetByPersonToken ACL missing for mixtape"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses TD_11 mux cutover staging evidence, but the current turn is investigating a specific JVM init/profiler native-library failure (`profiler_java_agent.so` / `libre2.so.10`) unrelated to mux signal fetching or trigger cutover logic.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2791,
+      "memory_title": "Strong staging evidence for TD_11 Mux cutover; missing-signal fallback not observed; recommend percentage rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory concerns a Mux cutover strategy for a payroll feature flag, which is completely unrelated to the current investigation of JVM initialization and native library failures in staging vs. production.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2801,
+      "memory_title": "RA Mux cutover for TD_11/payroll_run_update_connected_users: staged evidence is strong; percentage rollout strategy recommended"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Datadog monitoring workflow for TD_11 production cutover, but the current turn is investigating a specific JVM/native library failure in staging vs. production\u2014a different problem domain requiring log analysis and pod state inspection rather than metric window patterns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2851,
+      "memory_title": "Datadog production monitoring workflow for TD_11 trigger post-cutover"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes TD_11 monitoring procedures and metric interpretation, but the current turn is investigating a specific JVM/native-library failure in staging vs. production\u2014a different problem domain with no overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2859,
+      "memory_title": "TD_11 monitoring: repeated polling procedure and stale metric interpretation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory about stale metric confirmation is unrelated to the current investigation of a JVM init/profiler failure in production vs. staging environments.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2861,
+      "memory_title": "TD_11 stale metric confirmation: zero job failures + zero ACL errors over time span"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a PR rebase and staging deploy in progress, but the current turn is investigating a specific production failure (profiler_java_agent.so / libre2.so.10) and comparing it to staging state\u2014the memory provides no actionable details about the failure, staging pod status, or deployment SHAs relevant to the investigation.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3065,
+      "memory_title": "PR #477833 tbedor/riskarbiter-trigger-traffic: rebased and pushed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about deprecated signal audit, inventory mapping, and Dumbo cleanup is completely unrelated to the current turn's investigation of a JVM initialization failure in production vs. staging environments.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3181,
+      "memory_title": "Deprecated signal audit: inventory, mapping, backfill evidence, ownership classification, and Dumbo cleanup gates"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant context about the build 7692 deployment status and pre-existing production alerts, but the current turn focuses on staging-specific failure investigation with newer findings that supersede the stored summary.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3232,
+      "memory_title": "riskarbiter canary deploy (build 7692) status and blockers"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef12b-5400-7f41-9c2c-7c82f7013391",
+    "source_run_id": 2971,
+    "turn_ordinal": 125
+  }
+}

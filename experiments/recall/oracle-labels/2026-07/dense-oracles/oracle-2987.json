@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a deploy startup analysis tool and metrics framework, but the current turn is asking to poll until pods reach Ready status\u2014a real-time operational action that requires live pod state, not historical timing analysis or tool documentation.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1757,
+      "memory_title": "Deploy startup analysis: granular timing breakdown with metrics and logs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a deployment analysis tool feature, but the current turn is actively polling canary pods for readiness status\u2014a real-time operational task that doesn't need or benefit from cached deployment-startup-analysis tooling.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1758,
+      "memory_title": "just deploy-startup-analysis: auto-detect latest prod rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about LaunchDarkly flag configuration is stale operational context unrelated to the current pod health and readiness polling task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1881,
+      "memory_title": "RiskArbiter LaunchDarkly audit findings: mux rollout flag stuck in partial state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Datadog metric aggregation is stale and irrelevant to the current turn, which focuses on pod readiness status and startup health during a canary deployment.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2041,
+      "memory_title": "Datadog metric aggregation for canary validation: both code:500 and code:500s counted in error rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past optimization to NLB readiness timing, but the current turn is actively polling for pod readiness status in an ongoing deployment\u2014the memory provides historical context about expected timelines rather than actionable information for the immediate troubleshooting task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2306,
+      "memory_title": "Risk Arbiter deploy time improved by moving NLB to jobs-blue"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes deployment architecture and app modes, but the current turn is focused on monitoring pod readiness status during a canary rollout\u2014different operational context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2378,
+      "memory_title": "RiskArbiter2App is dormant in production; LegacyApp is the active app"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes RiskArbiter2App's dormant state in production, but the current turn is focused on monitoring canary pod readiness and startup health for an active deployment, making this context stale and not actionable for the immediate polling task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2452,
+      "memory_title": "RiskArbiter2App is dormant in production"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about a DynamoDB read spike from June 2026 is unrelated to the current turn's focus on pod readiness status and health during a canary deployment.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2709,
+      "memory_title": "Risk Arbiter DynamoDB read spike investigation (2026-06-25)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about canary cleanup procedures is stale context; the current turn is actively polling for pod readiness during an ongoing canary deployment, not dealing with a failed canary requiring cleanup.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2723,
+      "memory_title": "Cloud CD canary cleanup: retry deploy rather than manual kubectl delete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses canary cleanup after failures, but the current turn is actively polling healthy canary pods toward Ready state\u2014not dealing with stuck/failed deployments requiring cleanup.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2729,
+      "memory_title": "Cloud CD stuck canary cleanup: use retrigger deploy or manual kubectl delete as last resort"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a past TD_11 mux cutover decision with staging metrics, but the current turn is actively polling canary pod readiness status\u2014completely different operational context with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2791,
+      "memory_title": "Strong staging evidence for TD_11 Mux cutover; missing-signal fallback not observed; recommend percentage rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Datadog monitoring procedure for TD_11 risk-arbiter payroll metrics, but the current turn is about polling Kubernetes pod readiness status until canary pods reach Ready state\u2014a different operational context with no overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2864,
+      "memory_title": "TD_11 monitoring poll procedure: reusable query set and baseline comparison"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a PR rebase and staging deploy, but the current turn is actively monitoring canary pod readiness in production\u2014different context and timeline.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3065,
+      "memory_title": "PR #477833 tbedor/riskarbiter-trigger-traffic: rebased and pushed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past refactoring of pyriskarbiter library modules (PR #543), which is completely unrelated to the current turn's focus on monitoring pod readiness and startup health during a canary deployment.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context about the canary deployment status and known blockers, though the stored memory is slightly stale regarding current pod readiness state which the user is actively polling.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3232,
+      "memory_title": "riskarbiter canary deploy (build 7692) status and blockers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about LaunchDarkly archival rollout flags is completely unrelated to the current turn's focus on pod readiness status and health monitoring.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3368,
+      "memory_title": "Riskarbiter archival rollout: staged feature flag and script"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef12b-5400-7f41-9c2c-7c82f7013391",
+    "source_run_id": 2987,
+    "turn_ordinal": 133
+  }
+}

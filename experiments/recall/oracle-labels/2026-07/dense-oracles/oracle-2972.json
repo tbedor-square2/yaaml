@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents code review preferences for a previous PR, but the current turn is about removing cloud-profiler from a manifest file\u2014a different, unrelated task with no overlap in context or guidance needed.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1755,
+      "memory_title": "Java Risk Arbiter PR 480432: Review feedback patterns and code style preferences"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses rebasing and conflict resolution for overlapping improvements, but the current turn is about creating a simple draft PR to remove cloud-profiler\u2014a straightforward, non-conflicting change with no rebase or merge complexity involved.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2003,
+      "memory_title": "Rebase draft PR branches with manual conflict resolution for overlapping improvements"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses CI impact analysis of a library decomposition PR, which is unrelated to the current task of removing the cloud-profiler configuration from the manifest.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2030,
+      "memory_title": "PR #481245 (riskarbiter:lib decomposition) shows zero CI impact on recent significant code PRs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about skipping CI checks is stale context from a different task (rule-archival PR work) and conflicts with the current turn's focus on a separate, independent cloud-profiler removal PR.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2429,
+      "memory_title": "Commit and push without waiting for CI in rule-archival PR work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed MLP-4409/4410 PRs and LaunchDarkly handling, which is unrelated to the current task of removing cloud-profiler from riskarbiter's manifest.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes RiskArbiter2App's dormant status in production, but the current turn is focused on removing cloud-profiler configuration from riskarbiter's manifest\u2014a tactical deployment task unrelated to the app's operational status.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2452,
+      "memory_title": "RiskArbiter2App is dormant in production"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed notification job PR (MLP-4411) unrelated to the current task of removing cloud-profiler from the manifest; it provides no actionable context for the draft PR being created.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2486,
+      "memory_title": "MLP-4411 notification job implementation complete; draft PR ready without wiring scheduled sends"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about code review patterns is stale and tangential\u2014the current turn is executing a focused, mechanical task (removing cloud-profiler config), not soliciting design or code-quality feedback.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2566,
+      "memory_title": "RiskArbiter AGENTS.md: human review feedback patterns from 50 merged PRs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed PR review and freeze annotation fix for rule archival, which is unrelated to the current task of removing cloud-profiler from the manifest.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Snowflake manifest cleanup PR, which is unrelated to the current task of removing the cloud-profiler block from riskarbiter's app-manifest.yaml.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2705,
+      "memory_title": "Gap PR #11871: Snowflake Streamer manifest cleanup\u2014no runtime impact but doc gap"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a multi-PR cleanup strategy for removing serving flags and generators with staged rollouts, but the current turn is about removing cloud-profiler from a manifest\u2014a simpler, independent change with different risk profile and no overlap in technical approach.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2901,
+      "memory_title": "Cleanup PR strategy: remove serving flag and generator in separate PRs to reduce rollback blast radius"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different PR stack (rule archival date) unrelated to the current cloud-profiler removal task, making it stale and not actionable for this turn.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3034,
+      "memory_title": "Draft PRs to open: tbedor/riskarbiter-rule-summary-archival-date and tbedor/kui-rule-archival-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different PR (#477833) about rebasing trigger-traffic changes, while the current turn is about creating a new draft PR to remove cloud-profiler; the contexts are unrelated.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3065,
+      "memory_title": "PR #477833 tbedor/riskarbiter-trigger-traffic: rebased and pushed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed rebase and BUILD dependency removal task, which is unrelated to the current turn's focus on removing the cloud-profiler block from riskarbiter's app-manifest.yaml and opening a draft PR.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past pyriskarbiter refactoring and PR #543 completion, which is unrelated to the current task of removing the cloud-profiler block from riskarbiter's app-manifest.yaml and creating a draft PR.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a Homebrew formula migration and PyPI publishing workflow, which is unrelated to the current task of removing the cloud-profiler block from riskarbiter's app-manifest.yaml and creating a draft PR.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3157,
+      "memory_title": "homebrew-formulas PR #4844: sq-riskarbiter uvx wrapper migration\u2014mlds-core#545 blocker and publish workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about .editorconfig formatting settings is stale and irrelevant to the current task of removing the cloud-profiler block from the manifest.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3398,
+      "memory_title": "Riskarbiter .editorconfig formatting settings finalized and applied"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef12b-5400-7f41-9c2c-7c82f7013391",
+    "source_run_id": 2972,
+    "turn_ordinal": 127
+  }
+}

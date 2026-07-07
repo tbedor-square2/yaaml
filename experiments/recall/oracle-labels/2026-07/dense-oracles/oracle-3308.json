@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR workflow and git operations is unrelated to the current turn about Prefect deployments and Forge setup configuration.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1722,
+      "memory_title": "forge-signalsmith PR workflow: squash, verify, then force-with-lease push"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses Prefect log viewing and infrastructure, but the current turn is about deployment setup and form validation\u2014different concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1724,
+      "memory_title": "Prefect logs on forge-signalsmith: local CLI + Vertex infra fallback"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses Prefect log discovery techniques, but the current turn is about Prefect deployment setup and form validation, which are unrelated concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1725,
+      "memory_title": "Prefect log discovery: use deployment ID + tags, not --flow-name"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses testing Prefect\u2013Blox connectivity and validation methods, which is tangentially related to Prefect deployments but does not directly address the current turn's focus on setting up Prefect Deployments via Forge and avoiding duplicate Forge project creation.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3059,
+      "memory_title": "Testing Prefect\u2013Blox without PR review"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Blox hybrid migration architecture and Prefect-Blox integration patterns, which is unrelated to the current turn's focus on Prefect Deployments setup, Forge configuration, and form validation for the signalsmith app.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3245,
+      "memory_title": "Blox hybrid migration research: architecture, precedent, and spike plan"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Blox/Prefect integration diagnostic run with technical deployment details, which is completely unrelated to the current turn about setting up Prefect deployments via Forge and form validation steps.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3253,
+      "memory_title": "Blox/Prefect integration validation: diagnostic run with mesh endpoint in progress"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about gcloud ADC reauthentication is unrelated to the current turn's focus on Prefect Deployments setup, Forge configuration, and form validation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3265,
+      "memory_title": "gcloud/ADC reauth required after Forge image push fails on GCP auth"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Prefect CLI output parsing is unrelated to the current turn's focus on Prefect Deployments setup via Forge UI and form validation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3266,
+      "memory_title": "Prefect CLI output parsing pitfalls"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a KITT migration strategy for a Prefect flow, but the current turn is about setting up Prefect Deployments via Forge for the signalsmith app\u2014a different, earlier step that doesn't require KITT migration context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3272,
+      "memory_title": "KITT migration path: move entire Prefect flow from Vertex to KITT rather than split dispatcher+executor"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses KITT migration strategy and Prefect flow architecture, but the current turn is about UI form selection for Prefect Deployments setup with Forge\u2014different scope and not actionable for the immediate question.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3274,
+      "memory_title": "KITT migration path for signals-deprecate-and-delete-prefect: onboard \u2192 backend switch \u2192 data/auth resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes post-onboarding Terraform PR generation and KITT smoke testing, but the current turn focuses on Prefect Deployments setup UI decisions and form validation, which are distinct concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3282,
+      "memory_title": "KITT onboarding generates Terraform PR for Forge/Prefect access"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Buildkite principal removal is unrelated to the current turn's focus on Prefect deployments, Forge setup, and form validation for the signalsmith app.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3284,
+      "memory_title": "Buildkite principal removal in Forge template is intentional"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses a specific KITT runtime directory issue with Prefect, but the current turn is about UI form selection and validation for setting up Prefect Deployments via Forge\u2014a different concern with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3295,
+      "memory_title": "KITT runtime home directory fix for Prefect"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory confirms that forge-signalsmith exists and has been onboarded with Prefect/Forge infrastructure, which validates the assistant's guidance to reference the existing app and avoid creating duplicates, though it doesn't directly address the current turn's setup steps.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3297,
+      "memory_title": "Runway pipeline onboarded to forge-signalsmith"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses a technical YAML merge issue in Forge onboarding, but the current turn is about UI workflow steps for setting up Prefect Deployments\u2014different problem domain with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3298,
+      "memory_title": "KITT Forge onboarding duplicate YAML fix: additive merge strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes KITT migration infrastructure details (WIF, Terraform, service accounts) but the current turn is about Prefect Deployments UI setup and Forge configuration, which are unrelated concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3395,
+      "memory_title": "KITT migration for forge-signalsmith: WIF + preprod rollout \u2014 implementation in progress"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f0025-3f91-7922-81e4-7bc8cb3def79",
+    "source_run_id": 3308,
+    "turn_ordinal": 49
+  }
+}

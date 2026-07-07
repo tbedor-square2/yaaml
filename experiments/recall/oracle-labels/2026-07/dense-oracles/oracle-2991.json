@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant project context (Rust TUI app for code review with status tracking and notifications), but the current turn is specifically about status surfacing and refresh mechanics, which requires more detailed technical discussion than the memory captures.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1774,
+      "memory_title": "Node/Rust project (tbedor) active-thread goal: CLI agent dispatch, GitHub replies, run lifecycle, and notifications"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a refactoring of the `yaaml status` command output format, which is tangential to the current discussion about surfacing action statuses (review, needs_you, ci_failed) in the UI and refresh logic.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2034,
+      "memory_title": "yaaml status command: separate transcript state from cumulative counters"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about SummaryBot leave/out-of-office representation is unrelated to the current discussion about status surfacing, action indicators, and refresh mechanics in the UI.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2648,
+      "memory_title": "SummaryBot leave/out-of-office representation is a prompt priority, not a UI gap"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses background title-refresh worker behavior and warning suppression, which is tangentially related to refresh policy but does not directly address the current discussion about status surfacing, action state classification, or the need for idle-transition status refresh.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2682,
+      "memory_title": "Background title worker should not emit noisy warnings; refresh policy should respect quiet periods and insufficient-context outcomes"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant\u2014the stored memory describes the exact enum design and status values being discussed in the current turn, including how `review`, `needs_you`, `ci_failed` etc. map to the SessionStatus field.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2684,
+      "memory_title": "Collapse AttentionSignal enum into SessionStatus for simpler model"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses PR discovery and session startup priorities, but the current turn focuses on status surfacing and refresh mechanics for existing sessions, which are orthogonal concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2702,
+      "memory_title": "bot-manager next priorities: PR discovery, then session startup workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the solution to the problem discussed in the current turn\u2014adding explicit actionability signaling via a `next_action` field, which was identified as a missing gap in surfacing action states.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2902,
+      "memory_title": "bot-manager: next_action field added to session metadata"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes UI visibility and navigation features (done-session hiding, search, new-session creation) but does not address the core issue of status surfacing, metadata refresh timing, or why action states like `review` and `needs_you` are not appearing in practice.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3207,
+      "memory_title": "bot-manager TUI: done-session visibility, active status overlay, search navigation, and new-session creation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a recently-visited feature UI layout for Square Console, which is completely unrelated to the current discussion about status surfacing, metadata refresh, and action state classification in what appears to be a different system.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3233,
+      "memory_title": "Square Console KUI recently-visited feature: metadata table direction won team feedback"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses UI toggle behavior and refresh worker prioritization, but the current turn focuses on status surfacing and metadata refresh gaps\u2014different concerns that this memory does not directly address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3236,
+      "memory_title": "D toggle and session refresh behaviors in bot-manager TUI"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a metadata table UI implementation for recently-visited resources, which is unrelated to the current discussion about status surfacing, action indicators, and refresh mechanics for session states.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3239,
+      "memory_title": "Recently-visited metadata table won team feedback; update PR #13972 with new implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about action-table label cleanup for recently-visited resources is unrelated to the current discussion about status surfacing, metadata refresh, and actionable session states.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3248,
+      "memory_title": "Action-table label cleanup for recently-visited resources"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a recently-visited feature UI component, which is unrelated to the current discussion about status surfacing, refresh mechanics, and action state visibility in the TUI.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3250,
+      "memory_title": "KUI recently-visited feature: switch to metadata table with client-side tracking"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses a past bug fix about done status unification, but the current turn is focused on why action statuses (review, needs_you, ci_failed) aren't being surfaced and refreshed, which is a different problem.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3287,
+      "memory_title": "Session done status definition unified across refresh paths"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the status override behavior discussed, but the conversation has moved beyond implementation details to focus on refresh timing and UI surfacing gaps.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3291,
+      "memory_title": "Working status overrides ci_failed and other action statuses"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR #13972 feedback resolution is completely unrelated to the current discussion about status surfacing, metadata refresh, and action indicators in the UI.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3318,
+      "memory_title": "Recently visited resources PR feedback resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR #14151 (automated rule archival UI changes) is completely unrelated to the current discussion about status surfacing, metadata refresh, and action state visibility in the TUI.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019efc9f-ff22-7d32-bdac-00301bac40a8",
+    "source_run_id": 2991,
+    "turn_ordinal": 77
+  }
+}

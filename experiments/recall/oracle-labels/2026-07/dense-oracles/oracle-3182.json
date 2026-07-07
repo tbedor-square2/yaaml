@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses recall filtering and task_state handling, but the current turn is focused on regression testing segment-bounded validity and daemon integration, which is a different implementation phase.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses memory quality evaluation and lifecycle states in general terms, but the current turn is focused on a specific technical implementation task: ensuring task-state memories have segment-bounded validity and adding regression tests, making this context stale and tangential rather than actionable.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses eval-based health reranking and symptom-level improvements, but the current turn focuses on task-state memory validity, segment lifecycle, and regression testing\u2014different technical concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2327,
+      "memory_title": "Eval-based health reranking improves but is symptom-level"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a recall quality experiment with candidate families, but the current turn focuses on task-state memory lifecycle, segment validity, and regression testing\u2014different technical concerns with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2350,
+      "memory_title": "Recall candidate families 5x5 experiment: top signals identified"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a recall testing strategy, but the current turn is focused on task-state memory validity and regression testing at the daemon boundary, which are orthogonal concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact problem being solved in the current turn: segment-bounded task-state validity and preventing stale task-state recall, with concrete metrics and the proposed solution architecture already being implemented.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2751,
+      "memory_title": "Recall quality bottleneck: segment and task-state drift over session length"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed recall-quality fixes (source-overlap and rerun deduplication), but the current turn is focused on task-state memory validity and segment-bounded lifecycle testing, which are orthogonal concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses session recall cache invalidation for inactive memory IDs, which is tangentially related to the current turn's focus on task-state memory validity and segment-bounded lifecycle, but covers a different layer (session caching vs. formulation/storage) with limited direct actionability.",
+      "judge_score": "3",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3189,
+      "memory_title": "Session recall cache must invalidate on inactive memory IDs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory reports recall quality metrics and failure modes, but the current turn is focused on implementing segment-bounded task-state memory validity and regression testing\u2014a different technical concern with no direct overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses segment/task-fit reranking limitations and the need for segment summaries in generation, but the current turn focuses on task-state memory validity lifecycle, segment-bounded creation, and regression testing\u2014different technical concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3195,
+      "memory_title": "Segment/task-fit reranking is limited; segment summaries needed for generation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a 5x5 experiment workflow and metrics runner setup, which is orthogonal to the current turn's focus on task-state memory validity, segment lifecycle, and regression testing implementation.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3198,
+      "memory_title": "YAAML 5x5 experiment workflow: orchestrated metrics runner and prompt"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past recall experiments and lessons learned, but the current turn is focused on implementing a specific regression test for task-state memory segment-binding, which requires technical implementation details rather than historical experimental findings.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a past recall strategy experiment with tradeoff analysis, but the current turn is focused on implementing segment-bounded task-state memory validity and regression testing\u2014a different technical concern unrelated to the experimental results.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses recall ranking and segment gating strategies, but the current turn is focused on verifying task-state memory creation with segment-bounded validity and adding regression tests\u2014a different implementation concern than the ranking/gating experiments documented.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses recall quality regression and wrong-context issues, but the current turn is focused on task-state memory validity, segment lifecycle, and regression testing implementation\u2014different technical concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past corpus analysis and general quality findings, but the current turn is focused on a specific technical implementation task (segment-bounded task-state memory validity and regression testing), making the historical evidence mostly stale and not actionable for this concrete work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a persuasion document for budget approval, while the current turn focuses on implementing segment-bounded task-state memory validity and regression testing\u2014different technical contexts with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3376,
+      "memory_title": "Memory techniques report: technical persuasion doc for internal eng buy-in"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3182,
+    "turn_ordinal": 352
+  }
+}

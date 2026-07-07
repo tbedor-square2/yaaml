@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory captures review patterns (removing wrappers, preferring functional style, using utility APIs) that are directly relevant to the current factoring/cleanup pass, though the specific PR context has shifted to 483111 and the memory references older PR 480432.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1755,
+      "memory_title": "Java Risk Arbiter PR 480432: Review feedback patterns and code style preferences"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a PR comment response workflow for code fixes, but the current turn is focused on a completion pass reviewing code factoring and helper methods in an existing PR\u2014different context and workflow stage.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2231,
+      "memory_title": "PR review comment response workflow for code fixes"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes cleanup patterns from a different PR (#480432) involving inlining helpers and removing unused dependencies, which is tangentially related to the current turn's focus on factoring/helper cleanup in PR #483111, but lacks specific actionable context for the current implementation review.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2357,
+      "memory_title": "PR #480432 review feedback: inlining and unused dependency cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed PRs #480115 and #482842 from an earlier phase, but the current turn is focused on PR #483111 (the unscheduled manual executor), which is a different PR in a later stage of work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed notification job implementation (PR #482948), but the current turn is focused on a different PR (#483111) undergoing a factoring/cleanup review pass with no mention of the notification job context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2486,
+      "memory_title": "MLP-4411 notification job implementation complete; draft PR ready without wiring scheduled sends"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed notification job PR (#482948), but the current turn is focused on a different PR (#483111) involving factoring/cleanup of an executor implementation, making the stored context stale and largely irrelevant.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2490,
+      "memory_title": "MLP-4411 notification job PR #482948 complete; MLP-4418 archival execution job next"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents completed and future ticket sequencing, but the current turn is focused on a specific PR #483111 factoring/cleanup pass with no direct connection to the MLP-4410 sequencing context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2519,
+      "memory_title": "Automated rule archival project sequencing: MLP-4409 complete; MLP-4410 (dry-run RPC) in progress; MLP-4411+ follow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly documents the completion state of PR #483111, the exact branch being reviewed in the current turn, including specific commits pushed, helper methods evaluated, and the critical freeze annotation fix that is directly relevant to understanding the current implementation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly encodes the factoring principle being applied in the current turn\u2014distinguishing valuable helper methods (domain predicates, readability gates) from pointless wrappers\u2014and provides concrete examples from the same PR context.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2638,
+      "memory_title": "Code factoring preference: small helper methods acceptable if they encode domain predicates or readability gates; avoid wrappers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a multi-PR cleanup strategy for removing a serving flag and generator, but the current turn is focused on a factoring/code-quality review pass of PR #483111 with no mention of serving flags, generators, or rollback strategy.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2901,
+      "memory_title": "Cleanup PR strategy: remove serving flag and generator in separate PRs to reduce rollback blast radius"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a different PR (#521 on forge-signalsmith with BigQuery parameters) and is completely unrelated to the current turn's focus on PR #483111 factoring/cleanup review.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3044,
+      "memory_title": "forge-signalsmith PR #521: lifecycle refactor with BigQuery parameters follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different PR (#483601) focused on rebasing and BUILD dependency removals, while the current turn is about PR #483111 undergoing a factoring/cleanup review pass\u2014no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed pyriskarbiter consolidation series (PR #543), while the current turn focuses on an active PR #483111 factoring/cleanup pass with different components (calculator, executor, RPC action, query/store layer); the contexts are unrelated and the memory provides no actionable guidance for the current review task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed backend/frontend sync verification for a different PR (#14118), while the current turn is focused on a code review and cleanup pass for PR #483111 with no relevance to the stored context.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3217,
+      "memory_title": "KUI PR #14118 backend/frontend sync verified; frontend safe to merge before backend deploy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about KUI PR #14133 (table alignment), while the current turn is about a different PR #483111 (rule archival executor refactoring); completely wrong context.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3226,
+      "memory_title": "KUI PR #14133 deep review and alignment patch complete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a completely different PR (#14133 on table header alignment in KUI) and is actively distracting from the current turn's focus on PR #483111 code factoring and cleanup.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3241,
+      "memory_title": "KUI PR #14133 table header alignment: review addressed, CI green"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes UI label/tooltip changes for rule archival eligibility, while the current turn focuses on code factoring and helper method cleanup in a PR review\u2014completely different contexts and unrelated work.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns Mux helper renames and signal-generator cleanup, which is entirely unrelated to the current turn's focus on PR #483111 factoring/method cleanup and deep review.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef12b-5400-7f41-9c2c-7c82f7013391",
+    "source_run_id": 2191,
+    "turn_ordinal": 116
+  }
+}

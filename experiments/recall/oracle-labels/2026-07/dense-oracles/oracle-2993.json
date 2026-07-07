@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses transcript handling for incomplete turns and recall contexts, but the current turn is specifically about removing LLM state inference from transcript mtime\u2014a different architectural concern that doesn't require this distinction.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1818,
+      "memory_title": "Preference: incomplete transcript slices in live session context"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past refactoring of `yaaml status` output formatting, which is unrelated to the current discussion about removing LLM state inference from transcript mtime.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2034,
+      "memory_title": "yaaml status command: separate transcript state from cumulative counters"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes TUI title generation architecture, but the current turn focuses on removing transcript-based status inference\u2014a different concern with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2678,
+      "memory_title": "bot-manager TUI: responsive title generation with background worker"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's discussion of removing transcript-based inference and letting metadata/manual refresh decide state, but focuses on warning behavior rather than the core state inference logic being modified.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2682,
+      "memory_title": "Background title worker should not emit noisy warnings; refresh policy should respect quiet periods and insufficient-context outcomes"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly documents the exact change being discussed: using transcript mtime only for activity tracking (`UPDATED` column) rather than inferring semantic status (`working`/`idle`), which is the core of the current turn's solution.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2685,
+      "memory_title": "UPDATED column should reflect transcript file activity, not cache mutation time"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns task lifecycle metadata and retry field cleanup, which is unrelated to the current discussion about transcript-based LLM status inference and working label timing.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3135,
+      "memory_title": "Task lifecycle metadata fixes: clear stale retry fields on transitions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes TUI visibility and navigation features, but the current turn is about removing transcript-based LLM status inference entirely\u2014a different architectural concern not addressed in this memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3207,
+      "memory_title": "bot-manager TUI: done-session visibility, active status overlay, search navigation, and new-session creation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses threading/performance concerns, but the current turn focuses on removing transcript-based state inference logic, which is orthogonal to worker thread architecture.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3230,
+      "memory_title": "All major refresh work must run in background workers, not UI thread"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes TUI refresh and toggle behaviors that are related to the session state management being discussed, but focuses on UI presentation and refresh triggers rather than the core transcript-mtime inference change being implemented.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3236,
+      "memory_title": "D toggle and session refresh behaviors in bot-manager TUI"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about a metadata table UI implementation is unrelated to the current discussion about transcript mtime inference and LLM status state management.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3239,
+      "memory_title": "Recently-visited metadata table won team feedback; update PR #13972 with new implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about done status definition is useful context for understanding the session state model being refactored, but the current turn focuses specifically on removing transcript-based inference of working/idle states, which is a narrower concern than the unified done-status definition.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3287,
+      "memory_title": "Session done status definition unified across refresh paths"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes status precedence rules that are relevant context for understanding the refactoring, but the current turn is specifically about removing transcript-based working inference entirely, which supersedes the precedence logic being documented.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3291,
+      "memory_title": "Working status overrides ci_failed and other action statuses"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about transcript backfill cutoff is tangentially related to transcript handling but does not address the current discussion about removing LLM status inference from transcript mtime.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3302,
+      "memory_title": "bot-manager backfill cutoff for old inactive transcripts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR #14151 (automated rule archival eligibility labeling) is completely unrelated to the current turn's discussion about transcript mtime inference and LLM status state management.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses PR metadata refresh TTL and caching logic, which is tangentially related to refresh triggers but doesn't directly address the core issue of removing transcript-based status inference.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3351,
+      "memory_title": "PR refresh TTL and staleness logic"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes transcript preview rendering optimization, but the current turn focuses on removing mtime-based LLM status inference\u2014different concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3352,
+      "memory_title": "TUI live transcript preview rendering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about refresh warning visibility is tangentially related to TUI behavior but does not directly address the core issue of removing LLM status inference from transcript mtime.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3353,
+      "memory_title": "Refresh warning visibility"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019efc9f-ff22-7d32-bdac-00301bac40a8",
+    "source_run_id": 2993,
+    "turn_ordinal": 80
+  }
+}

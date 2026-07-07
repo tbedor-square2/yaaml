@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses RuleArchivalDateCalculator cancellation scope and rollout constraints, which is unrelated to the current question about multiple notification sends from repeated job executions.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2428,
+      "memory_title": "RuleArchivalDateCalculator cancellation scope risk mitigated by operational constraints"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses a test configuration issue (invalid TriggerDefToken length) that is tangential to the current question about notification scheduling and multiple executions.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2442,
+      "memory_title": "RuleArchivalNotificationJobTest uses invalid TriggerDefToken test value"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the notification job implementation, persistence logic, and retry behavior that directly answers the user's question about multiple executions sending duplicate notifications.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2486,
+      "memory_title": "MLP-4411 notification job implementation complete; draft PR ready without wiring scheduled sends"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses architectural separation of concerns for rule archival endpoints, but the current turn asks about execution mechanics and idempotency of notifications\u2014which the conversation already addresses directly without needing this design guidance.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2590,
+      "memory_title": "Separate admin endpoints and jobs by scheduling/domain boundaries"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses method naming and lifecycle structure, but the current turn asks about notification multiplicity and execution order\u2014which requires understanding the eligibility checks and marking logic, not the public API design.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2593,
+      "memory_title": "Rule archival executor factoring: public method naming and lifecycle terms"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents class/method naming and refactoring structure, but the current turn asks about notification execution semantics and idempotency\u2014which requires understanding the actual eligibility logic and marking behavior, not naming conventions.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2607,
+      "memory_title": "Rule archival refactor: executor naming and method signatures"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a refactoring of notification response fields, but the current turn asks about execution order and multiple notification sends\u2014which requires understanding the notification eligibility logic and marking behavior, not the response structure.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2618,
+      "memory_title": "MLP-4410 rule archival response: simplify notification fields; remove skip counts/reasons"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes archival-candidates discovery behavior, but the current turn is about notification scheduling and multiple execute invocations, which are unrelated topics.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2757,
+      "memory_title": "archival-candidates is pre-rollout discovery only"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a discovery helper command for trigger selection, which is unrelated to the current question about notification execution and scheduling behavior.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2762,
+      "memory_title": "archival-candidates discovery helper is pre-flag only, does not check LD or pending rows"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly explains the notification eligibility gates and timing mechanics that determine whether multiple executions send duplicate notifications, which is exactly what the user is asking about.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2795,
+      "memory_title": "Rule archival timing gates and notification cadence"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the user's question about whether multiple executions send multiple notifications by explaining the idempotency mechanism via DB marking and eligibility checks.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2964,
+      "memory_title": "Rule archival notification idempotency via DB marking"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses rule archival eligibility criteria, but the current turn is specifically about notification scheduling and multiple execute invocations, which are unrelated topics.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3008,
+      "memory_title": "Rule archival eligibility policy for SQ Lending"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory explains architectural design rationale for a helper class, but the current turn is asking about notification execution behavior and idempotency\u2014a different concern entirely.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3018,
+      "memory_title": "AutomatedRuleArchivalTriggerEligibility helper class justification"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses rule archival eligibility and proto field exposure, but does not address the current question about notification scheduling and multiple execute invocations.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3129,
+      "memory_title": "Rule archival eligibility: metadata-driven logic and proto exposure"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes Slack channel configuration requirements for archival notifications, but the current query asks about execution scheduling and duplicate notification behavior, which are orthogonal concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3373,
+      "memory_title": "Production rule archival notifications require Slack channel configuration"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes environment-specific notification routing and validation, but the current turn is asking about execution idempotency and multiple trigger invocations, which is not addressed by this memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3374,
+      "memory_title": "RuleArchivalExecutor notification validation and routing logic"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes notification delivery routing by environment, but the current turn asks about execution scheduling and duplicate notification prevention, which requires understanding the marking logic and eligibility checks already covered in the conversation history.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3397,
+      "memory_title": "Rule archival notification delivery guards by environment"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef566-2195-7d72-a3ad-cfb9ad00f810",
+    "source_run_id": 3034,
+    "turn_ordinal": 49
+  }
+}

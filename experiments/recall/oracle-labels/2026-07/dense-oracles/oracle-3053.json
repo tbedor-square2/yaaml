@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes latency improvements for payroll_connected_users from a June 24 deploy, but the current turn focuses on monitoring flagging rates, safety signals, and Mux cutover regression detection for a different job (payroll_run_update) with no direct connection to the earlier latency metric.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2615,
+      "memory_title": "payroll_connected_users latency improved post-deploy 11:03 PDT; p99 ~24s \u2192 ~5-9s, SLO misses nearly eliminated"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant baseline context on TD_11 performance and timeout safety, though the current turn focuses on post-cutover regression monitoring with different metrics (flagging rate, deadletter events, Mux failures) rather than latency.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2632,
+      "memory_title": "Served TD_11 payroll evaluation: no timeout errors, p99 latency 4.3s under 10s caller timeout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides directly relevant staging validation and production baseline metrics for the TD_11 Mux cutover, supporting the current monitoring poll, but requires filtering since the current turn is actively monitoring post-cutover regression signals rather than pre-cutover decision-making.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2791,
+      "memory_title": "Strong staging evidence for TD_11 Mux cutover; missing-signal fallback not observed; recommend percentage rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides directly relevant context about the Mux cutover strategy and baseline expectations for TD_11/payroll_run_update, but the current turn is actively monitoring post-cutover regression signals that require real-time interpretation beyond what the memory captures.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2801,
+      "memory_title": "RA Mux cutover for TD_11/payroll_run_update_connected_users: staged evidence is strong; percentage rollout strategy recommended"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly summarizes the post-cutover flagging rate stability for TD_11 payroll_run_update, which is exactly what the current turn is monitoring and reporting on, providing a clear baseline for comparison.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2816,
+      "memory_title": "TD_11 payroll_run_update flagging rate post-Mux cutover: stable within expected band"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact monitoring workflow being executed in the current turn, including the multi-window polling pattern (60m/10m/2m/baseline), safety checks (deadletters, Mux failures, circuit breaker), and cross-check methodology that the assistant is actively applying.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2837,
+      "memory_title": "Production monitoring workflow: multi-window metric polling with log cross-check"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact monitoring pattern being executed in the current turn, including the 60m/10m/2m window structure, safety signals checklist, and interpretation guidance for distinguishing noise from regression.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2840,
+      "memory_title": "Monitoring pattern for production flag rollout stability"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact monitoring workflow, metric windows, query patterns, and regression detection logic being applied in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2851,
+      "memory_title": "Datadog production monitoring workflow for TD_11 trigger post-cutover"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides directly relevant historical context about TD_11 flagging behavior and confirms that isolated flagging events age out cleanly without indicating regression, which aligns with the current turn's assessment that flagging is not accelerating despite being above baseline.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2853,
+      "memory_title": "TD_11 risk assessment monitoring: isolated flagging blip is normal and ages out cleanly"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact monitoring procedure, window sizes, safety checks, and interpretation heuristics being executed in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2859,
+      "memory_title": "TD_11 monitoring: repeated polling procedure and stale metric interpretation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the pattern in the current turn\u2014distinguishing stale metrics from active regressions\u2014and the turn explicitly confirms zero ACL errors and analyzes deadletter/failure logs, but the memory's generic guidance requires minor filtering to apply to the specific Mux cutover context.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2861,
+      "memory_title": "TD_11 stale metric confirmation: zero job failures + zero ACL errors over time span"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact monitoring procedure being executed in the current turn, including all five safety signal categories (flagging rates, job failures, circuit breaker, Mux failures, deadletter events) and the comparison methodology being applied.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2863,
+      "memory_title": "TD_11 monitoring procedure: reusable Datadog query set for flagging trend verification"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact monitoring poll procedure being executed in the current turn, including all query scopes, metrics, baselines, and reporting format used.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2864,
+      "memory_title": "TD_11 monitoring poll procedure: reusable query set and baseline comparison"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly documents the same Mux fetch failures and TD_11 monitoring context from an earlier poll, providing essential baseline and historical pattern for evaluating the current poll's safety signals.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2894,
+      "memory_title": "TD_11 Mux timeout/missing-signal failures during rollout monitoring"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context about the Mux cutover completion and stability, but the current turn shows ongoing monitoring with some safety signals (deadletter events, fetch failures) that require fresh evaluation beyond the stored memory's confirmation of cutover completion.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2900,
+      "memory_title": "Payroll generated signal (payroll_run_update_connected_users) cutover to Mux is complete and stable"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns deprecated signal inventory, ownership classification, and Dumbo cleanup gates\u2014entirely unrelated to the current turn's focus on Mux cutover monitoring, flagging rates, deadletter events, and safety signals.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3181,
+      "memory_title": "Deprecated signal audit: inventory, mapping, backfill evidence, ownership classification, and Dumbo cleanup gates"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ed6df-0d7b-7210-b6eb-9da62527d7f1",
+    "source_run_id": 3053,
+    "turn_ordinal": 60
+  }
+}

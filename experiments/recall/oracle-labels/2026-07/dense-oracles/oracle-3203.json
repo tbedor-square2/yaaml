@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed PRs and past work on MLP-4409/4410, but the current turn is actively working on a different code change (token-list edit, RuleArchivalDateCalculator, chaining-eligible metadata) with no clear connection to the backported LaunchDarkly handling or the published PRs.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns MLP-4411 notification job implementation and Slack/Squawk integration, which is entirely unrelated to the current turn's focus on RuleArchivalDateCalculator token-list refactoring, flow.chaining_eligible metadata, and Bazel test verification.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2486,
+      "memory_title": "MLP-4411 notification job implementation complete; draft PR ready without wiring scheduled sends"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed PR review for a different feature (MLP-4410 manual rule archival), while the current turn is actively working through a metadata-driven token exclusion refactor with ongoing Bazel verification and edge-case fixes.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a CLI workflow for rule archival staging, but the current turn focuses on code changes to `RuleArchivalDateCalculator`, metadata-driven exclusions, and test verification\u2014different operational contexts with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2787,
+      "memory_title": "Rule archival CLI workflow: pending-archivals command with trigger setup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a high-level PR plan, but the current turn is focused on immediate code changes, testing, and verification\u2014not on opening or managing PRs yet.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3034,
+      "memory_title": "Draft PRs to open: tbedor/riskarbiter-rule-summary-archival-date and tbedor/kui-rule-archival-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different PR (#477833 about trigger traffic and Datadog metrics) unrelated to the current turn's focus on RuleArchivalDateCalculator, token-list edits, and chaining-eligible metadata.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3065,
+      "memory_title": "PR #477833 tbedor/riskarbiter-trigger-traffic: rebased and pushed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed rebase and BUILD dependency work on PR #483601, but the current turn is actively working on token-list edits, metadata-driven exclusions, and test updates for a different code change, making this memory stale and contextually misaligned.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact changes being implemented in the current turn: metadata-driven exemption logic using `flow.chaining_eligible`, proto field addition, test strategy, and specific edge cases like the TD_45 trigger reuse.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3129,
+      "memory_title": "Rule archival eligibility: metadata-driven logic and proto exposure"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed pyriskarbiter CLI refactoring (PR #543), while the current turn is actively working on a different codebase task involving RuleArchivalDateCalculator, token metadata, and Bazel testing\u2014completely unrelated contexts.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents Risk Arbiter rule cleanup design decisions and implementation strategy, but the current turn is focused on a specific code change involving `flow.chaining_eligible` metadata and token-list refactoring in `RuleArchivalDateCalculator`, which is not directly addressed in the stored memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a Homebrew formula migration and PyPI publishing workflow, which is completely unrelated to the current turn's focus on Java code changes to `RuleArchivalDateCalculator`, trigger metadata, Bazel testing, and static analysis.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3157,
+      "memory_title": "homebrew-formulas PR #4844: sq-riskarbiter uvx wrapper migration\u2014mlds-core#545 blocker and publish workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact feature being implemented in the current turn: metadata-driven exemption via `flow.chaining_eligible` and feature flag exclusion, with the same collaborator and RPC components mentioned in the ongoing work.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3191,
+      "memory_title": "MLP-4608: Rule archival eligibility via chaining metadata + feature flag exempt list"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a proto field display addition to pyriskarbiter CLI, while the current turn focuses on code logic changes to RuleArchivalDateCalculator and trigger metadata-driven exclusions\u2014different concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3213,
+      "memory_title": "pyriskarbiter trigger archival eligibility display added to PR #553"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different PR (#483601) focused on test harness refactoring, while the current turn discusses token-list edits, metadata-driven exclusions, and Bazel verification for a separate code change\u2014minimal overlap in context or actionability.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3237,
+      "memory_title": "PR #483601: Reduce AbstractSuspicionThresholdTest dependency via explicit rule config harness"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes UI label and tooltip updates for PR #14151, while the current turn focuses on backend code changes to `RuleArchivalDateCalculator`, metadata-driven exclusions, and Bazel test verification\u2014different concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a LaunchDarkly rollout script and feature flag management for archival triggers, which is tangentially related to the current work on `RuleArchivalDateCalculator` and trigger metadata, but does not directly address the ongoing code refactoring, metadata-driven exclusions, or test verification currently in progress.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3368,
+      "memory_title": "Riskarbiter archival rollout: staged feature flag and script"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about .editorconfig formatting settings is stale and tangential; the current turn focuses on code logic changes (metadata-driven exclusion, trigger chaining, test updates, and Bazel verification), not formatting.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3398,
+      "memory_title": "Riskarbiter .editorconfig formatting settings finalized and applied"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f1526-64e5-7303-8922-6fc9a73e5d87",
+    "source_run_id": 3203,
+    "turn_ordinal": 2
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses recall filtering and task-state staleness, which aligns with the current turn's focus on segment-based freshness boundaries and task-state expiration, though it emphasizes kind-aware gating rather than segment lifecycle management.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes metrics infrastructure for recall and memory-corpus health, but the current turn is focused on segment-based freshness boundaries and task-state expiration logic\u2014different architectural concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2311,
+      "memory_title": "Recall and memory-corpus metrics separation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly supports the current turn's core insight: bad memories are stale/wrong-context rather than invalid, and the solution is segment-based lifecycle management rather than deletion\u2014exactly what the turn proposes.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the core design problem being discussed in the current turn: using conversation segments as the primary recall boundary instead of session/cwd, with task-state expiration rules tied to segment lifecycle.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the testing strategy for the segment-aware recall architecture being discussed, providing concrete evaluation criteria and methodology, though it lacks implementation details needed for immediate execution.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly describes the segment oracle architecture and implementation details that the current turn is actively designing and discussing, including tables, API patterns, backfill strategy, and recall reranking logic.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2692,
+      "memory_title": "Segment oracle architecture: tables, API, backfill design"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly documents the implemented solution to the exact recall-quality problem being discussed\u2014soft-deactivation of stale task_state memories by segment lifecycle\u2014with concrete results and commit reference.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2895,
+      "memory_title": "YAAML stale task-state cleanup: physical deactivation rather than recall-time filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the implementation of the exact mechanism (task-state deactivation by segment status) being discussed in the current turn, providing concrete evidence of completion and effectiveness.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2928,
+      "memory_title": "Stale task-state deactivation completed and effective"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a specific regression test for session recall cache invalidation, which is directly relevant to the current turn's discussion of recall quality and segment-based freshness boundaries, though it addresses implementation detail rather than the design-level recommendation being developed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3189,
+      "memory_title": "Session recall cache must invalidate on inactive memory IDs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides directly relevant baseline metrics and identifies the current failure mode (context-sensitive misplacement) that the current turn is actively addressing through segment-based freshness boundaries.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past experiment logs and metrics, but the current turn is actively designing a new segment-based recall architecture; the historical data is stale context rather than actionable guidance for the design decision being made.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant experimental data on segment-aware recall strategies and task-fit gating, but the current turn is focused on architectural design recommendations rather than validating against empirical results.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses segment-based recall design and filtering strategies, which is the core topic of the current turn, but it documents a prior negative experiment result that the current turn appears to be reconsidering or building upon with a different approach.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses hardcoded phrase/tool-key removal in YAAML recall, but the current turn focuses on segment-based freshness boundaries and task-state expiration\u2014orthogonal design concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly diagnoses the exact problem the current turn is addressing: wrong-context recalls from task drift within the same session, and proposes the same solution (task/segment-based gating) that the current turn is designing in detail.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant corpus statistics and quality metrics that contextualize the recall-quality discussion, but the current turn is focused on architectural design (segments, task-state expiration, daemon logic) rather than evidence gathering.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed deliverable (persuasion doc for budget approval) but provides no actionable context for the current turn's technical discussion about segment-based recall design and task-state memory expiration.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3376,
+      "memory_title": "Memory techniques report: technical persuasion doc for internal eng buy-in"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3184,
+    "turn_ordinal": 356
+  }
+}

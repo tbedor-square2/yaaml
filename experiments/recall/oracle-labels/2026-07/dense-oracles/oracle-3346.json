@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about nvm/Node environment persistence in Just recipes is unrelated to the current turn's focus on JetBrains formatter workarounds and justfile syntax issues.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1613,
+      "memory_title": "Just recipe design: nvm use does not persist across recipe calls"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly documents the IntelliJ formatter setup and Square.xml configuration that is central to solving the current problem of running the formatter while IntelliJ is open.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1649,
+      "memory_title": "Use IntelliJ Square.xml formatter for Java files via command-line format.sh"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about IntelliJ Bazel configuration and JAVA_HOME is unrelated to the current turn's focus on JetBrains' command-line formatter workaround using temporary config/system directories.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1697,
+      "memory_title": "IntelliJ Bazel configuration: JAVA_HOME and local wrapper path"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about IntelliJ/Bazel cache issues is unrelated to the current problem of running JetBrains' command-line formatter while IntelliJ is open; it addresses a different IntelliJ problem entirely.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1781,
+      "memory_title": "IntelliJ Bazel stale target cache fix"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Bazel workflow and Hermit tool management is unrelated to the current discussion about IntelliJ formatter workarounds and Just recipe configuration.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1901,
+      "memory_title": "Bazel workflow in squareup/java: Hermit-managed bin/bazel, strict-deps, and buildozer"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about git staging and index artifacts is unrelated to the current turn's focus on JetBrains formatter workarounds with isolated config directories.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2331,
+      "memory_title": "Java risk arbiter: Explicit path staging to avoid index noise when working tree has delete/untracked quirk"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents the `just fmt` recipe's original design, but the current turn shows it has been significantly modified (isolated IntelliJ config workaround added), so the memory provides useful context about the baseline implementation but needs updating.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3355,
+      "memory_title": "java fmt task: PR-touched or explicit-set Java formatting via google-java-format"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context about Square code-style requirement and previous formatter implementation, but the stored memory is now partially outdated since the current turn documents a workaround that eliminates the 'requires IntelliJ to be closed' constraint.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3365,
+      "memory_title": "riskarbiter: Square IntelliJ code-style is a formatting requirement"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly addresses the current turn's solution: using isolated temp config paths to run the formatter while IntelliJ is open, and specifies the correct .editorconfig-based formatting approach for the just fmt workflow.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3370,
+      "memory_title": "riskarbiter IntelliJ formatter uses monorepo editorconfig"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about .editorconfig and deprecated java-code-styles is tangentially related to the formatting setup, but the current turn is focused on solving the technical problem of running the formatter while IntelliJ is open (using isolated config/system directories), not on which style configuration file to use.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3372,
+      "memory_title": "java-code-styles repo deprecated; Java formatting now uses monorepo .editorconfig"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the IntelliJ CLI formatter workaround being implemented, though the current turn focuses on the instance-lock isolation solution rather than .editorconfig handling.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3381,
+      "memory_title": "IntelliJ CLI formatter requires -allowDefaults to honor .editorconfig for non-project files"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The memory about java-code-styles deprecation is stale context; the current turn has already moved past formatter configuration to implementing a workaround for the single-instance lock issue.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3382,
+      "memory_title": "java-code-styles repository is deprecated; use monorepo .editorconfig instead"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the formatter CLI invocation being debugged, though the current turn has already moved past the initial setup phase into testing the isolated-config workaround.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3391,
+      "memory_title": "Java formatter CLI requires -allowDefaults for .editorconfig outside checked-in IDEA project"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about `{{invocation_directory()}}` vs `$PWD` is a general Just best practice, but the current turn focuses on solving the IntelliJ formatter lock issue with isolated config directories, which is a different problem domain.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3392,
+      "memory_title": "Just recipe must use {{invocation_directory()}} not $PWD for relative path args"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about deprecated java-code-styles is tangentially related to the Java formatting discussion, but the current turn has already moved past tool selection to implementation details (isolated config directories, Just recipe fixes), making this historical context mostly stale and not actionable.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3393,
+      "memory_title": "java-code-styles repo is deprecated; use .editorconfig for Java formatting instead"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes finalized .editorconfig settings for Riskarbiter, but the current turn is about solving a JetBrains formatter lock issue with IntelliJ running\u2014a different technical problem with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3398,
+      "memory_title": "Riskarbiter .editorconfig formatting settings finalized and applied"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f23ad-7f57-7373-9829-cd921c397d84",
+    "source_run_id": 3346,
+    "turn_ordinal": 3
+  }
+}

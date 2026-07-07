@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context about Feature Cloud's non-standard deployment architecture (GKE/kpkube-backed rather than Cloud CD), which explains why the assistant is struggling with Cloud CD APIs and should pivot to kubectl/GCP commands instead.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1878,
+      "memory_title": "Feature Cloud deployment discovery: GKE/kpkube-backed, not Cloud CD"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses LaunchDarkly feature flags stuck in partial states, but the current turn is about a stuck Cloud CD deployment and canary build removal\u2014different systems and problem domains.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1881,
+      "memory_title": "RiskArbiter LaunchDarkly audit findings: mux rollout flag stuck in partial state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory concerns PR #482106 ACL prerequisites and person service deployment timing, which is unrelated to the current issue of removing a stuck canary build from riskarbiter.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2390,
+      "memory_title": "PR #482106 deployment blockers: person service ACL still pending production"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes RiskArbiter2App's dormant state and architecture, but the current turn is about removing a stuck canary build from a deployment\u2014a different operational concern requiring deployment history and pipeline state, not app architecture details.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2452,
+      "memory_title": "RiskArbiter2App is dormant in production"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses config deletion verification across worktrees, but the current turn is about removing a stuck canary deployment/build artifact from Cloud CD, which is a different operational context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2527,
+      "memory_title": "Verify config unused before deletion; check both relevant worktrees"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory is about PR #483111 code review fixes for rule archival and is completely unrelated to the current deployment troubleshooting issue involving a stuck canary build.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2721,
+      "memory_title": "MLP-4410 PR #483111 final review fixes: freeze gate, Slack dev guard, audit ordering, proto wording"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the user's stuck canary deployment issue by providing the recommended recovery procedure (retrigger via Cloud CD rather than manual deletion) and explaining the automatic cleanup mechanism.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2723,
+      "memory_title": "Cloud CD canary cleanup: retry deploy rather than manual kubectl delete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the user's stuck canary removal problem with specific recovery steps (retrigger deploy via Cloud CD console or manual kubectl delete) that match the current troubleshooting context.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2729,
+      "memory_title": "Cloud CD stuck canary cleanup: use retrigger deploy or manual kubectl delete as last resort"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly explains the root cause of the stuck deployment: the canary failed due to an auth rejection in PersonService.BatchGetByPersonToken, providing the exact commit, error rate, and ACL configuration file needed to resolve the issue.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2776,
+      "memory_title": "Production canary deploy failure: Mixtape PersonService.BatchGetByPersonToken auth rejection"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory explains the root cause of the earlier canary failure (PersonService ACL issue), which is useful context for understanding why the deployment got stuck, but the current turn is focused on the operational task of removing/unsticking the canary build itself rather than diagnosing the failure.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2781,
+      "memory_title": "Production canary failure root cause: PersonService.BatchGetByPersonToken ACL missing for mixtape"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory documents a past PR rebase and staging deploy, but the current issue is about a stuck production canary deployment that needs removal\u2014different context and timeline.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3065,
+      "memory_title": "PR #477833 tbedor/riskarbiter-trigger-traffic: rebased and pushed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory about PR #483601 BUILD dependency removals is unrelated to the current deployment troubleshooting issue involving a stuck canary build and Cloud CD state.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns pyriskarbiter library refactoring and CLI consolidation, which is completely unrelated to the current deployment troubleshooting issue about a stuck canary build in Cloud CD.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns Risk Arbiter partition metadata cleanup and evidence taxonomy, which is completely unrelated to the current deployment troubleshooting issue about removing a stuck canary build.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3151,
+      "memory_title": "Risk Arbiter no-traffic cleanup: partition metadata enrichment, evidence taxonomy, and execution status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a Homebrew formula PR for a pyriskarbiter uvx wrapper migration, which is completely unrelated to the current deployment troubleshooting issue about a stuck canary build in Cloud CD.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3157,
+      "memory_title": "homebrew-formulas PR #4844: sq-riskarbiter uvx wrapper migration\u2014mlds-core#545 blocker and publish workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a blocked build at a manual validation gate with passing canary verification, but the current turn shows a failed production deployment with desired-state drift and no queued builds\u2014a different failure mode that makes this memory stale and potentially misleading.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3232,
+      "memory_title": "riskarbiter canary deploy (build 7692) status and blockers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about a Prefect flow diagnostic run in preprod, completely unrelated to the current deployment stuck-canary issue in production Cloud CD.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3258,
+      "memory_title": "Task checkpoint: blox-prefect-noop preprod diagnostic run in progress"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef12b-5400-7f41-9c2c-7c82f7013391",
+    "source_run_id": 2980,
+    "turn_ordinal": 129
+  }
+}

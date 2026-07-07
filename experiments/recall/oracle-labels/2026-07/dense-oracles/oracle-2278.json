@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the segment enrichment discussion, but focuses on turn-level metadata persistence rather than segment-level external identifier enrichment that the current query emphasizes.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1821,
+      "memory_title": "Per-turn context metadata persisted for multi-project session recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to segment enrichment with external identifiers, but focuses on recall filtering mechanics rather than segment structure design itself.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses memory quality and lifecycle management, which is tangentially related to the segment enrichment discussion but does not directly inform the current architectural question about using segments as enrichment layers for external identifiers.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the segment enrichment discussion\u2014demonstrates a concrete pattern for attaching external identifiers (tool, command, task keys) to context layers, though focused on memory triggers rather than segment structure itself.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2392,
+      "memory_title": "Tool-triggered recall: deterministic activation keys over semantic classifiers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the current turn's core question about segments as an enrichment layer for external identifiers, providing the exact schema and rationale already discussed.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses provenance tracking and consolidation auditing, which is orthogonal to the current discussion about segment enrichment with external project identifiers.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2652,
+      "memory_title": "Memory provenance graph for consolidation tracking"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the segment-enrichment architecture discussion, but focuses on testing methodology rather than the architectural design itself, requiring minor filtering to extract actionable insights.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly details segment architecture, enrichment fields (task_keys, external_refs, repo_ids), and how segments accumulate external identifiers\u2014exactly matching the current turn's discussion of segments as an enrichment layer for tickets, PRs, and project identifiers.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2692,
+      "memory_title": "Segment oracle architecture: tables, API, backfill design"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to segment implementation details, but focuses on schema/migration mechanics rather than the conceptual enrichment layer design being discussed in the current turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2693,
+      "memory_title": "Segment oracle schema changes and test impacts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses segment design and enrichment strategy, but focuses on path evidence hierarchy and oracle mechanics rather than external project identifiers (tickets, PRs) which is the current turn's specific concern.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2703,
+      "memory_title": "Segmentation strategy: path evidence hierarchy and oracle design"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to segment enrichment with external identifiers, but focuses on implementation details (path normalization) rather than the architectural design being discussed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2811,
+      "memory_title": "Segment path keys need aggressive normalization and capping"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses technical implementation details about suppression rules during segment processing, but the current turn is conceptually discussing segment architecture and enrichment layers, not suppression mechanics.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2927,
+      "memory_title": "Segment context suppression blocks must match recall query suppression"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses segment lifecycle management and task-state expiration, which is tangentially related to segment enrichment but does not directly inform the current discussion about what external identifiers (tickets, PRs, etc.) should be attached to segments.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2965,
+      "memory_title": "Stale task-state lifespan: force segment rollover for long non-identity sessions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly addresses how to extract and filter task keys (tickets, PRs, branches) for segment enrichment, providing concrete rejection filters and normalization rules essential for implementing the segment enrichment layer discussed in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3098,
+      "memory_title": "Segment task-key extraction: filter tool output and prioritize identity keys"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses segment design and the limitation of post-hoc reranking, providing empirical context that supports why segment summaries and structured metadata (as discussed in the current turn) are necessary for effective recall and generation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3195,
+      "memory_title": "Segment/task-fit reranking is limited; segment summaries needed for generation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The memory directly addresses segment-based enrichment and recall strategy tradeoffs, providing empirical context for the current discussion about segments as an enrichment layer, though it focuses on experimental results rather than the architectural design being discussed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to segment design and enrichment strategy, but focuses on recall filtering mechanics rather than the segment structure itself being discussed in the current turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses memory consolidation mechanics in Kgoose, which is orthogonal to the current discussion about segment enrichment with external project identifiers.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3345,
+      "memory_title": "Kgoose memory consolidation is model-driven, not batch-scheduled"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 2278,
+    "turn_ordinal": 266
+  }
+}

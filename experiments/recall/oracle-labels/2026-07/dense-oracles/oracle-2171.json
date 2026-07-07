@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses RPC ACL checking for method shifts, but the current turn is specifically about whether `@CheckAllowedChange` applies to the job executor itself\u2014a narrower architectural question about annotation scope and interceptor mechanics that the stored memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2036,
+      "memory_title": "Check RPC ACLs when changing methods"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about Bazel verification procedures for Java worktrees and is completely unrelated to the current question about whether `@CheckAllowedChange` annotation applies to job classes versus executor classes.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2379,
+      "memory_title": "Bazel verification for archival review RPC changes in java worktrees"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about CI/commit preferences is completely unrelated to the technical question about whether `@CheckAllowedChange` annotation applies to the job itself.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2429,
+      "memory_title": "Commit and push without waiting for CI in rule-archival PR work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes a notification job PR but the current query asks about `@CheckAllowedChange` annotation scope on the executor/job itself, which is not addressed in the stored memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2490,
+      "memory_title": "MLP-4411 notification job PR #482948 complete; MLP-4418 archival execution job next"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes ticket sequencing and project roadmap but does not address the current technical question about whether `@CheckAllowedChange` applies to the job itself or executor.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2519,
+      "memory_title": "Automated rule archival project sequencing: MLP-4409 complete; MLP-4410 (dry-run RPC) in progress; MLP-4411+ follow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses predicate helpers for state contracts in rule archival, but the current turn asks specifically about whether `@CheckAllowedChange` applies to the job itself\u2014a distinct architectural question about annotation scope and interceptor mechanics that this memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2589,
+      "memory_title": "Rule archival refactoring: use predicate helpers for implicit state contracts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents method naming conventions and lifecycle terms for rule archival classes, but the current turn asks about whether `@CheckAllowedChange` annotation applies to the job itself\u2014a distinct architectural/security concern unrelated to method naming or notification lifecycle.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2593,
+      "memory_title": "Rule archival executor factoring: public method naming and lifecycle terms"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about RPC parameter naming (execute_changes vs dry_run) is unrelated to the current question about whether @CheckAllowedChange applies to the job itself, making it actively distracting.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2594,
+      "memory_title": "RPC method naming: execute_changes instead of dry_run"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes naming and method signatures from an earlier refactor, but the current turn requires understanding the current state of `@CheckAllowedChange` annotation application and interceptor mechanics, which this memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2607,
+      "memory_title": "Rule archival refactor: executor naming and method signatures"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly answers the current query by explaining that `@CheckAllowedChange` is only on the RPC action, not the executor itself, and documents the exact guard mechanism and architectural implications for both manual and scheduled job paths.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2622,
+      "memory_title": "RiskArbiter rule archival manual RPC requires change-freeze guard on both code paths"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the guard pattern and freeze semantics for RPC mutations, but the current turn reveals that the executor itself is not guarded and requires explicit checks in the job layer\u2014a nuance the memory doesn't fully capture.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2624,
+      "memory_title": "RPC mutation actions in Riskarbiter require @CheckAllowedChange and @AuditLogged guards"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the current question by explaining that `@CheckAllowedChange` is only on the RPC action, not the executor itself, and details the implications for scheduled jobs.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory explains the freeze allowlist architecture and CheckAllowedChange mechanics, directly addressing whether the guard applies to jobs/executors, but focuses on a different concern (error behavior) than the current question about job coverage.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2889,
+      "memory_title": "PR #483904: Code freeze allowlist factoring concern"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses freeze allowlist semantics and deferToBody naming in a different PR context, but the current turn asks specifically whether @CheckAllowedChange applies to the job itself\u2014a question already answered with architectural details about interceptor mechanics and executor guarding.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2958,
+      "memory_title": "Riskarbiter code freeze allowlist: deferToBody naming and semantics"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses eligibility logic organization for rule archival triggers, which is architecturally unrelated to the current question about whether `@CheckAllowedChange` guards apply to the job itself versus the executor.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3018,
+      "memory_title": "AutomatedRuleArchivalTriggerEligibility helper class justification"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses adding a read-only field to GetRulesSummaryAction, which is unrelated to the current question about whether @CheckAllowedChange applies to the job itself and guard semantics.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3033,
+      "memory_title": "Backend implementation: attach pending archival read to GetRulesSummaryAction"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses rule archival design decisions and reactivation strategy, but the current turn asks specifically about whether `@CheckAllowedChange` annotation applies to the job itself\u2014a narrow technical question about decorator scope that this memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about notification validation and routing is unrelated to the current question about whether `@CheckAllowedChange` applies to the job itself; it addresses a different subsystem (notifications) and would distract from the architectural discussion about annotation scope and executor guarding.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3374,
+      "memory_title": "RuleArchivalExecutor notification validation and routing logic"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef12b-5400-7f41-9c2c-7c82f7013391",
+    "source_run_id": 2171,
+    "turn_ordinal": 108
+  }
+}

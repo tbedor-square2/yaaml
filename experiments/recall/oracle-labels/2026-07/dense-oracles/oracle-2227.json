@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses currency code partitioning and refactoring concerns, which is completely unrelated to the current discussion about POST_MUX_DEADLINE_BUFFER_MILLIS, Mux timeout configuration, and feature flag behavior.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1975,
+      "memory_title": "RiskArbiter: Split SCORED_CURRENCY_CODES by semantic concern; prevent re-coupling"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory provides relevant context on Mux timeout computation and the LD flag mechanism, but describes the old behavior (10s baseline without explicit deadline); the current turn discusses the new PR behavior (flag value + 5s buffer), requiring minor filtering to distinguish old vs. new implementation.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2630,
+      "memory_title": "TD_11 payroll Mux timeout computation: default 10s baseline, LD cap applied on top"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the discussion of Mux timeout mechanics and feature flag control, but describes a specific payroll TD_11 scenario with a hardcoded 10s default that differs from the general PR behavior being discussed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2634,
+      "memory_title": "RiskArbiter payroll TD_11 Mux timeout mechanics: hardcoded 10s default dominates flag cap"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly explains the root cause of the TD_11 timeout issue and the fix strategy, which is exactly what the current turn is discussing regarding POST_MUX_DEADLINE_BUFFER_MILLIS, feature flag control, and how the PR enables adjustable Mux timeout.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2639,
+      "memory_title": "RiskArbiter TD_11 payroll Mux fetch timeout: root cause is missing scoreable deadline"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly explains the deadline structure, POST_MUX_DEADLINE_BUFFER_MILLIS purpose, and how the riskarbiter-mux-max-timeout-millis flag controls Mux timeout behavior\u2014exactly what the current turn is asking about.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2642,
+      "memory_title": "Payroll deadline structure: overall scoreable budget vs. parity-specific timeouts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses flag separation (cutover vs. parity flags) but the current turn focuses on POST_MUX_DEADLINE_BUFFER_MILLIS and timeout adjustment via the mux-max-timeout-millis flag, making this context tangential and not directly actionable.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2785,
+      "memory_title": "Mux cutover flag vs. parity flag are separate concerns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses staging evidence and rollout recommendations for TD_11 Mux cutover, but the current turn is asking about POST_MUX_DEADLINE_BUFFER_MILLIS timeout mechanics and feature flag adjustment\u2014different technical concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2791,
+      "memory_title": "Strong staging evidence for TD_11 Mux cutover; missing-signal fallback not observed; recommend percentage rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses Mux cutover validation and rollout procedures, but the current turn discusses POST_MUX_DEADLINE_BUFFER_MILLIS, feature flag adjustment mechanics, and timeout behavior\u2014topics not covered in the stored memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2794,
+      "memory_title": "Safe Mux cutover validation: staging evidence plus gradual rollout with metrics watch"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses TD_11 Mux cutover strategy and rollout recommendations, but the current turn is asking about POST_MUX_DEADLINE_BUFFER_MILLIS timeout mechanics and feature flag adjustment\u2014different technical concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2801,
+      "memory_title": "RA Mux cutover for TD_11/payroll_run_update_connected_users: staged evidence is strong; percentage rollout strategy recommended"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents post-cutover monitoring metrics for TD_11 but does not address the current discussion about POST_MUX_DEADLINE_BUFFER_MILLIS, feature flag adjustment mechanisms, or timeout behavior.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2816,
+      "memory_title": "TD_11 payroll_run_update flagging rate post-Mux cutover: stable within expected band"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the user's questions about POST_MUX_DEADLINE_BUFFER_MILLIS conservatism, feature flag adjustment capability, and provides concrete evidence of the timeout behavior in production.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2820,
+      "memory_title": "Mux feature-fetch timeout causing DLQ backlog on TD_11 payroll_run_update"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the user's questions about POST_MUX_DEADLINE_BUFFER_MILLIS conservatism, feature flag adjustment capability via `riskarbiter-mux-max-timeout-millis`, and provides concrete evidence of the timeout behavior in TD_11.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2823,
+      "memory_title": "TD_11 payroll_run_update DLQ failure root cause: Mux feature-fetch timeout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the user's question about POST_MUX_DEADLINE_BUFFER_MILLIS conservatism and feature flag adjustment capability, providing concrete details about the riskarbiter-mux-max-timeout-millis flag and its current configuration.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2827,
+      "memory_title": "RiskArbiter TD_11 timeout behavior: riskarbiter-mux-max-timeout-millis LaunchDarkly flag"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the LaunchDarkly flag `riskarbiter-mux-max-timeout-millis` that the user is asking about, including current values, available variants, and production status\u2014exactly what's needed to answer the question about adjusting Mux timeout via feature flag.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2844,
+      "memory_title": "LaunchDarkly timeout flag riskarbiter-mux-max-timeout-millis: TD_11 currently at fallthrough 15s, available 25s variant"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the current turn's questions about POST_MUX_DEADLINE_BUFFER_MILLIS conservatism, feature flag adjustment capability, and provides concrete context on the `riskarbiter-mux-max-timeout-millis` flag behavior and TD_11 targeting.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2846,
+      "memory_title": "TD_11 Mux timeout flag and Mixtape latency context"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly answers the user's question about adjusting Mux timeout via feature flag, providing the exact flag name, current values, and TD_11 configuration details.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2854,
+      "memory_title": "LaunchDarkly timeout flag for TD_11 rule: riskarbiter-mux-max-timeout-millis"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the discussion of POST_MUX_DEADLINE_BUFFER_MILLIS and mux timeout tuning via the feature flag, providing concrete evidence of timeout issues and flag adjustments, though the stored memory focuses on incident details rather than the technical explanation being discussed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2894,
+      "memory_title": "TD_11 Mux timeout/missing-signal failures during rollout monitoring"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory confirms Mux cutover is complete and production-verified, but the current turn is specifically about POST_MUX_DEADLINE_BUFFER_MILLIS tuning and feature flag adjustment mechanics, which this memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2910,
+      "memory_title": "RiskArbiter Mux cutover is production-verified and ready for permanent removal"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019edcc8-cff6-77d1-8e48-04b9adabc032",
+    "source_run_id": 2227,
+    "turn_ordinal": 49
+  }
+}

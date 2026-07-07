@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about sq agent-tools integrations is unrelated to the current turn, which contains instructions for AI agent message formatting conventions.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1548,
+      "memory_title": "Elroy tool adapter pattern: sq agent-tools integrations"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about KUI UI component practices is unrelated to the current turn's focus on AI agent message prefixing instructions for Slack, email, and PR comments.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1714,
+      "memory_title": "KUI instruction: use existing Fluent UI primitives, avoid inline styles, scope changes narrowly"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about agent-browser headers and automation is completely unrelated to the current turn's instructions about AI agent message prefixing conventions.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1746,
+      "memory_title": "agent-browser headers persist across navigation; use eval for runtime inspection"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes PR review shortcuts and agent dispatch features, but the current turn is about AI agent message prefixing instructions (\ud83e\udd16 prefix requirement), which is unrelated to the UI/keyboard shortcut functionality.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1778,
+      "memory_title": "tuicr PR comment browsing and agent dispatch shortcuts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory mentions the \ud83e\udd16 prefix convention for AI-authored comments, which is directly relevant to the current instructions, but lacks the specific context about when it applies (messages on behalf of user vs. PR descriptions).",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1792,
+      "memory_title": "Square-console CLAUDE.md guidance compliance"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant guidance on agent communication practices for PR contexts, but the current turn specifies using \ud83e\udd16 emoji prefix rather than 'agent:' text prefix, requiring minor filtering to align with the new instructions.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1844,
+      "memory_title": "Address PR review feedback with agent prefix and commit updates"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Slack posting workflows is stale and contextually unrelated to the current turn, which establishes agent messaging guidelines for prefixing with \ud83e\udd16.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1861,
+      "memory_title": "Interactive Slack posting workflow for no-traffic trigger notifications"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents code review patterns for RiskArbiter PRs, which is completely unrelated to the current turn's focus on AI agent messaging conventions in AGENTS.md.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2566,
+      "memory_title": "RiskArbiter AGENTS.md: human review feedback patterns from 50 merged PRs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Bazel verification and PR creation workflow is unrelated to the current turn's instructions about AI agent message prefixing conventions.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2601,
+      "memory_title": "Prefer subagent for Bazel verification in java monorepo; do not block PR creation on build completion"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Bazel testing workflows is unrelated to the current turn, which concerns AI agent message prefixing conventions in AGENTS.md.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2992,
+      "memory_title": "Subagent testing workflow for Bazel validation in riskarbiter repo"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Bazel testing via subagent is unrelated to the current turn's instructions about AI agent message prefixing conventions in AGENTS.md.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3024,
+      "memory_title": "Bazel testing via subagent for rule archival changes"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about KUI implementation location is completely unrelated to the current turn's instructions about AI agent message prefixing conventions.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3029,
+      "memory_title": "KUI: active implementation is in square-console, not java/knowledge-ui"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes Slack messaging practices with \ud83e\udd16 emoji prefixes, which directly relates to the user's instruction about agent message formatting, though it focuses on a specific implementation rather than the general guideline itself.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3150,
+      "memory_title": "Slack approval draft generator: trigger-only mode with filtering and static messaging"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a similar workflow for creating agent guidance documentation, but focuses on code review patterns rather than the specific communication protocol (\ud83e\udd16 prefix for agent-sent messages) in the current turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3218,
+      "memory_title": "Agent guidance documentation workflow for Risk Arbiter and KUI"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly captures the exact instruction from the current turn about prefixing agent messages with \ud83e\udd16, making it immediately actionable for future message composition.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3231,
+      "memory_title": "Agent message prefix requirement"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly captures the agent message prefix convention from the current turn's AGENTS.md instructions, providing actionable context for implementing the \ud83e\udd16 prefix rule.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3303,
+      "memory_title": "Agent message prefix convention in bot-manager"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f1e42-c26b-7b90-816a-2f8ee2c04ac3",
+    "source_run_id": 3303,
+    "turn_ordinal": 0
+  }
+}

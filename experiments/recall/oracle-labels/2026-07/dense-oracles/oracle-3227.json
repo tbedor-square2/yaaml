@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly captures the two-PR strategy, repo locations, and implementation split that the current turn is executing\u2014making it highly actionable context for proceeding with the draft PRs and deep review.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1738,
+      "memory_title": "Two-PR approach: Risk Arbiter backend, then KUI frontend"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory discusses Risk Arbiter's SCC cycle-breaking strategy and architectural refactoring, but the current turn is about creating draft PRs for a rule summary/archival date feature in both KUI and Risk Arbiter\u2014a different scope that doesn't require this architectural guidance.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2017,
+      "memory_title": "Risk Arbiter: Cycle-breaking strategy uses SCC measurement to validate architectural splits"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the sparse Java worktree approach already being executed in the current turn, though the stored memory provides additional implementation details (symlink strategy) that could be useful for optimization but aren't immediately actionable for the current PR creation task.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2219,
+      "memory_title": "Sparse Java worktrees"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory covers Bazel verification for Java worktrees, but current turn is focused on creating draft PRs and deep-reviewing both repos' agent instructions\u2014Bazel testing is not yet relevant to this phase.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2379,
+      "memory_title": "Bazel verification for archival review RPC changes in java worktrees"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about CI polling vs. local Bazel testing is stale and tangential\u2014the current turn is focused on creating draft PRs, linking them, and performing deep reviews with agent instruction checks, not on rebase verification or test compilation strategies.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2536,
+      "memory_title": "Verify rebases and push via CI rather than local Bazel when test compile is slow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly captures the exact task state: two linked draft PRs with specific branch names, the implementation order (Java first, then KUI), the requirement to check agent instructions, and the deep-pr-review step\u2014all of which are actively being executed in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3034,
+      "memory_title": "Draft PRs to open: tbedor/riskarbiter-rule-summary-archival-date and tbedor/kui-rule-archival-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory documents a past PR rebase/push for a different feature (trigger-traffic), not the current task of creating draft PRs for rule-summary-archival-date on both repos.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3065,
+      "memory_title": "PR #477833 tbedor/riskarbiter-trigger-traffic: rebased and pushed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory documents a past PR rebase and build cleanup, but the current turn is about creating new draft PRs for KUI and RiskArbiter with specific feature work (archival date summary field), making this stale context with no actionable relevance.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes completed pyriskarbiter refactoring work (PR #543), but current turn requires creating new draft PRs for riskarbiter and kui with specific agent instruction checks\u2014different scope and timing.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory concerns Homebrew formula migration and PyPI publishing workflows, which is entirely unrelated to the current task of creating draft PRs for KUI and RiskArbiter with linked reviews and agent instruction checks.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3157,
+      "memory_title": "homebrew-formulas PR #4844: sq-riskarbiter uvx wrapper migration\u2014mlds-core#545 blocker and publish workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current PR review task\u2014documents the backend/frontend contract and safety guarantees for the RuleSummary field, but requires filtering since the current turn is about creating new draft PRs rather than reviewing an already-completed one.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3217,
+      "memory_title": "KUI PR #14118 backend/frontend sync verified; frontend safe to merge before backend deploy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the agent guidance files (AGENTS.md and CLAUDE.md) that the current turn explicitly instructs the assistant to check before editing, making it essential context for understanding where and how to read agent instructions in both repos.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3218,
+      "memory_title": "Agent guidance documentation workflow for Risk Arbiter and KUI"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Bazel package splitting is unrelated to the current task of creating draft PRs for KUI and Risk Arbiter with rule summary/archival date fields and performing deep PR reviews.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3219,
+      "memory_title": "Build performance improvements via Bazel package splitting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory documents a completed PR review and patch for table alignment, but the current turn is about creating new draft PRs for rule summary archival features in both KUI and Riskarbiter\u2014a different feature scope with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3226,
+      "memory_title": "KUI PR #14133 deep review and alignment patch complete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory describes a completed PR about test refactoring in AbstractSuspicionThresholdTest, which is unrelated to the current task of creating draft PRs for KUI and RiskArbiter with rule summary/archival date fields.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3237,
+      "memory_title": "PR #483601: Reduce AbstractSuspicionThresholdTest dependency via explicit rule config harness"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current task of creating isolated worktrees for Riskarbiter PR work, but describes a different use case (analysis/categorization) rather than the current PR creation workflow.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3363,
+      "memory_title": "Categorize Riskarbiter code script uses temporary sparse worktree for analysis"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef566-2195-7d72-a3ad-cfb9ad00f810",
+    "source_run_id": 3227,
+    "turn_ordinal": 60
+  }
+}

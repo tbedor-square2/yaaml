@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Storybook usage is unrelated to the current turn's focus on backend code changes, test failures, Redis configuration, and PR validation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1617,
+      "memory_title": "Prefer Storybook for KUI visual samples over live dev server"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR screenshot requirements is stale context; the current turn is focused on resolving test failures and validation checks before creating the draft PR, not on PR body formatting.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1713,
+      "memory_title": "Console repo PR review guidelines require screenshot section in PR body"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about agent-browser headers and eval usage is unrelated to the current turn's focus on PR validation, test failures, and backend change review.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1746,
+      "memory_title": "agent-browser headers persist across navigation; use eval for runtime inspection"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed and published PRs from a previous task, while the current turn is actively working through pre-PR validation checks for a different change; the contexts are disconnected and the memory provides no actionable guidance for the current workflow.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Storybook screenshot management is tangentially related (Storybook was run during validation), but the current turn is focused on test failures and cache contamination, not visual regression or screenshot updates.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2575,
+      "memory_title": "Console dev review: inspect Storybook renders after code changes; old screenshots become stale after rebase"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed PR review and freeze-related fixes from a different change (MLP-4410), which is stale context unrelated to the current turn's backend polishing, testing, and PR preparation workflow.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses SummaryBot leave/out-of-office representation priorities, which is completely unrelated to the current turn's focus on backend code changes, test failures, PR validation, and cache contamination debugging.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2648,
+      "memory_title": "SummaryBot leave/out-of-office representation is a prompt priority, not a UI gap"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a screenshot refresh workflow for Storybook, but the current turn is focused on debugging test failures and validation checks for a backend-only change, making this context largely irrelevant to the immediate task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3051,
+      "memory_title": "PR screenshot refresh workflow with Storybook"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed rebase and BUILD dependency removal for PR #483601, which is entirely unrelated to the current turn's focus on polishing user-facing wording, running validation checks, and preparing a draft PR for a backend change.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed refactoring of pyriskarbiter modules and PR #543, which is entirely unrelated to the current turn's focus on polishing user-facing wording, running repo validation checks, and debugging test cache contamination in a backend change.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed backend/frontend sync verification for a different PR (#14118), while the current turn is actively working through test failures and validation for a backend-only change in the current PR\u2014completely different context and not actionable.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3217,
+      "memory_title": "KUI PR #14118 backend/frontend sync verified; frontend safe to merge before backend deploy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completely different PR (#14133, KuiTable alignment changes) with no relevance to the current turn's backend wording polish, test failures, and PR validation workflow.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3226,
+      "memory_title": "KUI PR #14133 deep review and alignment patch complete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed PR about KUI/metadata-table changes, but the current turn is focused on backend wording polish, test failures in Glean/privacy-candidate tests, and PR validation\u2014a different change context with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3235,
+      "memory_title": "PR #13972 updated from action-table experiment to metadata-table production implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed UI feature (metadata table for recently-visited items), while the current turn is focused on backend wording polish, test failures, and PR validation\u2014entirely different work streams with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3239,
+      "memory_title": "Recently-visited metadata table won team feedback; update PR #13972 with new implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR #13972 feedback resolution is unrelated to the current turn's focus on backend code polishing, test validation, and PR creation workflow.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3318,
+      "memory_title": "Recently visited resources PR feedback resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed PR about UI label/tooltip changes, but the current turn is focused on backend wording polish, test failures in Glean/privacy tests, and repo validation\u2014different scope and context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed PR (#13972) about recently-visited features, while the current turn is actively debugging test failures in a different backend change unrelated to that PR's scope.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3384,
+      "memory_title": "PR #13972: recently-visited feature addresses prod/staging distinction, timestamp milliseconds, and KITT URL deduplication"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019efb4b-6c80-7460-a7f2-3fb36ffab019",
+    "source_run_id": 2220,
+    "turn_ordinal": 2
+  }
+}

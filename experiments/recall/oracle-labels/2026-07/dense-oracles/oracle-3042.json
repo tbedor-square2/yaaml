@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes LaunchDarkly flag audit findings from a different system (RiskArbiter mux rollout), not the current TD_11 flagging rate monitoring task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1881,
+      "memory_title": "RiskArbiter LaunchDarkly audit findings: mux rollout flag stuck in partial state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses polling cadence for backfills with minute-scale latency, but the current turn is about hourly flagging-rate validation with a different context (flag flip monitoring), making it mostly irrelevant despite surface-level similarity.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2178,
+      "memory_title": "Polling cadence for long-running backfills with minute-scale window latency"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses provider heartbeat monitoring and baseline-change alerts, which is a different monitoring pattern than the current flagging-rate polling task; while both involve comparison to baselines, the memory's specific guidance on Datadog change() alerts and provider-specific thresholds does not directly apply to the TD_11 flag validation workflow.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2217,
+      "memory_title": "Provider heartbeat monitoring: use sustained baseline-change alerts to reduce false positives"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to TD_11 monitoring context and provides baseline metrics, but focuses on Mux cutover strategy rather than the current hourly flagging-rate polling task.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2801,
+      "memory_title": "RA Mux cutover for TD_11/payroll_run_update_connected_users: staged evidence is strong; percentage rollout strategy recommended"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory provides the exact baseline metrics (0.34% pre-cutover norm, 0.73-0.91% post-flip range, guardrail status) needed to validate the current hourly poll against established norms and detect drift.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2816,
+      "memory_title": "TD_11 payroll_run_update flagging rate post-Mux cutover: stable within expected band"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly describes the multi-window polling methodology and metric comparison approach being executed in the current turn, including specific windows (60m/10m/2m/24h baseline), log signatures to check, and guidance on interpreting flagging rate changes\u2014all of which align with the ongoing hourly validation task.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2826,
+      "memory_title": "Production monitoring workflow: multi-window metric polling with log cross-check"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact monitoring workflow being executed in the current turn\u2014multi-window Datadog polling of TD_11 flagging rates with baseline comparison and guardrail checks, matching the assistant's implementation perfectly.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2830,
+      "memory_title": "Datadog monitoring workflow: repeated multi-window metric polling with log cross-checks"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact monitoring workflow being executed in the current turn: multi-window metric polling for TD_11 flagging rate with baseline comparison, guardrail checks, and hourly polling cadence.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2837,
+      "memory_title": "Production monitoring workflow: multi-window metric polling with log cross-check"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly documents the exact monitoring pattern being executed in the current turn, including the specific time windows (60m/10m/2m), baseline comparison method (24h\u21924h), and safety signals being tracked.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2840,
+      "memory_title": "Monitoring pattern for production flag rollout stability"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly provides the monitoring framework and metric queries (TD_11 flagging rate, time windows, guardrail counters) that the current turn is actively implementing and executing.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2851,
+      "memory_title": "Datadog production monitoring workflow for TD_11 trigger post-cutover"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact monitoring pattern being executed in the current turn: parallel metric windows, flagging rate calculation, baseline comparison methodology, and guardrail checks for TD_11 that match the assistant's implementation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2852,
+      "memory_title": "Datadog monitoring pattern for production service health"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant baseline data for TD_11 flagging rate monitoring, but from a prior session (~24h earlier) that needs validation against current drift patterns.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2853,
+      "memory_title": "TD_11 risk assessment monitoring: isolated flagging blip is normal and ages out cleanly"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly documents the established polling pattern, metric queries, and safety checks that are actively being executed in the current turn for TD_11 flagging rate monitoring.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2858,
+      "memory_title": "Datadog polling pattern for trigger definition flagging monitoring"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly documents the TD_11 monitoring procedure, polling intervals, metric windows, and safety checks that are actively being executed in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2859,
+      "memory_title": "TD_11 monitoring: repeated polling procedure and stale metric interpretation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly documents the monitoring strategy and metric windows already being executed in the current turn, providing actionable guidance for repeated sampling intervals and baseline comparison thresholds.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2860,
+      "memory_title": "TD_11 monitoring: repeated sample windows and baseline for drift detection"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact monitoring procedure being executed in the current turn\u2014it provides the reusable query framework (60m/10m/2m windows, baseline comparisons, guardrails like circuit breaker and DLQ) that the assistant is already applying to TD_11 flagging rate validation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2863,
+      "memory_title": "TD_11 monitoring procedure: reusable Datadog query set for flagging trend verification"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact monitoring procedure and baseline metrics being executed in the current turn, providing the reusable query set and comparison framework needed for ongoing TD_11 flagging rate validation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2864,
+      "memory_title": "TD_11 monitoring poll procedure: reusable query set and baseline comparison"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ed6df-0d7b-7210-b6eb-9da62527d7f1",
+    "source_run_id": 3042,
+    "turn_ordinal": 23
+  }
+}

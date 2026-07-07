@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes Prefect logging infrastructure but is unrelated to the current query about Blox integration precedent and Prefect job patterns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1724,
+      "memory_title": "Prefect logs on forge-signalsmith: local CLI + Vertex infra fallback"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant as it outlines a Prefect-to-Blox integration plan with concrete steps, though it's a planned approach rather than documented precedent from existing code.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3055,
+      "memory_title": "Planned Blox migration spike for forge-signalsmith"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to testing Prefect-Blox integration, but focuses on validation methods rather than precedent research; useful for implementation but requires filtering to address the current query about existing patterns.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3059,
+      "memory_title": "Testing Prefect\u2013Blox without PR review"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant as proof-of-concept that Blox routines work with bbsubscriber and sa-builderbot identity, but needs integration with Prefect specifics to fully answer the current research query.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3077,
+      "memory_title": "Manual no-op Blox routine completed: bbsubscriber reachable, run_as_service=sa-builderbot works from laptop"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly documents the research findings on Prefect-to-Blox precedent, implementation patterns, and a concrete spike plan that directly answers the current query about whether there is precedent for using Blox from Prefect jobs.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3245,
+      "memory_title": "Blox hybrid migration research: architecture, precedent, and spike plan"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly actionable technical guidance for implementing Prefect-to-Blox integration, addressing the specific networking/endpoint configuration needed for bbsubscriber calls from Vertex jobs.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3252,
+      "memory_title": "Blox/Prefect integration: Vertex runtime requires internal mesh endpoint for bbsubscriber"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant as it documents an active Prefect-Blox integration attempt with implementation details, but represents in-progress diagnostic work rather than established precedent or final findings.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3253,
+      "memory_title": "Blox/Prefect integration validation: diagnostic run with mesh endpoint in progress"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the Prefect+Blox integration question with actionable mesh endpoint guidance and precedent from GRC, though the stored memory focuses on Vertex-specific networking rather than broader Blox job patterns.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3256,
+      "memory_title": "Blox/Prefect/Vertex integration diagnostic: mesh endpoint required"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents an active diagnostic run testing Prefect-to-Blox integration in preprod, which is directly relevant context for the current research query about Blox precedent, though it represents execution progress rather than research findings.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3258,
+      "memory_title": "Task checkpoint: blox-prefect-noop preprod diagnostic run in progress"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the technical implementation needed to call Blox from Prefect jobs, providing the specific socket configuration and endpoint routing required for Vertex-based Prefect flows to reach internal services.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3261,
+      "memory_title": "Prefect/Vertex runtime can call internal Blox through Envoy socket"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Useful context on Prefect-Blox integration testing setup, but addresses diagnostic/testing rather than production precedent or architectural patterns the user is researching.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3262,
+      "memory_title": "Blox endpoint override for Prefect diagnostic testing"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly actionable guidance on the exact networking pattern needed to call bbsubscriber (Blox) from Prefect flows on Vertex, with tested precedent from GRC.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3263,
+      "memory_title": "Prefect/Vertex to internal services requires mesh hostname + Envoy socket"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses Prefect CLI debugging techniques, but the current turn is researching precedent for integrating Blox with Prefect workflows\u2014a different concern that requires architectural/code examples rather than CLI troubleshooting.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3266,
+      "memory_title": "Prefect CLI output parsing pitfalls"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant diagnostic result showing Prefect-to-Blox integration via mesh endpoint, but represents a specific test case rather than broader precedent research.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3267,
+      "memory_title": "Blox/Prefect/Vertex diagnostic: mesh endpoint param working"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses KITT migration strategy for a specific Prefect flow, but the current query seeks research on Prefect+Blox precedent patterns across jobs\u2014different scope and not actionable for the research task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3272,
+      "memory_title": "KITT migration path: move entire Prefect flow from Vertex to KITT rather than split dispatcher+executor"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses KITT migration strategy for a Prefect flow, but the current query asks about precedent for using Blox from Prefect jobs\u2014a different technical question that this memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3274,
+      "memory_title": "KITT migration path for signals-deprecate-and-delete-prefect: onboard \u2192 backend switch \u2192 data/auth resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes Vertex pain points motivating infrastructure migration but does not address the current query about Prefect+Blox precedent or existing patterns for using Blox from Prefect jobs.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3276,
+      "memory_title": "Vertex pain motivating infrastructure migration: headless auth brittleness, expensive git/agent work, PR size limits, token expiry, slow Bazel, low throttle hiding capacity concerns"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f0025-3f91-7922-81e4-7bc8cb3def79",
+    "source_run_id": 3243,
+    "turn_ordinal": 21
+  }
+}

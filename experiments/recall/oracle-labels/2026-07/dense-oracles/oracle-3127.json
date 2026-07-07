@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about LaunchAgent error handling is unrelated to the current turn's focus on segment expiry, task-state memory cleanup, and stale suppression implementation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1809,
+      "memory_title": "YAAML service/daemon status command needs error handling for uninstalled LaunchAgent"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses SQLite contention and daemon logging, which is tangentially related to infrastructure but not directly relevant to the current turn's focus on segment expiry, task-state memory cleanup, and stale suppression logic.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1817,
+      "memory_title": "SQLite contention and daemon logging fixes in yaaml"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a UI/output refinement for a status command, while the current turn focuses on segment expiry, task-state memory cleanup, and stale suppression logic\u2014different architectural concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2034,
+      "memory_title": "yaaml status command: separate transcript state from cumulative counters"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about service status hardening and launchctl errors is unrelated to the current turn's focus on segment expiry, task-state memory management, and stale suppression in a recall/memory system.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2764,
+      "memory_title": "Service status hardening: launchctl errors now fail explicitly"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about SQLite locking is tangentially related to the system being modified but does not directly address the current task of implementing stale task-state suppression and segment cleanup logic.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2767,
+      "memory_title": "SQLite database locking under concurrent daemon writes; read CLI commands retry-safe but unreliable"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses SQLite lock contention, which is tangentially related to database reliability but not directly relevant to the current turn's focus on segment expiry, task-state memory cleanup, and stale suppression implementation.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2770,
+      "memory_title": "YAAML database lock contention under CLI read + daemon write"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the segment-scoped validity mechanism for task-state memories that the current turn is actively implementing and debugging, including the exact metadata fields, validity logic, and recall suppression behavior being discussed.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2848,
+      "memory_title": "Segment-scoped validity for task-state memories in YAAML"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the current turn's focus on implementing stale task-state suppression and cleanup by describing a completed two-part solution with specific implementation details, commands, and results that are immediately actionable for understanding and extending the segment-scoped task-state lifecycle.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2887,
+      "memory_title": "YAAML memory lifecycle: segment-scoped task state and health-action cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the completed implementation of stale task-state deactivation, which is the exact feature the current turn is implementing and testing.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2928,
+      "memory_title": "Stale task-state deactivation completed and effective"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed recall-quality fixes (source-overlap suppression and rerun deduplication), but the current turn is focused on implementing stale task-state suppression and segment expiry cleanup\u2014a different architectural concern with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses task lifecycle metadata cleanup for retry fields, but the current turn focuses on segment expiry, task-state memory suppression, and vector candidate slot management\u2014a different subsystem with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3135,
+      "memory_title": "Task lifecycle metadata fixes: clear stale retry fields on transitions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns pyriskarbiter CLI refactoring and library consolidation, while the current turn focuses on segment/task-state memory management and stale state suppression in a different system.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about YAAML eval summary metrics is completely unrelated to the current turn's focus on segment expiry, task-state memory management, and stale suppression implementation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3188,
+      "memory_title": "YAAML eval summary default limit expanded from 50 to 1000 runs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory reports recall quality metrics and failure modes, but the current turn is focused on implementing segment expiry and task-state cleanup logic\u2014a different technical domain with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a metrics runner and experimental workflow for testing recall strategies, which is unrelated to the current turn's focus on segment expiry, task-state memory management, and stale suppression implementation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3198,
+      "memory_title": "YAAML 5x5 experiment workflow: orchestrated metrics runner and prompt"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past experiment logs and recall metrics, but the current turn is focused on implementing segment expiry and task-state cleanup in code, making the historical experiment log mostly stale and tangential.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about quality gates is procedurally relevant but not actionable for the current technical discussion about segment expiry, task-state suppression, and memory link maintenance.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3223,
+      "memory_title": "yaaml repo requires `just quality` gate before committing code"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses memory quality metrics and evaluation evidence, but the current turn is focused on implementing segment expiry and task-state cleanup logic\u2014different technical concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3127,
+    "turn_ordinal": 323
+  }
+}

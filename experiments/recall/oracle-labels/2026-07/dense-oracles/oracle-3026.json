@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a different LaunchDarkly flag (mux rollout) and stale flags, but the current turn is focused on verifying a specific archival trigger flag and rerunning queries on archival candidates, making this context mostly irrelevant.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1881,
+      "memory_title": "RiskArbiter LaunchDarkly audit findings: mux rollout flag stuck in partial state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a flag default value concern, but the current turn shows the flag is already correctly configured in staging with proper targeting and variation, making this historical context about defaults mostly stale and not actionable for the immediate task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2380,
+      "memory_title": "riskarbiter pending rule archival flag default: empty string, not far-future date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory provides useful background on the LD flag structure and purpose, but the current turn already has concrete verification results (flag is correctly configured with value `2026-01-01`), so the memory adds context with minor gaps rather than directly actionable information for this specific turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2394,
+      "memory_title": "LaunchDarkly flag binding: riskarbiter-pending-rule-archival-trigger-rollout-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context about the LD flag structure and default value, though the current turn has already verified the flag is correctly set to `2026-01-01` in staging.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2400,
+      "memory_title": "Rule archival LaunchDarkly flag binding and default"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the flag's initial setup with a 2126-01-01 default, but the current turn shows the flag is already configured with 2026-01-01 in staging and has been verified\u2014making this historical context stale and not actionable for the current verification task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2406,
+      "memory_title": "LD flag for rule archival trigger rollout dates with Jan 1, 2126 default"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Provides relevant background on the LD flag structure and defaults, but the stored memory lacks the current staging configuration details (targeting status, variation value, context kind) that were just verified in the turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2412,
+      "memory_title": "LD rollout-date flag for rule archival: riskarbiter-pending-rule-archival-trigger-rollout-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides useful context about the flag structure and default behavior, but the current turn has already moved past flag setup into verification and query re-execution with specific staging values.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2430,
+      "memory_title": "LaunchDarkly feature flag for rule archival trigger rollout dates"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly provides the flag key, type, default value, and project location that the user is actively verifying and configuring in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2456,
+      "memory_title": "LD flag for archival rollout dates"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes the LD flag mechanism and TD_45 exclusion, but the current turn has already verified the flag is correctly set and is now focused on why TD_jlbh has no archival candidates\u2014a different diagnostic question not addressed by this memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2461,
+      "memory_title": "Rule archival: LD-backed trigger rollout dates with hardcoded TD_45 exclusion"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context about the LD flag configuration and behavior, though the current turn shows the flag is already set to '2026-01-01' rather than the empty string default described in memory.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2484,
+      "memory_title": "Pending rule archival rollout flag: empty string for unset, not far-future date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context explaining why `archival-candidates` found candidates but the pending-archivals query returned zero counts\u2014the stored memory clarifies that `archival-candidates` is discovery-only and doesn't check LD flags or create pending work, which aligns with the current turn's outcome.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2757,
+      "memory_title": "archival-candidates is pre-rollout discovery only"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context explaining that archival-candidates is pre-flag discovery only, which clarifies why the same three candidates appeared before and after flag setup, but adds minor clarification since the current turn already moved past this step to pending-archivals verification.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2762,
+      "memory_title": "archival-candidates discovery helper is pre-flag only, does not check LD or pending rows"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents the exact CLI workflow that was just executed in the current turn, providing useful reference for the command structure and execution order, though the current turn already demonstrates successful application of this knowledge.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2780,
+      "memory_title": "CLI command workflow for pending rule archival verification after flag set"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the LaunchDarkly flag being verified and re-run in the current turn, providing essential context about its purpose, configuration, and behavior.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2783,
+      "memory_title": "LaunchDarkly flag for rule archival rollout: riskarbiter-pending-rule-archival-trigger-rollout-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory is about a different LaunchDarkly flag (timeout-millis) and different trigger (TD_11), not relevant to the current archival-trigger-rollout-date flag verification for TD_jlbh.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2844,
+      "memory_title": "LaunchDarkly timeout flag riskarbiter-mux-max-timeout-millis: TD_11 currently at fallthrough 15s, available 25s variant"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past LD flag migration decision but is not actionable for the current turn, which focuses on verifying flag values and rerunning archival queries on specific candidates.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3339,
+      "memory_title": "LaunchDarkly flag migration: old string list to boolean trigger-keyed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory provides directly relevant context about the archival rollout flag configuration, rollout dates, and the script used, but the current turn focuses on verifying a specific flag value and rerunning queries, which the memory doesn't directly address.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3368,
+      "memory_title": "Riskarbiter archival rollout: staged feature flag and script"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef566-2195-7d72-a3ad-cfb9ad00f810",
+    "source_run_id": 3026,
+    "turn_ordinal": 39
+  }
+}

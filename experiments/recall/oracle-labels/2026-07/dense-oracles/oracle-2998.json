@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about FEM project documentation preferences is unrelated to the current discussion about UI layout decisions (table vs. details pane).",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1601,
+      "memory_title": "User prefers planning docs over code; update FEM brief on Slack changes"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about user preference for readable layouts is relevant context for the current discussion about table vs. details pane placement, but requires minor filtering since the current turn focuses on actionability and scanability rather than general width preferences.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1777,
+      "memory_title": "tbedor user preference: readable UI layouts with adequate column/pane widths"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a project update template format, but the current turn is about UI/UX layout decisions (table vs. details pane), making it contextually misaligned and not actionable.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1868,
+      "memory_title": "Lookout project update template: Cycle 2 Status, Key Update, Blockers/Risks, Leadership Ask"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the current discussion about table vs. details pane layout, providing the exact architectural recommendation being debated.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2323,
+      "memory_title": "Hybrid TUI layout recommendation: table + detail pane over IDE-style or pure dashboard"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses rule archival approval/objection state tracking, which is completely unrelated to the current discussion about UI layout decisions (table vs. details pane for displaying information).",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2413,
+      "memory_title": "Future rule archival amendments: approval/objection state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses action chip redundancy in tables, but the current discussion focuses on whether detailed text should go in the details pane versus the table itself\u2014a different design concern.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2597,
+      "memory_title": "Action table labels should avoid duplication and be non-redundant"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses table layout for multiple tickets/PRs, but the current turn discusses placement of next-action text (details vs. table), which is a different design concern.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2674,
+      "memory_title": "bot-manager: multi-line table rows for multiple tickets/PRs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about TUI screenshots and iteration is stale context from a different project phase; the current turn is specifically about table vs. details pane layout decisions for a dashboard UI, which this memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2677,
+      "memory_title": "User preference: TUI screenshots and iteration before stopping"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current discussion about table layout and what belongs in details vs. the table, though it focuses on STATE/ATTENTION consolidation rather than the specific next-action text placement being debated.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2686,
+      "memory_title": "Table layout: combine STATE/ATTN into one column, show REPO only, keep branch in details"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory describes specific PR review fixes for MLP-4410 that are completely unrelated to the current discussion about UI layout decisions (table vs. details pane for displaying information).",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2721,
+      "memory_title": "MLP-4410 PR #483111 final review fixes: freeze gate, Slack dev guard, audit ordering, proto wording"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses table alignment conventions, but the current turn discusses content placement (details vs. table) and scannability, which are orthogonal concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3222,
+      "memory_title": "KUI table alignment standard: left-align text, center status/icons"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past feature implementation for recently-visited resources, but the current turn discusses table vs. details pane layout for actionable status information\u2014different contexts and design problems.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3233,
+      "memory_title": "Square Console KUI recently-visited feature: metadata table direction won team feedback"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses action-table label design and avoiding duplicate links, but the current turn discusses placement of next-action text (details vs. table columns), which is a different UI layout concern.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3238,
+      "memory_title": "Action-table labels must not duplicate the resource's own detail link"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past implementation decision about a metadata table layout, but the current turn is discussing where to place next-action text (details vs. table columns), which is a different UI design question with no direct connection to the visited metadata table structure.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3239,
+      "memory_title": "Recently-visited metadata table won team feedback; update PR #13972 with new implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses label cleanup in a recently-visited resource table, but the current turn is about whether action text should go in details vs. a table for a different UI pattern (scannable status tracking), making it mostly irrelevant.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3248,
+      "memory_title": "Action-table label cleanup for recently-visited resources"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about table column optimization is contextually related to the discussion of table vs. details pane layout, but focuses on activity column formatting rather than the specific decision about where to place next-action text.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3255,
+      "memory_title": "Table Display Optimization for Recently Visited"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory about PR #14151's label and tooltip changes is unrelated to the current discussion about table vs. details pane layout for next-action text.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019efc9f-ff22-7d32-bdac-00301bac40a8",
+    "source_run_id": 2998,
+    "turn_ordinal": 83
+  }
+}

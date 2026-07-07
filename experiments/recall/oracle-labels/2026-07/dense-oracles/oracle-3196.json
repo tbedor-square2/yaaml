@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current investigation of stale task_state memories and recall-quality issues, but the stored memory focuses on kind-aware filtering strategy while the current turn is diagnosing segment coarseness and long-span active task_state validity problems.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current investigation of stale/obsolete memories and their lifecycle management, though the stored memory is more general guidance while the turn focuses on specific segment-boundary and task-state issues.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly addresses the core issue being debugged: segments are too coarse and task_state remains valid too long across distinct subproblems within the same file, which is exactly the problem the current turn identifies and proposes to fix with forced boundaries.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a test plan for recall architectures that is directly relevant to the current turn's focus on segment-based recall quality issues, but requires minor filtering since the current context has already moved into implementation of forced segment boundaries rather than testing hybrid architectures.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the segment-based architecture being debugged, but describes schema/migration mechanics rather than the current recall-quality and segment-coarseness issues being investigated.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2693,
+      "memory_title": "Segment oracle schema changes and test impacts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory documents PR review fixes for a rule archival executor (MLP-4410), which is completely unrelated to the current turn's focus on memory recall quality, segment boundaries, and stale-state diagnostics in a YAAML-based system.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2721,
+      "memory_title": "MLP-4410 PR #483111 final review fixes: freeze gate, Slack dev guard, audit ordering, proto wording"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed deduplication fixes from past commits, but the current turn is actively investigating segment granularity and stale planning memories\u2014a different recall-quality failure class not addressed by source-overlap or rerun deduplication.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes database task lifecycle fixes unrelated to the current turn's focus on memory recall quality, segment boundaries, and stale planning memories.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3135,
+      "memory_title": "Task lifecycle metadata fixes: clear stale retry fields on transitions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory documents a completed refactoring of pyriskarbiter (PR #543), which is entirely unrelated to the current turn's focus on memory recall quality, segment boundaries, and stale-state diagnostics in a YAAML-based system.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current debugging session about stale memory recall and cache invalidation, though the stored memory documents a specific test implementation rather than the broader segment-coarseness issue being investigated.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3189,
+      "memory_title": "Session recall cache must invalidate on inactive memory IDs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current investigation of segment coarseness and recall-quality failures, but focuses on reranking limitations rather than the specific issue of long segments with overlapping markers causing stale task_state to persist.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3195,
+      "memory_title": "Segment/task-fit reranking is limited; segment summaries needed for generation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents experimental findings and durable lessons about recall quality issues (precision, context, segment boundaries), which directly relates to the current turn's investigation of stale memories and segment-coarseness problems, though it lacks the specific current-session diagnostics being actively analyzed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a past experiment on segment/task-fit strategies, but the current turn is focused on identifying and fixing a specific stale-state problem (long segments spanning 100+ turns with obsolete planning memories), which requires different diagnostic and implementation work than the prior 5x5 experiment comparison.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses segment-based filtering and task-state memory lifecycle issues that the current turn is actively investigating, but it documents a prior negative result (hard gates don't work) rather than the current focus on forced segment boundaries and long-span task-state staleness.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses hardcoded phrase/tool-key removal in YAAML recall, but the current turn focuses on segment coarseness, stale task_state lifecycle, and recall-quality failures across long sessions\u2014orthogonal concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current investigation of recall-quality failures and stale/wrong-context memories, though the stored memory focuses on cross-project drift while current turn is analyzing within-segment obsolescence.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed documentation task (writing an internal report), which is stale context unrelated to the current turn's focus on debugging segment boundaries, stale memory detection, and recall-quality failures.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3376,
+      "memory_title": "Memory techniques report: technical persuasion doc for internal eng buy-in"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3196,
+    "turn_ordinal": 360
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes past ingestion bugs that were already fixed, but the current turn is focused on a new structural problem with segment identity inference from mixed speaker sources, which is a different issue.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1811,
+      "memory_title": "Daemon ingestion bugs: incomplete turns and session identity"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses transcript handling and recall state management, which is tangentially relevant to the current debugging of segment identity pollution, but doesn't directly inform the specific fix of preferring user-authored lines over assistant diagnostics in segment key extraction.",
+      "judge_score": "3",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1818,
+      "memory_title": "Preference: incomplete transcript slices in live session context"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current session's focus on segment/recall quality and task-key extraction issues, but the stored memory addresses LLM filtering while the current turn is fixing structural transcript parsing and segment identity inference.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant: the current turn is actively debugging segment identity pollution and implementing source-aware segment extraction, which maps precisely to the stored memory's core principle of decoupling task identity from mixed display streams and using deterministic evidence layers for segment creation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a testing plan for recall architectures, but the current turn is focused on fixing a structural segment-identity bug (assistant diagnostics polluting segment keys), which is a different problem phase than the hybrid architecture evaluation.",
+      "judge_score": "3",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes segment oracle architecture and design patterns, but the current turn is focused on fixing a specific structural bug (assistant diagnostics polluting segment keys) and implementing speaker-source prefixes\u2014tactical implementation work rather than architectural reference.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2692,
+      "memory_title": "Segment oracle architecture: tables, API, backfill design"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current session's focus on segment identity and extraction issues, but the stored memory covers schema/migration details rather than the specific parser/source-labeling fix being implemented now.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2693,
+      "memory_title": "Segment oracle schema changes and test impacts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the exact structural problem identified in the current turn: segment identity being polluted by assistant diagnostics, test examples, and tool output rather than user-authored intent.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2799,
+      "memory_title": "Segment task-key extraction: exclude tool output and code fixtures to avoid self-feedback loops"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current structural fix: the stored memory addresses suppression rules for segment context inference, which aligns with the assistant's ongoing work to prevent assistant diagnostics and tool output from polluting segment identity.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2927,
+      "memory_title": "Segment context suppression blocks must match recall query suppression"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed deduplication fixes from earlier work, but the current turn is focused on a new structural problem with segment identity inference from mixed speaker sources, making this prior context stale and not actionable for the immediate debugging task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the current turn's core issue: segment identity is being polluted by assistant diagnostic text and examples, and the stored memory provides the exact filtering strategy and implementation details needed to fix it.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3098,
+      "memory_title": "Segment task-key extraction: filter tool output and prioritize identity keys"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current debugging session on segment quality and recall evaluation, though it addresses a different subsystem (reranking) rather than the immediate parser/segment-identity structural fix being implemented.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3195,
+      "memory_title": "Segment/task-fit reranking is limited; segment summaries needed for generation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past experiment logs and lessons, but the current turn is actively debugging a live segment-identity regression in the present session\u2014requiring immediate transcript inspection and parser fixes, not historical experiment summaries.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past experiment on segment/task-fit recall strategies, but the current turn is focused on fixing a structural parser bug (assistant diagnostics polluting segment keys), which is a different problem domain with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses segment identity and context-weighted ranking strategies, which aligns with the current turn's focus on fixing segment extraction and preventing assistant diagnostics from polluting segment keys, though it emphasizes ranking over gating rather than the structural parser fix being implemented.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current session's core problem\u2014segment identity pollution from assistant diagnostics\u2014and the stored memory's refactoring direction (structural-only context, removing hardcoded rules) aligns with the solution being implemented (speaker-prefixed transcript lines, user-first segment extraction).",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses recall quality regression and wrong-context issues, which is highly relevant to the current turn's focus on finding measurable recall-quality gaps and fixing structural segment/identity problems, though the specific solutions differ.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3037,
+    "turn_ordinal": 295
+  }
+}

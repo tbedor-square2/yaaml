@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes metrics architecture for recall and memory-corpus separation, but the current turn is focused on executing a specific workflow (quality gates, install, smoke tests, commit) with no discussion of metrics design or corpus health evaluation.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2311,
+      "memory_title": "Recall and memory-corpus metrics separation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses memory scoring and lifecycle management in general terms, but the current turn is a detailed technical workflow execution (YAAML skill, eval replay fix, quality gates, service restart, smoke tests, commit) where this meta-analysis about memory quality is not actionable context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses eval health reranking experiments and failure modes, but the current turn is focused on completing an in-flight eval replay fix through verification, installation, smoke testing, and committing\u2014different scope and phase of work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2327,
+      "memory_title": "Eval-based health reranking improves but is symptom-level"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a recall experiment with candidate families and scoring metrics, but the current turn is focused on committing an eval replay fix with smoke tests and repo workflow\u2014different contexts with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2350,
+      "memory_title": "Recall candidate families 5x5 experiment: top signals identified"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a related eval/replay fix (excluding superseded reruns from metrics) that is contextually adjacent to the current turn's work on eval replay behavior and quality gates, but the current turn focuses on verification, installation, and smoke testing rather than the specific metric-filtering logic.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3088,
+      "memory_title": "Ignore superseded eval reruns in metrics"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a recall quality metric hygiene pattern relevant to eval replay behavior, which is mentioned in the current turn's context, but the turn is focused on execution workflow (quality gates, install, smoke tests, commit) rather than the specific rerun suppression logic.",
+      "judge_score": "3",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3089,
+      "memory_title": "Recall quality metric hygiene pattern"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes `--since` filtering for eval/stats commands, which is relevant context for the current turn's eval replay verification and smoke testing workflow, but requires filtering to apply only the timestamp-filtering aspects rather than the full feature scope.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3091,
+      "memory_title": "YAAML stats and eval summary support --since filtering for recency-focused diagnostics"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed recall-quality fixes from prior commits, but the current turn is actively working through a new eval replay fix with different focus (bulk judged replay landing on later context), making this memory stale and not actionable for the immediate workflow.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current turn's focus on eval replay behavior and recall quality verification, though the stored memory covers architectural details rather than immediate operational context for the commit workflow.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3156,
+      "memory_title": "YAAML Rust recall system: architecture, filtering pipeline, health diagnostics, and eval methodology"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides background context on YAAML recall quality metrics, but the current turn is focused on executing a specific workflow (quality gate, install, smoke test, commit) where these historical statistics are marginally relevant rather than directly actionable.",
+      "judge_score": "3",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a 5x5 experiment workflow for metrics testing, but the current turn focuses on completing an in-flight eval replay fix with quality gates, installation, smoke tests, and committing\u2014a different operational context with no overlap in tasks or goals.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3198,
+      "memory_title": "YAAML 5x5 experiment workflow: orchestrated metrics runner and prompt"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past YAAML recall experiments and lessons, but the current turn is executing a specific repo workflow (quality gates, install, smoke tests, commit) with no direct connection to recall strategy tuning or experiment logging.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past experiment on segment/task-fit recall strategies, but the current turn is focused on committing an eval replay fix with quality gates and smoke tests\u2014different work streams with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses recall ranking and segmentation strategy, but the current turn is focused on executing a concrete workflow (quality gates, install, smoke tests, commit), making the memory stale and contextually misaligned.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a recall quality regression pattern (wrong-context recalls within same project) that is directly relevant to the current turn's focus on eval/replay behavior and recall quality tightening, though it describes a past diagnostic rather than actionable guidance for the immediate commit workflow.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses YAAML corpus quality metrics and measurement strategies, but the current turn is focused on executing a specific fix workflow (eval replay behavior, quality gates, install/restart, smoke tests, and commit), making the memory stale and tangential to immediate action.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed documentation task (memory techniques report) that is stale and contextually unrelated to the current turn's active work on eval replay fixes, quality gates, and commit operations.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3376,
+      "memory_title": "Memory techniques report: technical persuasion doc for internal eng buy-in"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3271,
+    "turn_ordinal": 401
+  }
+}

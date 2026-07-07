@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to memory creation hacks discussed in the turn, but represents a different approach (manual CLI-based creation) than the thread injection and context surfacing methods being explored.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1814,
+      "memory_title": "YAAML remember skill for manual memory creation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a technical implementation detail about turn context metadata persistence, but the current turn is asking about practical hacks to improve memory surfacing/creation at a higher level (thread injection, memory file reading, custom stores), making this implementation detail mostly irrelevant to the immediate discussion.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1821,
+      "memory_title": "Per-turn context metadata persisted for multi-project session recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses memory quality evaluation and lifecycle management, but the current turn focuses on practical hacks for memory surfacing/injection (thread/inject_items, memory file reading, custom caching), making this analysis of bad memory characteristics tangential rather than actionable.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to memory surfacing hacks discussed in the turn, but describes an implemented solution rather than exploratory options being evaluated.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2504,
+      "memory_title": "Codex PreToolUse hook for YAAML is live and working end-to-end"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses memory surfacing/creation strategy with a complementary architectural approach (segment-based recall vs. injection hacks), though focuses on schema design rather than immediate implementation tactics.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the discussed hack of setting thread titles for memory surfacing, but requires minor filtering since the stored memory focuses on API mechanics while the turn emphasizes the broader strategy of injecting context and managing task memory.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2655,
+      "memory_title": "Codex app-server thread/name/set API for setting thread titles"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the discussed hack of setting thread title/goal for memory surfacing, but the stored memory covers only the title-setting mechanism while the current turn discusses a broader strategy including injection, goal-setting, and custom memory stores.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2672,
+      "memory_title": "Codex thread title can be set via app-server JSON-RPC thread/name/set"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a tmux/Codex session resumption feature, but the current turn focuses on memory surfacing hacks and APIs like `thread/inject_items`\u2014different technical concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2697,
+      "memory_title": "Session join uses stored working directory for tmux and Codex"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a specific regression test for session recall cache invalidation, but the current turn focuses on high-level hacks for improving memory surfacing/creation (thread injection, custom memory stores, etc.), making this implementation detail mostly irrelevant to the discussion.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3189,
+      "memory_title": "Session recall cache must invalidate on inactive memory IDs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes TUI features (session visibility, search navigation) but the current turn focuses on memory surfacing/creation hacks and APIs like `thread/inject_items`, which are unrelated to UI implementation details.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3207,
+      "memory_title": "bot-manager TUI: done-session visibility, active status overlay, search navigation, and new-session creation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes TUI toggle behavior and session refresh mechanics, which is implementation detail unrelated to the current discussion about memory surfacing hacks and APIs like `thread/inject_items`.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3236,
+      "memory_title": "D toggle and session refresh behaviors in bot-manager TUI"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a specific production memory service (kgoose-memory-store) for Moneybot, but the current turn is about generic hacks to improve memory surfacing/creation for bot-manager\u2014a different system with different constraints and goals.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3325,
+      "memory_title": "kgoose-memory-store: Backend service for Kgoose/Moneybot persistent user memory"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses tmux session management for bot-manager, but the current turn focuses on memory surfacing/creation hacks (thread/inject_items, memory file reading, context injection), which are orthogonal concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3327,
+      "memory_title": "Tmux session/window identity strategy for bot-manager"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about tmux session deduplication is operationally useful for bot-manager implementation, but the current turn is specifically about hacks to improve memory surfacing/creation in Codex, which this memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3342,
+      "memory_title": "Tmux session deduplication strategy for bot-manager"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses YAAML memory quality metrics and evaluation evidence, but the current turn is specifically about practical hacks for memory surfacing/creation in bot-manager (thread injection, memory file reading, custom stores), making this corpus-level analysis tangential rather than actionable.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past report on memory techniques and evaluation systems, but the current turn is specifically about practical hacks to improve memory surfacing/creation in bot-manager (thread injection, memory file reading, custom caches), making this historical documentation largely irrelevant to the immediate technical discussion.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3376,
+      "memory_title": "Memory techniques report: technical persuasion doc for internal eng buy-in"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019efc9f-ff22-7d32-bdac-00301bac40a8",
+    "source_run_id": 2359,
+    "turn_ordinal": 6
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly addresses the methodology used in the current turn\u2014it explains the deployment ID lookup strategy and tag-based filtering that the assistant is actively applying to check the deprecation/PR job status.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1725,
+      "memory_title": "Prefect log discovery: use deployment ID + tags, not --flow-name"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses PR #482106 deployment blockers from June 23, but the current turn is about the deprecation/PR job status as of June 29, making this context stale and not actionable for the current question.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2390,
+      "memory_title": "PR #482106 deployment blockers: person service ACL still pending production"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed MLP-4409/4410 PRs and backport work, which is unrelated to the current query about deprecation/PR job status and recent Prefect deployment runs.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory concerns a Mixtape production deployment and payroll signals metrics, which is unrelated to the current query about the deprecation/PR job's Prefect deployment status and recent runs.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2609,
+      "memory_title": "PR #482106 deployment to Mixtape production confirmed; latency/SLO metrics show improvement"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes a past deployment timing issue from June 23-24, but current query asks about deprecation/PR job status and recent runs (June 27-29), making this stale and contextually unrelated.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2614,
+      "memory_title": "PR #482106 missed auto-deploy by minutes; deployed next window at 11:03 PDT on Jun 24"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about payroll_connected_users latency improvements is completely unrelated to the current query about deprecation/PR job status and Prefect deployment runs.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2615,
+      "memory_title": "payroll_connected_users latency improved post-deploy 11:03 PDT; p99 ~24s \u2192 ~5-9s, SLO misses nearly eliminated"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past PR refactor (#521) with BigQuery parameter recommendations, but the current turn asks about recent deprecation/PR job runs and their status\u2014different concerns that don't overlap meaningfully.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3044,
+      "memory_title": "forge-signalsmith PR #521: lifecycle refactor with BigQuery parameters follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses testing Prefect-Blox connectivity in preprod without PRs, which is unrelated to the current query about the deprecation/PR job's deployment status and recent run history.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3059,
+      "memory_title": "Testing Prefect\u2013Blox without PR review"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a specific PR rebase and BUILD dependency removal task, which is unrelated to the current query about the deprecation/PR job's deployment status and recent run history.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Provides useful context about how deprecation PRs are structured and batched, which helps interpret the current run's output showing multiple PRs with signal counts, but requires minor filtering since the current turn focuses on job status/recent runs rather than deprecation mechanics.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3202,
+      "memory_title": "Deprecation is applied per signal definition, batched by holder class into PRs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory provides useful context on the deprecation/PR job's policy and timing, but the current turn focuses on recent run status and PR generation, which the memory only partially addresses (e.g., confirms daily 21:00 UTC schedule and PR limits, but doesn't directly explain the current run's operational errors or PR creation details).",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3205,
+      "memory_title": "Feature archival policy timeline: 90+90 days, 7+3 day PR review/queue"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes a temporary diagnostic Blox/Prefect integration test in preprod, while current query asks about the production deprecation/PR job status\u2014different deployment, different purpose, and stale context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3253,
+      "memory_title": "Blox/Prefect integration validation: diagnostic run with mesh endpoint in progress"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes a preprod diagnostic run, but current query is about the prod deprecation/PR job status, which is a different deployment and context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3258,
+      "memory_title": "Task checkpoint: blox-prefect-noop preprod diagnostic run in progress"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Prefect CLI parsing pitfalls is stale and tangential; the current turn has already successfully retrieved deployment status and run data without encountering the documented issues.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3266,
+      "memory_title": "Prefect CLI output parsing pitfalls"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory documents infrastructure pain points and migration rationale, but current turn is asking for live deployment status and recent run results, which the memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3276,
+      "memory_title": "Vertex pain motivating infrastructure migration: headless auth brittleness, expensive git/agent work, PR size limits, token expiry, slow Bazel, low throttle hiding capacity concerns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about a recently-visited feature PR is unrelated to the current query about deprecation/PR job status and Prefect deployment runs.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3384,
+      "memory_title": "PR #13972: recently-visited feature addresses prod/staging distinction, timestamp milliseconds, and KITT URL deduplication"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f0025-3f91-7922-81e4-7bc8cb3def79",
+    "source_run_id": 3238,
+    "turn_ordinal": 19
+  }
+}

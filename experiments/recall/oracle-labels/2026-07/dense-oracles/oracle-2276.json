@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes YAAML's file-backed architecture, but the current turn is critiquing the session_id + project_path recall model and proposing dynamic conversation segments\u2014a design concern orthogonal to implementation details.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1679,
+      "memory_title": "YAAML design: file-backed recall as sidecar"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a related but outdated approach (per-turn metadata on session/project basis) that the current turn explicitly critiques and proposes replacing with dynamic conversation segments and topic-based recall.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1821,
+      "memory_title": "Per-turn context metadata persisted for multi-project session recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses recall filtering strategy, but focuses on kind-aware gating rather than the dynamic segment-based model the user is proposing as a replacement.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the discussion of recall model design and memory evaluation, though focused on metrics rather than the architectural shift from session/path to dynamic topic-based segmentation.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2311,
+      "memory_title": "Recall and memory-corpus metrics separation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses eval data patterns about memory quality, but the current turn is about architectural redesign of the recall model itself (moving from session/path to dynamic topic segments), making this memory tangential rather than directly actionable.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses deterministic command-key activation for recall, but the current turn is about replacing project-path/session-id with dynamic topic segmentation and semantic summarization\u2014a different architectural layer that doesn't directly benefit from command-key patterns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2388,
+      "memory_title": "YAAML memory activation: use deterministic command keys, not semantic situation classifiers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the discussion of better recall signals, but focuses on tool-triggered activation keys rather than the conversation segment and topic-based model being proposed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2392,
+      "memory_title": "Tool-triggered recall: deterministic activation keys over semantic classifiers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This stored memory directly addresses the user's critique and proposes the exact architectural solution they advocated for: dynamic conversation segments decoupled from session/path, with semantic summarization as the primary recall signal.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses provenance tracking and consolidation auditing for memories, which is orthogonal to the current turn's core argument about replacing project-path/session-id signals with dynamic topic-based segmentation and semantic summarization.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2652,
+      "memory_title": "Memory provenance graph for consolidation tracking"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This stored memory directly documents the testing strategy for the segment-aware recall architecture that the current turn is designing and advocating for.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly documents the implemented architecture for dynamic conversation segments decoupled from session ID, addressing the exact design pattern the user is advocating for in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2692,
+      "memory_title": "Segment oracle architecture: tables, API, backfill design"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a specific implementation detail (session cache invalidation) that is orthogonal to the current discussion about fundamentally redesigning the recall model away from session/project-path-based abstractions.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3189,
+      "memory_title": "Session recall cache must invalidate on inactive memory IDs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant as prior experimental context on recall model design, but focuses on metrics/lessons rather than the specific architectural proposal being discussed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly documents experimental validation of the segment-aware recall architecture the user is proposing, showing concrete tradeoffs and supporting the shift from session/path-based to topic/segment-based recall.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the architectural shift from session/path-based recall to dynamic segment-based recall with context-weighted ranking, which is the core design point being discussed in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly addresses the user's critique of project-path and session-based recall, proposing removal of hardcoded abstractions in favor of dynamic conversation segments and semantic topic inference\u2014exactly the architectural shift the user is advocating for.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly validates the user's critique of project-path/session-based recall and documents the exact failure mode (wrong-context recalls within same project) that motivates the proposed segment-based architecture.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory documents past corpus analysis and measurement findings, but the current turn is actively proposing a new architectural redesign (dynamic segments, topic descriptors, decoupled from session/path); the stored memory is stale evidence rather than actionable context for the design discussion.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 2276,
+    "turn_ordinal": 264
+  }
+}

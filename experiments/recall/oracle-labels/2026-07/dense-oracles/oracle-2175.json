@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory covers Bazel verification procedures for archival changes, but the current turn is focused on a completed naming refactor with tests already passing; the memory's Bazel troubleshooting details are stale and not actionable for the current context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2379,
+      "memory_title": "Bazel verification for archival review RPC changes in java worktrees"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed PRs and backport work from an earlier phase, but the current turn is actively executing a naming improvement pass with test verification and commits, making the stale status summary not actionable for the immediate task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed work on MLP-4411 (notification job) and mentions MLP-4418 as next, but the current turn is executing a naming improvement pass on the archival executor\u2014a tactical refactoring step that is not directly addressed in the memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2490,
+      "memory_title": "MLP-4411 notification job PR #482948 complete; MLP-4418 archival execution job next"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides useful context about the MLP-4410 ticket status and project sequencing, but the current turn is focused on a completed naming improvement pass within that ticket, so the memory requires minor filtering to extract the relevant status update.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2519,
+      "memory_title": "Automated rule archival project sequencing: MLP-4409 complete; MLP-4410 (dry-run RPC) in progress; MLP-4411+ follow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a cherry-pick conflict resolution from a different commit (245a34d5cf3f) involving proto defaults, while the current turn is about a completed naming refactor pass (commit d99b0cd1176c); the contexts are distinct and the stored memory provides no actionable guidance for the current work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2587,
+      "memory_title": "Cherry-pick conflict resolution in MLP-4410: keep master's deletion of obsolete RunPendingRuleArchivals proto"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses predicate helpers for state contracts in rule archival refactoring, but the current turn is focused on a completed naming/renaming pass with no connection to predicate helper implementation or state contract encoding.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2589,
+      "memory_title": "Rule archival refactoring: use predicate helpers for implicit state contracts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory outlines naming conventions and lifecycle terms for the rule archival executor, which directly relates to the current rename pass, though the actual renames applied differ somewhat from the memory's suggestions (e.g., `runPendingRuleArchivals` vs. the memory's `getPendingRuleArchivals`/`refreshPendingRuleArchivals` split).",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2593,
+      "memory_title": "Rule archival executor factoring: public method naming and lifecycle terms"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents the executor naming and method signatures from an earlier refactor phase, providing useful context for understanding the current rename pass, though it is slightly stale relative to the new names just applied.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2607,
+      "memory_title": "Rule archival refactor: executor naming and method signatures"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses a specific local variable rename (`retainedActiveKeys` \u2192 `activePendingArchivalKeys`) that was part of an earlier naming discussion, but the current turn shows a completed broad renaming pass with different scope and variables, making this memory stale and not actionable for the immediate context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2620,
+      "memory_title": "MLP-4410 local variable naming: activePendingArchivalKeys"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed PR review and freeze fix from an earlier phase, but the current turn is actively executing a new naming improvement pass with different renames and a new commit (d99b0cd), making the prior context stale and not actionable for the current work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns CLI command organization and hierarchy, while the current turn focuses on renaming Java methods and running tests\u2014different concerns with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2754,
+      "memory_title": "CLI command organization: nest archival commands under 'rule' subcommand, not top-level 'archival'"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a prior rebase and BUILD dependency cleanup on a different PR, while the current turn is executing a focused naming refactor pass with tests\u2014different scope and context with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about pyriskarbiter library refactoring and PR #543 consolidation, while the current turn is about renaming methods in a Java codebase (RuleArchivals executor); completely different context and project.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents high-level design decisions and implementation strategy for rule cleanup, but the current turn is executing a narrow mechanical renaming pass with no connection to those architectural decisions.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes UI/frontend work on PR #14151 (label and tooltip updates), while the current turn is about backend Java code refactoring and method renaming in the rule archival executor\u2014completely different contexts with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a completely different refactoring (Mux helper rename and signal-generator cleanup) with no relevance to the current turn's naming improvements for archival executor methods.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different rename pass (Mux helper utilities) unrelated to the current turn's archival executor naming improvements, making it stale and not actionable for this context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3361,
+      "memory_title": "riskarbiter Mux helper rename to reflect post-signal-generator deletion"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes notification validation and routing logic from a previous task, but the current turn is focused on a naming refactor pass with no changes to validation or routing behavior.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3374,
+      "memory_title": "RuleArchivalExecutor notification validation and routing logic"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef12b-5400-7f41-9c2c-7c82f7013391",
+    "source_run_id": 2175,
+    "turn_ordinal": 112
+  }
+}

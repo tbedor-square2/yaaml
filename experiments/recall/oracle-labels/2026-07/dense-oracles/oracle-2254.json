@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the core issue identified in the current turn: wrong-task bleed in regular recall, particularly task_state memories from wrong subtasks within the same project, and proposes the exact deterministic filtering approach needed to improve recall precision.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a metrics framework and taxonomy, but the current turn is actively analyzing specific eval results and failure modes that require fresh data, not framework definitions.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2311,
+      "memory_title": "Recall and memory-corpus metrics separation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The memory is marginally relevant as it discusses abstention philosophy, which relates to tool recall's recent abstention behavior mentioned in the turn, but the current discussion focuses on eval metrics and failure modes rather than abstention principles.",
+      "judge_score": "3",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2312,
+      "memory_title": "Empty recall is abstention, not failure"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current discussion of regular recall failure modes (wrong-project/wrong-task bleed), providing diagnostic context about why bad memories occur and suggesting lifecycle-based solutions rather than deletion.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past 5x5 experiment with specific recommendations, but the current turn is asking for fresh eval inspection of current regular and tool recall performance, making this historical experiment data stale and not actionable for the immediate analysis.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2350,
+      "memory_title": "Recall candidate families 5x5 experiment: top signals identified"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses tool recall activation strategy, which is relevant to the current discussion about improving tool recall matching, but the conversation has already moved past activation mechanics toward broader eval analysis.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2388,
+      "memory_title": "YAAML memory activation: use deterministic command keys, not semantic situation classifiers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly addresses the current discussion's conclusion that tool recall needs 'stronger activation matching, not broader vector recall' by proposing deterministic activation keys as the solution.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2392,
+      "memory_title": "Tool-triggered recall: deterministic activation keys over semantic classifiers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a test plan for recall matching that directly addresses the current discussion about improving regular recall's task/topic disambiguation, but requires filtering since the conversation has already moved to specific eval results and next-step recommendations.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The memory addresses tool-workflow filtering logic, which is tangentially related to the tool-recall discussion, but the current turn focuses on eval metrics and failure modes rather than filter rule adjustments.",
+      "judge_score": "3",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3092,
+      "memory_title": "Same-project proven-useful workflow memories should bypass tool-key filter"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory reports older aggregate stats (~4.1 avg, 84% useful-run rate) that are now superseded by the fresh eval data in the current turn showing 3.46 avg for regular recall and 2.39 for tool recall, making it stale and less actionable.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current discussion of regular recall failure modes and task/topic disambiguation, but represents prior experimental work that may need updating given the current eval window results.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3195,
+      "memory_title": "Segment/task-fit reranking is limited; segment summaries needed for generation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past experiments log and lessons backlog, but the current turn is requesting fresh eval data and analysis of current recall performance metrics, which requires real-time evaluation results rather than historical experiment documentation.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current discussion of regular recall's wrong-task/wrong-project bleed problem, providing experimental data on task-fit gating strategies that could inform next iteration steps.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current discussion of regular-recall failure modes (wrong-task bleed) and next improvement directions, though the stored memory discusses segment gating while the current turn focuses on task/topic disambiguation and tool-recall activation matching.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the tool recall and task disambiguation issues discussed in the current turn, providing architectural context for the refactoring direction, though it represents a prior design decision rather than fresh eval data.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the current turn's focus on regular recall quality and provides historical context showing the same wrong-context/wrong-task bleed problem that the current eval is re-inspecting, making it immediately actionable for understanding the regression pattern.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses overall memory quality and corpus statistics, but the current turn is specifically focused on comparing regular recall vs. tool recall performance metrics, which the stored memory does not directly address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past deliverable (persuasion doc for budget approval) but provides no actionable context for the current turn's specific request to re-inspect eval metrics for regular and tool recall performance.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3376,
+      "memory_title": "Memory techniques report: technical persuasion doc for internal eng buy-in"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 2254,
+    "turn_ordinal": 256
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the core failure mode being debugged (stale semantically-related memories winning recall without task overlap), but the current turn has already moved past the kind-aware filtering approach to implementing latest-score awareness in memory health ranking.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses model replay and backfilling features for legacy systems, which is orthogonal to the current turn's focus on fixing memory recall ranking and health scoring for stale-but-semantically-related memories.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2247,
+      "memory_title": "Backfilled modern features for legacy model replay are viable if point-in-time correct and trained on high-fire windows"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes metric definitions and separation concerns, but the current turn is focused on fixing a specific ranking/health bug (stale-but-semantically-related memories winning recall), which requires implementation details rather than metric architecture.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2311,
+      "memory_title": "Recall and memory-corpus metrics separation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the core failure mode being debugged: stale-but-semantically-related memories winning recall without concrete task overlap, and proposes lifecycle-state handling rather than blind deletion\u2014exactly matching the current turn's focus on adding latest-score awareness and context gates to memory health.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past 5x5 experiment on recall candidate families, but the current turn is focused on fixing a specific failure mode in memory health ranking and latest-score awareness\u2014different problem scope with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2350,
+      "memory_title": "Recall candidate families 5x5 experiment: top signals identified"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a test plan for hybrid recall architectures, but the current turn is focused on fixing a specific failure mode in memory health scoring (latest-score awareness), which is orthogonal to the segment-aware retrieval strategy discussed in the memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the same failure mode being debugged: stale semantically-related memories winning recall without concrete task overlap, and proposes a solution (task-key matching and transient-plan detection) that aligns with the current turn's focus on health rerank behavior and context gating.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2966,
+      "memory_title": "Planning/diagnostic memories should not survive via broad example task keys"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes past deduplication fixes for recall quality, but the current turn is focused on a different failure mode (stale-but-semantically-related memories winning without task overlap) and a new solution (latest-score awareness in memory health), making this memory stale and tangentially related rather than actionable.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses session cache invalidation for inactive memory IDs, but the current turn focuses on memory health scoring and ranking logic to prevent stale-but-semantically-related memories from winning recall\u2014a different problem domain with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3189,
+      "memory_title": "Session recall cache must invalidate on inactive memory IDs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides directly relevant baseline metrics and failure-mode context for the current debugging session, though it lacks the specific code changes and test results being actively pursued.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current failure mode of stale semantically-related memories winning recall; provides prior context on why post-hoc reranking alone is insufficient and suggests the need for better candidate generation signals, which complements the current approach of adding latest-score awareness to memory health.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3195,
+      "memory_title": "Segment/task-fit reranking is limited; segment summaries needed for generation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents experimental findings and lessons about recall quality and memory health ranking, which directly relates to the current turn's focus on fixing stale-but-semantically-related memory recall issues, though it lacks the specific code implementation details being worked on now.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a past experiment on segment/task-fit strategies, but the current turn is focused on fixing a specific failure mode (stale-but-semantically-related memories winning recall) by editing memory_health.rs with latest-score awareness\u2014a different technical approach not addressed in the prior experiment.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses segment/task-fit gating and context-weighted ranking experiments, but the current turn is focused on a specific implementation fix (latest-score awareness in memory health to prevent stale semantically-related memories from winning recall), which is a narrower, more concrete intervention than the broader architectural directions explored in the stored memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact failure mode being addressed in the current turn\u2014stale-but-semantically-related memories winning recall without concrete task overlap\u2014and provides the diagnostic context and next-step guidance that the assistant is now implementing.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents past corpus analysis and quality metrics, but the current turn is focused on implementing a specific fix to memory health ranking logic, making the historical evidence report stale and not actionable for the immediate coding task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about a persuasion document for engineering buy-in, while the current turn is focused on debugging a specific memory recall failure mode by editing memory_health.rs code\u2014completely different contexts with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3376,
+      "memory_title": "Memory techniques report: technical persuasion doc for internal eng buy-in"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3223,
+    "turn_ordinal": 369
+  }
+}

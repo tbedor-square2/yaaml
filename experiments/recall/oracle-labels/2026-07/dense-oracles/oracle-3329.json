@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents Java code style preferences from a different PR (Risk Arbiter 480432), while the current turn requires UI text changes and documentation updates for a specific console PR (14151), making it actively distracting and wrong-context.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1755,
+      "memory_title": "Java Risk Arbiter PR 480432: Review feedback patterns and code style preferences"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides general Square-console development guidance but lacks specific relevance to the current task of updating PR language, adding tooltips, and managing screenshots.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1792,
+      "memory_title": "Square-console CLAUDE.md guidance compliance"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a high-level ML cleanup project status but lacks specific details about the PR #14151 UI changes, language updates, or tooltip requirements needed for the current task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2354,
+      "memory_title": "Online ML Model/Feature Rule Cleanup project status and phase"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant context about the RiskArbiter feature and documentation workflow, but the current turn requires specific PR updates (language changes, tooltip links, rebasing, preview generation, screenshots) that need direct action rather than background knowledge.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2551,
+      "memory_title": "RiskArbiter rule reactivation feature and documentation workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory references draft PRs about rule archival but lacks specific details about the language changes, tooltip requirements, and screenshot updates needed for the current turn.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3034,
+      "memory_title": "Draft PRs to open: tbedor/riskarbiter-rule-summary-archival-date and tbedor/kui-rule-archival-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different PR (#483601) with unrelated rebasing and BUILD dependency work, not the current PR #14151 about updating archival eligibility language and tooltips.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses pyriskarbiter library refactoring and PR #543, which is completely unrelated to the current turn's request about updating UI language and tooltips in square-console PR #14151.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a Homebrew formula PR for sq-riskarbiter migration, which is completely unrelated to the current task of updating UI language and tooltips in a Square Console PR.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3157,
+      "memory_title": "homebrew-formulas PR #4844: sq-riskarbiter uvx wrapper migration\u2014mlds-core#545 blocker and publish workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes a related but different PR (#553 in pyriskarbiter) with similar archival eligibility field work, but lacks actionable details for the current task (PR #14151 in square-console requiring UI text changes and tooltip updates).",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3213,
+      "memory_title": "pyriskarbiter trigger archival eligibility display added to PR #553"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a different PR (#14118) about backend/frontend sync for archival dates, while the current turn requests changes to PR #14151's UI language and tooltips, making it stale and mostly irrelevant.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3217,
+      "memory_title": "KUI PR #14118 backend/frontend sync verified; frontend safe to merge before backend deploy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the implementation context for PR #14151, including the field name and components involved, which is essential for understanding what needs to be updated with the new language and tooltip.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3277,
+      "memory_title": "Automated archival eligibility field added to KUI trigger model"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the PR task as it provides context on the backend field name and implementation details, though it doesn't address the specific UI text changes, tooltip, or screenshot updates needed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3309,
+      "memory_title": "Automated archival eligibility field implementation scope"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes PR #13972 feedback resolution unrelated to PR #14151's language/tooltip updates for archival eligibility messaging.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3318,
+      "memory_title": "Recently visited resources PR feedback resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the PR #14151 feature being modified, providing essential context about the automated archival eligibility implementation that the user is now refining with language and tooltip updates.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3336,
+      "memory_title": "Automated archival eligibility frontend feature"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact PR changes requested in the current turn, including the specific label wording update and tooltip documentation link implementation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses RiskArbiter archival rollout infrastructure and LaunchDarkly flags, but the current turn requires UI text changes and documentation updates to a specific PR, making this context stale and not actionable for the immediate task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3368,
+      "memory_title": "Riskarbiter archival rollout: staged feature flag and script"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes notification validation and routing logic for RuleArchivalExecutor, but the current turn requires UI text changes, tooltip additions, and PR/preview management\u2014different concerns not addressed by this memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3374,
+      "memory_title": "RuleArchivalExecutor notification validation and routing logic"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef68c-243f-7541-9fb6-ccd845bcf6d6",
+    "source_run_id": 3329,
+    "turn_ordinal": 40
+  }
+}

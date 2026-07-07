@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant: confirms the flag is in a partial rollout state with 119 production rules, validates the user's concern about it being stuck, and provides context for the removal decision and scope planning.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1881,
+      "memory_title": "RiskArbiter LaunchDarkly audit findings: mux rollout flag stuck in partial state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes removing a legacy PayrollDuplographSignalGenerator after Mux rollout, but the current turn is about the flag removal process itself and MuxMigrationUtil refactoring, which are different scopes.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2649,
+      "memory_title": "Payroll signal generator removal steps after Mux rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly clarifies the distinction between the cutover flag being removed and the parity flag, which is essential context for understanding the safe removal scope and avoiding unintended behavioral changes during the migration.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2785,
+      "memory_title": "Mux cutover flag vs. parity flag are separate concerns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses feature-domain wiring and cutover flag mechanics, but the current turn is asking for a detailed removal process with code-level steps, test cleanup, and scope decisions\u2014topics the memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2790,
+      "memory_title": "RA-to-Mux migration requires feature-domain wiring but not additional work if staging is cut over"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses staging evidence and rollout strategy for a flag cutover, but the current turn is asking for the technical process to remove the flag entirely\u2014different scope and phase than the monitoring/rollout guidance provided.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2791,
+      "memory_title": "Strong staging evidence for TD_11 Mux cutover; missing-signal fallback not observed; recommend percentage rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory covers validation and rollout strategy for enabling the flag in production, but the current turn is asking about the removal/cleanup process for the flag itself, which is a different phase and not addressed by this memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2794,
+      "memory_title": "Safe Mux cutover validation: staging evidence plus gradual rollout with metrics watch"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory provides relevant staging/production evidence and rollout strategy for the TD_11 flag, but the current turn is asking for the technical removal process itself, which the memory addresses only partially (mentions percentage rollout but not the detailed code refactoring steps already outlined in the turn).",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2801,
+      "memory_title": "RA Mux cutover for TD_11/payroll_run_update_connected_users: staged evidence is strong; percentage rollout strategy recommended"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context about flag scope and feature-domain prerequisites, but the stored memory addresses a different phase (cutover readiness) than the current turn's focus (safe removal sequence and code refactoring steps).",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2802,
+      "memory_title": "Cutover flag only changes RA routing; feature domain is a separate concern but already in place for TD_11 payroll"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the user's question about safe flag removal by providing the exact predicate replacement strategy (generator mapping check instead of blind true) and critical safety guardrails to preserve.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2890,
+      "memory_title": "Flag removal safety: preserve generatedSignalToGenerator mapping check"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly addresses the user's question about the flag removal process with a detailed, actionable sequence covering scope decision, code changes, cleanup steps, and verification\u2014exactly what they need.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2891,
+      "memory_title": "Flag removal process for riskarbiter-should-fetch-generated-signals-from-mux"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses module binding cleanup during flag removal, which is directly relevant to the current turn's flag removal process, but focuses on a specific generator deletion scenario rather than the general flag removal sequence being discussed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2911,
+      "memory_title": "RiskArbiter signal-generator cleanup should be done in one PR; module bindings must be preserved or explicitly removed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses deletion of MuxParityChecker and related parity infrastructure, which is tangential to the current turn's focus on flag removal process and predicate replacement strategy.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2924,
+      "memory_title": "MuxParityChecker became stale after generator migration; safe to delete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes signal generator deletion and dependency handoff, but the current turn is specifically about flag removal process and code migration steps, which are only tangentially related.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2932,
+      "memory_title": "Signal generator removal: dependency handoff mechanism and mux provider validation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory is about pyriskarbiter library refactoring and CLI consolidation; current turn is about flag removal process in MuxMigrationUtil code, completely different context.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a past refactoring (renaming and cleanup of signal-generator code), but the current turn is asking about the process for removing a feature flag (`FETCH_GENERATED_SIGNALS_FROM_MUX`), which is a different task with different scope and concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past rename refactoring (MuxSignalGeneratorMigrationUtil \u2192 MuxFeatureTypecastUtil), but the current turn is about flag removal process and migration strategy, which requires different context about flag predicates, scope decisions, and cleanup steps.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3361,
+      "memory_title": "riskarbiter Mux helper rename to reflect post-signal-generator deletion"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ed6df-0d7b-7210-b6eb-9da62527d7f1",
+    "source_run_id": 3120,
+    "turn_ordinal": 132
+  }
+}

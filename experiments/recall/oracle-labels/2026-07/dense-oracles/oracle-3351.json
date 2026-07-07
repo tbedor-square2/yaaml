@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about AuditDetailUtil removal is unrelated to the current discussion about deprecated formatters and their replacements (java-code-styles, ktfmt, .editorconfig).",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1648,
+      "memory_title": "AuditDetailUtil should be removed in favor of inline string formatting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes using IntelliJ's Square.xml formatter, but the current turn has already concluded that java-code-styles is deprecated and .editorconfig is the replacement direction, making this approach stale and potentially conflicting with the new guidance.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1649,
+      "memory_title": "Use IntelliJ Square.xml formatter for Java files via command-line format.sh"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents code review patterns for a specific PR but is entirely unrelated to the current query about deprecated formatters and their replacements.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1755,
+      "memory_title": "Java Risk Arbiter PR 480432: Review feedback patterns and code style preferences"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Square-console development guidance is unrelated to the current discussion about deprecated java-code-styles replacements and Java/Kotlin formatting tools.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1792,
+      "memory_title": "Square-console CLAUDE.md guidance compliance"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about functional style preferences is unrelated to the current discussion about deprecated formatters and their replacements (java-code-styles, ktfmt, .editorconfig).",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1810,
+      "memory_title": "Functional style preference for Java transformations"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR review requirements for contract changes is unrelated to the current query about what replaced a deprecated formatter tool.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2267,
+      "memory_title": "Deep PR review required after contract change"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns PR #480432 code refactoring (inlining helpers, removing unused fields), which is completely unrelated to the current query about deprecated formatters and their replacements.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2357,
+      "memory_title": "PR #480432 review feedback: inlining and unused dependency cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a `just fmt` recipe implementation using google-java-format, but the current turn is asking what replaced a deprecated tool\u2014the memory is about a formatting task setup, not about deprecation replacements or alternatives.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3355,
+      "memory_title": "java fmt task: PR-touched or explicit-set Java formatting via google-java-format"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the core constraint that Square IntelliJ code-style is a non-negotiable requirement, which is essential context for evaluating whether the proposed `.editorconfig` replacement actually satisfies the original formatting requirement.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3365,
+      "memory_title": "riskarbiter: Square IntelliJ code-style is a formatting requirement"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly answers the current query about what replaced the deprecated java-code-styles repo, providing the specific replacement (.editorconfig) and actionable implementation details for the riskarbiter project's formatter workflow.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3370,
+      "memory_title": "riskarbiter IntelliJ formatter uses monorepo editorconfig"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly answers the current query about what replaced the deprecated java-code-styles repo, providing the exact replacement (monorepo .editorconfig) and implementation details already established in the conversation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3372,
+      "memory_title": "java-code-styles repo deprecated; Java formatting now uses monorepo .editorconfig"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the conclusion that `.editorconfig` is the replacement for `java-code-styles`, but requires minor filtering since it addresses a CLI implementation detail (-allowDefaults flag) rather than the high-level replacement strategy itself.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3381,
+      "memory_title": "IntelliJ CLI formatter requires -allowDefaults to honor .editorconfig for non-project files"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly answers the current query about what replaced the deprecated java-code-styles repo, providing the exact replacement (.editorconfig) that the assistant is investigating and concluding.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3382,
+      "memory_title": "java-code-styles repository is deprecated; use monorepo .editorconfig instead"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to implementing the `.editorconfig` replacement solution discussed, but requires filtering since it's a CLI implementation detail rather than the conceptual replacement answer.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3391,
+      "memory_title": "Java formatter CLI requires -allowDefaults for .editorconfig outside checked-in IDEA project"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly answers the current turn's question about what replaced the deprecated java-code-styles repo, providing the exact replacement (.editorconfig) and context for both Java and Kotlin formatting.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3393,
+      "memory_title": "java-code-styles repo is deprecated; use .editorconfig for Java formatting instead"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly confirms that `.editorconfig` is the active replacement for deprecated `java-code-styles`, with specific finalized settings already applied to the monorepo and verified in PR d94cfa7e20b2.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3398,
+      "memory_title": "Riskarbiter .editorconfig formatting settings finalized and applied"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f23ad-7f57-7373-9829-cd921c397d84",
+    "source_run_id": 3351,
+    "turn_ordinal": 11
+  }
+}

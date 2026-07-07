@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents general code review preferences from a past PR, but the current turn requires specific technical analysis of two active PRs for contract alignment and sync issues\u2014different scope and context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1755,
+      "memory_title": "Java Risk Arbiter PR 480432: Review feedback patterns and code style preferences"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant guidance on cross-repo PR alignment and contract verification, but lacks specifics about the current PRs' actual changes (RuleSummary.next_automated_archival_utc_date field, CI task-list items, worktree setup) and would benefit from being filtered against the concrete findings already in progress.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1790,
+      "memory_title": "Cross-repo PR alignment: Backend and frontend contract synchronization"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes project phase and ticket status for ML rule cleanup, but the current turn is a specific deep PR review request for two PRs (java#484157 and square-console#14118) checking frontend-backend sync; the memory provides no actionable context for evaluating those particular PRs' contract alignment or code quality.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2354,
+      "memory_title": "Online ML Model/Feature Rule Cleanup project status and phase"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses code cleanup in PR #480432 (inlining and unused dependencies), but the current turn is a deep sync review of two different PRs (#484157 and #14118) focused on backend-frontend contract alignment for a new field; no direct relevance.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2357,
+      "memory_title": "PR #480432 review feedback: inlining and unused dependency cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed foundational PRs (#480115, #482842) for archival features, but the current turn asks for a deep review of two different PRs (#484157, #14118) that appear to be downstream consumers of that work; the memory provides historical context but no actionable details for evaluating the current PRs' sync or required updates.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a completed PR review for MLP-4410 (#483111), but the current turn requests deep review of two different PRs (#484157 and #14118) with no apparent connection to the archived memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly describes the backend implementation approach for the exact PR being reviewed, providing the architectural decision and wiring details needed to validate sync with the frontend PR.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3033,
+      "memory_title": "Backend implementation: attach pending archival read to GetRulesSummaryAction"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the exact two PRs being reviewed (Java backend and KUI frontend for rule archival date), their relationship, and the deep-review approach requested in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3034,
+      "memory_title": "Draft PRs to open: tbedor/riskarbiter-rule-summary-archival-date and tbedor/kui-rule-archival-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This stored memory directly documents the exact feature being reviewed in both PRs\u2014the backend proto field addition and frontend display/filter implementation\u2014providing essential context for evaluating sync between the two changes.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3123,
+      "memory_title": "Rule archival date surfacing: backend proto field + KUI table/filter display"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns pyriskarbiter CLI refactoring and library consolidation, which is completely unrelated to the current turn's request for a deep PR review of backend/frontend contract alignment between Java and square-console repositories.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current PR review task, confirming frontend PR #14118 status and test results, but lacks backend PR #484157 deep-review findings needed for complete sync assessment.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3194,
+      "memory_title": "KUI PR #14118 screenshots and deep review complete; select display fixed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This stored memory directly summarizes the sync verification already completed for both PRs, confirming contract alignment, nullable handling, and deployment order\u2014exactly what the current turn is asking to double-check.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3217,
+      "memory_title": "KUI PR #14118 backend/frontend sync verified; frontend safe to merge before backend deploy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly summarizes the sync status, field contract, and deployment safety of both PRs\u2014exactly what the current turn is asking to verify.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3221,
+      "memory_title": "Backend/frontend sync: RuleSummary archival dates (PR #484157 & #14118)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns KUI table alignment (PR #14133), which is completely unrelated to the current turn's request to review backend/frontend contract sync between Java and square-console PRs (#484157 and #14118).",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3226,
+      "memory_title": "KUI PR #14133 deep review and alignment patch complete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns PR #13972 feedback on KITT recent-history and rule-history features, which is unrelated to the current task of reviewing backend/frontend sync for archival date fields in PRs #484157 and #14118.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3318,
+      "memory_title": "Recently visited resources PR feedback resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the automated archival feature being reviewed, but covers a different field (`eligible_for_automated_rule_archival` on TriggerDef) than the current PRs' focus (`next_automated_archival_utc_date` on RuleSummary), so requires filtering to extract applicable patterns around schema parsing and frontend exposure.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3336,
+      "memory_title": "Automated archival eligibility frontend feature"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Related to the same feature area (automated archival) but addresses a different PR (#14151 vs #484157 and #14118); provides useful context on label/tooltip implementation but requires filtering to extract only directly applicable sync patterns.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f1526-64e5-7303-8922-6fc9a73e5d87",
+    "source_run_id": 3281,
+    "turn_ordinal": 15
+  }
+}

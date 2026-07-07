@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses build system fanout and dependency structure in riskml-common, which is completely unrelated to the current discussion about signal parity checking, ACL fixes, and risk mitigation strategies for the payroll job failure.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1769,
+      "memory_title": "riskml-common fanout is driven by monolithic :lib, not riskarbiter decomposition"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about audit logging interceptors is tangential to the current discussion of signal parity checking, Mixtape rollforward options, and ACL fixes for BatchGetByPersonToken.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1797,
+      "memory_title": "RiskArbiter audit paths: @DangerousRpc (Slack) vs @AuditLogged (Squawk/Datadog) are separate interceptors"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about LaunchDarkly flag states is tangentially related to RiskArbiter but does not directly address the current question about signal parity checking, Mixtape rollout risks, or ACL mitigation strategies.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1881,
+      "memory_title": "RiskArbiter LaunchDarkly audit findings: mux rollout flag stuck in partial state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the deployment risk discussion\u2014provides concrete prerequisite status and deployment timeline for the Person ACL change mentioned as the lowest-risk fix, but lacks current timestamp context to assess if Tuesday deadline has passed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2514,
+      "memory_title": "PR #482106 (java) merge blockers and deployment prerequisites"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a successful Mixtape deployment with improved metrics, but the current discussion explicitly rejects Mixtape as a mitigation path for the Risk Arbiter payroll jobs issue, making this context stale and not actionable for the current turn.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2609,
+      "memory_title": "PR #482106 deployment to Mixtape production confirmed; latency/SLO metrics show improvement"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes cleanup steps for after Mixtape rollout is complete, but the current turn is actively debating whether rolling forward to Mixtape is even a viable option and what the risks are\u2014making this post-decision cleanup guidance premature and not actionable for the immediate decision at hand.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2649,
+      "memory_title": "Payroll signal generator removal steps after Mux rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses deadline sharing in async payroll scoring, but the current turn focuses on signal parity checking gaps and mitigation options (ACL fixes vs. Mixtape rollforward), making it tangentially related but not actionable for this specific question.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2658,
+      "memory_title": "Async deadline sharing vs. parity-specific deadline trade-off"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the current turn's discussion of parity checking gaps, ACL issues with BatchGetByPersonToken, and the specific risk/mitigation of rolling forward to Mixtape versus fixing Person ACL for riskarbiter.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2781,
+      "memory_title": "Production canary failure root cause: PersonService.BatchGetByPersonToken ACL missing for mixtape"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to understanding Mixtape rollout options and parity checking gaps, but the stored memory addresses flag mechanics rather than the risk assessment and ACL mitigation strategy that dominates the current turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2785,
+      "memory_title": "Mux cutover flag vs. parity flag are separate concerns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Mux cutover staging evidence for TD_11, but the current turn is asking about parity checking gaps and risk of rolling forward to Mixtape as a mitigation for a different failure (Risk Arbiter payroll jobs with caller identity issues), making it contextually misaligned.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2791,
+      "memory_title": "Strong staging evidence for TD_11 Mux cutover; missing-signal fallback not observed; recommend percentage rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the Mixtape rollout option with concrete staging data and risk assessment, but focuses on a specific feature flag scenario rather than the broader parity checking and ACL fix discussion in the current turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2801,
+      "memory_title": "RA Mux cutover for TD_11/payroll_run_update_connected_users: staged evidence is strong; percentage rollout strategy recommended"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about TD_11 timeout configuration is stale and tangential\u2014the current discussion is about parity checking gaps, ACL fixes, and whether rolling forward to Mixtape is viable, not about tuning Mux timeout flags.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2827,
+      "memory_title": "RiskArbiter TD_11 timeout behavior: riskarbiter-mux-max-timeout-millis LaunchDarkly flag"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed Mux cutover and legacy code removal, but the current turn is asking about rolling forward TO Mixtape as a mitigation option for a parity/ACL failure\u2014a different architectural decision with active risk assessment that this memory doesn't address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2910,
+      "memory_title": "RiskArbiter Mux cutover is production-verified and ready for permanent removal"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses pyriskarbiter library refactoring and module extraction, which is unrelated to the current discussion about signal parity checking, ACL failures, and mitigation options for the Risk Arbiter payroll job issue.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Risk Arbiter rule cleanup and archival design decisions, which is entirely unrelated to the current discussion about signal parity checking, Mixtape deployment options, and ACL fixes for payroll jobs.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns Risk Arbiter partition metadata cleanup and evidence taxonomy, which is entirely unrelated to the current discussion about signal parity checking, Mixtape deployment options, and ACL fixes for PersonService.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3151,
+      "memory_title": "Risk Arbiter no-traffic cleanup: partition metadata enrichment, evidence taxonomy, and execution status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a refactoring of utility classes and cleanup after signal-generator removal, which is unrelated to the current discussion about parity checking, Mixtape rollforward options, and ACL fixes for the payroll job failure.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a utility class rename for feature typecast handling, which is tangential infrastructure work unrelated to the current discussion about parity checking, signal execution paths, and ACL mitigation strategies for the payroll job failure.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3361,
+      "memory_title": "riskarbiter Mux helper rename to reflect post-signal-generator deletion"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ed6df-0d7b-7210-b6eb-9da62527d7f1",
+    "source_run_id": 3025,
+    "turn_ordinal": 10
+  }
+}

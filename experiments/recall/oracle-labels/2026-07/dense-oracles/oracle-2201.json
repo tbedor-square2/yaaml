@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory about research compilation preferences is unrelated to the current turn about cloning summarybot and implementing leave/OOO representation in summaries.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1582,
+      "memory_title": "User preference: compile research into concise briefs from linked sources"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory about FEM project documentation preferences is unrelated to the current turn about cloning summarybot and adding leave/OOO representation to summaries.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1601,
+      "memory_title": "User prefers planning docs over code; update FEM brief on Slack changes"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns MLP-4409/4410 archival storage PRs and is completely unrelated to the current turn about cloning summarybot and adding leave/OOO representation to summaries.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly documents the exact issue the user raised\u2014leave not appearing in summaries\u2014and captures the root cause analysis and proposed solution already completed in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2628,
+      "memory_title": "SummaryBot leave/out-of-office representation gap"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Provides useful baseline context about SummaryBot's operational status and entry points, but the current turn is focused on a specific implementation detail (leave/OOO representation in summaries), so the memory has minor gaps in directly addressing the technical investigation underway.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2645,
+      "memory_title": "SummaryBot service status and entry points"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly captures the investigation outcome and design decision already made in the current turn, providing a concise summary of the leave representation issue and the chosen solution approach.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2648,
+      "memory_title": "SummaryBot leave/out-of-office representation is a prompt priority, not a UI gap"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly captures the user's stated preference and the technical decision made in the current turn, making it essential context for any future work on SummaryBot's leave representation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2659,
+      "memory_title": "SummaryBot leave/OOO representation preference"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a forge-signalsmith PR about lifecycle refactoring and BigQuery parameters, which is completely unrelated to the current turn about cloning squareup/summarybot and adding leave/OOO representation to summaries.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3044,
+      "memory_title": "forge-signalsmith PR #521: lifecycle refactor with BigQuery parameters follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory about PR #483601 rebase and BUILD dependency removals is completely unrelated to the current turn about cloning squareup/summarybot and adding leave/out-of-office representation to summaries.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about pyriskarbiter refactoring and CLI consolidation, completely unrelated to the current turn about cloning squareup/summarybot and adding leave/OOO representation to summaries.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a Homebrew formula PR for sq-riskarbiter migration, which is completely unrelated to the current turn about cloning squareup/summarybot and adding leave/out-of-office representation to summaries.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3157,
+      "memory_title": "homebrew-formulas PR #4844: sq-riskarbiter uvx wrapper migration\u2014mlds-core#545 blocker and publish workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about EXPERIMENTS_LOG.md updates is unrelated to the current turn's focus on cloning summarybot, investigating leave/OOO representation in summaries, and making prompt changes to surface out-of-office context.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3196,
+      "memory_title": "5x5 prompt should require EXPERIMENTS_LOG.md updates on primary branch"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a metrics runner and 5x5 experiment workflow for recall optimization, which is completely unrelated to the current turn about cloning summarybot and adding leave/out-of-office representation to summaries.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3198,
+      "memory_title": "YAAML 5x5 experiment workflow: orchestrated metrics runner and prompt"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about a bot-manager TUI interface with session visibility and navigation features, completely unrelated to the current turn about cloning squareup/summarybot and implementing leave/out-of-office representation in summaries.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3207,
+      "memory_title": "bot-manager TUI: done-session visibility, active status overlay, search navigation, and new-session creation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses removing hardcoded phrases and tool-key extraction from YAAML recall, which is orthogonal to the current turn's focus on cloning summarybot and investigating leave/OOO representation in summaries.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR #13972 feedback resolution is completely unrelated to the current turn about cloning squareup/summarybot and adding leave/out-of-office representation to summaries.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3318,
+      "memory_title": "Recently visited resources PR feedback resolution"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019efb4b-6c80-7460-a7f2-3fb36ffab019",
+    "source_run_id": 2201,
+    "turn_ordinal": 1
+  }
+}

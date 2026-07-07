@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the core issue being debugged: kind-aware recall gating and task-state filtering precision, which is exactly what the current turn identifies as the problem (same-project durable memories with disjoint subject tags being incorrectly surfaced).",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant framework for understanding the memory-health metrics being analyzed, though the current turn focuses on specific failure cases rather than the general metric definitions.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2311,
+      "memory_title": "Recall and memory-corpus metrics separation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly applicable: the current turn is investigating whether low-scoring memories are bad content vs. wrong-context retrieval, and this stored memory provides the exact analytical framework and findings needed to guide that investigation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant\u2014the stored memory documents the exact diagnostic work (wrong-context failures, stale episodic, noisy task-keys) and proposed policies that the current turn is actively investigating and validating through replay and health checks.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2327,
+      "memory_title": "Eval-based health reranking improves but is symptom-level"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past 5x5 experiment with specific recommendations, but the current turn is focused on diagnosing and fixing immediate production recall failures in a Java/RiskArbiter segment through replay analysis and health cleanup\u2014different scope and methodology than the historical experiment.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2350,
+      "memory_title": "Recall candidate families 5x5 experiment: top signals identified"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly captures the core diagnostic insight the current turn is working through: distinguishing bad memory content from right memory in wrong context, and identifying that the dominant failure is task-state drift rather than ranking bugs.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2758,
+      "memory_title": "Recall quality failures are segment/task-state drift, not memory quality"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed task-state deactivation feature, but the current turn is focused on diagnosing remaining low-scoring recalls and determining whether failures are due to memory-health cleanup or ranking-code bugs\u2014this memory is stale context about a past implementation rather than actionable for the current diagnostic work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2928,
+      "memory_title": "Stale task-state deactivation completed and effective"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns task lifecycle metadata and database migrations, while the current turn focuses on memory recall evaluation, context gating, and debugging a Java/RiskArbiter segment failure\u2014completely disjoint domains with no actionable connection.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3135,
+      "memory_title": "Task lifecycle metadata fixes: clear stale retry fields on transitions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes Risk Arbiter rule cleanup design decisions and implementation strategy, but the current turn is focused on debugging memory recall quality issues and evaluating segment performance\u2014a different technical domain with no overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The memory describes a session cache invalidation mechanism for inactive memory IDs, which is tangentially related to the ongoing memory-health debugging but not directly actionable for the current turn's focus on evaluating remaining low performers and determining whether they are memory-content issues or ranking-code bugs.",
+      "judge_score": "3",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3189,
+      "memory_title": "Session recall cache must invalidate on inactive memory IDs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant summary of eval metrics and failure modes that the current turn is actively investigating and building upon, though the stored memory is slightly stale relative to the ongoing analysis.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past experiment log and lessons backlog, but the current turn is actively debugging specific memory-health issues and code changes in real-time, making the historical experiment summary stale and not actionable for the immediate diagnostic work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a past experiment on segment/task-fit strategies, but the current turn is focused on diagnosing and fixing a specific Java/RiskArbiter memory-health issue with actionable replay results, making the historical experiment results stale and not directly applicable to the immediate debugging work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the core investigation\u2014segment-based context gating and ranking strategies\u2014and provides prior experimental findings that inform the current debugging direction, though the current turn has moved into concrete failure analysis rather than high-level strategy.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly describes the exact failure pattern being investigated\u2014wrong-context recalls within same-project durable memories with disjoint subject tags\u2014and proposes the solution (stricter same-project gating) that aligns with the current turn's diagnosis and next steps.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context on memory quality metrics and prior findings, but the current turn is focused on specific recent replay improvements and actionable next steps rather than broad corpus evidence.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past deliverable (persuasion document) but provides no actionable context for the current turn's focus on diagnosing and fixing specific memory recall failures in the Java/RiskArbiter segment.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3376,
+      "memory_title": "Memory techniques report: technical persuasion doc for internal eng buy-in"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3173,
+    "turn_ordinal": 344
+  }
+}

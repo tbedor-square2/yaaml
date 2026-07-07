@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Prefect logs and Vertex infrastructure is tangentially related to the GCP project context but does not address the specific command execution or permission errors being discussed.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1724,
+      "memory_title": "Prefect logs on forge-signalsmith: local CLI + Vertex infra fallback"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Blox hybrid migration architecture is unrelated to the current query about GCP Secret Manager permission errors and command execution attempts.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3245,
+      "memory_title": "Blox hybrid migration research: architecture, precedent, and spike plan"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Blox/Prefect integration diagnostic run, which is completely unrelated to the current query about GCP Secret Manager access permissions and KITT secret seeding commands.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3253,
+      "memory_title": "Blox/Prefect integration validation: diagnostic run with mesh endpoint in progress"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a high-level KITT migration strategy, but the current turn asks about a specific failed command; the memory provides context about the overall migration path rather than actionable details for debugging the permission errors shown.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3272,
+      "memory_title": "KITT migration path: move entire Prefect flow from Vertex to KITT rather than split dispatcher+executor"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes high-level infrastructure migration motivations but does not address the specific GCP Secret Manager permission errors or command execution details in the current turn.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3273,
+      "memory_title": "Vertex pain points motivating infrastructure migration: auth brittleness, GitHub PR generation fragility, token/cache issues, platform limits"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant context about the KITT migration strategy and secret resolution approach, but the current query asks specifically about a command that was attempted, requiring direct recall of the exact command details rather than high-level migration planning.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3274,
+      "memory_title": "KITT migration path for signals-deprecate-and-delete-prefect: onboard \u2192 backend switch \u2192 data/auth resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Vertex infrastructure pain points and migration rationale, but the current query asks about a specific failed command (GCP Secret Manager access and impersonation), which is a tactical debugging issue rather than strategic infrastructure context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3276,
+      "memory_title": "Vertex pain motivating infrastructure migration: headless auth brittleness, expensive git/agent work, PR size limits, token expiry, slow Bazel, low throttle hiding capacity concerns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes KITT onboarding and Terraform PR generation for AWS/Prefect access, but the current turn discusses GCP Secret Manager permission errors and service account impersonation issues, which are unrelated contexts.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3282,
+      "memory_title": "KITT onboarding generates Terraform PR for Forge/Prefect access"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Buildkite principal removal is completely unrelated to the current query about GCP Secret Manager access commands and permission errors.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3284,
+      "memory_title": "Buildkite principal removal in Forge template is intentional"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a migration strategy for KITT, but the current query asks about a specific command that failed with GCP permissions errors\u2014the memory provides no context for debugging this particular technical issue.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3296,
+      "memory_title": "Preferred KITT migration strategy for signalsmith"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed auth pattern implementation, but the current turn asks about a failed command attempt with GCP permission errors\u2014different context and not actionable for the immediate problem.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3300,
+      "memory_title": "KITT secret-file auth pattern: GitHub and Slack creds"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the auth chain architecture that is directly relevant to understanding why the user was attempting to seed KITT secrets from GCP, but requires minor filtering since it explains the end-state design rather than the specific command execution issues encountered.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3349,
+      "memory_title": "KITT secret auth chain: env vars \u2192 KITT mounted files \u2192 GCP Secret Manager"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a KITT secret pattern for reading credentials, but the current query asks about a specific failed command attempt, making this general pattern documentation only tangentially relevant to the immediate troubleshooting context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3367,
+      "memory_title": "KITT secret file auth pattern for Prefect flows"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes an alternative secret flow using KITT-mounted files and environment variables that directly addresses the permission errors encountered in the current turn's command attempts.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3379,
+      "memory_title": "App WIF secret flow: KITT-mounted file + env var + fallback chain"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses AWS/KITT identity and smoke tests, but the current query is about a failed GCP Secret Manager access command with permission errors, making this context largely irrelevant to the immediate problem.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3394,
+      "memory_title": "KITT AWS identity confirmed + smoke tests validate path"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the KITT migration implementation including the exact commands and approaches being attempted, making it essential context for understanding what command was tried and why it failed.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3395,
+      "memory_title": "KITT migration for forge-signalsmith: WIF + preprod rollout \u2014 implementation in progress"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f0025-3f91-7922-81e4-7bc8cb3def79",
+    "source_run_id": 3319,
+    "turn_ordinal": 76
+  }
+}

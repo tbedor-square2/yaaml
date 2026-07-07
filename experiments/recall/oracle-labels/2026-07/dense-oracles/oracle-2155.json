@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns Slack job consolidation and duplicate publisher logic across two repositories, which is entirely unrelated to the current discussion about reducing latency in PayrollConnectedUsersSignalGenerator through parallelization and instrumentation.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1728,
+      "memory_title": "SSS Slack jobs consolidation: separate concerns, shared codebase"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about offline signal production classification and Dumbo shadow logs is completely unrelated to the current discussion about latency reduction strategies for PayrollConnectedUsersSignalGenerator.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2072,
+      "memory_title": "Offline signal production-use classification: Dumbo shadow logs + Sourcegraph layering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory provides useful baseline context (pre-deploy latency ~24.2s, post-deploy ~18.5s, current p99 5-7s range) and confirms the deployment succeeded, but the current turn already references more recent and detailed metrics (4.5s-7.1s over last 30m) and specific code paths, making the stored memory somewhat stale for the forward-looking optimization discussion.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2609,
+      "memory_title": "PR #482106 deployment to Mixtape production confirmed; latency/SLO metrics show improvement"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory provides useful historical context on recent latency improvements and deployment timing, but the current turn is asking about *future* optimization steps and next actions, which requires forward-looking analysis rather than past deployment facts.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2612,
+      "memory_title": "Mixtape auto-deploy missed PR #482106 by minutes; latency improved post-deploy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly documents the baseline latency improvement (24s \u2192 5-9s p99) and current SLO status that the current turn is building upon to discuss further optimization steps.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2615,
+      "memory_title": "payroll_connected_users latency improved post-deploy 11:03 PDT; p99 ~24s \u2192 ~5-9s, SLO misses nearly eliminated"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory provides relevant baseline latency data (4.3s p99) and timeout context, but the current turn seeks forward-looking optimization strategies and next steps, requiring deeper analysis beyond the stored summary.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2632,
+      "memory_title": "Served TD_11 payroll evaluation: no timeout errors, p99 latency 4.3s under 10s caller timeout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly provides the current production latency baseline (p99 ~4.3s, timeout ~10s) that the current turn uses to contextualize optimization opportunities and validate that the discussed improvements (parallelization reducing p99 to 3-4s) are meaningful relative to actual SLO headroom.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2641,
+      "memory_title": "TD_11 payroll current production latency and timeout state (post-refactor)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes cleanup steps for removing a legacy generator after migration, but the current turn asks about latency reduction opportunities and next optimization steps for the new PayrollConnectedUsersSignalGenerator, which are unrelated concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2649,
+      "memory_title": "Payroll signal generator removal steps after Mux rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses deadline-sharing trade-offs in async payroll scoring, but the current turn focuses on latency reduction strategies for signal generation (parallelizing flows, instrumentation, Person batch optimization), making it mostly irrelevant to the immediate question.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2658,
+      "memory_title": "Async deadline sharing vs. parity-specific deadline trade-off"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a Mux cutover rollout decision for TD_11, which is entirely unrelated to the current query about latency reduction strategies for PayrollConnectedUsersSignalGenerator.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2791,
+      "memory_title": "Strong staging evidence for TD_11 Mux cutover; missing-signal fallback not observed; recommend percentage rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a Mux cutover strategy for a different payroll feature, while the current turn asks about latency reduction opportunities for PayrollConnectedUsersSignalGenerator\u2014completely different context and not actionable for the current question.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2801,
+      "memory_title": "RA Mux cutover for TD_11/payroll_run_update_connected_users: staged evidence is strong; percentage rollout strategy recommended"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context showing Mixtape latency exceeding deadlines in production (17.7s vs 15s timeout), providing real-world validation that the 4.5-7.1s p99 discussed needs further reduction, though the stored memory focuses on a specific incident rather than optimization strategy.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2820,
+      "memory_title": "Mux feature-fetch timeout causing DLQ backlog on TD_11 payroll_run_update"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses PR strategy for removing a payroll generator, but the current turn asks about latency reduction opportunities and next optimization steps\u2014completely different technical context.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2916,
+      "memory_title": "Remove payroll generator: single large PR vs phased approach trade-off"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns pyriskarbiter library refactoring and CLI consolidation, which is completely unrelated to latency optimization strategies for PayrollConnectedUsersSignalGenerator.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns deprecated signal inventory, audit workflows, and Dumbo cleanup gates\u2014entirely unrelated to latency optimization strategies for PayrollConnectedUsersSignalGenerator.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3181,
+      "memory_title": "Deprecated signal audit: inventory, mapping, backfill evidence, ownership classification, and Dumbo cleanup gates"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns Blox hybrid migration architecture and is entirely unrelated to the current query about latency reduction strategies for PayrollConnectedUsersSignalGenerator.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3245,
+      "memory_title": "Blox hybrid migration research: architecture, precedent, and spike plan"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Vertex infrastructure pain points and migration strategy, which is entirely unrelated to the current query about latency reduction in PayrollConnectedUsersSignalGenerator and parallelization opportunities.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3276,
+      "memory_title": "Vertex pain motivating infrastructure migration: headless auth brittleness, expensive git/agent work, PR size limits, token expiry, slow Bazel, low throttle hiding capacity concerns"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019edcc8-cff6-77d1-8e48-04b9adabc032",
+    "source_run_id": 2155,
+    "turn_ordinal": 38
+  }
+}

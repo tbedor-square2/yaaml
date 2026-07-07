@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Duplograph signal optimization project (batching, filtering, rollout modes) but does not contain current timeout metrics, latency data, or traffic projections needed to answer the specific question about expected timeouts if traffic rolls to Mixtape.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1899,
+      "memory_title": "Payroll Duplograph signal optimization: batch endpoints, requestedSignals filtering, tri-state rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a rolloff ticket and migration strategy, but the current turn is asking for a specific quantitative prediction about timeouts under traffic rollout to Mixtape, which requires real-time metrics analysis rather than historical context about a removal ticket.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1968,
+      "memory_title": "Linear rolloff ticket for payroll signal generator"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past deployment (2026-06-24) with historical latency data, but the current turn requires real-time Datadog metrics and current state analysis to answer the timeout prediction question, making this stale context mostly irrelevant.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2609,
+      "memory_title": "PR #482106 deployment to Mixtape production confirmed; latency/SLO metrics show improvement"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly provides the latency baseline (p99 ~5-9s post-deploy) needed to estimate timeouts when rolling traffic to Mixtape under the 10s timeout threshold.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2615,
+      "memory_title": "payroll_connected_users latency improved post-deploy 11:03 PDT; p99 ~24s \u2192 ~5-9s, SLO misses nearly eliminated"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly explains the timeout mechanism (10s default, LD cap) that is essential for answering the current query about expected timeouts when rolling traffic to Mixtape.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2630,
+      "memory_title": "TD_11 payroll Mux timeout computation: default 10s baseline, LD cap applied on top"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly answers the current query by providing the exact metric (p99 latency 4.3s vs 10s timeout) and expected timeout count (effectively zero) needed to estimate timeouts if traffic rolls to mixtape.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2632,
+      "memory_title": "Served TD_11 payroll evaluation: no timeout errors, p99 latency 4.3s under 10s caller timeout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly answers the current query by providing the exact expected timeout count (<3/hour) based on current production latency metrics and observed failure rates.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2641,
+      "memory_title": "TD_11 payroll current production latency and timeout state (post-refactor)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory provides relevant baseline data on TD_11 Mux cutover safety and failure rates, but the current turn asks for a specific timeout projection under full traffic rollout, which requires real-time latency metrics (p99, p95) rather than historical success/failure counters.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2791,
+      "memory_title": "Strong staging evidence for TD_11 Mux cutover; missing-signal fallback not observed; recommend percentage rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly addresses the current question by providing baseline Mux fetch failure rates for TD_11 and staging evidence needed to estimate timeout impact under full traffic rollout.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2801,
+      "memory_title": "RA Mux cutover for TD_11/payroll_run_update_connected_users: staged evidence is strong; percentage rollout strategy recommended"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes TD_11 payroll_run_update flagging rates post-cutover, but current query asks about timeout expectations for traffic rollout to Mixtape\u2014different metric and context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2816,
+      "memory_title": "TD_11 payroll_run_update flagging rate post-Mux cutover: stable within expected band"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly addresses the current query by providing historical timeout data, deadline thresholds (10s effective window, 15s cap), and Mixtape latency patterns (17.7s observed) that are essential for estimating expected timeouts under full traffic rollout to Mixtape.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2820,
+      "memory_title": "Mux feature-fetch timeout causing DLQ backlog on TD_11 payroll_run_update"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant historical context on TD_11 timeout behavior and Mixtape latency, but the stored memory documents a past incident (2026-06-26) while the current query asks about expected timeouts at present state with fresh Datadog metrics.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2823,
+      "memory_title": "TD_11 payroll_run_update DLQ failure root cause: Mux feature-fetch timeout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory provides relevant historical context about TD_11 timeout behavior and LaunchDarkly flag configuration, but the current turn is asking about expected timeouts at present state with fresh Datadog metrics showing p99 at 4.3s, so the stale DLQ item analysis requires filtering/revalidation against current conditions.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2824,
+      "memory_title": "TD_11 stale DLQ item root cause: Mux GetFeatures timeout on retry loop"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant: explains the timeout mechanism (LaunchDarkly flag control), current fallthrough value (15s), and provides baseline p99 latency (4.3s) needed to estimate expected timeouts under traffic rollout to Mixtape.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2827,
+      "memory_title": "RiskArbiter TD_11 timeout behavior: riskarbiter-mux-max-timeout-millis LaunchDarkly flag"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory provides directly relevant context about TD_11 timeout configuration and historical latency observations (17.7s\u201320.2s), but the current turn shows fresh Datadog metrics indicating p99 is now 4.3s, so the memory's older latency baseline needs reconciliation with current state.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2844,
+      "memory_title": "LaunchDarkly timeout flag riskarbiter-mux-max-timeout-millis: TD_11 currently at fallthrough 15s, available 25s variant"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory provides directly relevant context on Mux timeout configuration and TD_11 latency behavior, but the current turn has already gathered fresh Datadog metrics showing p99 of 4.3s, making the stored 17.7-20.2s observation somewhat stale and requiring filtering.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2846,
+      "memory_title": "TD_11 Mux timeout flag and Mixtape latency context"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the repeated polling procedure and metric interpretation strategy that the assistant is actively executing in the current turn to estimate TD_11 timeouts under traffic rollout.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2859,
+      "memory_title": "TD_11 monitoring: repeated polling procedure and stale metric interpretation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant\u2014stored memory documents TD_11 Mux timeout failures and monitoring context that directly informs the current question about expected timeouts if traffic rolls to Mixtape.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2894,
+      "memory_title": "TD_11 Mux timeout/missing-signal failures during rollout monitoring"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019edcc8-cff6-77d1-8e48-04b9adabc032",
+    "source_run_id": 2196,
+    "turn_ordinal": 41
+  }
+}

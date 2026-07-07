@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past research consolidation task unrelated to the current AGENTS.md instructions for a gists repository structure and AI agent guidelines.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1582,
+      "memory_title": "User preference: compile research into concise briefs from linked sources"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Rust TUI project (tuicr) for code review, but the current turn is about AGENTS.md instructions for a gists repository\u2014different project context with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1774,
+      "memory_title": "Node/Rust project (tbedor) active-thread goal: CLI agent dispatch, GitHub replies, run lifecycle, and notifications"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes UI shortcuts for a PR review tool (tuicr), which is unrelated to the current turn's focus on AGENTS.md instructions for a gists repository structure and AI agent guidelines.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1778,
+      "memory_title": "tuicr PR comment browsing and agent dispatch shortcuts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a specific implementation detail about traffic-drafts and pyriskarbiter CLI commands, which is unrelated to the current turn's focus on AGENTS.md instructions and gists repository structure.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1835,
+      "memory_title": "traffic-drafts is a standalone gist script, not a pyriskarbiter CLI command"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR linkage strategy is tangentially related to git workflow but doesn't directly address the current turn's focus on AGENTS.md instructions, repository structure, or AI agent guidelines.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2324,
+      "memory_title": "PR linkage strategy: branch names, body refs, explicit links, Linear/GitHub metadata all together"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents RiskArbiter code review patterns from merged PRs, but the current turn is about general AGENTS.md instructions for a gists repository with no specific RiskArbiter context or actionable guidance needed.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2566,
+      "memory_title": "RiskArbiter AGENTS.md: human review feedback patterns from 50 merged PRs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory references a testing workflow for a different repository (riskarbiter with Bazel), while the current turn is about AGENTS.md instructions for a gists repository with no unified build system.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2992,
+      "memory_title": "Subagent testing workflow for Bazel validation in riskarbiter repo"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Graphite + Bazel testing workflow, but the current turn is about AGENTS.md instructions for a gists repository with no unified build system\u2014different context and tooling.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3015,
+      "memory_title": "Graphite + Bazel testing workflow: use subagents for test runs, stage only relevant files"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory references a different project (riskarbiter with Bazel tests) and testing strategy, while the current turn is about AGENTS.md instructions for a gists repository with no unified build system.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3024,
+      "memory_title": "Bazel testing via subagent for rule archival changes"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory references specific PR work that aligns with the user's gists repository workflow, but lacks direct connection to the current AGENTS.md instructions being reviewed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3034,
+      "memory_title": "Draft PRs to open: tbedor/riskarbiter-rule-summary-archival-date and tbedor/kui-rule-archival-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes Risk Arbiter's architecture and data pipeline, but the current turn is about AGENTS.md instructions for a gists repository\u2014different contexts with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3174,
+      "memory_title": "redundant-rules: Full architecture, data pipeline, and UI export"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a relevant workflow pattern (collating feedback into AGENTS.md files) that aligns with the current task of working with AGENTS.md instructions, but it references different projects (Risk Arbiter, KUI) rather than the current gists repository context.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3218,
+      "memory_title": "Agent guidance documentation workflow for Risk Arbiter and KUI"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly captures a key instruction from the AGENTS.md file that governs how the AI agent should communicate on the user's behalf.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3231,
+      "memory_title": "Agent message prefix requirement"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly captures the agent message prefix convention from the current turn's AGENTS.md instructions, providing actionable guidance for future agent communications.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3303,
+      "memory_title": "Agent message prefix convention in bot-manager"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes specific categorization work on Riskarbiter code that directly relates to the current project context, but requires filtering since it documents past implementation details rather than current instructions or setup needs.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3360,
+      "memory_title": "HyperDynamic/Rulius action and proto files added to custom code categorization"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a specific implementation detail (sparse worktree for Riskarbiter analysis) that provides useful context about the project structure and AI agent workflow, but requires filtering since the current turn is about general AGENTS.md instructions for a gists repository, not specifically about Riskarbiter code categorization.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3363,
+      "memory_title": "Categorize Riskarbiter code script uses temporary sparse worktree for analysis"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes Riskarbiter code categorization work, but the current turn is about AGENTS.md instructions and gists repository structure\u2014different contexts with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3364,
+      "memory_title": "Riskarbiter legacy code categorization patterns: HyperDynamic and Rulius actions"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f23ac-3e63-7643-9119-5868e9aa6415",
+    "source_run_id": 3344,
+    "turn_ordinal": 1
+  }
+}

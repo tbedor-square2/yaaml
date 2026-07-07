@@ -1,0 +1,18 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The current turn query is empty, making it impossible to determine relevance; this memory about LaunchDarkly audit findings cannot be evaluated against a non-existent information need.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1881,
+      "memory_title": "RiskArbiter LaunchDarkly audit findings: mux rollout flag stuck in partial state"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ed6df-0d7b-7210-b6eb-9da62527d7f1",
+    "source_run_id": 3109,
+    "turn_ordinal": 130
+  }
+}

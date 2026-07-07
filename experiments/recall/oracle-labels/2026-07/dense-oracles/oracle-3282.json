@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Tabler icons is completely unrelated to the current discussion about ratatui TUI framework tradeoffs and migration strategy.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1651,
+      "memory_title": "Use Tabler icons in KUI, not Fluent"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Fluent UI primitives and KUI instruction scope is from a different codebase context and actively distracts from the ratatui TUI framework tradeoff discussion.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1714,
+      "memory_title": "KUI instruction: use existing Fluent UI primitives, avoid inline styles, scope changes narrowly"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the project's overall goals and implemented features, but does not contain any information about ratatui tradeoffs, migration strategy, or TUI rendering decisions relevant to the current query.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1774,
+      "memory_title": "Node/Rust project (tbedor) active-thread goal: CLI agent dispatch, GitHub replies, run lifecycle, and notifications"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses navigation routing in a tuicr dashboard, which is unrelated to the current query about ratatui framework tradeoffs and migration strategy.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1776,
+      "memory_title": "tuicr dashboard and PR review navigation redesign"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes UI layout preferences but doesn't directly address the tradeoffs of adopting ratatui; it's tangentially relevant only if considering how ratatui might affect layout capabilities.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1777,
+      "memory_title": "tbedor user preference: readable UI layouts with adequate column/pane widths"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a recommended TUI layout structure, but the current turn asks about tradeoffs of adopting ratatui as a framework\u2014different concerns (architecture/migration) than layout design.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2323,
+      "memory_title": "Hybrid TUI layout recommendation: table + detail pane over IDE-style or pure dashboard"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about TUI screenshots and iteration preference is tangentially related but doesn't directly address the current question about ratatui tradeoffs; it's stale context about process rather than technical decision-making.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2677,
+      "memory_title": "User preference: TUI screenshots and iteration before stopping"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes TUI feature implementation details (done-session visibility, search navigation, new-session creation) but does not address the architectural tradeoffs of adopting ratatui as a rendering framework.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3207,
+      "memory_title": "bot-manager TUI: done-session visibility, active status overlay, search navigation, and new-session creation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes an implemented line-diff rendering solution that directly addresses one of the key tradeoffs mentioned (blinking reduction), providing concrete context on the alternative path chosen, though it doesn't cover the full ratatui migration decision factors.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3214,
+      "memory_title": "Line-diff rendering strategy for bot-manager TUI"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly summarizes the exact tradeoffs discussion in the current turn, providing a concise decision framework for ratatui adoption.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3215,
+      "memory_title": "Pragmatic ratatui adoption path for bot-manager"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory provides relevant context on the current rendering approach and its tradeoffs, useful for understanding the baseline before considering ratatui migration, though it doesn't directly address ratatui-specific concerns.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3227,
+      "memory_title": "Rendering strategy: line-diff over cell-diff for TUI"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about iteration preferences is tangentially related but doesn't directly address the current question about ratatui tradeoffs; it would only be useful if deciding *how* to approach a migration, not *whether* to do it.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3228,
+      "memory_title": "User preference: terminal iterations before stopping on TUI work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about D-toggle and session refresh behaviors is entirely unrelated to the current query about ratatui adoption tradeoffs and migration strategy.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3236,
+      "memory_title": "D toggle and session refresh behaviors in bot-manager TUI"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Vertex infrastructure migration pain points (auth, GitHub PR generation, tokens), which is completely unrelated to the current query about ratatui TUI framework tradeoffs.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3273,
+      "memory_title": "Vertex pain points motivating infrastructure migration: auth brittleness, GitHub PR generation fragility, token/cache issues, platform limits"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents hotkey bindings and UI footer help, which is unrelated to the architectural tradeoffs of adopting ratatui as a rendering framework.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3288,
+      "memory_title": "TUI hotkey audit: p/P split, removed o alias, documented all normal-mode bindings"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a specific implementation detail (transcript preview rendering optimization) but does not address the broader architectural tradeoffs of adopting ratatui as a framework.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3352,
+      "memory_title": "TUI live transcript preview rendering"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef013-6c3b-7220-86d0-6293caf814dc",
+    "source_run_id": 3282,
+    "turn_ordinal": 31
+  }
+}

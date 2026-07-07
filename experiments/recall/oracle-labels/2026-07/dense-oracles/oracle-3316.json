@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes how to access Prefect logs for existing Vertex infrastructure, but the current turn is about a KITT migration failure requiring GCP Secret Manager access\u2014different infrastructure and problem domain.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1724,
+      "memory_title": "Prefect logs on forge-signalsmith: local CLI + Vertex infra fallback"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses alternative validation approaches for Prefect-Blox connectivity, but the current turn is focused on a specific failure (missing GitHub App private key in KITT) and credential seeding, making this context stale and tangential rather than actionable.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3059,
+      "memory_title": "Testing Prefect\u2013Blox without PR review"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes an earlier diagnostic run with a different endpoint configuration, but the current turn focuses on a credential/secret access failure in a later validation phase, making it mostly stale and not actionable for the immediate problem.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3253,
+      "memory_title": "Blox/Prefect integration validation: diagnostic run with mesh endpoint in progress"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the current failure by outlining the exact migration path needed, including step (6) about moving GitHub App secrets from GCP Secret Manager to KITT secrets\u2014the core blocker just described.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3272,
+      "memory_title": "KITT migration path: move entire Prefect flow from Vertex to KITT rather than split dispatcher+executor"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant context about why the migration to KITT is happening (auth brittleness, credential management pain), which directly relates to the current failure (missing GitHub App credentials), but doesn't address the specific immediate blocker of seeding KITT secrets.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3273,
+      "memory_title": "Vertex pain points motivating infrastructure migration: auth brittleness, GitHub PR generation fragility, token/cache issues, platform limits"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly outlines the KITT migration strategy and explicitly addresses the current blocker (secrets resolution at step 4) and the validation approach (step 7) that the user is actively executing.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3274,
+      "memory_title": "KITT migration path for signals-deprecate-and-delete-prefect: onboard \u2192 backend switch \u2192 data/auth resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory provides useful context on why KITT migration is needed (Vertex auth brittleness, expensive git work), but the current turn is focused on immediate credential-seeding blockers rather than strategic motivation.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3276,
+      "memory_title": "Vertex pain motivating infrastructure migration: headless auth brittleness, expensive git/agent work, PR size limits, token expiry, slow Bazel, low throttle hiding capacity concerns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes KITT onboarding Terraform setup for AWS/Forge access, but the current issue is about missing GCP Secret Manager credentials for GitHub/Slack secrets in the signalsmith KITT namespace\u2014a different infrastructure concern.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3282,
+      "memory_title": "KITT onboarding generates Terraform PR for Forge/Prefect access"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Buildkite principal removal in Forge templates is completely unrelated to the current discussion about GitHub/Slack credential access issues for KITT secret management.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3284,
+      "memory_title": "Buildkite principal removal in Forge template is intentional"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the staged migration strategy being executed in the current turn, providing useful context for understanding the overall plan, though it doesn't address the specific credential/secret access blocker now encountered.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3296,
+      "memory_title": "Preferred KITT migration strategy for signalsmith"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the KITT secret-file auth pattern implementation that is central to resolving the current failure\u2014it explains the exact mechanism being used to read GitHub/Slack credentials from mounted KITT secrets, which is the solution already in progress.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3300,
+      "memory_title": "KITT secret-file auth pattern: GitHub and Slack creds"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the three-tier credential lookup mechanism that is central to understanding the current failure and the solution already implemented in the code.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3349,
+      "memory_title": "KITT secret auth chain: env vars \u2192 KITT mounted files \u2192 GCP Secret Manager"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly documents the exact KITT secret mounting pattern and auth chain strategy that was just implemented to solve the GitHub App private key failure described in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3367,
+      "memory_title": "KITT secret file auth pattern for Prefect flows"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current failure\u2014describes the secret mounting flow that was patched into PR #530\u2014but requires filtering since it focuses on WIF while the immediate blocker is GitHub/Slack credentials in the signalsmith namespace.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3379,
+      "memory_title": "App WIF secret flow: KITT-mounted file + env var + fallback chain"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about AWS identity and KITT smoke tests is tangentially related to KITT infrastructure but does not address the current blocker, which is GCP Secret Manager access and GitHub/Slack credential seeding.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3394,
+      "memory_title": "KITT AWS identity confirmed + smoke tests validate path"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This stored memory directly documents the KITT migration implementation status, including the exact PR structure, secret mounting paths, and current blockers that match the failure summary being discussed.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3395,
+      "memory_title": "KITT migration for forge-signalsmith: WIF + preprod rollout \u2014 implementation in progress"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f0025-3f91-7922-81e4-7bc8cb3def79",
+    "source_run_id": 3316,
+    "turn_ordinal": 73
+  }
+}

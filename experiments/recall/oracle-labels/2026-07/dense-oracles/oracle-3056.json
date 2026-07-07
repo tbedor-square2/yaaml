@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes past backtest improvements for recall ranking, but the current turn is focused on fixing placeholder token pollution in task-key extraction\u2014a different problem domain with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1822,
+      "memory_title": "Backtest confirms recall ranking improved for multi-project sessions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a recall testing plan for hybrid architectures, but the current turn is focused on fixing placeholder token pollution in task-key extraction and running quality gates\u2014a different problem domain with no direct connection to the hybrid recall matching strategy.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2654,
+      "memory_title": "Recall matching test plan: direct + segment-aware hybrid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes segment oracle architecture and backfill design, which is relevant context for the current turn's focus on segment pollution and task-key extraction, but requires filtering since the turn is now addressing placeholder token rejection rather than the broader oracle design.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2692,
+      "memory_title": "Segment oracle architecture: tables, API, backfill design"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the core recall quality problem and proposed solution (segment-based grouping with task-key matching) that the current turn is actively implementing and testing.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2751,
+      "memory_title": "Recall quality bottleneck: segment and task-state drift over session length"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed deduplication fixes from earlier work, but the current turn is focused on a new concrete failure mode (placeholder/example Bazel targets polluting Java segments), making this prior context stale and not actionable for the immediate debugging task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3093,
+      "memory_title": "Source-overlap and rerun deduplication completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the current turn's core issue: filtering placeholder/example tokens from task-key extraction to prevent segment pollution, which is exactly what the assistant is implementing and testing.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3098,
+      "memory_title": "Segment task-key extraction: filter tool output and prioritize identity keys"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact placeholder-rejection fix being implemented in the current turn, providing concrete details about what tokens are rejected and why.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3099,
+      "memory_title": "Reject placeholder task keys at extraction time (commit 076541d)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed PR rebase and BUILD dependency cleanup, which is stale context unrelated to the current turn's focus on fixing recall quality issues with placeholder task keys and segment pollution.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns task lifecycle metadata and database transitions, while the current turn focuses on memory recall quality, placeholder token filtering, and segment extraction\u2014completely different domains with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3135,
+      "memory_title": "Task lifecycle metadata fixes: clear stale retry fields on transitions"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed refactoring of pyriskarbiter CLI modules (PR #543), while the current turn focuses on debugging recall quality issues with placeholder task keys in Java/Bazel segments\u2014entirely different problem domains with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides directly relevant baseline metrics (4.1 avg score, 15% low-score rate) for the current debugging session focused on improving recall quality and addressing failure modes like placeholder pollution.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past experiments log and lessons backlog, but the current turn is actively debugging a specific placeholder-token pollution issue in Java segment extraction\u2014different scope and not actionable for the immediate task.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a past experiment on segment/task-fit strategies, but the current turn is focused on fixing placeholder token pollution in task-key extraction and running quality gates\u2014a different, more immediate problem.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses segment/task-fit gating experiments and ranking strategies, but the current turn is focused on fixing placeholder token pollution in task-key extraction\u2014a different problem layer that doesn't require the recalled context about gating vs. ranking trade-offs.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a refactoring to remove hardcoded phrases and tool-specific task keys from YAAML recall, which is directly relevant to the current turn's focus on fixing placeholder/example Bazel targets polluting segment identity, but requires filtering since the current work targets placeholder predicates rather than broad phrase removal.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the recall quality regression and wrong-context issue the assistant is investigating, providing diagnostic context about root causes and prior findings, though the current turn focuses on placeholder token extraction which is a more specific tactical fix.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past refactoring (MuxSignalGeneratorMigrationUtil rename and cleanup) that is stale context for the current turn, which is focused on recall-quality loops, placeholder token extraction, and segment pollution in Java sessions.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides relevant context about YAAML memory quality issues and evaluation metrics, but the current turn is focused on a specific concrete fix (placeholder token rejection in task-key extraction), so the broader corpus evidence is useful background with minor filtering needed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 3056,
+    "turn_ordinal": 302
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a different flag (`riskarbiter-pending-rule-archival-trigger-rollout-date`) and its default value, while the current turn focuses on flag renaming and recreation concerns for `riskarbiter-pending-rule-archival-excluded-trigger-def-tokens` / `riskarbiter-trigger-exempt-from-automated-rule-archival`.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2380,
+      "memory_title": "riskarbiter pending rule archival flag default: empty string, not far-future date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different flag (`riskarbiter-pending-rule-archival-trigger-rollout-date`) than the one discussed in the current turn (`riskarbiter-pending-rule-archival-excluded-trigger-def-tokens` / `riskarbiter-trigger-exempt-from-automated-rule-archival`), making it mostly irrelevant to the user's archiving and remaking concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2394,
+      "memory_title": "LaunchDarkly flag binding: riskarbiter-pending-rule-archival-trigger-rollout-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory describes a different flag (`riskarbiter-pending-rule-archival-trigger-rollout-date`) unrelated to the user's question about the archival-excluded flag and its renaming.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2400,
+      "memory_title": "Rule archival LaunchDarkly flag binding and default"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different flag ('riskarbiter-pending-rule-archival-trigger-rollout-date') than the one discussed in the current turn ('riskarbiter-pending-rule-archival-excluded-trigger-def-tokens' / 'riskarbiter-trigger-exempt-from-automated-rule-archival'), making it mostly irrelevant to the user's archival and remaking concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2406,
+      "memory_title": "LD flag for rule archival trigger rollout dates with Jan 1, 2126 default"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory discusses a different flag (rollout-date) and implementation details unrelated to the user's current question about flag renaming and archival/recreation issues.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2412,
+      "memory_title": "LD rollout-date flag for rule archival: riskarbiter-pending-rule-archival-trigger-rollout-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a different flag (`riskarbiter-pending-rule-archival-trigger-rollout-date`) and its default value semantics, which is tangentially related to rule archival but does not address the user's specific question about the renamed flag or archiving/remaking concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2484,
+      "memory_title": "Pending rule archival rollout flag: empty string for unset, not far-future date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a discovery helper tool for archival candidates, but the current turn is specifically about flag naming and recreation concerns, which this memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2762,
+      "memory_title": "archival-candidates discovery helper is pre-flag only, does not check LD or pending rows"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory describes a different flag (riskarbiter-pending-rule-archival-trigger-rollout-date) than the one discussed in the current turn (riskarbiter-pending-rule-archival-excluded-trigger-def-tokens / riskarbiter-trigger-exempt-from-automated-rule-archival), making it mostly irrelevant to the user's question about flag renaming and archival/remaking issues.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2783,
+      "memory_title": "LaunchDarkly flag for rule archival rollout: riskarbiter-pending-rule-archival-trigger-rollout-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the technical implementation details of the flag design, but the current turn is asking about the flag's current name and archival/recreation concerns, which are already answered in the conversation history with specific guidance.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2991,
+      "memory_title": "Feature flag design for archival eligibility: string set of trigger tokens"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory describes the old flag name and archival logic, which is directly relevant to the user's question about the flag, but the current turn already provides the updated flag name and migration guidance, so the memory has minor gaps relative to the current context.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3006,
+      "memory_title": "Rule archival eligibility: two-factor exemption via chaining + feature flag"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory provides relevant background on the flag's purpose and original design, but is now stale since the flag was renamed and its type changed from string to boolean in the follow-up PR.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3010,
+      "memory_title": "Feature flag for rule archival exclusion list"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses rule cleanup design decisions and implementation strategy, but does not address the specific flag naming question or archival/recreation concerns raised in the current turn.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory documents the old flag name and its purpose, providing useful context for understanding the archival feature, but the current turn indicates the flag was already renamed in a follow-up PR, so the memory is somewhat stale.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3191,
+      "memory_title": "MLP-4608: Rule archival eligibility via chaining metadata + feature flag exempt list"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses proto field display changes in pyriskarbiter, which is tangential to the current question about flag naming and archival mechanics.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3213,
+      "memory_title": "pyriskarbiter trigger archival eligibility display added to PR #553"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory describes the old flag name and archival logic, but the current turn indicates the flag was renamed to `riskarbiter-trigger-exempt-from-automated-rule-archival`; useful context with minor gaps requiring filtering.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3330,
+      "memory_title": "Rule archival exemption logic: feature flag + rule chaining"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the user's question about the flag name change and provides the exact alternative solution (keeping old flag key with type change) that was discussed in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3339,
+      "memory_title": "LaunchDarkly flag migration: old string list to boolean trigger-keyed"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f1582-544a-73b3-ba9b-60ee3c280fba",
+    "source_run_id": 3335,
+    "turn_ordinal": 18
+  }
+}

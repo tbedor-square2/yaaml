@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR comment management and artifact canary workflows is unrelated to the current query about outstanding signal generators and migration project status.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1791,
+      "memory_title": "PR comment management: Preview SHA links and artifact canary workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns LaunchDarkly feature flags and rollout states, while the current turn is about outstanding signal generators to be removed/migrated\u2014different technical domains with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1881,
+      "memory_title": "RiskArbiter LaunchDarkly audit findings: mux rollout flag stuck in partial state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a payroll signal generator optimization pattern, but the current turn is asking about outstanding signal generators to be removed/migrated, making this implementation detail tangential and not actionable for the immediate query.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1902,
+      "memory_title": "Payroll signal generator optimization pattern: OLD/PARITY_CHECK/NEW rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the outstanding signal generator (PayrollDuplographSignalGenerator) identified in the current turn and provides actionable context about migration risks and recommended rolloff procedures.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1968,
+      "memory_title": "Linear rolloff ticket for payroll signal generator"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the payroll generator removal mentioned in the current turn, but the stored memory is a procedural checklist rather than an inventory answer to 'what other signal generators are outstanding.'",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2649,
+      "memory_title": "Payroll signal generator removal steps after Mux rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the current query about outstanding signal generators by providing the Linear project name, ticket status (MLP-2470 in review), repo inventory findings, and a command to query current state.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2650,
+      "memory_title": "Outstanding signal generators migration status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns flag removal for a specific migration feature, while the current turn asks about outstanding signal generators\u2014different scope and context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2891,
+      "memory_title": "Flag removal process for riskarbiter-should-fetch-generated-signals-from-mux"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a cleanup strategy for PayrollDuplographSignalGenerator, but the current turn is asking about outstanding signal generators\u2014a factual inventory question already answered by repo and Linear queries, not a strategic planning question.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2901,
+      "memory_title": "Cleanup PR strategy: remove serving flag and generator in separate PRs to reduce rollback blast radius"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides directly relevant context about PayrollDuplographSignalGenerator removal constraints and module binding considerations, but the current turn has already resolved the query and moved past the implementation phase into project status reporting.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2911,
+      "memory_title": "RiskArbiter signal-generator cleanup should be done in one PR; module bindings must be preserved or explicitly removed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses implementation strategy for removing the payroll generator, but the current turn asks about what other signal generators are outstanding\u2014a factual inventory question that doesn't require recall of the PR strategy trade-off.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2916,
+      "memory_title": "Remove payroll generator: single large PR vs phased approach trade-off"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses MuxParityChecker deletion after generator migration, but the current query is about outstanding signal generators to be removed\u2014a different scope that focuses on Risk Arbiter custom generators like PayrollDuplographSignalGenerator, not parity-checking infrastructure.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2924,
+      "memory_title": "MuxParityChecker became stale after generator migration; safe to delete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory provides useful context about signal generator removal mechanics and validation, but the current turn is asking about outstanding generators to remove, not about the dependency handoff mechanism after removal.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2932,
+      "memory_title": "Signal generator removal: dependency handoff mechanism and mux provider validation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses pyriskarbiter CLI refactoring and module extraction, but the current query asks about outstanding signal generators to remove\u2014a different project scope that requires Linear tickets and repo inventory, not CLI consolidation details.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns Risk Arbiter partition metadata cleanup and evidence taxonomy, but the current turn asks about outstanding signal generators and their migration status\u2014a different subsystem with no overlap in content or context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3151,
+      "memory_title": "Risk Arbiter no-traffic cleanup: partition metadata enrichment, evidence taxonomy, and execution status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory covers deprecated signal inventory, backfill evidence, and Dumbo cleanup gates, but the current turn is specifically about outstanding Risk Arbiter custom signal generators (payroll removal status and Linear project tickets), which is a narrower operational question not addressed by this broader deprecation audit context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3181,
+      "memory_title": "Deprecated signal audit: inventory, mapping, backfill evidence, ownership classification, and Dumbo cleanup gates"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory documents related signal-generator cleanup and migration work, including the payroll generator removal mentioned in the current turn, but focuses on utility renames and unused-deps rather than the current query about outstanding generators.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed refactoring of Mux helper utilities after signal-generator deletion, but the current turn is asking about outstanding (remaining/incomplete) signal generators, making this stale and tangential context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3361,
+      "memory_title": "riskarbiter Mux helper rename to reflect post-signal-generator deletion"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019efc99-8694-7e32-aa45-80b9bafd75bb",
+    "source_run_id": 2258,
+    "turn_ordinal": 1
+  }
+}

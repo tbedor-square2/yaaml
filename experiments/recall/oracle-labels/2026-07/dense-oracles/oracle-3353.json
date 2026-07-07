@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory discusses backend Environment enum and client factory routing, but current turn asks about UI-level staging/prod distinction in Recently Visited table, which are different architectural concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1560,
+      "memory_title": "Environment enum still controls staging vs production after proto migration"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes backend endpoint validation and data rendering, but does not address the UI distinction between staging and production environments in the Recently Visited table.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1711,
+      "memory_title": "KUI Datadog traffic endpoint validation complete, ready for UI refinement"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes the recently-visited feature implementation details but doesn't explicitly mention the Environment column or staging/prod distinction that the current turn is asking about.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3233,
+      "memory_title": "Square Console KUI recently-visited feature: metadata table direction won team feedback"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Provides relevant context about the recently-visited feature implementation, but doesn't directly address the staging/prod distinction question; useful for understanding the broader PR changes with minor filtering needed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3234,
+      "memory_title": "KUI recently-visited: use localStorage upsert instead of useLocalHistory deduplication"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the PR's technical implementation details (action-table to metadata-table transition) but does not address the staging/production environment distinction feature being discussed in the current turn.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3235,
+      "memory_title": "PR #13972 updated from action-table experiment to metadata-table production implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the Recently Visited table implementation and design choices, but doesn't explicitly mention the Environment column or staging/prod distinction that the current turn is asking about.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3239,
+      "memory_title": "Recently-visited metadata table won team feedback; update PR #13972 with new implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns table header alignment in PR #14133, while the current query asks about distinguishing staging/production environments in Recently Visited\u2014completely different features and unrelated to the recalled context.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3241,
+      "memory_title": "KUI PR #14133 table header alignment: review addressed, CI green"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the Recently Visited feature discussion, but focuses on timestamp/metadata implementation rather than the Environment column distinction being asked about.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3247,
+      "memory_title": "Recently visited resources: metadata table with client-side timestamp tracking"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the recently-visited feature implementation with table design and metadata tracking, which is relevant context for the staging/prod distinction discussion, but doesn't explicitly mention the Environment column or URL-based environment detection.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3250,
+      "memory_title": "KUI recently-visited feature: switch to metadata table with client-side tracking"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes localStorage implementation details for deduplication, but the current query is specifically about distinguishing staging/prod environments in the Recently Visited table, which is a different feature aspect.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3251,
+      "memory_title": "KUI recently-visited: use localStorage directly instead of useLocalHistory for upsert semantics"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses column width and layout optimization for the Recently Visited table, but the current query is specifically about distinguishing staging vs. production environments, which is not addressed in this memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3255,
+      "memory_title": "Table Display Optimization for Recently Visited"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the Recently Visited feature implementation and metadata capture, which is directly relevant to the current discussion about distinguishing staging/prod environments, but lacks specific details about the Environment column derivation from URL paths.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3306,
+      "memory_title": "KUI recently visited resources: route canonicalization and metadata capture"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory covers recently visited resources implementation details but doesn't directly address the staging/prod environment distinction feature mentioned in the current turn, though it's related context about the same feature area.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3315,
+      "memory_title": "KUI recently visited resources: route canonicalization and graph metadata"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the current query about distinguishing staging/prod in the Recently Visited feature, confirming the Environment column solution was implemented.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3318,
+      "memory_title": "Recently visited resources PR feedback resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about PR #14151 (rule archival eligibility labels), while the current turn discusses distinguishing staging/prod environments in Recently Visited\u2014completely different features with no overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly confirms the PR implementation of the Environment column for distinguishing staging/prod in Recently Visited, which is exactly what the current turn is asking about.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3384,
+      "memory_title": "PR #13972: recently-visited feature addresses prod/staging distinction, timestamp milliseconds, and KITT URL deduplication"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f1f5f-7e51-79f2-a539-75b8b2709eb5",
+    "source_run_id": 3353,
+    "turn_ordinal": 5
+  }
+}

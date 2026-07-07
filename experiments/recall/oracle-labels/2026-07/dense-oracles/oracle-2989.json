@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a project status update template format, but the current turn is focused on tactical document repairs and data updates with no connection to status reporting or leadership communication.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1868,
+      "memory_title": "Lookout project update template: Cycle 2 Status, Key Update, Blockers/Risks, Leadership Ask"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides the exact cost/usage numbers and evidence sources needed to populate the cost/usage paragraph that the current turn is actively repairing in the document.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2229,
+      "memory_title": "Beacon/Dumbo spend estimates and catalog baselines"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes an ML model cleanup project status and Linear tickets, which is completely unrelated to the current turn's focus on repairing a Google Docs policy document and spreadsheet.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2354,
+      "memory_title": "Online ML Model/Feature Rule Cleanup project status and phase"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns completed PRs and LaunchDarkly rollout handling, which is entirely unrelated to the current turn's focus on repairing a Google Doc (policy section, cost/usage paragraph, lifecycle table).",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a code review and PR merge for an unrelated backend service (MLP-4410 rule archival executor), while the current turn focuses on repairing a Google Docs policy document and spreadsheet with specific formatting and content updates.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Snowflake manifest cleanup and Kafka topics is completely unrelated to the current turn's focus on repairing a Google Docs policy document, fixing table structure, and updating cost/usage paragraphs.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2705,
+      "memory_title": "Gap PR #11871: Snowflake Streamer manifest cleanup\u2014no runtime impact but doc gap"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes project status tracking and blockers from a different cycle/phase, but the current turn is focused on tactical document repairs (cost/usage paragraph, Policy heading, lifecycle table columns) with no connection to the status template or blockers mentioned.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2941,
+      "memory_title": "Online ML ModelFeatureRule cleanup project: Cycle 2 status template and blockers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a Python PR refactor for BigQuery parameters in a different codebase (forge-signalsmith), while the current turn focuses on repairing Google Docs/Sheets document structure and content\u2014completely unrelated contexts.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3044,
+      "memory_title": "forge-signalsmith PR #521: lifecycle refactor with BigQuery parameters follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR #483601 rebase and BUILD dependency removals is completely unrelated to the current turn's focus on repairing a Google Docs policy document, spreadsheet verification, and table restructuring.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns pyriskarbiter library refactoring and CLI consolidation, while the current turn focuses on Google Docs/Sheets document repairs and content updates\u2014completely different contexts with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Risk Arbiter rule cleanup design decisions is completely unrelated to the current turn's focus on repairing a Google Docs policy document and spreadsheet (cost/usage paragraph, Policy heading, lifecycle table columns).",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns Risk Arbiter partition metadata cleanup and evidence taxonomy, which is entirely unrelated to the current turn's focus on repairing a Google Docs policy document, spreadsheet verification, and table restructuring.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3151,
+      "memory_title": "Risk Arbiter no-traffic cleanup: partition metadata enrichment, evidence taxonomy, and execution status"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a Homebrew formula PR and PyPI publishing workflow, while the current turn focuses on repairing a Google Docs policy document and spreadsheet\u2014completely different contexts with no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3157,
+      "memory_title": "homebrew-formulas PR #4844: sq-riskarbiter uvx wrapper migration\u2014mlds-core#545 blocker and publish workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a deprecated signal audit workflow and Dumbo cleanup gates, which is entirely unrelated to the current turn's focus on repairing a Google Doc (policy section, cost/usage paragraph, lifecycle table structure).",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3181,
+      "memory_title": "Deprecated signal audit: inventory, mapping, backfill evidence, ownership classification, and Dumbo cleanup gates"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a KUI PR table alignment fix and is completely unrelated to the current turn's focus on Google Docs/Sheets document repairs, policy sections, and lifecycle table restructuring.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3226,
+      "memory_title": "KUI PR #14133 deep review and alignment patch complete"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a Kubernetes UI pull request with table header alignment fixes, which is completely unrelated to the current turn's focus on repairing a Google Docs policy document and spreadsheet.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3241,
+      "memory_title": "KUI PR #14133 table header alignment: review addressed, CI green"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about PR #14151 (UI label and tooltip updates) is completely unrelated to the current turn's focus on repairing a Google Docs policy document, spreadsheet verification, and table restructuring.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef19d-3024-7071-b441-8893b0ecdb99",
+    "source_run_id": 2989,
+    "turn_ordinal": 46
+  }
+}

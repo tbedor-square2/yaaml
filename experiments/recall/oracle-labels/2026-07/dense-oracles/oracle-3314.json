@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses testing Prefect-Blox connectivity via manual curl and diagnostic tasks, but the current turn is focused on debugging a KITT infrastructure issue (missing HOME directory in container runtime), which is orthogonal to the Blox testing strategies.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3059,
+      "memory_title": "Testing Prefect\u2013Blox without PR review"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the ongoing diagnostic run and deployment context that the current turn is continuing to monitor and troubleshoot.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3253,
+      "memory_title": "Blox/Prefect integration validation: diagnostic run with mesh endpoint in progress"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly describes the same preprod diagnostic run being continued in the current turn, providing essential context about the deployment target, run ID, and verification objectives.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3258,
+      "memory_title": "Task checkpoint: blox-prefect-noop preprod diagnostic run in progress"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the KITT migration strategy being actively executed in the current turn, including the exact steps, configuration changes, and troubleshooting context (HOME directory issues, env vars, deployment validation) that are central to the ongoing work.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3272,
+      "memory_title": "KITT migration path: move entire Prefect flow from Vertex to KITT rather than split dispatcher+executor"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes past Vertex pain points and migration motivation, but the current turn is actively debugging KITT deployment runtime errors (HOME directory issues), making this historical context mostly stale and not actionable for the immediate problem.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3273,
+      "memory_title": "Vertex pain points motivating infrastructure migration: auth brittleness, GitHub PR generation fragility, token/cache issues, platform limits"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the KITT migration strategy and concrete steps for the signals-deprecate-and-delete-prefect flow, which is exactly what the current turn is actively executing (onboarding to KITT, resolving runtime issues, patching environment variables).",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3274,
+      "memory_title": "KITT migration path for signals-deprecate-and-delete-prefect: onboard \u2192 backend switch \u2192 data/auth resolution"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes high-level Vertex infrastructure pain points and migration rationale, but the current turn is focused on immediate KITT deployment debugging (HOME directory, runtime env vars, job submission states), making this context stale and not actionable for the current technical troubleshooting.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3276,
+      "memory_title": "Vertex pain motivating infrastructure migration: headless auth brittleness, expensive git/agent work, PR size limits, token expiry, slow Bazel, low throttle hiding capacity concerns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes KITT onboarding Terraform PR generation, but the current turn is focused on debugging a runtime HOME directory issue in an already-deployed KITT flow, making this context stale and not actionable for the immediate problem.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3282,
+      "memory_title": "KITT onboarding generates Terraform PR for Forge/Prefect access"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about Buildkite principal removal is completely unrelated to the current turn's focus on KITT runtime directory errors and Prefect deployment troubleshooting.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3284,
+      "memory_title": "Buildkite principal removal in Forge template is intentional"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact KITT runtime home directory issue being debugged in the current turn, including the specific error message and the solution being implemented.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3295,
+      "memory_title": "KITT runtime home directory fix for Prefect"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory outlines the staged KITT migration strategy that directly contextualizes the current turn's troubleshooting work (smoke testing the no-op preprod deployment), though the current turn is focused on resolving a specific runtime error rather than planning next steps.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3296,
+      "memory_title": "Preferred KITT migration strategy for signalsmith"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past onboarding event, but the current turn is actively troubleshooting a KITT runtime deployment issue (HOME directory/Prefect runtime problems), making the historical context mostly stale and not actionable.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3297,
+      "memory_title": "Runway pipeline onboarded to forge-signalsmith"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about KITT Forge onboarding YAML deduplication is unrelated to the current turn's focus on debugging Prefect runtime directory and HOME environment variable issues in KITT container execution.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3298,
+      "memory_title": "KITT Forge onboarding duplicate YAML fix: additive merge strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a secret/authentication flow setup, but the current turn is focused on debugging a Prefect runtime directory creation failure on KITT infrastructure, which is a different operational concern.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3379,
+      "memory_title": "App WIF secret flow: KITT-mounted file + env var + fallback chain"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about a UI feature PR (recently-visited resources, environment columns, timestamps) is completely unrelated to the current turn's focus on KITT infrastructure deployment, Prefect runtime errors, and container filesystem issues.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3384,
+      "memory_title": "PR #13972: recently-visited feature addresses prod/staging distinction, timestamp milliseconds, and KITT URL deduplication"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the KITT migration implementation context, including the exact prefect-kitt layer configuration (HOME/PREFECT_HOME env vars, resource limits, secret mounting) and preprod rollout strategy that the current turn is actively debugging and patching.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3395,
+      "memory_title": "KITT migration for forge-signalsmith: WIF + preprod rollout \u2014 implementation in progress"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019f0025-3f91-7922-81e4-7bc8cb3def79",
+    "source_run_id": 3314,
+    "turn_ordinal": 67
+  }
+}

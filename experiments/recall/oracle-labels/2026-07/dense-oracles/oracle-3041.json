@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about alert monitor backtesting and threshold tuning is unrelated to the current query about queue recovery status and baseline comparison.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2218,
+      "memory_title": "Backtest alert monitors over 1-month windows before PR merge; validate exact threshold tradeoffs with real incident data"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Mixtape deployment and its latency/SLO improvements, but the current turn is specifically about queue baseline recovery for `payroll_run_update` DLQ metrics, which are unrelated system concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2609,
+      "memory_title": "PR #482106 deployment to Mixtape production confirmed; latency/SLO metrics show improvement"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns payroll_connected_users latency improvements post-deploy, while the current turn asks about queue baseline recovery for payroll_run_update\u2014different signals, different services, no actionable overlap.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2615,
+      "memory_title": "payroll_connected_users latency improved post-deploy 11:03 PDT; p99 ~24s \u2192 ~5-9s, SLO misses nearly eliminated"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory discusses payroll latency and timeouts for a different service path (TD_11/RiskArbiter), while current turn focuses on queue backlog recovery for `payroll_run_update`; minimal overlap in concern.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2632,
+      "memory_title": "Served TD_11 payroll evaluation: no timeout errors, p99 latency 4.3s under 10s caller timeout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes latency and timeout metrics for payroll, but current query asks about queue backlog recovery to baseline; the stored data is stale operational context from a different incident phase and doesn't directly address DLQ or queue state.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2641,
+      "memory_title": "TD_11 payroll current production latency and timeout state (post-refactor)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes a QPS monitoring metric, but the current turn focuses on queue backlog recovery and dead-letter job status, which are different signals not addressed by this stored context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2798,
+      "memory_title": "jobqueue.sharded.dispatched_jobs metric for payroll_run_update QPS monitoring"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes flagging rate stability post-Mux cutover, but current query asks about queue backlog recovery to baseline; the stored memory's focus on flagging rates and guardrails is tangential to the specific DLQ/deadletter backlog assessment being made.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2816,
+      "memory_title": "TD_11 payroll_run_update flagging rate post-Mux cutover: stable within expected band"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory directly documents the root cause of the queue failure and provides essential context for evaluating whether the baseline has truly recovered\u2014the Mux timeout issue and DLQ backlog pattern are precisely what the current turn is assessing.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2820,
+      "memory_title": "Mux feature-fetch timeout causing DLQ backlog on TD_11 payroll_run_update"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory provides root cause context for the incident (Mux timeout), but current turn is asking about queue recovery status, which the memory doesn't directly address\u2014useful for understanding what happened but requires filtering to apply to the recovery question.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2823,
+      "memory_title": "TD_11 payroll_run_update DLQ failure root cause: Mux feature-fetch timeout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a general monitoring workflow pattern, but the current turn has already completed its analysis with specific queue metrics and conclusions; the memory adds no new actionable context for answering whether the queue is back to baseline.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2830,
+      "memory_title": "Datadog monitoring workflow: repeated multi-window metric polling with log cross-checks"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a multi-window monitoring workflow for payroll queue metrics that directly aligns with the current turn's focus on queue baseline recovery, but the current turn has already completed the analysis and doesn't need the general methodology reminder.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2837,
+      "memory_title": "Production monitoring workflow: multi-window metric polling with log cross-check"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a general TD_11 cutover monitoring workflow, but the current turn is asking about queue baseline recovery for `payroll_run_update` with specific metric details already provided; the stored memory offers no actionable context for evaluating the current queue state.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2851,
+      "memory_title": "Datadog production monitoring workflow for TD_11 trigger post-cutover"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory provides relevant monitoring methodology and safety checks for TD_11 queue health, but the current turn already has specific recent data; memory adds procedural context about repeated sampling and stale metric interpretation that could help validate the conclusion, though with minor filtering needed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2859,
+      "memory_title": "TD_11 monitoring: repeated polling procedure and stale metric interpretation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory provides useful context for interpreting stale metrics vs. active failures, which is relevant to confirming queue baseline recovery, but requires minor filtering since the current turn already shows concrete evidence of backlog drainage rather than needing stale-metric confirmation.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2861,
+      "memory_title": "TD_11 stale metric confirmation: zero job failures + zero ACL errors over time span"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a reusable monitoring procedure for TD_11 payroll_run_update that directly addresses the current query about queue baseline recovery, but requires filtering since the current turn already contains the specific findings and doesn't need the full procedure template.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2864,
+      "memory_title": "TD_11 monitoring poll procedure: reusable query set and baseline comparison"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns payroll signal cutover to Mux, which is unrelated to the current query about queue backlog recovery and dead-letter job metrics for `payroll_run_update`.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2900,
+      "memory_title": "Payroll generated signal (payroll_run_update_connected_users) cutover to Mux is complete and stable"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ed6df-0d7b-7210-b6eb-9da62527d7f1",
+    "source_run_id": 3041,
+    "turn_ordinal": 22
+  }
+}

@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses LaunchDarkly flag audit findings and stale rollout flags, but the current turn is specifically about timeout knobs and parity checker configuration for the Mux fetch path, which are not addressed in the audit memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1881,
+      "memory_title": "RiskArbiter LaunchDarkly audit findings: mux rollout flag stuck in partial state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses batch endpoint optimization and a feature flag for the payroll signal generator, but the current turn is specifically about timeout issues and RiskArbiter timeout knobs, which are unrelated optimization concerns.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1882,
+      "memory_title": "Batch endpoint optimization with feature flag for safe rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Duplograph signal optimization and batching strategies, but the current turn is specifically about timeout issues in the Mux fetch path and RiskArbiter timeout knobs, which are distinct concerns not addressed in this memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1899,
+      "memory_title": "Payroll Duplograph signal optimization: batch endpoints, requestedSignals filtering, tri-state rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly explains the timeout computation logic that the current turn is asking about, including why raising the LD flag alone won't help and what would be needed to change it.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2630,
+      "memory_title": "TD_11 payroll Mux timeout computation: default 10s baseline, LD cap applied on top"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context confirming the served TD_11 path has no timeouts (p99 latency 4.3s), which supports the assistant's distinction between the served production path (no timeouts) and the parity shadow path (occasional exceptions).",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2632,
+      "memory_title": "Served TD_11 payroll evaluation: no timeout errors, p99 latency 4.3s under 10s caller timeout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly explains the root cause of the timeout issue discussed in the current turn and provides the exact technical fix needed.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2639,
+      "memory_title": "RiskArbiter TD_11 payroll Mux fetch timeout: root cause is missing scoreable deadline"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly summarizes the current production state and timeout behavior that the user is questioning, providing exact metrics (p99 latency, zero served timeouts, parity shadow timeouts) that are immediately actionable for the conversation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2641,
+      "memory_title": "TD_11 payroll current production latency and timeout state (post-refactor)"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly explains the deadline structure and timeout mechanics that the current turn is actively discussing, including why raising the mux-max-timeout-millis flag alone won't help and how the overall scoreable deadline interacts with parity timeouts.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2642,
+      "memory_title": "Payroll deadline structure: overall scoreable budget vs. parity-specific timeouts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current discussion of timeout tuning and parity-specific deadlines, but the stored memory predates the current finding that the hardcoded 10s default overrides the LD flag, requiring minor filtering to apply correctly.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2658,
+      "memory_title": "Async deadline sharing vs. parity-specific deadline trade-off"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context explaining the distinction between cutover and parity flags, which clarifies why adjusting parity rollout is a safe option without affecting served traffic.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2785,
+      "memory_title": "Mux cutover flag vs. parity flag are separate concerns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant staging cutover data and rollout recommendation, but current turn focuses on timeout knobs and parity flag adjustments rather than cutover readiness.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2791,
+      "memory_title": "Strong staging evidence for TD_11 Mux cutover; missing-signal fallback not observed; recommend percentage rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the RiskArbiter timeout discussion, providing context on the Mux cutover strategy and production failure rates, though the current turn focuses more on timeout knob adjustments than the cutover decision itself.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2801,
+      "memory_title": "RA Mux cutover for TD_11/payroll_run_update_connected_users: staged evidence is strong; percentage rollout strategy recommended"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly documents the exact timeout issue, RiskArbiter knobs, and root cause (Mux latency exceeding 10s effective window) that the current turn is asking about.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2820,
+      "memory_title": "Mux feature-fetch timeout causing DLQ backlog on TD_11 payroll_run_update"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant\u2014provides root cause analysis of the exact Mux timeout issue being discussed, identifies the governing LaunchDarkly flag, and explains why the current 15s cap is insufficient for TD_11 payroll jobs.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2823,
+      "memory_title": "TD_11 payroll_run_update DLQ failure root cause: Mux feature-fetch timeout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the LaunchDarkly flag and timeout configuration that the current turn is asking about, providing the exact knob name, current value, and available variations needed to answer the user's question about RiskArbiter-side adjustments.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2827,
+      "memory_title": "RiskArbiter TD_11 timeout behavior: riskarbiter-mux-max-timeout-millis LaunchDarkly flag"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the timeout discussion and RiskArbiter knobs, but the current turn clarifies that raising the max-timeout-millis cap alone won't help the parity path (which uses a hardcoded 10s default), making this memory useful context with a key limitation already identified.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2844,
+      "memory_title": "LaunchDarkly timeout flag riskarbiter-mux-max-timeout-millis: TD_11 currently at fallthrough 15s, available 25s variant"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides directly relevant context about the Mux timeout flag and its current settings, but the current turn has already moved past this into deeper analysis of why raising the cap alone won't help (the 10s hardcoded default for async jobs), so it requires minor filtering to remain actionable.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2846,
+      "memory_title": "TD_11 Mux timeout flag and Mixtape latency context"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the LaunchDarkly timeout flag mentioned in the current turn, but the conversation has evolved to clarify that raising this cap alone won't help the payroll async job (which lacks a scoreable deadline and defaults to 10s), making the memory partially outdated for the current recommendation.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2854,
+      "memory_title": "LaunchDarkly timeout flag for TD_11 rule: riskarbiter-mux-max-timeout-millis"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019edcc8-cff6-77d1-8e48-04b9adabc032",
+    "source_run_id": 2217,
+    "turn_ordinal": 45
+  }
+}

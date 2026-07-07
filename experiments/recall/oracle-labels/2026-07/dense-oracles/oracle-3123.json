@@ -1,0 +1,18 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The recall query is empty, making it impossible to determine relevance; this memory cannot be evaluated against a non-existent information need.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2675,
+      "memory_title": "bot-manager: ask Codex sessions for status via ephemeral exec, not background daemon with LLM"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019efc9f-ff22-7d32-bdac-00301bac40a8",
+    "source_run_id": 3123,
+    "turn_ordinal": 89
+  }
+}

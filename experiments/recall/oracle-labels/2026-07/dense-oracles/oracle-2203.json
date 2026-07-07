@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a different flag (`riskarbiter-should-fetch-generated-signals-from-mux`) and stale rollout flags, but the current turn identifies the specific applicable flag as `riskarbiter-compute-ra-mux-generator-parity` with concrete targeting details already resolved.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1881,
+      "memory_title": "RiskArbiter LaunchDarkly audit findings: mux rollout flag stuck in partial state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a related optimization with a tri-state rollout flag, but the current turn is asking about `riskarbiter-compute-ra-mux-generator-parity` (a different flag for Mux generator parity testing), so there's useful context about the rollout pattern and tri-state approach but requires filtering to distinguish between the two separate flags.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1899,
+      "memory_title": "Payroll Duplograph signal optimization: batch endpoints, requestedSignals filtering, tri-state rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Provides useful context on RiskArbiter's feature flag architecture and tri-state pattern, but the current turn has already identified the specific flag name and its targeting details, so this general pattern knowledge has minor gaps relative to the concrete answer already found.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1900,
+      "memory_title": "RiskArbiter feature flag pattern: FeatureFlag<String> with enum modes, OLD default, tri-state rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the general pattern for parity testing with feature flags in RiskArbiter, which is relevant context, but the current turn has already identified the specific flag name and is validating its current state\u2014the memory provides useful architectural guidance but requires filtering to apply to the concrete situation.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1902,
+      "memory_title": "Payroll signal generator optimization pattern: OLD/PARITY_CHECK/NEW rollout"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses deadline/timeout mechanics for payroll parity, but the current turn is asking to locate and identify a feature flag for testing parity\u2014a different concern that the memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2642,
+      "memory_title": "Payroll deadline structure: overall scoreable budget vs. parity-specific timeouts"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly identifies the exact feature flag name and its current rollout state for payroll parity testing, which is precisely what the user is asking for.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2643,
+      "memory_title": "Payroll parity checking flag and current rollout state"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses deadline handling in parity checks, but the current turn is asking for the specific feature flag name and its configuration for testing parity\u2014a different concern that the memory does not address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2658,
+      "memory_title": "Async deadline sharing vs. parity-specific deadline trade-off"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly clarifies the distinction between the two flags discussed in the current turn, explaining that the parity flag (`riskarbiter-compute-ra-mux-generator-parity`) is separate from the routing cutover flag and only runs async comparison\u2014essential context for understanding which flag to use for testing parity.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2785,
+      "memory_title": "Mux cutover flag vs. parity flag are separate concerns"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a different feature flag (`riskarbiter-should-fetch-generated-signals-from-mux`) and cutover strategy, while the current turn asks about the parity testing flag (`riskarbiter-compute-ra-mux-generator-parity`); related context but requires filtering to avoid confusion.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2801,
+      "memory_title": "RA Mux cutover for TD_11/payroll_run_update_connected_users: staged evidence is strong; percentage rollout strategy recommended"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a different flag (`riskarbiter-should-fetch-generated-signals-from-mux`) and routing concerns, whereas the current turn identifies and validates the actual parity flag (`riskarbiter-compute-ra-mux-generator-parity`) with specific LD targeting details.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2802,
+      "memory_title": "Cutover flag only changes RA routing; feature domain is a separate concern but already in place for TD_11 payroll"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Stored memory is about a timeout flag, not the parity flag the user is asking about; contextually stale and distracting.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2844,
+      "memory_title": "LaunchDarkly timeout flag riskarbiter-mux-max-timeout-millis: TD_11 currently at fallthrough 15s, available 25s variant"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a different feature flag (`riskarbiter-features-to-typecast`) unrelated to the parity testing flag (`riskarbiter-compute-ra-mux-generator-parity`) that the user is asking about.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2944,
+      "memory_title": "riskarbiter-features-to-typecast flag is live in production"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents pyriskarbiter refactoring and CLI consolidation, but the current query asks about a RiskArbiter feature flag for parity testing, which is unrelated to the Python library extraction work described.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses rule archival eligibility and a different feature flag (`riskarbiter-pending-rule-archival-excluded-trigger-def-tokens`), which is unrelated to the current query about the parity testing flag (`riskarbiter-compute-ra-mux-generator-parity`).",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3191,
+      "memory_title": "MLP-4608: Rule archival eligibility via chaining metadata + feature flag exempt list"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns pyriskarbiter proto changes and trigger archival eligibility display, which is unrelated to the current query about RiskArbiter feature flags for parity testing.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3213,
+      "memory_title": "pyriskarbiter trigger archival eligibility display added to PR #553"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a refactoring of MuxSignalGeneratorMigrationUtil and cleanup work, but does not contain information about the `riskarbiter-compute-ra-mux-generator-parity` feature flag or its LaunchDarkly configuration that the current turn is asking about.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3357,
+      "memory_title": "Riskarbiter Mux helper rename and signal-generator cleanup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes an archival rollout flag script, but the current query asks about a parity testing flag (`riskarbiter-compute-ra-mux-generator-parity`), which is a different feature flag entirely with no overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3368,
+      "memory_title": "Riskarbiter archival rollout: staged feature flag and script"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019edcc8-cff6-77d1-8e48-04b9adabc032",
+    "source_run_id": 2203,
+    "turn_ordinal": 43
+  }
+}

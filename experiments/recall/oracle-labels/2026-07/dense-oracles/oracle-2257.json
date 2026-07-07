@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses transcript handling and recall mechanics, but the current turn is focused on debugging specific memory ranking failures and semantic staleness\u2014different technical concerns that this memory does not directly illuminate.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1818,
+      "memory_title": "Preference: incomplete transcript slices in live session context"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to understanding why archival memories received high context scores from tag overlap\u2014the stored memory explains how turn context metadata (repo_id, work_area, tags) is persisted and used for ranking, which is the mechanism causing the failure mode identified in the current turn.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1821,
+      "memory_title": "Per-turn context metadata persisted for multi-project session recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the current investigation into recall failures by proposing the exact filtering mechanism and debug output strategy being discussed to diagnose why semantically stale memories are being surfaced.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses model replay and backfilling strategies, which is tangential to the current focus on debugging memory recall failures and understanding why specific memories were surfaced in ranking.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2247,
+      "memory_title": "Backfilled modern features for legacy model replay are viable if point-in-time correct and trained on high-fire windows"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes metrics infrastructure for recall/corpus evaluation, but the current turn is focused on debugging specific failure modes in ranking logic (kind diversity, context scoring, semantic staleness), which requires different technical context.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2311,
+      "memory_title": "Recall and memory-corpus metrics separation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly explains the root cause of the failures being discussed\u2014stale/wrong-context memories being over-retrieved due to broad metadata matches and kind diversity constraints\u2014and provides the exact analytical framework the conversation is using.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about deterministic command keys for memory activation is tangentially related to recall mechanisms but doesn't directly address the current discussion of why specific memories were surfaced with high scores due to kind diversity constraints and context score computation.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2388,
+      "memory_title": "YAAML memory activation: use deterministic command keys, not semantic situation classifiers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the failure analysis\u2014the stored memory about deterministic activation keys vs. semantic classifiers explains the root cause of the observed failures (generic task-key matches boosting unrelated memories), though the current turn has already moved past this mechanism to focus on context scoring and kind diversity issues.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2392,
+      "memory_title": "Tool-triggered recall: deterministic activation keys over semantic classifiers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current discussion about recall failures and memory selection; proposes segment-based context organization that addresses the kind diversity and stale context issues being debugged, though implementation details would need verification.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a specific regression test for session cache invalidation, which is tangentially related to recall mechanisms but does not address the current focus on debugging why specific memories were incorrectly surfaced due to scoring/filtering issues.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3189,
+      "memory_title": "Session recall cache must invalidate on inactive memory IDs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant summary of recall quality metrics and failure modes that contextualizes the current deep-dive investigation into specific failures.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current discussion of recall failures and ranking mechanisms, though it addresses a different failure mode (segment/task-fit reranking) than the specific Java/RiskArbiter kind-diversity and context-score issues being debugged.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3195,
+      "memory_title": "Segment/task-fit reranking is limited; segment summaries needed for generation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents experimental findings and lessons about recall metrics, but the current turn is focused on debugging specific failure mechanisms (kind diversity, context scoring, task-key matching) in an active session, making this historical experiment log mostly irrelevant to the immediate diagnostic work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the recall failure analysis\u2014documents a prior experiment on task-fit gating and kind diversity tradeoffs that explains the exact failure modes (wrong-context lows, kind diversity reserving slots) currently being debugged.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses recall ranking mechanisms and failure modes (gating, context scoring, provenance), which is highly relevant to the current turn's investigation of why specific memories were surfaced; however, it discusses prior experimental conclusions rather than the specific Java/RiskArbiter session failures being debugged now.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to the current discussion of recall failures\u2014the stored memory documents a known issue with hardcoded task-key matching (tool:* keys) and kind diversity that caused false positives, which aligns with the debug findings about generic task-key boosts and strict kind diversity reserving slots for less relevant memories.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant\u2014the stored memory documents the exact failure pattern (wrong-context recalls, kind diversity issues, broad tag overlap causing stale selections) that the current turn is actively investigating and debugging.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses overall memory quality metrics and corpus statistics, but the current turn is focused on debugging specific recall failures and ranking mechanisms\u2014different analytical layers with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 2257,
+    "turn_ordinal": 257
+  }
+}

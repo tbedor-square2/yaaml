@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes the `yaaml remember` CLI command and skill design, but the current turn asks for the taxonomy of labels in use\u2014which requires detailed knowledge of label types, scopes, kinds, task keys, and scoring weights that this memory does not contain.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1814,
+      "memory_title": "YAAML remember skill for manual memory creation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to understanding label taxonomy (turn context metadata, project identity, activity domain), but the stored memory focuses on persistence mechanism rather than the complete taxonomy structure itself.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1821,
+      "memory_title": "Per-turn context metadata persisted for multi-project session recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly documents the label taxonomy implementation (kinds, task keys, scope, strength scoring) that the current turn is asking to explain, including the exact code locations and recall filtering logic.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly explains the current label taxonomy's gating strategy, including memory kinds (preference/lesson/workflow/project_fact/task_state), task key strength tiers, and cross-project recall rules\u2014exactly what the user is asking about.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2062,
+      "memory_title": "Kind-aware recall gating strategy: preference/lesson/workflow cross-project if strong; task_state same-project only with task-key match"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes metrics and health monitoring for recall/corpus systems, but the current turn asks for the taxonomy of labels themselves (scope, kind, task keys, etc.), which requires different technical content.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2311,
+      "memory_title": "Recall and memory-corpus metrics separation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses bad memory characteristics and lifecycle management, but the current turn is asking for the current label taxonomy structure itself, which requires fresh code inspection rather than meta-analysis of memory quality.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a proposed architecture for conversation segments and task identity, which is relevant context for understanding label taxonomy, but the current turn is asking about the *actual* taxonomy currently implemented in code, not the proposed design.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to task-key extraction and filtering logic, but the current turn is asking for the full taxonomy overview (which the assistant is already providing from code inspection), whereas this memory focuses specifically on extraction rules and rejection filters.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3098,
+      "memory_title": "Segment task-key extraction: filter tool output and prioritize identity keys"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is a metrics summary about recall quality, not documentation of the label taxonomy itself; it provides no actionable information for explaining the current label system.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory documents experimental findings and lessons about recall metrics, but the current query asks for the actual taxonomy structure and definitions, which the turn already retrieved directly from code.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly documents experimental validation of the label taxonomy's task-fit and segment-aware recall strategies, providing concrete evidence of how the current taxonomy (task_keys, memory kind, scope) performs in practice.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses recall ranking experiments and segment-based filtering strategies, but the current turn asks for the taxonomy of labels themselves\u2014the stored memory is about optimization direction, not label definitions.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly addresses the current turn's request by documenting the taxonomy of labels (scope, memory kind, task keys, project identity, health labels, daemon task kinds) and critically, the planned refactoring to remove hardcoded phrase/tool taxonomies in favor of structural-only inference.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly addresses the current turn's question about label taxonomy by documenting the problematic aspects of the current system and the strategic direction to replace hardcoded taxonomies with structural extraction and statistical classification.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3333,
+      "memory_title": "Remove hardcoded phrase taxonomy and tool-based task keys from core"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses recall quality regression and wrong-context issues, but the current turn is asking for an explanation of the label taxonomy itself\u2014the memory provides no information about label definitions, structures, or how they work.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses corpus quality metrics and evaluation evidence, but the current turn is asking for the taxonomy of labels currently in use\u2014a structural/definitional question that requires code-level label definitions, not quality assessment data.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 2271,
+    "turn_ordinal": 261
+  }
+}

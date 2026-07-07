@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses pyriskarbiter consolidation priorities and code extraction phases, but the current turn is focused on CLI command structure reorganization (moving archival commands under `rule`), which is orthogonal to the refactoring roadmap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1760,
+      "memory_title": "pyriskarbiter consolidation priorities before CLI distribution shift"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses a separate gist script for traffic drafts, but the current turn focuses on restructuring CLI commands under the `rule` namespace for archival operations, which is unrelated.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1835,
+      "memory_title": "traffic-drafts is a standalone gist script, not a pyriskarbiter CLI command"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes completed PRs and backport work on archival features, but the current turn is actively discussing CLI command structure reorganization (moving commands under `rule`), which is a different implementation concern not addressed in the memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2448,
+      "memory_title": "MLP-4409/4410 stack complete and published; backport reduced reviewer churn"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a notification job implementation (MLP-4411), but the current turn discusses CLI command restructuring under `rule` for archival operations\u2014different features with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2486,
+      "memory_title": "MLP-4411 notification job implementation complete; draft PR ready without wiring scheduled sends"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a completed PR review for rule archival functionality, but the current turn is about CLI command structure and nesting\u2014different concerns with no actionable overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2629,
+      "memory_title": "MLP-4410 PR #483111 final review passes; dry-run RPC now unfrozen during change freeze"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly captures the core decision and context for the current turn\u2014that archival commands should be nested under `rule` rather than top-level\u2014which is exactly what the user and assistant are discussing and implementing.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2754,
+      "memory_title": "CLI command organization: nest archival commands under 'rule' subcommand, not top-level 'archival'"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a related CLI workflow for rule archival commands, but uses slightly outdated command names (`pending-archivals` vs. the current `archival-candidate-triggers` and `run-archivals`), requiring minor filtering to remain actionable.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2780,
+      "memory_title": "CLI command workflow for pending rule archival verification after flag set"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory references draft PRs for rule archival features, but the current turn is about CLI command structure and nesting decisions that have evolved beyond the initial PR scope.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3034,
+      "memory_title": "Draft PRs to open: tbedor/riskarbiter-rule-summary-archival-date and tbedor/kui-rule-archival-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a BigQuery parameter refactoring in a different PR (#521), while the current turn focuses on CLI command nesting under `rule`; minimal overlap or actionable relevance.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3044,
+      "memory_title": "forge-signalsmith PR #521: lifecycle refactor with BigQuery parameters follow-up"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory is about a different PR (#477833, trigger-traffic) and does not relate to the current turn's discussion of command nesting under `rule` for archival operations.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3065,
+      "memory_title": "PR #477833 tbedor/riskarbiter-trigger-traffic: rebased and pushed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a past PR rebase and BUILD dependency cleanup, which is stale context unrelated to the current turn's discussion about CLI command nesting under `rule`.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3120,
+      "memory_title": "PR #483601: rebase and BUILD dep removals completed"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents a completed refactoring (PR #543) that extracted CLI logic into library modules, but the current turn discusses ongoing command restructuring (moving archival commands under `rule`), which is a related but distinct organizational task not directly covered in the memory.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory documents high-level design decisions and implementation strategy for rule archival, but the current turn is about CLI command structure and naming conventions (nesting under `rule`), which is not addressed in the memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a Homebrew formula migration and publish workflow, but the current turn is about CLI command nesting structure for rule archival commands\u2014different context and not actionable for this discussion.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3157,
+      "memory_title": "homebrew-formulas PR #4844: sq-riskarbiter uvx wrapper migration\u2014mlds-core#545 blocker and publish workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory concerns a KUI component PR update (action-table to metadata-table), which is completely unrelated to the current turn's discussion about CLI command nesting under `rule` for archival operations.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3235,
+      "memory_title": "PR #13972 updated from action-table experiment to metadata-table production implementation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes UI label/tooltip updates for rule archival eligibility, while the current turn focuses on CLI command structure and file reorganization\u2014different domains with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3350,
+      "memory_title": "PR #14151: Automated Rule Archival Eligibility label and tooltip"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory about .editorconfig formatting settings is unrelated to the current turn's discussion of CLI command nesting structure and rule archival command organization.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3398,
+      "memory_title": "Riskarbiter .editorconfig formatting settings finalized and applied"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef566-2195-7d72-a3ad-cfb9ad00f810",
+    "source_run_id": 3011,
+    "turn_ordinal": 31
+  }
+}

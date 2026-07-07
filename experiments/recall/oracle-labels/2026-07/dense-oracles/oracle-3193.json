@@ -1,0 +1,146 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses Slack channel archival and trigger routing, which is tangentially related to Risk Arbiter but does not directly address the current turn's focus on the pending-archivals CLI command and archival verification.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1860,
+      "memory_title": "Slack channel archival and successor routing for Risk Arbiter triggers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory covers rule reactivation features, while the current turn discusses archival verification CLI commands\u2014different features within the same system with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2551,
+      "memory_title": "RiskArbiter rule reactivation feature and documentation workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to understanding the PendingRuleArchival mechanism and validation logic for the archival CLI command discussed in the current turn, though it focuses on data model details rather than the CLI command itself.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2616,
+      "memory_title": "PendingRuleArchival: Add rule_config_id, keep metadata, use exact targeting"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant context about RiskArbiter archival execution mechanisms and change-freeze guards, though references PR #483111 instead of the current PR #553 being discussed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2622,
+      "memory_title": "RiskArbiter rule archival manual RPC requires change-freeze guard on both code paths"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes `archival-candidates` discovery behavior, but the current turn focuses on the `pending-archivals` CLI command and PR #553, making this context stale and tangential.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2757,
+      "memory_title": "archival-candidates is pre-rollout discovery only"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Useful context explaining the archival workflow and how `archival-candidates` differs from `pending-archivals`, though the current turn focuses on PR #553 specifics rather than needing this distinction.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2762,
+      "memory_title": "archival-candidates discovery helper is pre-flag only, does not check LD or pending rows"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact CLI workflow and commands discussed in the current turn, providing actionable reference for the pending-archivals command syntax and execution steps.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2780,
+      "memory_title": "CLI command workflow for pending rule archival verification after flag set"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly documents the exact CLI workflow and commands discussed in the current turn, including the pending-archivals command, --execute flag behavior, and the complete end-to-end staging process for rule archival verification.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2787,
+      "memory_title": "Rule archival CLI workflow: pending-archivals command with trigger setup"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to understanding rule archival eligibility and exclusion logic for the pending-archivals CLI command discussed, though the memory focuses on policy rather than the specific CLI implementation details.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3008,
+      "memory_title": "Rule archival eligibility policy for SQ Lending"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses rule archival date surfacing and proto changes, which is tangentially related to Risk Arbiter archival but doesn't directly address the current turn's focus on the pending-archivals CLI command and its --execute flag behavior.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3011,
+      "memory_title": "Risk Arbiter rule archival date surfacing: use min pending date per model_name in RuleSummary"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Memory describes backend implementation details for archival features but doesn't directly address the current turn's focus on PR #553's CLI command and its functionality.",
+      "judge_score": "3",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3033,
+      "memory_title": "Backend implementation: attach pending archival read to GetRulesSummaryAction"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory references different PRs (tbedor/riskarbiter-rule-summary-archival-date and tbedor/kui-rule-archival-date) unrelated to the current discussion about PR #553's pending-archivals CLI command.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3034,
+      "memory_title": "Draft PRs to open: tbedor/riskarbiter-rule-summary-archival-date and tbedor/kui-rule-archival-date"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses PR #543 refactoring and pyriskarbiter library extraction, but the current turn is specifically about PR #553 and the Risk Arbiter archival verification CLI\u2014different PRs with different purposes.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3140,
+      "memory_title": "pyriskarbiter consolidation series: PR #543 complete, CLI distribution shift ready"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses high-level design decisions and implementation strategy for Risk Arbiter rule cleanup/reactivation, but the current turn is specifically about a CLI command for archival verification (PR #553), which is a different operational concern not addressed in this memory.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3148,
+      "memory_title": "Risk Arbiter rule cleanup: design decisions and implementation strategy"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses homebrew-formulas PR #4844 and mlds-core#545, but the current turn focuses on mlds-core PR #553 (Risk Arbiter archival CLI), which is a different PR entirely with no apparent connection.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3157,
+      "memory_title": "homebrew-formulas PR #4844: sq-riskarbiter uvx wrapper migration\u2014mlds-core#545 blocker and publish workflow"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly relevant to PR #553 context with specific implementation details, but focuses on a different feature (trigger eligibility display) than the current turn's focus on the pending-archivals CLI command.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3213,
+      "memory_title": "pyriskarbiter trigger archival eligibility display added to PR #553"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides useful context about the riskarbiter archival rollout infrastructure and feature flag management, but the current turn focuses on PR #553's CLI command specifics rather than the rollout staging details.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3368,
+      "memory_title": "Riskarbiter archival rollout: staged feature flag and script"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ef566-2195-7d72-a3ad-cfb9ad00f810",
+    "source_run_id": 3193,
+    "turn_ordinal": 53
+  }
+}

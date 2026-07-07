@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses backlog batching and session boundary flushing mechanics, but the current turn is diagnosing a specific recall failure (wrong-task memory surfacing) that stems from coarse project-level matching and ranking diversity logic, not from batching or flush timing issues.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1803,
+      "memory_title": "Backlog memory formulation aligns on session boundaries with idle flush"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory addresses transcript handling and turn completion mechanics, but the current query is specifically about diagnosing a memory recall failure (wrong task-thread retrieval), which this memory does not directly address.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1818,
+      "memory_title": "Preference: incomplete transcript slices in live session context"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This memory directly explains the per-turn context metadata system that is central to diagnosing why cross-task memory recall occurred\u2014it describes exactly how turn context should be persisted and used for ranking, making it essential for understanding the failure mode analysis in the current turn.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 1821,
+      "memory_title": "Per-turn context metadata persisted for multi-project session recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This stored memory directly addresses the root cause identified in the current turn: implementing kind-aware filtering to prevent cross-task memory contamination (like RiskArbiter memories surfacing in payroll context) and provides the exact fix direction needed.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2032,
+      "memory_title": "Kind-aware recall gating: priority over LLM filtering"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the root cause identified in the current turn (wrong task-thread recall due to coarse project/session model and weak generic keys), but focuses on implemented filtering rather than the specific diagnostic findings about memory 1975 and ranking/diversity logic.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2083,
+      "memory_title": "Kind-aware recall filtering with LLM reranking roadmap"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes metrics taxonomy and separation logic, but the current turn is diagnosing a specific recall failure (wrong task-thread retrieval); the memory provides no actionable context for that diagnosis.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2311,
+      "memory_title": "Recall and memory-corpus metrics separation"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly explains the root cause of the current turn's question\u2014bad memories are wrong-context/stale rather than lag-related\u2014and provides the exact failure mode (broad project context, weak task keys, diversity logic) that the assistant just detailed.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2326,
+      "memory_title": "Bad memories are mostly wrong-context or stale, not inherently invalid"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the core issue identified in the turn\u2014weak generic keys like `tool:just` causing wrong-task recall\u2014and proposes a solution (deterministic activation keys) that aligns with the fix direction discussed.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2392,
+      "memory_title": "Tool-triggered recall: deterministic activation keys over semantic classifiers"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This stored memory directly addresses the root cause identified in the current turn: the session/project model is too coarse, and the fix requires task-sensitive recall via dynamic conversation segments rather than broad path-derived context.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 2651,
+      "memory_title": "Conversation segments as primary recall context, decoupled from session"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a technical fix for session cache invalidation, but the current turn is analyzing root causes of wrong-task memory recall (task-thread sensitivity, project-coarseness, ranking logic)\u2014different problem domains with minimal overlap.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3189,
+      "memory_title": "Session recall cache must invalidate on inactive memory IDs"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory provides aggregate eval statistics but lacks the specific diagnostic details (memory IDs, session origins, task-thread analysis) needed to answer the current turn's questions about lag vs. cross-session retrieval.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3190,
+      "memory_title": "YAAML recall quality status: ~4.1 avg score, 15% low-score rate, 84% useful-run rate"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "This stored memory directly documents the experimental findings and durable lessons about YAAML recall failures, including the exact diagnosis that wrong task-thread recall (not ingestion lag) is the root cause, making it highly actionable context for the current turn's investigation.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3199,
+      "memory_title": "YAAML recall experiment log and durable lessons backlog"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the root cause identified in the current turn\u2014task-thread sensitivity and ranking/diversity tradeoffs\u2014with experimental data on segment-aware recall strategies, though the specific payroll/RiskArbiter case is not mentioned.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3211,
+      "memory_title": "Segment/task-fit 5x5 experiment shows mixed tradeoffs; task_fit_required best conservative approach"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "Directly addresses the root cause identified in the current turn (coarse task/project model causing wrong-task recall) and proposes a relevant next direction (lighter-weight segment context features instead of binary gating), though it predates the specific findings about memory 1975 and diversity logic failures.",
+      "judge_score": "4",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3212,
+      "memory_title": "Next recall direction: segment provenance and context-weighted ranking over binary gating"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the root cause identified in the current turn: weak generic task keys like `tool:just` and coarse project-level matching causing wrong-task recall, and proposes the exact fix direction (remove hardcoded task keys, strengthen task-sensitivity) that the user's analysis concludes is needed.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3311,
+      "memory_title": "Remove hardcoded topic phrases and tool:* task keys from YAAML recall"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory directly addresses the user's diagnostic question by confirming it was cross-session/cross-task retrieval (not lag), providing the exact root cause analysis and fix direction the conversation is exploring.",
+      "judge_score": "5",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3334,
+      "memory_title": "Recall quality regression in last 24h is wrong-context, not bloat; background recall strong"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory discusses overall corpus quality metrics and measurement methodology, but does not address the specific diagnostic question about whether the bad recall was due to lag, conversation drift, or cross-session retrieval\u2014which the current turn has already answered in detail.",
+      "judge_score": "2",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3375,
+      "memory_title": "YAAML memory quality evidence: corpus shows need for continued work"
+    },
+    {
+      "adjudicator_model": "claude-haiku-4-5-20251001",
+      "judge_rationale": "The stored memory describes a technical report on memory techniques and internal documentation, which is entirely unrelated to the current turn's investigation of memory recall failures, session boundaries, and task-thread sensitivity.",
+      "judge_score": "1",
+      "label_source": "dense_adjudicator",
+      "memory_id": 3376,
+      "memory_title": "Memory techniques report: technical persuasion doc for internal eng buy-in"
+    }
+  ],
+  "run": {
+    "oracle_kind": "dense_adjudicator",
+    "session_id": "019ea810-ee08-7cb3-a7ac-5bcd76670996",
+    "source_run_id": 2260,
+    "turn_ordinal": 258
+  }
+}

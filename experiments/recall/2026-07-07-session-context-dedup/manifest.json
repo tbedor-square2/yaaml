@@ -1,0 +1,120 @@
+{
+  "anchors_file": "experiments/recall/anchor-libraries/2026-07-screening.tsv",
+  "baseline_details": "target/recall-backtests/wide-multi-query-candidate-generation-v2/wide-multi-query-candidate-generation-v2.details.jsonl",
+  "baseline_label": "wide-multi-query-candidate-generation-v2",
+  "baseline_summary": {
+    "anchors": 200,
+    "average_known_score": 4.666666666666667,
+    "average_selected_per_anchor": 0.61,
+    "clean_abstention_runs": 47.0,
+    "empty_recall_runs": 89.0,
+    "known_selected_memories": 3,
+    "low_known_selected": 0.0,
+    "low_selection_runs": 0.0,
+    "missed_useful_empty_runs": 42.0,
+    "selected_memories": 122,
+    "unknown_selected_memories": 119,
+    "useful_capture_runs": 3.0,
+    "useful_known_selected": 3.0
+  },
+  "candidate_summary": {
+    "anchors": 200,
+    "average_known_score": 4.5,
+    "average_selected_per_anchor": 0.18,
+    "clean_abstention_runs": 85.0,
+    "empty_recall_runs": 166.0,
+    "known_selected_memories": 2,
+    "low_known_selected": 0.0,
+    "low_selection_runs": 0.0,
+    "missed_useful_empty_runs": 81.0,
+    "selected_memories": 36,
+    "unknown_selected_memories": 34,
+    "useful_capture_runs": 2.0,
+    "useful_known_selected": 2.0
+  },
+  "date": "2026-07-07",
+  "db": "/Users/tbedor/.yaaml/yaaml.db",
+  "decision": "Do not ship this drop-only context-dedup policy as a recall-quality change. It reduces selected context, but the screening set has too few known selected labels to prove it preserves useful recall; use these drops as diagnostic cases for a richer session-context feature rather than a hard gate.",
+  "deltas": {
+    "average_known_score": {
+      "ci_95": [
+        -0.666666666666667,
+        0.0
+      ],
+      "point_delta": -0.16666666666666696,
+      "verdict": "needs larger sample"
+    },
+    "average_selected_per_anchor": {
+      "ci_95": [
+        -0.505,
+        -0.36499999999999994
+      ],
+      "point_delta": -0.43,
+      "verdict": "confirmed"
+    },
+    "clean_abstention_runs": {
+      "ci_95": [
+        27.0,
+        49.0
+      ],
+      "point_delta": 38.0,
+      "verdict": "confirmed"
+    },
+    "empty_recall_runs": {
+      "ci_95": [
+        64.0,
+        90.0
+      ],
+      "point_delta": 77.0,
+      "verdict": "confirmed"
+    },
+    "low_known_selected": {
+      "ci_95": [
+        0.0,
+        0.0
+      ],
+      "point_delta": 0.0,
+      "verdict": "no detectable effect"
+    },
+    "low_selection_runs": {
+      "ci_95": [
+        0.0,
+        0.0
+      ],
+      "point_delta": 0.0,
+      "verdict": "no detectable effect"
+    },
+    "missed_useful_empty_runs": {
+      "ci_95": [
+        29.0,
+        50.0
+      ],
+      "point_delta": 39.0,
+      "verdict": "confirmed"
+    },
+    "useful_capture_runs": {
+      "ci_95": [
+        -3.0,
+        0.0
+      ],
+      "point_delta": -1.0,
+      "verdict": "no detectable effect"
+    },
+    "useful_known_selected": {
+      "ci_95": [
+        -3.0,
+        0.0
+      ],
+      "point_delta": -1.0,
+      "verdict": "no detectable effect"
+    }
+  },
+  "drop_counts": {
+    "previously_recalled_same_session": 44,
+    "total": 86,
+    "visible_in_current_query": 42
+  },
+  "overlap_threshold": 0.72,
+  "recall_dir": "target/recall-backtests/wide-multi-query-candidate-generation-v2",
+  "strategy": "session-context-dedup"
+}

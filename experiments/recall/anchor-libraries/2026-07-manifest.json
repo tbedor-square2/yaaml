@@ -1,0 +1,47 @@
+{
+  "backtest_summary": {
+    "anchor_source": "eval-library",
+    "anchors": 300,
+    "empty_recall_runs": 151,
+    "oracle_useful_runs": 156,
+    "selected_memories": 159,
+    "strategy": "anchor-refresh"
+  },
+  "database_snapshot": {
+    "exists": true,
+    "modified_at": "2026-07-06T17:19:24.864484+00:00",
+    "path": "/Users/tbedor/.yaaml/yaaml.db",
+    "size_bytes": 97714176
+  },
+  "generated_at": "2026-07-06",
+  "generated_by": "scripts/build-anchor-library.py",
+  "holdout": {
+    "anchors": 100,
+    "known_score_coverage": 0.91,
+    "oracle_useful_anchors": 54,
+    "path": "/Users/tbedor/Development/yaaml/experiments/recall/anchor-libraries/2026-07-holdout.tsv"
+  },
+  "input_dir": "/Users/tbedor/Development/yaaml/target/anchor-refresh-2026-07",
+  "label": "2026-07",
+  "pool_anchors": 300,
+  "pool_known_score_coverage": 0.9066666666666666,
+  "screening": {
+    "anchors": 200,
+    "known_score_coverage": 0.905,
+    "oracle_useful_anchors": 102,
+    "path": "/Users/tbedor/Development/yaaml/experiments/recall/anchor-libraries/2026-07-screening.tsv"
+  },
+  "seed": 20260706,
+  "selection_query_parameters": {
+    "anchor_limit": "300",
+    "anchor_source": "eval-library",
+    "dedupe": "latest_per_session_turn",
+    "exclude_context_embedded": true,
+    "order": "run_id DESC",
+    "recall_origins": [
+      "session_background",
+      "tool_pre_use"
+    ],
+    "requires_completed_turn_at_or_before_anchor": true
+  }
+}

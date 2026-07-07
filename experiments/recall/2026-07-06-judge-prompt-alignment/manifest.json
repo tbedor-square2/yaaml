@@ -1,0 +1,79 @@
+{
+  "details_file": "experiments/recall/2026-07-06-judge-prompt-alignment/details.jsonl",
+  "generated_at": "2026-07-06",
+  "label_field": "adjudicator_score",
+  "labels_file": "experiments/recall/judge-calibration/2026-07-labels.jsonl",
+  "model": "claude-haiku-4-5-20251001",
+  "provider": "anthropic",
+  "summaries": {
+    "production_eval_candidate": {
+      "cohens_kappa_exact_1_to_5": 0.18296276453254756,
+      "cohens_kappa_low_binary": 0.22512234910277315,
+      "cohens_kappa_useful_binary": 0.1638078902229846,
+      "exact_agreement": 0.39,
+      "label_field": "adjudicator_score",
+      "labeled_rows": 100,
+      "low_binary_agreement": 0.62,
+      "mean_absolute_error": 1.18,
+      "mean_signed_error": 0.62,
+      "missing_labels": 0,
+      "rows": 100,
+      "score_field": "candidate_score",
+      "useful_binary_agreement": 0.61,
+      "within_1_agreement": 0.63
+    },
+    "production_existing": {
+      "cohens_kappa_exact_1_to_5": 0.13522012578616355,
+      "cohens_kappa_low_binary": 0.20574886535552186,
+      "cohens_kappa_useful_binary": 0.20574886535552186,
+      "exact_agreement": 0.34,
+      "label_field": "adjudicator_score",
+      "labeled_rows": 100,
+      "low_binary_agreement": 0.58,
+      "mean_absolute_error": 1.42,
+      "mean_signed_error": 0.94,
+      "missing_labels": 0,
+      "rows": 100,
+      "score_field": "judge_score",
+      "useful_binary_agreement": 0.58,
+      "within_1_agreement": 0.58
+    },
+    "query_memory_rubric": {
+      "cohens_kappa_exact_1_to_5": 0.7386000580888759,
+      "cohens_kappa_low_binary": 0.8933901918976545,
+      "cohens_kappa_useful_binary": 0.865010799136069,
+      "exact_agreement": 0.82,
+      "label_field": "adjudicator_score",
+      "labeled_rows": 100,
+      "low_binary_agreement": 0.96,
+      "mean_absolute_error": 0.26,
+      "mean_signed_error": 0.02,
+      "missing_labels": 0,
+      "rows": 100,
+      "score_field": "candidate_score",
+      "useful_binary_agreement": 0.95,
+      "within_1_agreement": 0.96
+    },
+    "strict_recall_decision": {
+      "cohens_kappa_exact_1_to_5": 0.4197853205686103,
+      "cohens_kappa_low_binary": 0.7690531177829101,
+      "cohens_kappa_useful_binary": 0.7690531177829101,
+      "exact_agreement": 0.6,
+      "label_field": "adjudicator_score",
+      "labeled_rows": 100,
+      "low_binary_agreement": 0.92,
+      "mean_absolute_error": 0.51,
+      "mean_signed_error": -0.39,
+      "missing_labels": 0,
+      "rows": 100,
+      "score_field": "candidate_score",
+      "useful_binary_agreement": 0.92,
+      "within_1_agreement": 0.92
+    }
+  },
+  "variants": [
+    "production_eval_candidate",
+    "query_memory_rubric",
+    "strict_recall_decision"
+  ]
+}

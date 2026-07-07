@@ -1,0 +1,135 @@
+{
+  "anchors": 200,
+  "anchors_file": "experiments/recall/anchor-libraries/2026-07-screening.tsv",
+  "baseline": {
+    "average_known_score": 4.666666666666667,
+    "average_selected_per_anchor": 0.53,
+    "clean_abstention_runs": 56.0,
+    "empty_recall_runs": 101.0,
+    "low_known_selected": 0.0,
+    "low_selection_runs": 0.0,
+    "missed_useful_empty_runs": 45.0,
+    "useful_capture_runs": 3.0,
+    "useful_known_selected": 3.0
+  },
+  "baseline_details": "experiments/recall/2026-07-06-wide-multi-query-candidate-generation/production.details.jsonl",
+  "candidate": {
+    "average_known_score": 4.666666666666667,
+    "average_selected_per_anchor": 0.61,
+    "clean_abstention_runs": 47.0,
+    "empty_recall_runs": 89.0,
+    "low_known_selected": 0.0,
+    "low_selection_runs": 0.0,
+    "missed_useful_empty_runs": 42.0,
+    "useful_capture_runs": 3.0,
+    "useful_known_selected": 3.0
+  },
+  "candidate_details": "experiments/recall/2026-07-06-wide-multi-query-candidate-generation/wide-multi-query-candidate-generation-v2.details.jsonl",
+  "date": "2026-07-06",
+  "decision": "do_not_ship",
+  "deltas": {
+    "average_known_score": {
+      "ci_95": [
+        0.0,
+        0.0
+      ],
+      "point_delta": 0.0,
+      "verdict": "no detectable effect"
+    },
+    "average_selected_per_anchor": {
+      "ci_95": [
+        0.03500000000000003,
+        0.125
+      ],
+      "point_delta": 0.07999999999999996,
+      "verdict": "confirmed"
+    },
+    "clean_abstention_runs": {
+      "ci_95": [
+        -16.0,
+        -2.0
+      ],
+      "point_delta": -9.0,
+      "verdict": "confirmed"
+    },
+    "empty_recall_runs": {
+      "ci_95": [
+        -20.0,
+        -4.0
+      ],
+      "point_delta": -12.0,
+      "verdict": "confirmed"
+    },
+    "low_known_selected": {
+      "ci_95": [
+        0.0,
+        0.0
+      ],
+      "point_delta": 0.0,
+      "verdict": "no detectable effect"
+    },
+    "low_selection_runs": {
+      "ci_95": [
+        0.0,
+        0.0
+      ],
+      "point_delta": 0.0,
+      "verdict": "no detectable effect"
+    },
+    "missed_useful_empty_runs": {
+      "ci_95": [
+        -8.0,
+        2.0
+      ],
+      "point_delta": -3.0,
+      "verdict": "needs larger sample"
+    },
+    "useful_capture_runs": {
+      "ci_95": [
+        0.0,
+        0.0
+      ],
+      "point_delta": 0.0,
+      "verdict": "no detectable effect"
+    },
+    "useful_known_selected": {
+      "ci_95": [
+        0.0,
+        0.0
+      ],
+      "point_delta": 0.0,
+      "verdict": "no detectable effect"
+    }
+  },
+  "experiment": "wide-multi-query-candidate-generation",
+  "implementation": {
+    "candidate_pool": 64,
+    "env_flag": "YAAML_EXPERIMENT_WIDE_RECALL",
+    "final_selection_limit": "unchanged",
+    "query_texts": [
+      "current recall query",
+      "active segment summary",
+      "active identity keys"
+    ],
+    "selector_pool_limit": 64,
+    "similarity_threshold": 0.2
+  },
+  "pool_oracle": {
+    "active_known_useful_in_pool": 22,
+    "active_known_useful_selected": 3,
+    "active_known_useful_selected_rate": 0.10714285714285714,
+    "active_missing_due_to_retrieval": 6,
+    "active_missing_due_to_selection": 19,
+    "active_oracle_useful_anchors": 28,
+    "active_pool_recall_rate": 0.7857142857142857,
+    "anchors": 200,
+    "decision": "Selection is the larger observed gap on this screening library for active useful memories: more known-useful misses are in the candidate pool but not selected. Future recall-quality work should prioritize selection/reranking before widening candidate generation.",
+    "known_useful_in_pool": 22,
+    "known_useful_selected": 3,
+    "known_useful_selected_rate": 0.029411764705882353,
+    "missing_due_to_retrieval": 80,
+    "missing_due_to_selection": 19,
+    "oracle_useful_anchors": 102,
+    "pool_recall_rate": 0.21568627450980393
+  }
+}

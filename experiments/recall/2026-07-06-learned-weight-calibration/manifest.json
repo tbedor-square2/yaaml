@@ -1,0 +1,347 @@
+{
+  "baseline_details": "/Users/tbedor/Development/yaaml/experiments/recall/2026-07-06-learned-weight-calibration/production.details.jsonl",
+  "baseline_summary": {
+    "anchors": 195,
+    "average_known_score": 4.666666666666667,
+    "average_selected_per_anchor": 0.6256410256410256,
+    "clean_abstention_runs": 73.0,
+    "empty_recall_runs": 84.0,
+    "known_selected_memories": 3,
+    "low_known_selected": 0.0,
+    "low_selection_runs": 0.0,
+    "missed_useful_empty_runs": 11.0,
+    "oracle_useful_runs": 22,
+    "selected_memories": 122,
+    "strategy": "production",
+    "unknown_selected_memories": 119,
+    "useful_capture_runs": 3.0,
+    "useful_known_selected": 3.0
+  },
+  "candidate_details": "/Users/tbedor/Development/yaaml/experiments/recall/2026-07-06-learned-weight-calibration/feature_model.details.jsonl",
+  "candidate_summary": {
+    "anchors": 195,
+    "average_known_score": 4.75,
+    "average_selected_per_anchor": 2.0,
+    "clean_abstention_runs": 0.0,
+    "empty_recall_runs": 0.0,
+    "known_selected_memories": 4,
+    "low_known_selected": 0.0,
+    "low_selection_runs": 0.0,
+    "missed_useful_empty_runs": 0.0,
+    "oracle_useful_runs": 22,
+    "selected_memories": 390,
+    "strategy": "learned-weight-calibration",
+    "unknown_selected_memories": 386,
+    "useful_capture_runs": 4.0,
+    "useful_known_selected": 4.0
+  },
+  "dataset": "target/recall-training-datasets/wide-v2-candidates.jsonl",
+  "date": "2026-07-06",
+  "decision": "Do not ship this learned selector. Useful-known selection did not improve with a CI excluding zero.",
+  "deltas": {
+    "average_known_score": {
+      "ci_95": [
+        0.0,
+        0.5
+      ],
+      "point_delta": 0.08333333333333304,
+      "verdict": "needs larger sample"
+    },
+    "average_selected_per_anchor": {
+      "ci_95": [
+        1.2923076923076922,
+        1.4564102564102566
+      ],
+      "point_delta": 1.3743589743589744,
+      "verdict": "confirmed"
+    },
+    "clean_abstention_runs": {
+      "ci_95": [
+        -87.0,
+        -61.0
+      ],
+      "point_delta": -73.0,
+      "verdict": "confirmed"
+    },
+    "empty_recall_runs": {
+      "ci_95": [
+        -98.0,
+        -71.0
+      ],
+      "point_delta": -84.0,
+      "verdict": "confirmed"
+    },
+    "low_known_selected": {
+      "ci_95": [
+        0.0,
+        0.0
+      ],
+      "point_delta": 0.0,
+      "verdict": "no detectable effect"
+    },
+    "low_selection_runs": {
+      "ci_95": [
+        0.0,
+        0.0
+      ],
+      "point_delta": 0.0,
+      "verdict": "no detectable effect"
+    },
+    "missed_useful_empty_runs": {
+      "ci_95": [
+        -18.0,
+        -5.0
+      ],
+      "point_delta": -11.0,
+      "verdict": "confirmed"
+    },
+    "useful_capture_runs": {
+      "ci_95": [
+        0.0,
+        3.0
+      ],
+      "point_delta": 1.0,
+      "verdict": "no detectable effect"
+    },
+    "useful_known_selected": {
+      "ci_95": [
+        0.0,
+        3.0
+      ],
+      "point_delta": 1.0,
+      "verdict": "no detectable effect"
+    }
+  },
+  "feature_names": [
+    "bias",
+    "score",
+    "similarity",
+    "vector_score",
+    "context_score",
+    "project_bonus",
+    "task_key_bonus",
+    "global_durable_bonus",
+    "matched_task_key_count",
+    "filter_reason_count",
+    "kind:lesson",
+    "kind:workflow",
+    "kind:preference",
+    "kind:project_fact",
+    "kind:task_state",
+    "kind:unknown"
+  ],
+  "fold_summaries": [
+    {
+      "feature_model": {
+        "anchors": 38,
+        "average_known_score": null,
+        "average_selected_per_anchor": 2.0,
+        "clean_abstention_runs": 0.0,
+        "empty_recall_runs": 0.0,
+        "known_selected_memories": 0,
+        "low_known_selected": 0.0,
+        "low_selection_runs": 0.0,
+        "missed_useful_empty_runs": 0.0,
+        "oracle_useful_runs": 6,
+        "selected_memories": 76,
+        "strategy": "learned-weight-calibration",
+        "unknown_selected_memories": 76,
+        "useful_capture_runs": 0.0,
+        "useful_known_selected": 0.0
+      },
+      "fold": 0,
+      "production": {
+        "anchors": 38,
+        "average_known_score": null,
+        "average_selected_per_anchor": 0.5789473684210527,
+        "clean_abstention_runs": 18.0,
+        "empty_recall_runs": 21.0,
+        "known_selected_memories": 0,
+        "low_known_selected": 0.0,
+        "low_selection_runs": 0.0,
+        "missed_useful_empty_runs": 3.0,
+        "oracle_useful_runs": 6,
+        "selected_memories": 22,
+        "strategy": "production",
+        "unknown_selected_memories": 22,
+        "useful_capture_runs": 0.0,
+        "useful_known_selected": 0.0
+      },
+      "test_runs": 38,
+      "threshold": 0.1,
+      "train_labeled_rows": 35
+    },
+    {
+      "feature_model": {
+        "anchors": 40,
+        "average_known_score": 5.0,
+        "average_selected_per_anchor": 2.0,
+        "clean_abstention_runs": 0.0,
+        "empty_recall_runs": 0.0,
+        "known_selected_memories": 2,
+        "low_known_selected": 0.0,
+        "low_selection_runs": 0.0,
+        "missed_useful_empty_runs": 0.0,
+        "oracle_useful_runs": 5,
+        "selected_memories": 80,
+        "strategy": "learned-weight-calibration",
+        "unknown_selected_memories": 78,
+        "useful_capture_runs": 2.0,
+        "useful_known_selected": 2.0
+      },
+      "fold": 1,
+      "production": {
+        "anchors": 40,
+        "average_known_score": 5.0,
+        "average_selected_per_anchor": 0.7,
+        "clean_abstention_runs": 14.0,
+        "empty_recall_runs": 15.0,
+        "known_selected_memories": 2,
+        "low_known_selected": 0.0,
+        "low_selection_runs": 0.0,
+        "missed_useful_empty_runs": 1.0,
+        "oracle_useful_runs": 5,
+        "selected_memories": 28,
+        "strategy": "production",
+        "unknown_selected_memories": 26,
+        "useful_capture_runs": 2.0,
+        "useful_known_selected": 2.0
+      },
+      "test_runs": 40,
+      "threshold": 0.1,
+      "train_labeled_rows": 38
+    },
+    {
+      "feature_model": {
+        "anchors": 39,
+        "average_known_score": null,
+        "average_selected_per_anchor": 2.0,
+        "clean_abstention_runs": 0.0,
+        "empty_recall_runs": 0.0,
+        "known_selected_memories": 0,
+        "low_known_selected": 0.0,
+        "low_selection_runs": 0.0,
+        "missed_useful_empty_runs": 0.0,
+        "oracle_useful_runs": 4,
+        "selected_memories": 78,
+        "strategy": "learned-weight-calibration",
+        "unknown_selected_memories": 78,
+        "useful_capture_runs": 0.0,
+        "useful_known_selected": 0.0
+      },
+      "fold": 2,
+      "production": {
+        "anchors": 39,
+        "average_known_score": null,
+        "average_selected_per_anchor": 0.6666666666666666,
+        "clean_abstention_runs": 11.0,
+        "empty_recall_runs": 14.0,
+        "known_selected_memories": 0,
+        "low_known_selected": 0.0,
+        "low_selection_runs": 0.0,
+        "missed_useful_empty_runs": 3.0,
+        "oracle_useful_runs": 4,
+        "selected_memories": 26,
+        "strategy": "production",
+        "unknown_selected_memories": 26,
+        "useful_capture_runs": 0.0,
+        "useful_known_selected": 0.0
+      },
+      "test_runs": 39,
+      "threshold": 0.1,
+      "train_labeled_rows": 35
+    },
+    {
+      "feature_model": {
+        "anchors": 39,
+        "average_known_score": 5.0,
+        "average_selected_per_anchor": 2.0,
+        "clean_abstention_runs": 0.0,
+        "empty_recall_runs": 0.0,
+        "known_selected_memories": 1,
+        "low_known_selected": 0.0,
+        "low_selection_runs": 0.0,
+        "missed_useful_empty_runs": 0.0,
+        "oracle_useful_runs": 5,
+        "selected_memories": 78,
+        "strategy": "learned-weight-calibration",
+        "unknown_selected_memories": 77,
+        "useful_capture_runs": 1.0,
+        "useful_known_selected": 1.0
+      },
+      "fold": 3,
+      "production": {
+        "anchors": 39,
+        "average_known_score": null,
+        "average_selected_per_anchor": 0.5128205128205128,
+        "clean_abstention_runs": 15.0,
+        "empty_recall_runs": 19.0,
+        "known_selected_memories": 0,
+        "low_known_selected": 0.0,
+        "low_selection_runs": 0.0,
+        "missed_useful_empty_runs": 4.0,
+        "oracle_useful_runs": 5,
+        "selected_memories": 20,
+        "strategy": "production",
+        "unknown_selected_memories": 20,
+        "useful_capture_runs": 0.0,
+        "useful_known_selected": 0.0
+      },
+      "test_runs": 39,
+      "threshold": 0.1,
+      "train_labeled_rows": 37
+    },
+    {
+      "feature_model": {
+        "anchors": 39,
+        "average_known_score": 4.0,
+        "average_selected_per_anchor": 2.0,
+        "clean_abstention_runs": 0.0,
+        "empty_recall_runs": 0.0,
+        "known_selected_memories": 1,
+        "low_known_selected": 0.0,
+        "low_selection_runs": 0.0,
+        "missed_useful_empty_runs": 0.0,
+        "oracle_useful_runs": 2,
+        "selected_memories": 78,
+        "strategy": "learned-weight-calibration",
+        "unknown_selected_memories": 77,
+        "useful_capture_runs": 1.0,
+        "useful_known_selected": 1.0
+      },
+      "fold": 4,
+      "production": {
+        "anchors": 39,
+        "average_known_score": 4.0,
+        "average_selected_per_anchor": 0.6666666666666666,
+        "clean_abstention_runs": 15.0,
+        "empty_recall_runs": 15.0,
+        "known_selected_memories": 1,
+        "low_known_selected": 0.0,
+        "low_selection_runs": 0.0,
+        "missed_useful_empty_runs": 0.0,
+        "oracle_useful_runs": 2,
+        "selected_memories": 26,
+        "strategy": "production",
+        "unknown_selected_memories": 25,
+        "useful_capture_runs": 1.0,
+        "useful_known_selected": 1.0
+      },
+      "test_runs": 39,
+      "threshold": 0.1,
+      "train_labeled_rows": 39
+    }
+  ],
+  "folds": 5,
+  "label": "learned-weight-calibration",
+  "labeled_rows": 46,
+  "rows": 12480,
+  "selection_limit": 2,
+  "thresholds": [
+    0.1,
+    0.1,
+    0.1,
+    0.1,
+    0.1
+  ]
+}

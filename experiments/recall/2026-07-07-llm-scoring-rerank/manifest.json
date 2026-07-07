@@ -1,0 +1,231 @@
+{
+  "anchors_file": "experiments/recall/anchor-libraries/2026-07-screening.tsv",
+  "baseline_details": "experiments/recall/2026-07-07-llm-scoring-rerank/production.details.jsonl",
+  "baseline_summary": {
+    "anchors": 200,
+    "average_known_score": 4.666666666666667,
+    "average_selected_per_anchor": 0.61,
+    "clean_abstention_runs": 47.0,
+    "empty_recall_runs": 89.0,
+    "known_selected_memories": 3,
+    "low_known_selected": 0.0,
+    "low_selection_runs": 0.0,
+    "missed_useful_empty_runs": 42.0,
+    "oracle_useful_runs": 102,
+    "selected_memories": 122,
+    "strategy": "production",
+    "unknown_selected_memories": 119,
+    "useful_capture_runs": 3.0,
+    "useful_known_selected": 3.0
+  },
+  "candidate_details": "experiments/recall/2026-07-07-llm-scoring-rerank/llm_rerank.details.jsonl",
+  "candidate_summary": {
+    "anchors": 200,
+    "average_known_score": 3.6666666666666665,
+    "average_selected_per_anchor": 0.605,
+    "clean_abstention_runs": 55.0,
+    "empty_recall_runs": 113.0,
+    "known_selected_memories": 3,
+    "low_known_selected": 1.0,
+    "low_selection_runs": 1.0,
+    "missed_useful_empty_runs": 58.0,
+    "oracle_useful_runs": 102,
+    "selected_memories": 121,
+    "strategy": "llm-scoring-rerank",
+    "unknown_selected_memories": 118,
+    "useful_capture_runs": 2.0,
+    "useful_known_selected": 2.0
+  },
+  "date": "2026-07-07",
+  "decision": "Do not ship this LLM rerank. Useful-known selection did not improve with a CI excluding zero.",
+  "deltas": {
+    "average_known_score": {
+      "ci_95": [
+        -4.0,
+        0.833333333333333
+      ],
+      "point_delta": -1.0000000000000004,
+      "verdict": "needs larger sample"
+    },
+    "average_selected_per_anchor": {
+      "ci_95": [
+        -0.13,
+        0.12
+      ],
+      "point_delta": -0.0050000000000000044,
+      "verdict": "no detectable effect"
+    },
+    "clean_abstention_runs": {
+      "ci_95": [
+        -3.0,
+        19.0
+      ],
+      "point_delta": 8.0,
+      "verdict": "needs larger sample"
+    },
+    "empty_recall_runs": {
+      "ci_95": [
+        5.0,
+        42.0
+      ],
+      "point_delta": 24.0,
+      "verdict": "confirmed"
+    },
+    "low_known_selected": {
+      "ci_95": [
+        0.0,
+        3.0
+      ],
+      "point_delta": 1.0,
+      "verdict": "no detectable effect"
+    },
+    "low_selection_runs": {
+      "ci_95": [
+        0.0,
+        3.0
+      ],
+      "point_delta": 1.0,
+      "verdict": "no detectable effect"
+    },
+    "missed_useful_empty_runs": {
+      "ci_95": [
+        2.0,
+        31.0
+      ],
+      "point_delta": 16.0,
+      "verdict": "confirmed"
+    },
+    "useful_capture_runs": {
+      "ci_95": [
+        -6.0,
+        3.0
+      ],
+      "point_delta": -1.0,
+      "verdict": "needs larger sample"
+    },
+    "useful_known_selected": {
+      "ci_95": [
+        -6.0,
+        3.0
+      ],
+      "point_delta": -1.0,
+      "verdict": "needs larger sample"
+    }
+  },
+  "fixed_threshold_summaries": [
+    {
+      "summary": {
+        "anchors": 200,
+        "average_known_score": 4.0,
+        "average_selected_per_anchor": 1.95,
+        "clean_abstention_runs": 3.0,
+        "empty_recall_runs": 5.0,
+        "known_selected_memories": 4,
+        "low_known_selected": 1.0,
+        "low_selection_runs": 1.0,
+        "missed_useful_empty_runs": 2.0,
+        "oracle_useful_runs": 102,
+        "selected_memories": 390,
+        "strategy": "llm_threshold_1",
+        "unknown_selected_memories": 386,
+        "useful_capture_runs": 3.0,
+        "useful_known_selected": 3.0
+      },
+      "threshold": 1
+    },
+    {
+      "summary": {
+        "anchors": 200,
+        "average_known_score": 4.0,
+        "average_selected_per_anchor": 1.93,
+        "clean_abstention_runs": 4.0,
+        "empty_recall_runs": 6.0,
+        "known_selected_memories": 4,
+        "low_known_selected": 1.0,
+        "low_selection_runs": 1.0,
+        "missed_useful_empty_runs": 2.0,
+        "oracle_useful_runs": 102,
+        "selected_memories": 386,
+        "strategy": "llm_threshold_2",
+        "unknown_selected_memories": 382,
+        "useful_capture_runs": 3.0,
+        "useful_known_selected": 3.0
+      },
+      "threshold": 2
+    },
+    {
+      "summary": {
+        "anchors": 200,
+        "average_known_score": 4.0,
+        "average_selected_per_anchor": 1.325,
+        "clean_abstention_runs": 26.0,
+        "empty_recall_runs": 48.0,
+        "known_selected_memories": 4,
+        "low_known_selected": 1.0,
+        "low_selection_runs": 1.0,
+        "missed_useful_empty_runs": 22.0,
+        "oracle_useful_runs": 102,
+        "selected_memories": 265,
+        "strategy": "llm_threshold_3",
+        "unknown_selected_memories": 261,
+        "useful_capture_runs": 3.0,
+        "useful_known_selected": 3.0
+      },
+      "threshold": 3
+    },
+    {
+      "summary": {
+        "anchors": 200,
+        "average_known_score": 4.0,
+        "average_selected_per_anchor": 1.295,
+        "clean_abstention_runs": 26.0,
+        "empty_recall_runs": 49.0,
+        "known_selected_memories": 4,
+        "low_known_selected": 1.0,
+        "low_selection_runs": 1.0,
+        "missed_useful_empty_runs": 23.0,
+        "oracle_useful_runs": 102,
+        "selected_memories": 259,
+        "strategy": "llm_threshold_4",
+        "unknown_selected_memories": 255,
+        "useful_capture_runs": 3.0,
+        "useful_known_selected": 3.0
+      },
+      "threshold": 4
+    },
+    {
+      "summary": {
+        "anchors": 200,
+        "average_known_score": 3.6666666666666665,
+        "average_selected_per_anchor": 0.605,
+        "clean_abstention_runs": 55.0,
+        "empty_recall_runs": 113.0,
+        "known_selected_memories": 3,
+        "low_known_selected": 1.0,
+        "low_selection_runs": 1.0,
+        "missed_useful_empty_runs": 58.0,
+        "oracle_useful_runs": 102,
+        "selected_memories": 121,
+        "strategy": "llm_threshold_5",
+        "unknown_selected_memories": 118,
+        "useful_capture_runs": 2.0,
+        "useful_known_selected": 2.0
+      },
+      "threshold": 5
+    }
+  ],
+  "input_dir": "target/recall-backtests/wide-multi-query-candidate-generation-v2",
+  "label": "llm-scoring-rerank",
+  "model": "claude-haiku-4-5-20251001",
+  "scored_candidates": 1544,
+  "selection_limit": 2,
+  "strategy_label": "wide-multi-query-candidate-generation-v2",
+  "thresholds": [
+    5,
+    5,
+    5,
+    5,
+    5
+  ],
+  "top_k": 8
+}

@@ -1,0 +1,34 @@
+{
+  "cases_jsonl": "/Users/tbedor/Development/yaaml/experiments/recall/2026-07-06-wide-multi-query-candidate-generation-v2-pool-oracle/cases.jsonl",
+  "date": "2026-07-06",
+  "db": "/Users/tbedor/.yaaml/yaaml.db",
+  "generated_by": "scripts/diagnose-retrieval-misses.py",
+  "recall_dir": "/Users/tbedor/Development/yaaml/target/recall-backtests/wide-multi-query-candidate-generation-v2",
+  "strategy_label": "wide-multi-query-candidate-generation-v2",
+  "summary": {
+    "active_known_useful_in_pool": 22,
+    "active_known_useful_selected": 3,
+    "active_missing_due_to_retrieval": 6,
+    "active_missing_due_to_selection": 19,
+    "active_oracle_useful_anchors": 28,
+    "cause_counts": {
+      "memory_inactive": 98,
+      "missing_identity_key_in_query": 5,
+      "query_noise_dominates": 1
+    },
+    "memory_kind_counts": {
+      "lesson": 17,
+      "preference": 1,
+      "project_fact": 57,
+      "task_checkpoint": 2,
+      "task_state": 9,
+      "workflow": 18
+    },
+    "project_match_counts": {
+      "cross_or_missing_project": 2,
+      "same_project": 102
+    },
+    "retrieval_miss_anchors": 80,
+    "retrieval_miss_memory_instances": 104
+  }
+}

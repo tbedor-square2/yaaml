@@ -1,0 +1,276 @@
+{
+  "active_memories_scanned": 905,
+  "correction_turns": 175,
+  "covered_clusters": 7,
+  "decision": "Formation misses are observable with transcript-only mining. Use the missed clusters as seed cases for a formation-time activation condition prompt, but do not treat this heuristic diagnostic as a ship/no-ship evaluation of the write policy.",
+  "missed_clusters": 4,
+  "missed_turns": 36,
+  "repeated_clusters": 11,
+  "sessions_scanned": 381,
+  "top_missed_clusters": [
+    {
+      "covered_by_active_memory": false,
+      "covering_memory": null,
+      "examples": [
+        {
+          "excerpt": "dont think we got ahttps://github.com/squareup/java/pull/480115/changes#r3455980523",
+          "message_index": 33,
+          "reasons": [
+            "do_not"
+          ],
+          "session_id": "019ef566-2195-7d72-a3ad-cfb9ad00f810",
+          "transcript_file_path": "/Users/tbedor/.codex/sessions/2026/06/23/rollout-2026-06-23T09-52-51-019ef566-2195-7d72-a3ad-cfb9ad00f810.jsonl"
+        },
+        {
+          "excerpt": "dont think we got ahttps://github.com/squareup/java/pull/480115/changes#r3455980523",
+          "message_index": 33,
+          "reasons": [
+            "do_not"
+          ],
+          "session_id": "019ef12b-5400-7f41-9c2c-7c82f7013391",
+          "transcript_file_path": "/Users/tbedor/.codex/sessions/2026/06/22/rollout-2026-06-22T14-10-09-019ef12b-5400-7f41-9c2c-7c82f7013391.jsonl"
+        },
+        {
+          "excerpt": "dont think we got ahttps://github.com/squareup/java/pull/480115/changes#r3455980523",
+          "message_index": 33,
+          "reasons": [
+            "do_not"
+          ],
+          "session_id": "019ef564-9aa2-7c60-a572-7ee9a657f998",
+          "transcript_file_path": "/Users/tbedor/.codex/sessions/2026/06/23/rollout-2026-06-23T09-51-11-019ef564-9aa2-7c60-a572-7ee9a657f998.jsonl"
+        },
+        {
+          "excerpt": "dont think we got ahttps://github.com/squareup/java/pull/480115/changes#r3455980523",
+          "message_index": 33,
+          "reasons": [
+            "do_not"
+          ],
+          "session_id": "019ef563-3211-77c1-a353-7a39b85aa52d",
+          "transcript_file_path": "/Users/tbedor/.codex/sessions/2026/06/23/rollout-2026-06-23T09-49-39-019ef563-3211-77c1-a353-7a39b85aa52d.jsonl"
+        },
+        {
+          "excerpt": "dont think we got ahttps://github.com/squareup/java/pull/480115/changes#r3455980523",
+          "message_index": 33,
+          "reasons": [
+            "do_not"
+          ],
+          "session_id": "019ef562-35e3-77e2-b9a1-41b40b444333",
+          "transcript_file_path": "/Users/tbedor/.codex/sessions/2026/06/23/rollout-2026-06-23T09-48-34-019ef562-35e3-77e2-b9a1-41b40b444333.jsonl"
+        }
+      ],
+      "identity_keys": [
+        "path:github.com/squareup/java/pull/480115/changes"
+      ],
+      "missed_opportunity": true,
+      "project_id": "/Users/tbedor/Development/java",
+      "reason_counts": {
+        "do_not": 13
+      },
+      "reasons": [
+        "do_not"
+      ],
+      "session_count": 13,
+      "signature": "java|path:github.com/squareup/java/pull/480115/changes",
+      "turn_count": 13
+    },
+    {
+      "covered_by_active_memory": false,
+      "covering_memory": null,
+      "examples": [
+        {
+          "excerpt": "im wondering if we should have the default be null instead, and have it just not persist anything if the rollout flag isn't set",
+          "message_index": 22,
+          "reasons": [
+            "should_have",
+            "instead"
+          ],
+          "session_id": "019ef566-2195-7d72-a3ad-cfb9ad00f810",
+          "transcript_file_path": "/Users/tbedor/.codex/sessions/2026/06/23/rollout-2026-06-23T09-52-51-019ef566-2195-7d72-a3ad-cfb9ad00f810.jsonl"
+        },
+        {
+          "excerpt": "im wondering if we should have the default be null instead, and have it just not persist anything if the rollout flag isn't set",
+          "message_index": 22,
+          "reasons": [
+            "should_have",
+            "instead"
+          ],
+          "session_id": "019ef12b-5400-7f41-9c2c-7c82f7013391",
+          "transcript_file_path": "/Users/tbedor/.codex/sessions/2026/06/22/rollout-2026-06-22T14-10-09-019ef12b-5400-7f41-9c2c-7c82f7013391.jsonl"
+        },
+        {
+          "excerpt": "im wondering if we should have the default be null instead, and have it just not persist anything if the rollout flag isn't set",
+          "message_index": 22,
+          "reasons": [
+            "should_have",
+            "instead"
+          ],
+          "session_id": "019ef564-9aa2-7c60-a572-7ee9a657f998",
+          "transcript_file_path": "/Users/tbedor/.codex/sessions/2026/06/23/rollout-2026-06-23T09-51-11-019ef564-9aa2-7c60-a572-7ee9a657f998.jsonl"
+        },
+        {
+          "excerpt": "im wondering if we should have the default be null instead, and have it just not persist anything if the rollout flag isn't set",
+          "message_index": 22,
+          "reasons": [
+            "should_have",
+            "instead"
+          ],
+          "session_id": "019ef563-3211-77c1-a353-7a39b85aa52d",
+          "transcript_file_path": "/Users/tbedor/.codex/sessions/2026/06/23/rollout-2026-06-23T09-49-39-019ef563-3211-77c1-a353-7a39b85aa52d.jsonl"
+        },
+        {
+          "excerpt": "im wondering if we should have the default be null instead, and have it just not persist anything if the rollout flag isn't set",
+          "message_index": 22,
+          "reasons": [
+            "should_have",
+            "instead"
+          ],
+          "session_id": "019ef562-35e3-77e2-b9a1-41b40b444333",
+          "transcript_file_path": "/Users/tbedor/.codex/sessions/2026/06/23/rollout-2026-06-23T09-48-34-019ef562-35e3-77e2-b9a1-41b40b444333.jsonl"
+        }
+      ],
+      "identity_keys": [],
+      "missed_opportunity": true,
+      "project_id": "/Users/tbedor/Development/java",
+      "reason_counts": {
+        "instead": 13,
+        "should_have": 13
+      },
+      "reasons": [
+        "instead",
+        "should_have"
+      ],
+      "session_count": 13,
+      "signature": "java|flag-rollout-wondering",
+      "turn_count": 13
+    },
+    {
+      "covered_by_active_memory": false,
+      "covering_memory": null,
+      "examples": [
+        {
+          "excerpt": "ok , take a look at https://github.com/squareup/java/pull/481756. i think ive removed most of the stuff needed to not break production, assess that and suggest next steps for tests. Maybe StaticRulesetSelectionParameterEnumerator gets initialized instead of partition registry?",
+          "message_index": 16,
+          "reasons": [
+            "instead"
+          ],
+          "session_id": "019ed18a-2cc8-74f0-ac23-5b9ac95dc98f",
+          "transcript_file_path": "/Users/tbedor/.codex/sessions/2026/06/16/rollout-2026-06-16T10-45-54-019ed18a-2cc8-74f0-ac23-5b9ac95dc98f.jsonl"
+        },
+        {
+          "excerpt": "ok , take a look at https://github.com/squareup/java/pull/481756. i think ive removed most of the stuff needed to not break production, assess that and suggest next steps for tests. Maybe StaticRulesetSelectionParameterEnumerator gets initialized instead of partition registry?",
+          "message_index": 16,
+          "reasons": [
+            "instead"
+          ],
+          "session_id": "019ed1ed-43a2-7b21-a952-e8735c0f2b8d",
+          "transcript_file_path": "/Users/tbedor/.codex/sessions/2026/06/16/rollout-2026-06-16T12-34-08-019ed1ed-43a2-7b21-a952-e8735c0f2b8d.jsonl"
+        },
+        {
+          "excerpt": "ok , take a look at https://github.com/squareup/java/pull/481756. i think ive removed most of the stuff needed to not break production, assess that and suggest next steps for tests. Maybe StaticRulesetSelectionParameterEnumerator gets initialized instead of partition registry?",
+          "message_index": 16,
+          "reasons": [
+            "instead"
+          ],
+          "session_id": "019ed1eb-c641-70a0-944b-4cbc9071993b",
+          "transcript_file_path": "/Users/tbedor/.codex/sessions/2026/06/16/rollout-2026-06-16T12-32-30-019ed1eb-c641-70a0-944b-4cbc9071993b.jsonl"
+        },
+        {
+          "excerpt": "ok , take a look at https://github.com/squareup/java/pull/481756. i think ive removed most of the stuff needed to not break production, assess that and suggest next steps for tests. Maybe StaticRulesetSelectionParameterEnumerator gets initialized instead of partition registry?",
+          "message_index": 16,
+          "reasons": [
+            "instead"
+          ],
+          "session_id": "019ed1d9-f1f5-73b0-bf9d-21fc1451125e",
+          "transcript_file_path": "/Users/tbedor/.codex/sessions/2026/06/16/rollout-2026-06-16T12-13-01-019ed1d9-f1f5-73b0-bf9d-21fc1451125e.jsonl"
+        },
+        {
+          "excerpt": "ok , take a look at https://github.com/squareup/java/pull/481756. i think ive removed most of the stuff needed to not break production, assess that and suggest next steps for tests. Maybe StaticRulesetSelectionParameterEnumerator gets initialized instead of partition registry?",
+          "message_index": 16,
+          "reasons": [
+            "instead"
+          ],
+          "session_id": "019ed1d8-576a-7550-b17c-276b62895eff",
+          "transcript_file_path": "/Users/tbedor/.codex/sessions/2026/06/16/rollout-2026-06-16T12-11-16-019ed1d8-576a-7550-b17c-276b62895eff.jsonl"
+        }
+      ],
+      "identity_keys": [
+        "path:github.com/squareup/java/pull/481756"
+      ],
+      "missed_opportunity": true,
+      "project_id": "/Users/tbedor/Development/java",
+      "reason_counts": {
+        "instead": 5
+      },
+      "reasons": [
+        "instead"
+      ],
+      "session_count": 5,
+      "signature": "java|path:github.com/squareup/java/pull/481756",
+      "turn_count": 5
+    },
+    {
+      "covered_by_active_memory": false,
+      "covering_memory": null,
+      "examples": [
+        {
+          "excerpt": "- Any production legacy partition that is accidentally missing will stay missing instead of self-healing on master startup. but the init code currently already creates these partitions if they are missing, right?",
+          "message_index": 10,
+          "reasons": [
+            "instead"
+          ],
+          "session_id": "019ed18a-2cc8-74f0-ac23-5b9ac95dc98f",
+          "transcript_file_path": "/Users/tbedor/.codex/sessions/2026/06/16/rollout-2026-06-16T10-45-54-019ed18a-2cc8-74f0-ac23-5b9ac95dc98f.jsonl"
+        },
+        {
+          "excerpt": "- Any production legacy partition that is accidentally missing will stay missing instead of self-healing on master startup. but the init code currently already creates these partitions if they are missing, right?",
+          "message_index": 10,
+          "reasons": [
+            "instead"
+          ],
+          "session_id": "019ed1ed-43a2-7b21-a952-e8735c0f2b8d",
+          "transcript_file_path": "/Users/tbedor/.codex/sessions/2026/06/16/rollout-2026-06-16T12-34-08-019ed1ed-43a2-7b21-a952-e8735c0f2b8d.jsonl"
+        },
+        {
+          "excerpt": "- Any production legacy partition that is accidentally missing will stay missing instead of self-healing on master startup. but the init code currently already creates these partitions if they are missing, right?",
+          "message_index": 10,
+          "reasons": [
+            "instead"
+          ],
+          "session_id": "019ed1eb-c641-70a0-944b-4cbc9071993b",
+          "transcript_file_path": "/Users/tbedor/.codex/sessions/2026/06/16/rollout-2026-06-16T12-32-30-019ed1eb-c641-70a0-944b-4cbc9071993b.jsonl"
+        },
+        {
+          "excerpt": "- Any production legacy partition that is accidentally missing will stay missing instead of self-healing on master startup. but the init code currently already creates these partitions if they are missing, right?",
+          "message_index": 10,
+          "reasons": [
+            "instead"
+          ],
+          "session_id": "019ed1d9-f1f5-73b0-bf9d-21fc1451125e",
+          "transcript_file_path": "/Users/tbedor/.codex/sessions/2026/06/16/rollout-2026-06-16T12-13-01-019ed1d9-f1f5-73b0-bf9d-21fc1451125e.jsonl"
+        },
+        {
+          "excerpt": "- Any production legacy partition that is accidentally missing will stay missing instead of self-healing on master startup. but the init code currently already creates these partitions if they are missing, right?",
+          "message_index": 10,
+          "reasons": [
+            "instead"
+          ],
+          "session_id": "019ed1d8-576a-7550-b17c-276b62895eff",
+          "transcript_file_path": "/Users/tbedor/.codex/sessions/2026/06/16/rollout-2026-06-16T12-11-16-019ed1d8-576a-7550-b17c-276b62895eff.jsonl"
+        }
+      ],
+      "identity_keys": [],
+      "missed_opportunity": true,
+      "project_id": "/Users/tbedor/Development/java",
+      "reason_counts": {
+        "instead": 5
+      },
+      "reasons": [
+        "instead"
+      ],
+      "session_count": 5,
+      "signature": "java|partition-creates-right",
+      "turn_count": 5
+    }
+  ],
+  "transcripts_read": 380
+}

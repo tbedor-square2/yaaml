@@ -1,0 +1,26 @@
+{
+  "anchors_file": "/Users/tbedor/Development/yaaml/experiments/recall/anchor-libraries/2026-07-screening.tsv",
+  "date": "2026-07-06",
+  "db": "/Users/tbedor/.yaaml/yaaml.db",
+  "generated_by": "scripts/pool-recall-oracle.py",
+  "input_dir": "/Users/tbedor/Development/yaaml/target/anchor-refresh-2026-07",
+  "strategy_label": "anchor-refresh",
+  "summary": {
+    "active_known_useful_in_pool": 18,
+    "active_known_useful_selected": 3,
+    "active_known_useful_selected_rate": 0.10714285714285714,
+    "active_missing_due_to_retrieval": 10,
+    "active_missing_due_to_selection": 15,
+    "active_oracle_useful_anchors": 28,
+    "active_pool_recall_rate": 0.6428571428571429,
+    "anchors": 200,
+    "decision": "Selection is the larger observed gap on this screening library for active useful memories: more known-useful misses are in the candidate pool but not selected. Future recall-quality work should prioritize selection/reranking before widening candidate generation.",
+    "known_useful_in_pool": 18,
+    "known_useful_selected": 3,
+    "known_useful_selected_rate": 0.029411764705882353,
+    "missing_due_to_retrieval": 84,
+    "missing_due_to_selection": 15,
+    "oracle_useful_anchors": 102,
+    "pool_recall_rate": 0.17647058823529413
+  }
+}

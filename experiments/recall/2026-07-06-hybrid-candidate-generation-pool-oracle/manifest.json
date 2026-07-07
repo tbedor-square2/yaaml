@@ -1,0 +1,18 @@
+{
+  "anchors_file": "/Users/tbedor/Development/yaaml/experiments/recall/anchor-libraries/2026-07-screening.tsv",
+  "date": "2026-07-06",
+  "generated_by": "scripts/pool-recall-oracle.py",
+  "input_dir": "/Users/tbedor/Development/yaaml/target/recall-backtests/hybrid-candidate-generation",
+  "strategy_label": "hybrid-candidate-generation",
+  "summary": {
+    "anchors": 200,
+    "decision": "Retrieval is the binding ceiling on this screening library: more known-useful misses are absent from the candidate pool than present-but-not-selected. Future recall-quality work should prioritize candidate generation before another selection/rerank variant.",
+    "known_useful_in_pool": 21,
+    "known_useful_selected": 4,
+    "known_useful_selected_rate": 0.0392156862745098,
+    "missing_due_to_retrieval": 81,
+    "missing_due_to_selection": 17,
+    "oracle_useful_anchors": 102,
+    "pool_recall_rate": 0.20588235294117646
+  }
+}

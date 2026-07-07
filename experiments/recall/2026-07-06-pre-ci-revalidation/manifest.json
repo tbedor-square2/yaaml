@@ -1,0 +1,192 @@
+{
+  "anchors_file": "/Users/tbedor/Development/yaaml/experiments/recall/anchor-libraries/2026-07-screening.tsv",
+  "comparisons": {
+    "health_action_rerank": {
+      "baseline": {
+        "anchors": 200,
+        "average_known_score": 2.25,
+        "average_selected_per_anchor": 0.885,
+        "clean_abstention_runs": 24,
+        "details_path": "/Users/tbedor/Development/yaaml/experiments/recall/2026-07-06-pre-ci-revalidation/no_health_action_rerank_proxy.details.jsonl",
+        "empty_recall_runs": 35,
+        "low_known_selected": 3,
+        "low_selection_runs": 3,
+        "missed_useful_empty_rate": 0.10784313725490197,
+        "missed_useful_empty_runs": 11,
+        "strategy": "no_health_action_rerank_proxy",
+        "useful_capture_runs": 1,
+        "useful_known_selected": 1
+      },
+      "candidate": {
+        "anchors": 200,
+        "average_known_score": 4.666666666666667,
+        "average_selected_per_anchor": 0.53,
+        "clean_abstention_runs": 56,
+        "details_path": "/Users/tbedor/Development/yaaml/experiments/recall/2026-07-06-pre-ci-revalidation/production.details.jsonl",
+        "empty_recall_runs": 101,
+        "low_known_selected": 0,
+        "low_selection_runs": 0,
+        "missed_useful_empty_rate": 0.4411764705882353,
+        "missed_useful_empty_runs": 45,
+        "strategy": "production_current",
+        "useful_capture_runs": 3,
+        "useful_known_selected": 3
+      },
+      "delta_ci_95": {
+        "average_known_score": [
+          0.666666666666667,
+          4.0
+        ],
+        "average_selected_per_anchor": [
+          -0.43500000000000005,
+          -0.2749999999999999
+        ],
+        "clean_abstention_runs": [
+          22.0,
+          42.0
+        ],
+        "empty_recall_runs": [
+          52.0,
+          80.0
+        ],
+        "low_known_selected": [
+          -7.0,
+          0.0
+        ],
+        "low_selection_runs": [
+          -7.0,
+          0.0
+        ],
+        "missed_useful_empty_runs": [
+          23.0,
+          45.0
+        ],
+        "useful_capture_runs": [
+          0.0,
+          5.0
+        ],
+        "useful_known_selected": [
+          0.0,
+          5.0
+        ]
+      },
+      "delta_verdicts": {
+        "average_known_score": "confirmed",
+        "average_selected_per_anchor": "confirmed",
+        "clean_abstention_runs": "confirmed",
+        "empty_recall_runs": "confirmed",
+        "low_known_selected": "needs larger sample",
+        "low_selection_runs": "needs larger sample",
+        "missed_useful_empty_runs": "confirmed",
+        "useful_capture_runs": "needs larger sample",
+        "useful_known_selected": "no detectable effect"
+      },
+      "point_deltas": {
+        "average_known_score": 2.416666666666667,
+        "average_selected_per_anchor": -0.355,
+        "clean_abstention_runs": 32.0,
+        "empty_recall_runs": 66.0,
+        "low_known_selected": -3.0,
+        "low_selection_runs": -3.0,
+        "missed_useful_empty_runs": 34.0,
+        "useful_capture_runs": 2.0,
+        "useful_known_selected": 2.0
+      }
+    },
+    "query_cleaning": {
+      "baseline": {
+        "anchors": 200,
+        "average_known_score": 4.5,
+        "average_selected_per_anchor": 0.53,
+        "clean_abstention_runs": 58,
+        "details_path": "/Users/tbedor/Development/yaaml/experiments/recall/2026-07-06-pre-ci-revalidation/no_query_cleaning.details.jsonl",
+        "empty_recall_runs": 101,
+        "low_known_selected": 0,
+        "low_selection_runs": 0,
+        "missed_useful_empty_rate": 0.4215686274509804,
+        "missed_useful_empty_runs": 43,
+        "strategy": "no_query_cleaning",
+        "useful_capture_runs": 4,
+        "useful_known_selected": 4
+      },
+      "candidate": {
+        "anchors": 200,
+        "average_known_score": 4.666666666666667,
+        "average_selected_per_anchor": 0.53,
+        "clean_abstention_runs": 56,
+        "details_path": "/Users/tbedor/Development/yaaml/experiments/recall/2026-07-06-pre-ci-revalidation/production.details.jsonl",
+        "empty_recall_runs": 101,
+        "low_known_selected": 0,
+        "low_selection_runs": 0,
+        "missed_useful_empty_rate": 0.4411764705882353,
+        "missed_useful_empty_runs": 45,
+        "strategy": "production_current",
+        "useful_capture_runs": 3,
+        "useful_known_selected": 3
+      },
+      "delta_ci_95": {
+        "average_known_score": [
+          0.0,
+          0.666666666666667
+        ],
+        "average_selected_per_anchor": [
+          -0.025000000000000022,
+          0.029999999999999916
+        ],
+        "clean_abstention_runs": [
+          -7.0,
+          3.0
+        ],
+        "empty_recall_runs": [
+          -6.0,
+          5.0
+        ],
+        "low_known_selected": [
+          0.0,
+          0.0
+        ],
+        "low_selection_runs": [
+          0.0,
+          0.0
+        ],
+        "missed_useful_empty_runs": [
+          0.0,
+          5.0
+        ],
+        "useful_capture_runs": [
+          -3.0,
+          0.0
+        ],
+        "useful_known_selected": [
+          -3.0,
+          0.0
+        ]
+      },
+      "delta_verdicts": {
+        "average_known_score": "needs larger sample",
+        "average_selected_per_anchor": "no detectable effect",
+        "clean_abstention_runs": "needs larger sample",
+        "empty_recall_runs": "needs larger sample",
+        "low_known_selected": "no detectable effect",
+        "low_selection_runs": "no detectable effect",
+        "missed_useful_empty_runs": "needs larger sample",
+        "useful_capture_runs": "no detectable effect",
+        "useful_known_selected": "no detectable effect"
+      },
+      "point_deltas": {
+        "average_known_score": 0.16666666666666696,
+        "average_selected_per_anchor": 0.0,
+        "clean_abstention_runs": -2.0,
+        "empty_recall_runs": 0.0,
+        "low_known_selected": 0.0,
+        "low_selection_runs": 0.0,
+        "missed_useful_empty_runs": 2.0,
+        "useful_capture_runs": -1.0,
+        "useful_known_selected": -1.0
+      }
+    }
+  },
+  "input_dir": "/Users/tbedor/Development/yaaml/target/anchor-refresh-2026-07",
+  "production_details": "/Users/tbedor/Development/yaaml/target/anchor-refresh-2026-07/anchor-refresh.details.jsonl",
+  "query_no_cleaning_details": "/Users/tbedor/Development/yaaml/target/revalidate-no-query-cleaning/no-query-cleaning.details.jsonl"
+}

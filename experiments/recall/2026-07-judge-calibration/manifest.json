@@ -1,0 +1,18 @@
+{
+  "cohens_kappa_exact_1_to_5": 0.13522012578616355,
+  "cohens_kappa_low_binary": 0.20574886535552186,
+  "cohens_kappa_useful_binary": 0.20574886535552186,
+  "exact_agreement": 0.34,
+  "generated_at": "2026-07-06",
+  "label_field": "adjudicator_score",
+  "label_source_counts": {
+    "anthropic:claude-haiku-4-5-20251001": 100
+  },
+  "labeled_rows": 100,
+  "labels_file": "experiments/recall/judge-calibration/2026-07-labels.jsonl",
+  "low_binary_agreement": 0.58,
+  "missing_labels": 0,
+  "rows": 100,
+  "useful_binary_agreement": 0.58,
+  "within_1_agreement": 0.58
+}

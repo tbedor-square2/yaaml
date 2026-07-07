@@ -1,0 +1,32 @@
+{
+  "date": "2026-07-07",
+  "db": "/Users/tbedor/.yaaml/yaaml.db",
+  "heuristics": {
+    "correction_patterns": [
+      "explicit_wrong",
+      "agent_missed",
+      "should_have",
+      "do_not",
+      "instead",
+      "no_correction",
+      "repeated_correction",
+      "why_did"
+    ],
+    "coverage": "same-project/global active memory with identity-key overlap or lexical overlap score >= 0.35"
+  },
+  "min_sessions": 2,
+  "out_dir": "/Users/tbedor/Development/yaaml/experiments/recall/2026-07-07-formation-miss-mining",
+  "question": "Find repeated user corrections across sessions with no apparent active memory.",
+  "session_limit": null,
+  "summary": {
+    "active_memories_scanned": 905,
+    "correction_turns": 175,
+    "covered_clusters": 7,
+    "decision": "Formation misses are observable with transcript-only mining. Use the missed clusters as seed cases for a formation-time activation condition prompt, but do not treat this heuristic diagnostic as a ship/no-ship evaluation of the write policy.",
+    "missed_clusters": 4,
+    "missed_turns": 36,
+    "repeated_clusters": 11,
+    "sessions_scanned": 381,
+    "transcripts_read": 380
+  }
+}

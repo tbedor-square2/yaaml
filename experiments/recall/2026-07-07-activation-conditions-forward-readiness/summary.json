@@ -1,0 +1,167 @@
+{
+  "cohorts": {
+    "comparison_no_activation_conditions": {
+      "active_memory_count": 902,
+      "average_memory_score": 2.7472335223484743,
+      "condition_coverage_rate": 0.0,
+      "condition_memory_count": 0,
+      "created_at_max": "unix:1783029106",
+      "created_at_min": "unix:1780943956",
+      "insufficient_context_count": 1217,
+      "judged_count": 5995,
+      "low_count": 3567,
+      "memory_count": 3399,
+      "selected_count": 10076,
+      "useful_count": 2377
+    },
+    "new_policy_activation_conditions": {
+      "active_memory_count": 92,
+      "average_memory_score": 3.3333333333333335,
+      "condition_coverage_rate": 1.0,
+      "condition_memory_count": 119,
+      "created_at_max": "unix:1783446134",
+      "created_at_min": "unix:1783444939",
+      "insufficient_context_count": 0,
+      "judged_count": 3,
+      "low_count": 1,
+      "memory_count": 119,
+      "selected_count": 3,
+      "useful_count": 2
+    }
+  },
+  "condition_examples": [
+    {
+      "activation_anti_triggers": [],
+      "activation_triggers": [
+        "tf-gcp-org-pol PR",
+        "org-policy approval",
+        "platsec-staff"
+      ],
+      "memory_id": 3400,
+      "title": "tf-gcp-org-pol deployments require #platform-security-help approval"
+    },
+    {
+      "activation_anti_triggers": [],
+      "activation_triggers": [
+        "pending_rule_archivals",
+        "DelayPendingRuleArchival",
+        "archival date",
+        "delay reason"
+      ],
+      "memory_id": 3401,
+      "title": "Automated archival delay feature: append-only pending rows + delay metadata"
+    },
+    {
+      "activation_anti_triggers": [],
+      "activation_triggers": [
+        "riskarbiter",
+        "PR",
+        "code review",
+        "Java"
+      ],
+      "memory_id": 3402,
+      "title": "Riskarbiter code review checklist: streaming, immutability, no temp diagnostics"
+    },
+    {
+      "activation_anti_triggers": [],
+      "activation_triggers": [
+        "riskarbiter",
+        "test",
+        "bazel",
+        "java_test"
+      ],
+      "memory_id": 3403,
+      "title": "Riskarbiter test execution: use all_tests_all_shards to bypass shard guessing"
+    },
+    {
+      "activation_anti_triggers": [],
+      "activation_triggers": [
+        "riskarbiter",
+        "worktree",
+        "git"
+      ],
+      "memory_id": 3404,
+      "title": "Riskarbiter sparse worktree setup for focused work"
+    },
+    {
+      "activation_anti_triggers": [
+        "after PR#1 is merged into rust-impl"
+      ],
+      "activation_triggers": [
+        "working on YAAML memory formulation quality",
+        "justifying memory work budget to eng team",
+        "eval-gated consolidation design"
+      ],
+      "memory_id": 3405,
+      "title": "YAAML memory quality evidence: corpus findings and engineering case"
+    },
+    {
+      "activation_anti_triggers": [],
+      "activation_triggers": [
+        "presenting memory work business case internally",
+        "cross-referencing YAAML experiment corpus"
+      ],
+      "memory_id": 3406,
+      "title": "Updated YAAML memory techniques impact report with corpus evidence"
+    },
+    {
+      "activation_anti_triggers": [],
+      "activation_triggers": [
+        "claude code",
+        "transcript ingestion",
+        "session source"
+      ],
+      "memory_id": 3407,
+      "title": "Claude Code session format and storage"
+    }
+  ],
+  "decision": "Do not retire the backlog item yet: the activation-condition cohort has not accumulated enough forward exposure for a decision.",
+  "downstream_eval_examples": [
+    {
+      "judged_count": 1,
+      "latest_eval_run_id": 3573,
+      "latest_eval_score": "4",
+      "low_count": 0,
+      "memory_id": 3515,
+      "selected_count": 1,
+      "title": "LLM scoring rerank and learned calibration: selection-limiting backlog decisions",
+      "useful_count": 1
+    },
+    {
+      "judged_count": 1,
+      "latest_eval_run_id": 3573,
+      "latest_eval_score": "4",
+      "low_count": 0,
+      "memory_id": 3424,
+      "selected_count": 1,
+      "title": "Phase 0 completion state: items 1\u20133 done, 4\u20135 in progress",
+      "useful_count": 1
+    },
+    {
+      "judged_count": 1,
+      "latest_eval_run_id": 3569,
+      "latest_eval_score": "2",
+      "low_count": 1,
+      "memory_id": 3431,
+      "selected_count": 1,
+      "title": "Phase 0 structure: five validation items before technique decisions",
+      "useful_count": 0
+    }
+  ],
+  "pending_downstream_eval_tasks": {
+    "due_task_count": 0,
+    "selected_condition_memory_count": 0,
+    "selected_condition_memory_ids": [],
+    "task_count": 0,
+    "tasks": [],
+    "with_later_turns_count": 0
+  },
+  "readiness": {
+    "minimum_condition_memories": 20,
+    "minimum_judged_evals": 20,
+    "observed_condition_judged_evals": 3,
+    "observed_condition_memories": 119,
+    "ready_for_decision": false
+  },
+  "total_memories": 3518
+}

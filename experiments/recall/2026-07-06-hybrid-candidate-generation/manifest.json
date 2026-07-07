@@ -1,0 +1,114 @@
+{
+  "anchors_file": "experiments/recall/anchor-libraries/2026-07-screening.tsv",
+  "baseline_details": "experiments/recall/2026-07-06-hybrid-candidate-generation/production.details.jsonl",
+  "baseline_summary": {
+    "average_known_score": 4.666666666666667,
+    "average_selected_per_anchor": 0.53,
+    "clean_abstention_runs": 56.0,
+    "empty_recall_runs": 101.0,
+    "low_known_selected": 0.0,
+    "low_selection_runs": 0.0,
+    "missed_useful_empty_runs": 45.0,
+    "useful_capture_runs": 3.0,
+    "useful_known_selected": 3.0
+  },
+  "candidate_details": "experiments/recall/2026-07-06-hybrid-candidate-generation/hybrid-candidate-generation-v2.details.jsonl",
+  "candidate_summary": {
+    "average_known_score": 4.25,
+    "average_selected_per_anchor": 0.75,
+    "clean_abstention_runs": 37.0,
+    "empty_recall_runs": 73.0,
+    "low_known_selected": 0.0,
+    "low_selection_runs": 0.0,
+    "missed_useful_empty_runs": 36.0,
+    "useful_capture_runs": 4.0,
+    "useful_known_selected": 4.0
+  },
+  "date": "2026-07-06",
+  "decision": "Do not ship this hybrid variant. It confirmed lower abstention but did not confirm useful-known selection/capture gains, increased average selected per anchor, and only improved pool recall from 18/102 to 21/102.",
+  "delta_ci_95": {
+    "average_known_score": [
+      -1.0,
+      0.0
+    ],
+    "average_selected_per_anchor": [
+      0.1499999999999999,
+      0.29499999999999993
+    ],
+    "clean_abstention_runs": [
+      -27.0,
+      -11.0
+    ],
+    "empty_recall_runs": [
+      -39.0,
+      -18.0
+    ],
+    "low_known_selected": [
+      0.0,
+      0.0
+    ],
+    "low_selection_runs": [
+      0.0,
+      0.0
+    ],
+    "missed_useful_empty_runs": [
+      -16.0,
+      -2.0
+    ],
+    "useful_capture_runs": [
+      -2.0,
+      4.0
+    ],
+    "useful_known_selected": [
+      -2.0,
+      4.0
+    ]
+  },
+  "delta_verdicts": {
+    "average_known_score": "needs larger sample",
+    "average_selected_per_anchor": "confirmed",
+    "clean_abstention_runs": "confirmed",
+    "empty_recall_runs": "confirmed",
+    "low_known_selected": "no detectable effect",
+    "low_selection_runs": "no detectable effect",
+    "missed_useful_empty_runs": "confirmed",
+    "useful_capture_runs": "no detectable effect",
+    "useful_known_selected": "no detectable effect"
+  },
+  "experiment": "hybrid_candidate_generation",
+  "implementation": "YAAML_EXPERIMENT_HYBRID_RECALL=1 unions primary query vector hits, segment-summary/task-key vector hits, and exact identity-key memory hits; v2 also extracts memory title/body identity keys.",
+  "phase0_pool_oracle": {
+    "anchors": 200,
+    "decision": "Retrieval is the binding ceiling on this screening library: more known-useful misses are absent from the candidate pool than present-but-not-selected. Future recall-quality work should prioritize candidate generation before another selection/rerank variant.",
+    "known_useful_in_pool": 18,
+    "known_useful_selected": 3,
+    "known_useful_selected_rate": 0.029411764705882353,
+    "missing_due_to_retrieval": 84,
+    "missing_due_to_selection": 15,
+    "oracle_useful_anchors": 102,
+    "pool_recall_rate": 0.17647058823529413
+  },
+  "point_deltas": {
+    "average_known_score": -0.41666666666666696,
+    "average_selected_per_anchor": 0.21999999999999997,
+    "clean_abstention_runs": -19.0,
+    "empty_recall_runs": -28.0,
+    "low_known_selected": 0.0,
+    "low_selection_runs": 0.0,
+    "missed_useful_empty_runs": -9.0,
+    "useful_capture_runs": 1.0,
+    "useful_known_selected": 1.0
+  },
+  "pool_oracle": {
+    "anchors": 200,
+    "decision": "Retrieval is the binding ceiling on this screening library: more known-useful misses are absent from the candidate pool than present-but-not-selected. Future recall-quality work should prioritize candidate generation before another selection/rerank variant.",
+    "known_useful_in_pool": 21,
+    "known_useful_selected": 4,
+    "known_useful_selected_rate": 0.0392156862745098,
+    "missing_due_to_retrieval": 81,
+    "missing_due_to_selection": 17,
+    "oracle_useful_anchors": 102,
+    "pool_recall_rate": 0.20588235294117646
+  },
+  "target_candidate_details": "target/recall-backtests/hybrid-candidate-generation-v2/hybrid-candidate-generation-v2.details.jsonl"
+}

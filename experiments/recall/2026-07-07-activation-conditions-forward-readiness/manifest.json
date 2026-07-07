@@ -1,0 +1,27 @@
+{
+  "activation_table_present": true,
+  "cohort_definitions": {
+    "comparison_no_activation_conditions": "memories without activation-condition metadata created before policy_start, or all such memories when policy_start is omitted",
+    "new_policy_activation_conditions": "memories with non-empty memory_activation_conditions trigger or anti-trigger JSON",
+    "new_policy_no_activation_conditions": "memories created at or after policy_start without activation-condition metadata"
+  },
+  "db_path": "/Users/tbedor/.yaaml/yaaml.db",
+  "experiment": "formation-time activation conditions forward readiness",
+  "exposure_window": {
+    "comparison_no_activation_conditions": {
+      "created_at_max": "unix:1783029106",
+      "created_at_min": "unix:1780943956"
+    },
+    "new_policy_activation_conditions": {
+      "created_at_max": "unix:1783446134",
+      "created_at_min": "unix:1783444939"
+    }
+  },
+  "generated_at": "2026-07-07T18:01:00Z",
+  "outputs": {
+    "cohorts": "cohorts.jsonl",
+    "report": "REPORT.md",
+    "summary": "summary.json"
+  },
+  "policy_start": "unix:1783407600"
+}

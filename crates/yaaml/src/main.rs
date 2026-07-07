@@ -10,7 +10,7 @@ use std::ffi::CStr;
 use anyhow::{bail, Context};
 use clap::{Parser, Subcommand, ValueEnum};
 use serde::Serialize;
-use yaaml::llm_judge::JudgeClient;
+use yaaml::llm_judge::{candidate_judge_prompt, candidate_judge_system_prompt, JudgeClient};
 use yaaml::memory_health::{apply_health_action_rerank, build_memory_health_summaries};
 use yaaml::recall_filter::{
     effective_recall_selection_limit, select_recall_candidates_with_llm_filter,
@@ -4262,8 +4262,12 @@ fn judge_eval_candidate(
     let Some(client) = judge_client else {
         return ("unjudged".to_string(), retrieval_metadata);
     };
-    let prompt = eval_judge_prompt(turn, candidate, citation_score);
-    match client.structured_json(eval_candidate_judge_system_prompt(), &prompt) {
+    let prompt = candidate_judge_prompt(
+        turn.display_text.as_deref().unwrap_or(""),
+        &candidate.memory.title,
+        &candidate.memory.body,
+    );
+    match client.structured_json(candidate_judge_system_prompt(), &prompt) {
         Ok(value) => {
             let outcome = parse_eval_judge_response(&value);
             (
@@ -4291,50 +4295,6 @@ fn eval_abstention_judge_system_prompt() -> &'static str {
         "2: recalled context had only weak relevance, was stale/misleading/outdated, or required substantial filtering before use. ",
         "1: recalled context was not relevant. ",
         "For scores 1 or 2, name the main failure mode in the rationale when possible: stale task state, outdated or superseded guidance, wrong context, noisy metadata, too generic, or too long."
-    )
-}
-
-fn eval_candidate_judge_system_prompt() -> &'static str {
-    concat!(
-        "You are scoring memory recall quality for an AI coding agent before context injection. ",
-        "Decide whether the stored memory would be useful context for the current turn. ",
-        "Use only the current turn, memory, and rubric. ",
-        "Return only JSON with fields score and rationale. score must be a string from \"1\" to \"5\"."
-    )
-}
-
-fn eval_judge_prompt(
-    turn: &TurnRecord,
-    candidate: &EvalCandidate,
-    _citation_score: &str,
-) -> String {
-    format!(
-        concat!(
-            "Score whether this stored memory would be useful context for answering the current turn.\n\n",
-            "Return only JSON with this exact shape:\n",
-            "{{\"score\": \"<integer 1-5>\", \"rationale\": \"<one short sentence>\"}}\n\n",
-            "Rubric:\n",
-            "- 5: directly useful and actionable for the current turn.\n",
-            "- 4: useful context with minor gaps or extra filtering needed.\n",
-            "- 3: mixed or marginal; some relevance but not clearly worth recall.\n",
-            "- 2: weak, stale, or mostly irrelevant.\n",
-            "- 1: distracting, wrong-context, or actively harmful.\n\n",
-            "Current turn:\n",
-            "```text\n",
-            "{}\n",
-            "```\n\n",
-            "Stored memory title:\n",
-            "```text\n",
-            "{}\n",
-            "```\n\n",
-            "Stored memory body:\n",
-            "```text\n",
-            "{}\n",
-            "```\n"
-        ),
-        truncate_eval_text(turn.display_text.as_deref().unwrap_or(""), 4_000),
-        truncate_eval_text(&candidate.memory.title, 500),
-        truncate_eval_text(&candidate.memory.body, 4_000)
     )
 }
 

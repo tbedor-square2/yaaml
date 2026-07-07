@@ -34,7 +34,7 @@ use yaaml_store::{Database, SqliteExactVectorIndex};
 use yaaml_transcript::codex::parse_codex_file_from_offset_with_session;
 use yaaml_transcript::discovery::discover_codex_backlog;
 
-use crate::llm_judge::JudgeClient;
+use crate::llm_judge::{candidate_judge_prompt, candidate_judge_system_prompt, JudgeClient};
 use crate::memory_health::{apply_health_action_rerank, build_memory_health_summaries};
 use crate::recall_filter::{
     select_recall_candidates_with_llm_filter, source_overlap_gate_client,
@@ -946,12 +946,37 @@ fn run_recall_eval_task(
     }
     let judge_client = JudgeClient::from_config(config, false)
         .context("recall eval judge provider is unavailable")?;
+    let anchor_turn_text = db
+        .completed_turns_for_session_range(session_id, turn_ordinal, turn_ordinal + 1)
+        .context("failed to load recall eval anchor turn")?
+        .into_iter()
+        .next()
+        .and_then(|turn| turn.display_text)
+        .unwrap_or_default();
     for target in &eval_targets {
-        let prompt = recall_eval_prompt(&target.recall_text, &later_turns);
-        let outcome = judge_client
-            .structured_json(recall_eval_system_prompt(), &prompt)
-            .map(|value| parse_eval_judge_response(&value))
-            .context("failed to rate recall")?;
+        // Per-memory results use the aligned pre-injection instrument
+        // (current turn + memory + rubric); abstention judging keeps the
+        // after-the-fact prompt because it depends on later turns. Fall back
+        // to the after-the-fact prompt when the anchor turn has no stored
+        // display text.
+        let aligned_inputs = target
+            .memory_title
+            .as_deref()
+            .zip(target.memory_body.as_deref())
+            .filter(|_| !anchor_turn_text.is_empty());
+        let outcome = if let Some((memory_title, memory_body)) = aligned_inputs {
+            judge_client.structured_json(
+                candidate_judge_system_prompt(),
+                &candidate_judge_prompt(&anchor_turn_text, memory_title, memory_body),
+            )
+        } else {
+            judge_client.structured_json(
+                recall_eval_system_prompt(),
+                &recall_eval_prompt(&target.recall_text, &later_turns),
+            )
+        }
+        .map(|value| parse_eval_judge_response(&value))
+        .context("failed to rate recall")?;
         let score = if memory_ids.is_empty() {
             abstention_eval_score(&outcome.score)
         } else {
@@ -1082,6 +1107,8 @@ fn defer_recall_eval_until_later_turns_exist(
 struct RecallEvalTarget {
     memory_id: Option<i64>,
     recall_text: String,
+    memory_title: Option<String>,
+    memory_body: Option<String>,
 }
 
 fn recall_eval_targets(
@@ -1093,6 +1120,8 @@ fn recall_eval_targets(
         return Ok(vec![RecallEvalTarget {
             memory_id: None,
             recall_text: fallback_recall_text.to_string(),
+            memory_title: None,
+            memory_body: None,
         }]);
     }
     let memories = db
@@ -1104,6 +1133,8 @@ fn recall_eval_targets(
             targets.push(RecallEvalTarget {
                 memory_id: Some(*memory_id),
                 recall_text: recall_eval_memory_text(memory),
+                memory_title: Some(memory.title.clone()),
+                memory_body: Some(memory.body.clone()),
             });
         }
     }
@@ -1111,6 +1142,8 @@ fn recall_eval_targets(
         targets.push(RecallEvalTarget {
             memory_id: None,
             recall_text: fallback_recall_text.to_string(),
+            memory_title: None,
+            memory_body: None,
         });
     }
     Ok(targets)

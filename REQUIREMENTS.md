@@ -130,12 +130,15 @@ YAAML tracks recall as an evaluated retrieval system, not just as a memory datab
 
 ### Eval Scoring
 
-1. Numeric recall evals use a 1-5 scale:
-   - `5`: recalled context was relevant, concise, and actionable
-   - `4`: recalled context was relevant and concise, but not directly actionable
-   - `3`: recalled context was partially relevant, partially irrelevant, or overly long
-   - `2`: recalled context had weak relevance, was stale/misleading, or required substantial filtering
-   - `1`: recalled context was not relevant
+1. Numeric recall evals use a 1-5 scale. Per-memory results are judged with
+   the aligned pre-injection instrument (current turn + stored memory +
+   rubric), single-sourced in `llm_judge.rs` and shared between the online
+   daemon judge and offline eval judging:
+   - `5`: directly useful and actionable for the current turn
+   - `4`: useful context with minor gaps or extra filtering needed
+   - `3`: mixed or marginal; some relevance but not clearly worth recall
+   - `2`: weak, stale, or mostly irrelevant
+   - `1`: distracting, wrong-context, or actively harmful
 2. `insufficient_context` means no later completed turns were available, so usefulness could not be scored.
 3. Empty recall runs are scored as abstentions:
    - `clean_abstention`: recall returned nothing and no useful memory appears to have been missed

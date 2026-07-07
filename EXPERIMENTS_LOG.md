@@ -644,6 +644,17 @@ Decision:
 2. Keep the empty-recall abstention judge on the old after-the-fact prompt,
    because abstention scoring still depends on subsequent conversation.
 
+Addendum (2026-07-07): the daemon's online per-memory recall evals also moved
+to the aligned instrument, single-sourced as
+`candidate_judge_system_prompt`/`candidate_judge_prompt` in
+`crates/yaaml/src/llm_judge.rs` and shared with the offline path so the
+prompts cannot drift. The online judge scores each recalled memory against
+the anchor turn text pre-injection-style; abstention judging (and per-memory
+judging when the anchor turn has no stored display text) stays on the
+after-the-fact prompt. Consequence: online per-memory scores before and after
+this date come from different instruments — do not trend them across the
+boundary.
+
 ## 2026-07-06: Hybrid Candidate Generation
 
 Sources:

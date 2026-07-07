@@ -216,14 +216,8 @@ pub struct SourceOverlapGate<'a> {
 /// Restoration" decision record in EXPERIMENTS_LOG.md.
 const SOURCE_OVERLAP_GATE_MIN_SCORE: i64 = 4;
 
-pub fn source_overlap_gate_enabled() -> bool {
-    env::var("YAAML_EXPERIMENT_SOURCE_OVERLAP_GATE")
-        .map(|value| matches!(value.as_str(), "1" | "true" | "TRUE" | "yes" | "on"))
-        .unwrap_or(false)
-}
-
 pub fn source_overlap_gate_client(config: &Config) -> Option<JudgeClient> {
-    JudgeClient::from_config(config, !source_overlap_gate_enabled())
+    JudgeClient::from_config(config, false)
 }
 
 pub fn suppress_source_overlapping_candidates_gated(
@@ -1165,10 +1159,12 @@ mod tests {
     }
 
     #[test]
-    fn source_overlap_gate_is_disabled_without_env_flag() {
-        env::remove_var("YAAML_EXPERIMENT_SOURCE_OVERLAP_GATE");
-        assert!(!source_overlap_gate_enabled());
-        assert!(source_overlap_gate_client(&Config::default()).is_none());
+    fn source_overlap_gate_requires_judge_credentials() {
+        let config = Config {
+            eval_judge_api_key_env: "YAAML_TEST_MISSING_GATE_KEY".to_string(),
+            ..Config::default()
+        };
+        assert!(source_overlap_gate_client(&config).is_none());
     }
 
     #[test]

@@ -171,6 +171,63 @@ trustworthy.
    behavior based on the numbers — that's when uninstrumented iteration
    starts producing false wins.
 
+## Overlap with the AI DX Analytics workstream (#cycle-2-project-ai-dx-analytics)
+
+Reviewed 2026-07-08. There is an active cross-org metrics effort whose
+infrastructure the proposal should ride rather than duplicate. What they
+have:
+
+- **Session telemetry pipeline** (the substrate): sq-agents CLI telemetry →
+  CDP → Snowflake (`CUSTOMER_DATA.DEVTOOLS.SQUARE_EMPLOYEE_AGENT_SESSION`) →
+  dbt marts in `forge-tech-health`
+  (`TECH_HEALTH.AI_TELEMETRY.FCT_AI_AGENT_SESSIONS`). Session-grain rows for
+  Amp, Claude Code, Codex, Goose, Cursor: cost (actual for goose/amp,
+  token×rate-card otherwise), tokens by model, tool-call events, subagent
+  rollup. Owned largely by Charlie Croom (client) and Drew Traylor (marts).
+- **Local LLM session classification** in the sq-agents CLI, feature-flagged:
+  per-session category + success labels computed on the user's machine, only
+  labels emitted. Coverage is their sore spot — **Goose is at ~4% coverage**,
+  by far the worst agent in their table.
+- **Local-eval + anonymized-summary pilot** (Jonathan Guy thread, 51
+  replies): evaluate sessions locally, emit only eval results and anonymized
+  per-prompt summaries — explicitly to avoid shipping raw transcripts.
+  Opt-in pilot planned for cycle 3. This is architecturally identical to our
+  async-judge pattern.
+- **BuilderBot session evals**: a Prefect job (forge-octo-art-prefect) that
+  LLM-evaluates BuilderBot conversations from
+  `KGOOSE_BUILDERBOT_CHAT_MESSAGES` (support-thread effectiveness, oncall/PD
+  variants in progress).
+- **Session ↔ PR authorship attribution** (in flight): joining session
+  telemetry to PR outcomes — the other half of the "metrics only from PR on"
+  gap.
+
+What this means for the proposal:
+
+1. **No overlap on memory itself — the gap is confirmed.** Nothing in their
+   pipeline touches memory: no memory events, no memory fields in the
+   session schema, no memory quality signal. The proposal is complementary,
+   not competitive.
+2. **Ride their rails, don't build parallel ones.** For berd/goose, memory
+   exposure counters can be emitted as fields on the existing session
+   telemetry (the CLI → CDP → FCT_AI_AGENT_SESSIONS path already carries
+   goose sessions), and judged memory scores can piggyback on the local-eval
+   pilot mechanism rather than a new pipeline. This turns "new
+   instrumentation system" into "new fields + one new local eval."
+3. **Their Goose coverage problem is our opening.** The workstream's
+   weakest data is exactly the agent our proposal instruments; memory
+   telemetry lands as part of fixing goose session telemetry generally.
+4. **Their local-eval privacy pattern resolves the buzz encryption
+   question.** Judge locally where decryption is allowed, emit only
+   scores/anonymized aggregates — the same compromise they've already
+   socialized for transcripts.
+5. **Our calibration methodology is a contribution to their evals, not just
+   ours.** The session classifier's success labels and the BuilderBot
+   evaluator are uncalibrated LLM judges; the 0.135→0.865 kappa story and
+   the calibration protocol apply directly.
+6. **Timing hook**: cycle 3 planning is happening now (doc circulating);
+   the local-eval pilot is slated for cycle 3 — a memory-metrics addendum
+   to that pilot is a natural, small ask.
+
 ## Open questions for the proposal
 
 - Buzz: is memory quality an (agent, owner)-private concern (judge runs

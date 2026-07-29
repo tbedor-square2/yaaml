@@ -15,16 +15,12 @@ use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use yaaml_core::{
-    active_segment_recall_turns, apply_activation_condition_adjustments,
-    build_active_segment_recall_query, build_conversation_segments, build_recall_query,
-    derive_project_descriptor, embedded_text_hash, embedding_text, find_consolidation_clusters,
-    merge_task_keys, parse_eval_judge_response, parse_formulation_response,
-    parse_segment_label_response, rank_recall_candidates, recall_file_path, render_recall_markdown,
-    segment_task_keys, session_recall_file_path, write_recall_file, ClusterMemory, Config,
-    ConversationSegmentRecord, ConversationSegmentStatus, EmbeddingRecord,
-    MemoryActivationConditions, MemoryKind, MemoryRecord, MemoryScope, MemoryValidity,
-    RecallMemory, RecallRankingOptions, SegmentLabelRecord, SourceTurnRef, TaskRecord, TaskStatus,
-    TurnRecord, VectorIndex,
+    build_conversation_segments, derive_project_descriptor, embedded_text_hash, embedding_text,
+    find_consolidation_clusters, parse_eval_judge_response, parse_formulation_response,
+    parse_segment_label_response, ClusterMemory, Config, ConversationSegmentRecord,
+    ConversationSegmentStatus, EmbeddingRecord, MemoryActivationConditions, MemoryKind,
+    MemoryRecord, MemoryScope, MemoryValidity, SegmentLabelRecord, SourceTurnRef, TaskRecord,
+    TaskStatus, TurnRecord, VectorIndex,
 };
 use yaaml_llm::anthropic::{AnthropicMessageClient, AnthropicMessageConfig};
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
@@ -35,17 +31,11 @@ use yaaml_transcript::codex::parse_codex_file_from_offset_with_session;
 use yaaml_transcript::discovery::discover_codex_backlog;
 
 use crate::llm_judge::{candidate_judge_prompt, candidate_judge_system_prompt, JudgeClient};
-use crate::memory_health::{apply_health_action_rerank, build_memory_health_summaries};
-use crate::recall_filter::{
-    select_recall_candidates_with_llm_filter, source_overlap_gate_client,
-    suppress_recently_recalled_candidates, suppress_source_overlapping_candidates_gated,
-    RecallFilterRequest, RecallFilterTelemetry, SourceOverlapGate,
-};
-use crate::turn_hydration::{context_from_turns, hydrate_turns};
+use crate::recall_filter::RecallFilterTelemetry;
+use crate::turn_hydration::hydrate_turns;
 
 pub const TASK_KIND_MEMORY_FORMULATION: &str = "memory_formulation";
 pub const TASK_KIND_MEMORY_CONSOLIDATION: &str = "memory_consolidation";
-pub const TASK_KIND_RECALL: &str = "recall";
 pub const TASK_KIND_RECALL_EVAL: &str = "recall_eval";
 pub const TASK_KIND_SEGMENT_LABELING: &str = "segment_labeling";
 
@@ -69,12 +59,6 @@ struct MemoryConsolidationTaskPayload {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct SegmentLabelingTaskPayload {
     segment_id: i64,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct RecallTaskPayload {
-    session_id: String,
-    turn_ordinal: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -348,10 +332,6 @@ pub fn process_codex_changes(
                 if ingested.next_offset > previous_offset || ingested.inserted_turns > 0 {
                     report.changed_files += 1;
                     report.processed_turns += ingested.inserted_turns;
-                    if let Some(turn_ordinal) = ingested.last_inserted_ordinal {
-                        queue_recall_after_turn(db, &ingested.session_id, turn_ordinal, 20)
-                            .context("failed to queue Codex recall refresh")?;
-                    }
                     db.add_backlog_progress(
                         0,
                         1,
@@ -401,9 +381,6 @@ pub fn run_queued_tasks(db: &Database, config: &Config, limit: usize) -> anyhow:
                     .map(|()| TaskRunOutcome::Complete),
                 TASK_KIND_MEMORY_CONSOLIDATION => run_memory_consolidation_task(db, config, &task)
                     .map(|()| TaskRunOutcome::Complete),
-                TASK_KIND_RECALL => {
-                    run_recall_task(db, config, &task).map(|()| TaskRunOutcome::Complete)
-                }
                 TASK_KIND_RECALL_EVAL => run_recall_eval_task(db, config, &task),
                 TASK_KIND_SEGMENT_LABELING => {
                     run_segment_labeling_task(db, config, &task).map(|()| TaskRunOutcome::Complete)
@@ -803,52 +780,6 @@ fn run_memory_consolidation_task(
     })
     .context("failed to persist consolidated memory embedding")?;
     Ok(())
-}
-
-fn run_recall_task(db: &Database, config: &Config, task: &TaskRecord) -> anyhow::Result<()> {
-    let payload: RecallTaskPayload =
-        serde_json::from_str(&task.payload_json).context("failed to parse recall payload")?;
-    let session_id = payload.session_id.as_str();
-    let turn_ordinal = payload.turn_ordinal;
-    let session = db
-        .session_by_id(session_id)
-        .context("failed to load recall task session")?
-        .context("recall task references missing session")?;
-    let window = u64::try_from(config.recall_live_turn_window).unwrap_or(u64::MAX);
-    let start_ordinal = turn_ordinal.saturating_add(1).saturating_sub(window.max(1));
-    let recent_turns = db
-        .completed_turns_for_session_range(session_id, start_ordinal, turn_ordinal + 1)
-        .context("failed to load recall task turns")?;
-    let recent_turns =
-        hydrate_turns(db, &recent_turns).context("failed to hydrate recall turns")?;
-    if recent_turns.is_empty() {
-        return Ok(());
-    }
-    let query_text = build_active_segment_recall_query(
-        &recent_turns,
-        config.recall_query_max_chars,
-        config.tool_call_truncation_chars,
-    );
-    if query_text.trim().is_empty() {
-        return Ok(());
-    }
-    let embedding_client = OpenAiEmbeddingClient::new(
-        OpenAiEmbeddingConfig::from_config(config),
-        ReqwestTransport::default(),
-    );
-    let query_embedding = embedding_client
-        .embed(&query_text)
-        .context("failed to embed recall task query")?;
-    refresh_recall_with_embedding(
-        db,
-        config,
-        Path::new(&session.project_id),
-        &recent_turns,
-        &query_embedding,
-        "background active segment",
-    )
-    .context("failed to refresh recall")
-    .map(|_| ())
 }
 
 fn run_recall_eval_task(
@@ -2163,70 +2094,6 @@ fn days_from_civil(year: i32, month: u32, day: u32) -> Option<i64> {
     Some((era * 146_097 + day_of_era - 719_468) as i64)
 }
 
-pub fn queue_recall_after_turn(
-    db: &Database,
-    session_id: &str,
-    turn_ordinal: u64,
-    priority: i64,
-) -> anyhow::Result<i64> {
-    let payload_json = serde_json::to_string(&RecallTaskPayload {
-        session_id: session_id.to_string(),
-        turn_ordinal,
-    })
-    .context("failed to serialize recall task payload")?;
-    if db
-        .task_payload_exists(TASK_KIND_RECALL, &payload_json)
-        .context("failed to check existing recall task")?
-    {
-        return Ok(0);
-    }
-    let now = unix_timestamp();
-    let task = TaskRecord {
-        id: None,
-        kind: TASK_KIND_RECALL.to_string(),
-        status: TaskStatus::Queued,
-        priority,
-        payload_json,
-        attempts: 0,
-        max_attempts: 5,
-        next_run_at: None,
-        last_error: None,
-        created_at: now.clone(),
-        updated_at: now,
-    };
-    db.enqueue_task(&task)
-        .context("failed to enqueue recall task")
-}
-
-pub fn queue_recall_eval_after_turn(
-    db: &Database,
-    session_id: &str,
-    turn_ordinal: u64,
-    recall_text: &str,
-    memory_ids: &[i64],
-    filter_telemetry: Option<&RecallFilterTelemetry>,
-    priority: i64,
-) -> anyhow::Result<i64> {
-    queue_recall_eval_after_turn_with_metadata(
-        db,
-        session_id,
-        Some(turn_ordinal),
-        None,
-        recall_text,
-        memory_ids,
-        filter_telemetry,
-        RecallEvalMetadata {
-            recall_origin: "session_background".to_string(),
-            turn_id: None,
-            tool_name: None,
-            tool_use_id: None,
-            tool_input_summary: None,
-            injected: None,
-        },
-        priority,
-    )
-}
-
 #[allow(clippy::too_many_arguments)]
 pub fn queue_recall_eval_after_turn_with_metadata(
     db: &Database,
@@ -2283,197 +2150,6 @@ pub fn queue_recall_eval_after_turn_with_metadata(
     };
     db.enqueue_task(&task)
         .context("failed to enqueue recall eval task")
-}
-
-pub fn refresh_recall_with_embedding(
-    db: &Database,
-    config: &Config,
-    project_id: &Path,
-    recent_turns: &[yaaml_core::TurnRecord],
-    query_embedding: &[f32],
-    query_source: &str,
-) -> anyhow::Result<yaaml_core::RecallWrite> {
-    let now = unix_timestamp();
-    let index = SqliteExactVectorIndex::new(db, config.embedding_model.clone(), now.clone());
-    let hits = index
-        .search(
-            query_embedding,
-            config.recall_candidate_pool,
-            config.recall_similarity_threshold,
-        )
-        .context("failed to search vector index")?;
-    let hit_ids = hits.iter().map(|hit| hit.memory_id).collect::<Vec<_>>();
-    let memories = db
-        .list_active_memories_by_ids(&hit_ids)
-        .context("failed to load active memories")?;
-    let project_id_string = project_id.display().to_string();
-    let recall_turns = active_segment_recall_turns(recent_turns);
-    let query_text = build_recall_query(
-        recall_turns,
-        config.recall_query_max_chars,
-        config.tool_call_truncation_chars,
-    );
-    let query_context = context_from_turns(recall_turns, project_id, &query_text);
-    let (query_task_keys, current_segment_id) =
-        active_segment_recall_metadata(db, &query_text, recent_turns)?;
-    let candidates = rank_recall_candidates(
-        &hits,
-        &memories,
-        &project_id_string,
-        &query_context,
-        &query_task_keys,
-        RecallRankingOptions {
-            project_tiebreaker: config.recall_project_tiebreaker,
-            project_score_bonus: config.recall_project_score_bonus,
-        },
-    );
-    let candidate_ids = candidates
-        .iter()
-        .map(|candidate| candidate.memory_id)
-        .collect::<Vec<_>>();
-    let activation_conditions = db
-        .activation_conditions_for_memories(&candidate_ids)
-        .context("failed to load recall activation conditions")?;
-    let candidates =
-        apply_activation_condition_adjustments(candidates, &activation_conditions, &query_text);
-    let candidate_ids = candidates
-        .iter()
-        .map(|candidate| candidate.memory_id)
-        .collect::<Vec<_>>();
-    let eval_history = db
-        .eval_history_for_memories(&candidate_ids)
-        .context("failed to load recall candidate eval history")?;
-    let memory_health = build_memory_health_summaries(&memories, &eval_history);
-    let candidates = apply_health_action_rerank(candidates, &memories, &memory_health);
-    let mut filter_result = select_recall_candidates_with_llm_filter(
-        config,
-        candidates,
-        &memories,
-        RecallFilterRequest {
-            current_project_id: &project_id_string,
-            query_text: &query_text,
-            query_context: &query_context,
-            query_task_keys: &query_task_keys,
-            current_segment_id,
-        },
-    );
-    let gate_client = source_overlap_gate_client(config);
-    let (selected_after_overlap, gate_outcome) = suppress_source_overlapping_candidates_gated(
-        filter_result.selected,
-        &mut filter_result.debug_candidates,
-        &memories,
-        recall_turns,
-        gate_client.as_ref().map(|client| SourceOverlapGate {
-            client,
-            query_text: &query_text,
-        }),
-    );
-    filter_result.selected = selected_after_overlap;
-    filter_result.telemetry.source_overlap_gate_attempted = gate_outcome.attempted;
-    filter_result.telemetry.source_overlap_gate_restored = gate_outcome.restored;
-    filter_result.telemetry.source_overlap_gate_errors = gate_outcome.errors;
-    let recent_memory_ids = recent_turns
-        .last()
-        .map(|turn| &turn.session_id)
-        .zip(cooldown_since_unix(
-            &now,
-            config.recall_memory_cooldown_seconds,
-        ))
-        .map(|(session_id, since_unix)| {
-            filter_result.telemetry.cooldown_since_unix = Some(since_unix);
-            db.recent_recalled_memory_ids(session_id, since_unix)
-                .context("failed to load recent recall memory ids")
-        })
-        .transpose()?
-        .unwrap_or_default();
-    let selected_before_cooldown = filter_result.selected.len();
-    filter_result.telemetry.recent_recall_candidate_count = recent_memory_ids.len();
-    let selected = suppress_recently_recalled_candidates(
-        filter_result.selected,
-        &mut filter_result.debug_candidates,
-        &recent_memory_ids,
-    );
-    filter_result.telemetry.cooldown_suppressed_count =
-        selected_before_cooldown.saturating_sub(selected.len());
-    filter_result.telemetry.final_selected_count = selected.len();
-    let selected_ids = selected
-        .iter()
-        .map(|candidate| candidate.memory_id)
-        .collect::<Vec<_>>();
-    let selected_memories = db
-        .list_active_memories_by_ids(&selected_ids)
-        .context("failed to load selected memories")?;
-    let recall_memories = selected
-        .iter()
-        .filter_map(|candidate| {
-            selected_memories
-                .iter()
-                .find(|memory| memory.id == Some(candidate.memory_id))
-                .map(|memory| RecallMemory {
-                    memory_id: candidate.memory_id,
-                    title: memory.title.clone(),
-                    body: memory.body.clone(),
-                    created_at: memory.created_at.clone(),
-                    project_id: memory.project_id.clone(),
-                    project_descriptor: memory.project_descriptor.clone(),
-                    score: candidate.score,
-                    rank: candidate.rank.clone(),
-                })
-        })
-        .collect::<Vec<_>>();
-    let source = if query_text.is_empty() {
-        query_source.to_string()
-    } else {
-        format!("{query_source}: {} chars", query_text.len())
-    };
-    let rendered = render_recall_markdown(&now, &source, &project_id_string, &recall_memories);
-    let recall_dir = config.recall_dir()?;
-    let path = recent_turns
-        .last()
-        .map(|turn| session_recall_file_path(&recall_dir, &turn.session_id))
-        .unwrap_or_else(|| recall_file_path(&recall_dir, project_id));
-    let write = write_recall_file(&path, &rendered, &selected_ids)
-        .context("failed to write recall file")?;
-    if !selected_ids.is_empty() {
-        if let Some(turn) = recent_turns.last() {
-            queue_recall_eval_after_turn(
-                db,
-                &turn.session_id,
-                turn.ordinal,
-                &rendered,
-                &selected_ids,
-                Some(&filter_result.telemetry),
-                0,
-            )?;
-        }
-    }
-    Ok(write)
-}
-
-fn active_segment_recall_metadata(
-    db: &Database,
-    query_text: &str,
-    recent_turns: &[TurnRecord],
-) -> anyhow::Result<(Vec<String>, Option<i64>)> {
-    let query_task_keys = segment_task_keys(query_text);
-    let Some(latest_turn) = recent_turns.last() else {
-        return Ok((query_task_keys, None));
-    };
-    let Some(segment) = db
-        .conversation_segment_for_turn(&latest_turn.session_id, latest_turn.ordinal)
-        .context("failed to load active conversation segment for recall")?
-    else {
-        return Ok((query_task_keys, None));
-    };
-    Ok((
-        merge_task_keys(&query_task_keys, &segment.task_keys),
-        segment.id,
-    ))
-}
-
-fn cooldown_since_unix(query_timestamp: &str, cooldown_seconds: u64) -> Option<i64> {
-    let timestamp = query_timestamp.strip_prefix("unix:")?.parse::<i64>().ok()?;
-    Some(timestamp.saturating_sub(i64::try_from(cooldown_seconds).unwrap_or(i64::MAX)))
 }
 
 pub fn recover_running_tasks(db: &Database) -> anyhow::Result<u64> {

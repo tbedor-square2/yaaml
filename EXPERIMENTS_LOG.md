@@ -139,32 +139,7 @@ boundary — materially different ideas that fit the intake rules are welcome
 additions, and the 5x5 loop's "propose 5 materially different approaches"
 step is expected to generate candidates not listed here.
 
-1. **Runtime adjudicator gate for source-overlap candidates** (added
-   2026-07-07). Implement the offline-validated gate in the daemon recall
-   path behind an env flag: when the recall filter would drop a candidate
-   solely for `drop:source_turn_already_in_query`, score it with the
-   redundancy-aware adjudicator prompt (async, ~1-3 calls per recall) and
-   restore it when the score is >= 4. Offline simulation was confirmed on
-   screening (+14 useful capture runs, CI +7 to +22) and holdout (+9, CI +4
-   to +15) with zero added low selections under both the raw dense and
-   redundancy-adjusted oracles — see the 2026-07-07 "Adjudicator-Gated
-   Source-Overlap Restoration" decision record. Ship path: env-flag rollout,
-   then forward production evals as the independent confirmation (the
-   offline gate and adjustment share an instrument). Track added latency and
-   provider cost per recall alongside the recall metrics.
-   SETUP 2026-07-07: implemented always-on (prototype; no env gating) in
-   `suppress_source_overlapping_candidates_gated`
-   (`crates/yaaml/src/recall_filter.rs`), wired into both the daemon and CLI
-   recall paths; active whenever the eval-judge credentials are configured,
-   with a no-credentials fallback to the old drop behavior. The gate scores
-   only selected candidates that would be dropped solely for source overlap
-   (restore at adjudicator score >= 4, errors fall back to dropping),
-   annotates `keep:source_overlap_incremental_gate` in debug rankings, and
-   reports `source_overlap_gate_attempted/restored/errors` in filter
-   telemetry. Still pending: accumulate judged forward production evals for
-   gate-restored selections (segment on the keep annotation) to confirm the
-   offline result with an independent instrument.
-2. **Lineage-aware retrieval for superseded useful memories** (added
+1. **Lineage-aware retrieval for superseded useful memories** (added
    2026-07-07). Diagnostic first: 98 of 104 raw pool-oracle retrieval misses
    were oracle-useful memories that are now inactive. Question: do their
    consolidated/refined successors carry the useful content, and do those
@@ -174,31 +149,45 @@ step is expected to generate candidates not listed here.
    unranked, follow with a technique experiment: map inactive vector hits to
    their active successor at retrieval time, or revisit consolidation
    aggressiveness.
-3. **Formation-time activation conditions** (added 2026-07-02). Have
-   formulation emit explicit recall triggers and anti-triggers ("recall when
-   touching X", "not applicable once PR merged") stored as structured
-   metadata, matched at recall time. Attacks stale-task and wrong-context
-   lows at the source instead of at ranking. Requires new formulation output
-   and forward evaluation; not replayable from saved candidates. Use the
-   memory-write experiment metrics in `experiments/recall/README.md`.
-   SETUP 2026-07-07: schema, formulation parsing/prompting, persistence, and
-   recall-time score adjustment are implemented. Still pending: expose a
-   forward cohort of newly written memories with activation-condition rows,
-   then report the memory-write metrics and downstream recall usefulness
-   before retiring this item.
-   READINESS 2026-07-07: `scripts/activation-condition-forward-report.py`
-   generated
-   `experiments/recall/2026-07-07-activation-conditions-forward-readiness/`.
-   The local service is running the new binary, and the artifact snapshot has
-   119 activation-condition memories, meeting the condition-memory threshold.
-   Three downstream recall evals have completed for the cohort: two useful
-   (score 4) and one low (score 2). Still pending: enough judged downstream
-   recall evals for a decision.
-   REFRESH 2026-07-07: re-ran the reporter and the readiness state is
-   unchanged at 119 condition memories and 3 judged downstream evals. The
-   only queued recall-eval task selects memories 3277 and 3309, neither of
-   which has activation-condition metadata, so it will not advance this
-   forward experiment.
+
+## 2026-07-29: Automatic Background Recall Retired
+
+Evidence:
+
+1. In the trailing seven-day production slice, `session_background` had 32
+   useful runs out of 98 evaluated runs (32.7%); 32 of 111 judged memories
+   were useful (28.8%), 76 were low (68.5%), and the average score was 2.43.
+2. The preceding seven-day slice was also weak and better than the current
+   one: 43 useful runs out of 102 (42.2%); 46 of 118 judged memories were
+   useful (39.0%), 69 were low (58.5%), and the average score was 2.69.
+3. Explicit `manual_query` recall was materially cleaner in the trailing
+   slice: 14 useful runs out of 16 evaluated, with 14 of 16 judged memories
+   useful (87.5%) and an average score of 4.25.
+4. The source-overlap adjudicator gate did not provide convincing forward
+   confirmation: among eight isolated restored runs, four were useful and
+   four were low. This operational slice is small and unpaired, so it is not
+   treated as a statistically confirmed technique result.
+5. Activation-condition rows were associated with worse background outcomes
+   in the same observational slice (10 of 53 judged memories useful with
+   conditions versus 22 of 58 without). That comparison is unpaired and
+   confounded, so it diagnoses rather than estimates a causal effect.
+
+Decision:
+
+1. Remove automatic recall generation from completed-turn processing,
+   including its queued-task kind, dispatcher, ranking path, file writes, and
+   eval scheduling.
+2. Reject bare `yaaml recall` and remove the manual
+   `--origin session-background` compatibility surface. Keep only focused
+   explicit queries and historical replay.
+3. Retire the runtime source-overlap forward rollout and formation-time
+   activation-condition forward experiment as automatic-recall shipping
+   items. Their existing artifacts and historical metrics remain for
+   analysis; shared ranking metadata may still be evaluated for explicit
+   recall.
+4. This is a product stop-loss based on sustained poor absolute background
+   recall quality, not a claim that the unpaired week-over-week or metadata
+   slices establish a causal treatment effect.
 
 ## 2026-07-07: Adjudicator-Gated Source-Overlap Restoration
 

@@ -10,12 +10,13 @@ Scope note: this file holds product direction. Anything experiment-sized — a c
 - SQLite-backed memory, embeddings, tasks, status, recall evals, and backlog progress.
 - Codex transcript ingestion from `~/.codex/sessions`.
 - Claude Code transcript ingestion from `~/.claude/projects/<encoded-path>/`, ignoring `subagents/` transcripts by default and parsing tool-use loops into completed turns.
-- Session-aware recall files under `~/.yaaml/recall`.
-- Installed Codex and Claude skills for recall and manual remember workflows.
+- Session-aware cached results for explicit recall queries under `~/.yaaml/recall`.
+- Installed Codex and Claude skills for on-demand recall and manual remember workflows.
 - macOS LaunchAgent service management.
 - Manual `yaaml remember` for durable user preferences and problem-solving lessons.
 - Task queue inspection, retry, and clearing through `yaaml tasks`.
-- Formation-time activation-condition metadata is implemented in memory formulation and recall ranking; the forward experiment remains open until enough downstream recall evals accumulate.
+- Automatic background recall has been removed; transcript ingestion and memory formation continue without generating recall after completed turns.
+- Formation-time activation-condition metadata remains available to explicit recall ranking.
 
 ## Near-Term
 
@@ -42,7 +43,7 @@ Improve provider failure recovery beyond the existing `yaaml tasks` commands.
 
 ### Recall Value Per Context Token
 
-Improve recall by reducing low-value context before increasing recall volume.
+Improve explicit recall by reducing low-value context before increasing recall volume.
 
 - Track useful recall separately from context cost: useful selected memories, low-scoring selected memories, empty recall rate, missed-useful empties, and recall character/token volume.
 - Prefer policies that reduce low-scoring injected memories without sharply increasing missed-useful abstentions.
@@ -62,14 +63,14 @@ Keep same-project recall helpful without making it noisy.
 Use evals to guide ranking and memory formation changes.
 
 - Track 1-5 recall scores over time.
-- Compare background recall, manual query recall, and imported native-memory recall.
+- Compare explicit query recall and imported native-memory recall; retain historical background-recall metrics only for analysis.
 - Surface low-scoring recall patterns in `yaaml eval` output.
 - Use subsequent transcript evidence to identify memories that were relevant but not recalled.
 - Prefer feature-level recall experiments before fine-tuning a tiny text model; only revisit fine-tuning after feature models plateau on denser per-candidate labels and error analysis shows text-level judgment is the missing signal.
 
 ### Future Direction: Recall Cooldowns
 
-Avoid repeatedly surfacing the same memory while it is likely already in the agent context.
+Avoid repeatedly surfacing the same memory across explicit queries while it is likely already in the agent context.
 
 - Consider a session-level per-memory cooldown before recall injection.
 - Backtest cooldown windows against useful captures, low-scoring selections, missed-useful abstentions, and recall volume.
@@ -80,9 +81,9 @@ Avoid repeatedly surfacing the same memory while it is likely already in the age
 
 Use deterministic tool and command signals when they can narrow recall without adding another lossy classifier.
 
-- Continue evaluating formation-time activation triggers and anti-triggers under the forward experiment in `EXPERIMENTS_LOG.md`.
-- Prefer signals already present in transcripts, segment metadata, and explicit recall queries before adding new runtime hook surfaces.
-- Keep activation metadata evidence-driven; file watching and normal session recall should remain the primary path.
+- Evaluate formation-time activation triggers and anti-triggers only in explicit recall.
+- Prefer signals already present in explicit queries before adding new runtime hook surfaces.
+- Keep activation metadata evidence-driven; it must not reintroduce automatic recall.
 - Avoid broad semantic labels such as `situation:pr-comment` until evals show they improve useful recall per context token.
 - Do not reintroduce broad pre-tool hooks without a separate experiment, deterministic activation rules, and metrics that segment hook recall from ordinary session recall.
 
@@ -110,7 +111,7 @@ Continue tightening memory consolidation.
 
 Keep skill instructions explicit about YAAML surfaces.
 
-- Recall skill should prefer daemon-maintained background recall before query refresh.
+- Recall skill should run a focused explicit query only when prior context is materially relevant.
 - Remember skill should prefer `yaaml remember` for YAAML memory storage when it applies.
 - Avoid relying on agent-native memory write commands unless the user explicitly asks for native memory.
 

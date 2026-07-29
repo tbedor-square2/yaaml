@@ -1,8 +1,8 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
+use std::env;
 use std::path::{Path, PathBuf};
 use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use std::{env, fs};
 
 #[cfg(unix)]
 use std::ffi::CStr;
@@ -13,23 +13,22 @@ use serde::Serialize;
 use yaaml::llm_judge::{candidate_judge_prompt, candidate_judge_system_prompt, JudgeClient};
 use yaaml::memory_health::{apply_health_action_rerank, build_memory_health_summaries};
 use yaaml::recall_filter::{
-    effective_recall_selection_limit, select_recall_candidates_with_llm_filter,
-    source_overlap_gate_client, suppress_recently_recalled_candidates,
-    suppress_source_overlapping_candidates_gated, RecallFilterRequest, RecallFilterTelemetry,
-    SourceOverlapGate,
+    select_recall_candidates_with_llm_filter, source_overlap_gate_client,
+    suppress_recently_recalled_candidates, suppress_source_overlapping_candidates_gated,
+    RecallFilterRequest, RecallFilterTelemetry, SourceOverlapGate,
 };
 use yaaml::turn_hydration::{context_from_turns, hydrate_turns};
 use yaaml_core::{
     active_segment_recall_turns, apply_activation_condition_adjustments, context_score,
     counterfactual_citation_score, derive_project_descriptor, embedded_text_hash, embedding_text,
     extract_task_keys, find_consolidation_clusters, infer_context_from_memory,
-    infer_context_from_path, infer_context_from_text, infer_memory_kind, is_transient_plan_memory,
-    merge_contexts, merge_task_keys, parse_eval_judge_response, parse_memory_ids,
-    rank_recall_candidates, recall_file_path, render_recall_markdown, segment_task_keys,
-    session_recall_file_path, write_recall_file, ClusterMemory, Config, ConfigPaths,
-    ContextMetadata, ConversationSegmentLabelRecord, ConversationSegmentRecord, EmbeddingRecord,
-    MemoryKind, MemoryRecord, MemoryScope, MemoryValidity, RecallMemory, RecallRankDetails,
-    RecallRankingOptions, RecallWrite, SessionRecord, TurnRecord, VectorHit, VectorIndex,
+    infer_context_from_path, infer_context_from_text, infer_memory_kind, merge_contexts,
+    merge_task_keys, parse_eval_judge_response, rank_recall_candidates, recall_file_path,
+    render_recall_markdown, segment_task_keys, session_recall_file_path, write_recall_file,
+    ClusterMemory, Config, ConfigPaths, ContextMetadata, ConversationSegmentLabelRecord,
+    ConversationSegmentRecord, EmbeddingRecord, MemoryKind, MemoryRecord, MemoryScope,
+    MemoryValidity, RecallMemory, RecallRankDetails, RecallRankingOptions, TurnRecord, VectorHit,
+    VectorIndex,
 };
 use yaaml_llm::openai::{OpenAiEmbeddingClient, OpenAiEmbeddingConfig};
 use yaaml_llm::ReqwestTransport;
@@ -71,9 +70,9 @@ enum Command {
     Memories(MemoriesArgs),
     /// Backfill and inspect conversation segments.
     Segments(SegmentsArgs),
-    /// Resolve the current session or project's daemon-owned recall file path.
+    /// Resolve the current session or project's explicit-recall cache path.
     Path,
-    /// Print existing recall, or update it from user input.
+    /// Run explicit recall or historical replay.
     Recall(RecallArgs),
     /// Store a concise durable memory.
     Remember(RememberArgs),
@@ -531,12 +530,9 @@ impl TaskDisplayStatusArg {
 
 #[derive(Debug, Parser)]
 struct RecallArgs {
-    /// User input to embed and search against stored memories. Omit to print existing recall.
+    /// User input to embed and search against stored memories.
     #[arg(long)]
     query: Option<String>,
-    /// Recall source for eval segmentation.
-    #[arg(long, value_enum)]
-    origin: Option<RecallOriginArg>,
     /// Session id to replay recall for.
     #[arg(long)]
     session: Option<String>,
@@ -555,21 +551,6 @@ struct RecallArgs {
     /// Include per-memory ranking components in JSON output.
     #[arg(long)]
     debug_ranking: bool,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
-enum RecallOriginArg {
-    SessionBackground,
-    ManualQuery,
-}
-
-impl RecallOriginArg {
-    fn as_str(self) -> &'static str {
-        match self {
-            Self::SessionBackground => "session_background",
-            Self::ManualQuery => "manual_query",
-        }
-    }
 }
 
 #[derive(Debug, Parser)]
@@ -4344,40 +4325,13 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
         bail!("--debug-ranking requires --json");
     }
 
-    let explicit_recall = args.query.is_some();
-
-    if !explicit_recall && (args.session.is_some() || args.turn.is_some()) {
+    if args.query.is_none() && (args.session.is_some() || args.turn.is_some()) {
         return recall_for_historical_turn(args, &config, &db);
     }
 
     let recall_path = contextual_recall_file_path(&recall_dir, &project_id_path, &db)?;
-    let recall_selection_limit = effective_recall_selection_limit(&config);
     let Some(query) = args.query.clone() else {
-        if args.json || args.debug_ranking {
-            bail!("--json and --debug-ranking require --query or --session/--turn");
-        }
-        if let Some(contents) = read_active_recall_file(&db, &recall_path, recall_selection_limit)?
-        {
-            print!("{contents}");
-            return Ok(());
-        }
-        if let Some(rendered) =
-            refresh_missing_recall_file(&db, &config, &project_id_path, &recall_path)?
-        {
-            print!("{rendered}");
-            return Ok(());
-        }
-        let project_recall_path = recall_file_path(&recall_dir, &project_id_path);
-        if project_recall_path != recall_path {
-            if let Some(contents) =
-                read_active_recall_file(&db, &project_recall_path, recall_selection_limit)?
-            {
-                print!("{contents}");
-                return Ok(());
-            }
-        }
-        println!("no recall file at {}", recall_path.display());
-        return Ok(());
+        bail!("recall requires --query, or --session/--turn for historical replay");
     };
     if config.embedding_provider != "openai" {
         bail!(
@@ -4393,14 +4347,6 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
         .embed(&query)
         .context("failed to embed recall query")?;
     let project_id = project_id_path.display().to_string();
-    let recall_origin = args
-        .origin
-        .map(RecallOriginArg::as_str)
-        .unwrap_or("manual_query");
-    let query_source = match recall_origin {
-        "manual_query" => "user input".to_string(),
-        other => other.to_string(),
-    };
     let anchor = recall_anchor_from_args_or_current(&db, &project_id, &args)?;
     let additional_query_embeddings = experimental_recall_query_embeddings(
         &db,
@@ -4422,7 +4368,7 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
             query_turns: &[],
             query_text: &query,
             query_context: None,
-            query_source,
+            query_source: "user input".to_string(),
             query_timestamp: now.clone(),
             apply_cooldown: true,
         },
@@ -4446,7 +4392,7 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
             &selected_ids,
             Some(&filter_telemetry),
             yaaml::daemon::RecallEvalMetadata {
-                recall_origin: recall_origin.to_string(),
+                recall_origin: "manual_query".to_string(),
                 turn_id: args.turn_id.clone(),
                 tool_name: None,
                 tool_use_id: None,
@@ -4479,21 +4425,11 @@ fn recall(args: RecallArgs) -> anyhow::Result<()> {
         );
         return Ok(());
     }
-    let write = write_recall_file(&recall_path, &rendered, &selected_ids)
-        .context("failed to write recall file")?;
-
-    match write {
-        RecallWrite::Written | RecallWrite::Unchanged => print!("{rendered}"),
-        RecallWrite::NoopEmptyResults => {
-            if let Some(contents) =
-                read_active_recall_file(&db, &recall_path, recall_selection_limit)?
-            {
-                print!("{contents}");
-            } else {
-                println!("no recall results");
-            }
-        }
+    if !selected_ids.is_empty() {
+        write_recall_file(&recall_path, &rendered, &selected_ids)
+            .context("failed to write recall file")?;
     }
+    print!("{rendered}");
     Ok(())
 }
 
@@ -4544,196 +4480,6 @@ fn queue_query_recall_eval(
         0,
     )?;
     Ok(())
-}
-
-fn refresh_missing_recall_file(
-    db: &Database,
-    config: &Config,
-    project_id_path: &std::path::Path,
-    recall_path: &std::path::Path,
-) -> anyhow::Result<Option<String>> {
-    if config.embedding_provider != "openai" {
-        return Ok(None);
-    }
-    let project_id = project_id_path.display().to_string();
-    let Some(session) = recall_session(db, &project_id)? else {
-        return Ok(None);
-    };
-    let Some(turn_ordinal) = latest_turn_ordinal(db, &session.id)? else {
-        return Ok(None);
-    };
-    let window = u64::try_from(config.recall_live_turn_window).unwrap_or(u64::MAX);
-    let start_ordinal = turn_ordinal.saturating_add(1).saturating_sub(window.max(1));
-    let turns = db
-        .completed_turns_for_session_range(
-            &session.id,
-            start_ordinal,
-            turn_ordinal.saturating_add(1),
-        )
-        .context("failed to load turns for missing recall file")?;
-    let turns = hydrate_turns(db, &turns).context("failed to hydrate missing recall turns")?;
-    if turns.is_empty() {
-        return Ok(None);
-    }
-    let recall_turns = active_segment_recall_turns(&turns);
-    let query = yaaml_core::build_recall_query(
-        recall_turns,
-        config.recall_query_max_chars,
-        config.tool_call_truncation_chars,
-    );
-    if query.trim().is_empty() {
-        return Ok(None);
-    }
-    let embedding_client = OpenAiEmbeddingClient::new(
-        OpenAiEmbeddingConfig::from_config(config),
-        ReqwestTransport::default(),
-    );
-    let query_embedding = embedding_client
-        .embed(&query)
-        .context("failed to embed missing recall query")?;
-    let additional_query_embeddings = experimental_recall_query_embeddings(
-        db,
-        &embedding_client,
-        &query,
-        Some(&session.id),
-        Some(turn_ordinal),
-    )?;
-    let now = unix_timestamp();
-    let query_context = context_from_turns(
-        recall_turns,
-        std::path::Path::new(&session.project_id),
-        &query,
-    );
-    let query_source = recall_query_source(
-        "on-demand active segment",
-        &turns,
-        recall_turns,
-        start_ordinal,
-        turn_ordinal,
-        query.len(),
-    );
-    let result = recall_from_embedding(
-        db,
-        config,
-        RecallEmbeddingRequest {
-            query_embedding: &query_embedding,
-            additional_query_embeddings: &additional_query_embeddings,
-            project_id: &session.project_id,
-            session_id: Some(&session.id),
-            turn_ordinal: Some(turn_ordinal),
-            query_turns: recall_turns,
-            query_text: &query,
-            query_context: Some(query_context),
-            query_source,
-            query_timestamp: now,
-            apply_cooldown: true,
-        },
-    )?;
-    if result.selected_memory_ids.is_empty() {
-        return Ok(Some(result.markdown));
-    }
-    let write = write_recall_file(recall_path, &result.markdown, &result.selected_memory_ids)
-        .context("failed to write missing recall file")?;
-    if matches!(write, RecallWrite::Written | RecallWrite::Unchanged) {
-        yaaml::daemon::queue_recall_eval_after_turn(
-            db,
-            &session.id,
-            turn_ordinal,
-            &result.markdown,
-            &result.selected_memory_ids,
-            None,
-            0,
-        )?;
-    }
-    Ok(Some(result.markdown))
-}
-
-fn read_active_recall_file(
-    db: &Database,
-    recall_path: &std::path::Path,
-    recall_result_limit: usize,
-) -> anyhow::Result<Option<String>> {
-    if !recall_path.exists() {
-        return Ok(None);
-    }
-    let contents = fs::read_to_string(recall_path).context("failed to read recall file")?;
-    let memory_ids = parse_memory_ids(&contents);
-    if memory_ids.is_empty() {
-        invalidate_recall_file(recall_path)?;
-        return Ok(None);
-    }
-    if memory_ids.len() > recall_result_limit {
-        invalidate_recall_file(recall_path)?;
-        return Ok(None);
-    }
-    let active_memories = db
-        .list_active_memories_by_ids(&memory_ids)
-        .context("failed to validate recall memory ids")?;
-    let active_ids = active_memories
-        .iter()
-        .filter_map(|memory| memory.id)
-        .collect::<HashSet<_>>();
-    if active_memories
-        .iter()
-        .any(cached_memory_requires_recall_refresh)
-    {
-        invalidate_recall_file(recall_path)?;
-        return Ok(None);
-    }
-    if memory_ids
-        .iter()
-        .all(|memory_id| active_ids.contains(memory_id))
-    {
-        Ok(Some(contents))
-    } else {
-        invalidate_recall_file(recall_path)?;
-        Ok(None)
-    }
-}
-
-fn cached_memory_requires_recall_refresh(memory: &MemoryRecord) -> bool {
-    memory.superseded_by_memory_id.is_some()
-        || segment_scoped_memory_from_inactive_origin(memory)
-        || is_transient_plan_memory(memory)
-            && !memory.task_keys.iter().any(|key| {
-                key.split_once(':')
-                    .map(|(prefix, _)| prefix != "tool")
-                    .unwrap_or(true)
-            })
-}
-
-fn segment_scoped_memory_from_inactive_origin(memory: &MemoryRecord) -> bool {
-    matches!(
-        memory.kind,
-        MemoryKind::ProjectFact | MemoryKind::TaskCheckpoint | MemoryKind::TaskState
-    ) && memory.origin_segment_id.is_some()
-        && memory.origin_segment_status != Some(yaaml_core::ConversationSegmentStatus::Active)
-}
-
-fn invalidate_recall_file(recall_path: &std::path::Path) -> anyhow::Result<()> {
-    match fs::remove_file(recall_path) {
-        Ok(()) => Ok(()),
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
-        Err(error) => Err(error).with_context(|| {
-            format!(
-                "failed to remove stale recall file {}",
-                recall_path.display()
-            )
-        }),
-    }
-}
-
-fn recall_session(db: &Database, project_id: &str) -> anyhow::Result<Option<SessionRecord>> {
-    if let Some(session_id) = current_session_id() {
-        if let Some(session) = db
-            .session_by_id(&session_id)
-            .context("failed to load current recall session")?
-        {
-            return Ok(Some(session));
-        }
-    }
-    db.latest_session_for_project(project_id)
-        .context("failed to load latest project session")
 }
 
 #[derive(Debug, Serialize)]
@@ -5683,47 +5429,6 @@ mod tests {
     fn parse_since_unix_rejects_unknown_duration_units() {
         let error = parse_since_unix("1y").unwrap_err().to_string();
         assert!(error.contains("unsupported --since duration unit y"));
-    }
-
-    #[test]
-    fn cached_recall_refreshes_segment_scoped_memory_from_inactive_origin() {
-        let active = cache_test_memory(
-            MemoryKind::ProjectFact,
-            Some(ConversationSegmentRecord {
-                id: Some(1),
-                session_id: "session-1".to_string(),
-                start_turn_ordinal: 1,
-                end_turn_ordinal: 2,
-                summary: "active task".to_string(),
-                task_keys: Vec::new(),
-                context: None,
-                status: yaaml_core::ConversationSegmentStatus::Active,
-                created_at: "unix:1".to_string(),
-                updated_at: "unix:1".to_string(),
-            }),
-            None,
-        );
-        let inactive = cache_test_memory(
-            MemoryKind::ProjectFact,
-            Some(ConversationSegmentRecord {
-                id: Some(2),
-                session_id: "session-1".to_string(),
-                start_turn_ordinal: 3,
-                end_turn_ordinal: 4,
-                summary: "completed task".to_string(),
-                task_keys: Vec::new(),
-                context: None,
-                status: yaaml_core::ConversationSegmentStatus::Completed,
-                created_at: "unix:2".to_string(),
-                updated_at: "unix:2".to_string(),
-            }),
-            None,
-        );
-        let superseded = cache_test_memory(MemoryKind::Lesson, None, Some(42));
-
-        assert!(!cached_memory_requires_recall_refresh(&active));
-        assert!(cached_memory_requires_recall_refresh(&inactive));
-        assert!(cached_memory_requires_recall_refresh(&superseded));
     }
 
     #[test]

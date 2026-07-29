@@ -2,14 +2,14 @@
 
 YAAML is "Yet Another Agent Memory Layer": a local, file-first memory system for AI coding agents such as Codex and Claude Code.
 
-Instead of injecting recalled memories into an agent conversation, YAAML watches native agent transcripts, summarizes durable context into a local SQLite database, and materializes relevant memories as Markdown files under `~/.yaaml/recall`. Agents discover those files through installed skills or the `yaaml recall` command.
+YAAML watches native agent transcripts, summarizes durable context into a local SQLite database, and retrieves memories only when an agent or user makes an explicit recall query. Results can be cached as Markdown under `~/.yaaml/recall`; YAAML does not automatically inject or preload them into agent conversations.
 
 ## What It Does
 
 - Watches Codex and Claude Code transcript directories for completed turns.
 - Stores durable memories in a user-global database at `~/.yaaml/yaaml.db`.
-- Uses embeddings to recall memories relevant to the current project or prompt.
-- Writes recall output to daemon-owned Markdown files instead of mutating the live chat context.
+- Uses embeddings for explicit, on-demand recall queries.
+- Can cache explicit recall output as Markdown instead of mutating the live chat context.
 - Installs `yaaml` and `yaaml-remember` skills for Codex and Claude Code.
 - Provides CLI commands for status, manual recall, manual memory creation, task inspection, and recall evaluation.
 
@@ -87,12 +87,6 @@ Check daemon, database, provider, and backlog status:
 yaaml status
 ```
 
-Print the current recall file for this project or session:
-
-```sh
-yaaml recall
-```
-
 Run explicit recall from a prompt:
 
 ```sh
@@ -108,7 +102,7 @@ yaaml remember \
   --scope project
 ```
 
-Inspect the path YAAML will use for recall in the current working directory:
+Inspect the path YAAML uses to cache non-empty explicit recall results:
 
 ```sh
 yaaml path
@@ -191,8 +185,8 @@ yaaml stats        Show recall coverage, volume, and usefulness metrics
 yaaml config       Inspect configuration
 yaaml tasks        Inspect or manage daemon tasks
 yaaml memories     Inspect or rebuild stored memories
-yaaml path         Print the current recall file path
-yaaml recall       Print existing recall or update it from user input
+yaaml path         Print the explicit-recall cache path
+yaaml recall       Run explicit recall or historical replay
 yaaml remember     Store a concise durable memory
 ```
 

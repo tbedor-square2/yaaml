@@ -1,11 +1,11 @@
 # YAAML Requirements
 
-YAAML is a local, file-first memory layer for coding agents. It watches native agent transcripts, formulates durable memories in the background, stores them in a user-global local database, and materializes relevant recall as Markdown files that agents can read through installed skills.
+YAAML is a local, file-first memory layer for coding agents. It watches native agent transcripts, formulates durable memories in the background, stores them in a user-global local database, and retrieves memories only through explicit on-demand recall.
 
 ## Design Principles
 
-1. **File-first recall**: Recall is written to daemon-owned Markdown files under `~/.yaaml/recall`; agents read those files instead of receiving synthetic injected chat messages.
-2. **Async by default**: Transcript ingestion, memory formulation, embedding, consolidation, recall refresh, and evaluation run outside the agent turn path.
+1. **File-first recall**: Explicit recall can be cached as Markdown under `~/.yaaml/recall`; agents do not receive synthetic injected chat messages.
+2. **Async by default**: Transcript ingestion, memory formulation, embedding, consolidation, and evaluation run outside the agent turn path.
 3. **Agent-native transcripts remain source of truth**: YAAML stores session, turn, byte-range, and lightweight display metadata, but it does not duplicate full raw transcript event streams.
 4. **User-global memory store**: Memories are shared across projects, with ranking that favors relevant project/task context without making project path the only signal.
 5. **Measurable recall quality**: Recall behavior is evaluated with explicit quality, abstention, volume, and usefulness metrics.
@@ -62,13 +62,13 @@ YAAML is a local, file-first memory layer for coding agents. It watches native a
 ## Recall
 
 1. Recall is session-aware.
-2. `yaaml recall` chooses the recall file in this order:
+2. A non-empty explicit query chooses its optional cache file in this order:
    - `CODEX_THREAD_ID`, when present
    - newest known session for the current project
    - project fallback file
 3. `yaaml path` resolves the same session/project recall-file path.
-4. Background recall is generated from recent completed turns for the session.
-5. Manual recall can be run with `yaaml recall --query "<query>"`.
+4. The daemon does not generate or refresh recall automatically when transcript turns complete.
+5. Recall runs on demand with `yaaml recall --query "<query>"`.
 6. Historical replay can be run with `yaaml recall --session <id> --turn <ordinal>` or `--turn-id <id>`.
 7. Recall queries are compact synthetic text, not raw JSONL. They include recent user/assistant text, tool names, command names, file paths, short errors, inferred context, and task keys.
 8. Recall ranking combines:
@@ -82,8 +82,8 @@ YAAML is a local, file-first memory layer for coding agents. It watches native a
    - memory-health reranking from prior evals
 9. Recall selection filters out inactive memories and can suppress memories recalled very recently.
 10. LLM recall filtering is available but disabled by default.
-11. Empty recall is a valid abstention. Empty recall should preserve an existing recall file unless a command explicitly refreshes a session file.
-12. Bare recall validates that cached recall files still refer to active memories and does not surface inactive or consolidated-away memories.
+11. Empty recall is a valid abstention and does not overwrite an existing cached result.
+12. Bare `yaaml recall` is rejected; retrieval requires `--query` or historical replay arguments.
 
 ## Tool-Specific Recall
 
@@ -97,7 +97,7 @@ YAAML is a local, file-first memory layer for coding agents. It watches native a
 1. `yaaml init` installs two skills for Codex and Claude homes when those homes exist:
    - `yaaml`
    - `yaaml-remember`
-2. The `yaaml` skill tells the agent to run `yaaml recall` first, then use `yaaml recall --query` only when background recall is missing or stale.
+2. The `yaaml` skill is used only when prior context is materially relevant and runs one focused `yaaml recall --query`; it does not preload bare/background recall.
 3. The `yaaml-remember` skill stores one concise durable memory with `yaaml remember`.
 4. Agents should use the skill or CLI command to resolve recall. They should not assume a project-local `.yaaml/recall.md`.
 5. A transcript-reading skill is not part of the current implemented MVP.
@@ -117,8 +117,8 @@ yaaml stats        Show recall coverage, volume, and usefulness metrics
 yaaml config       Inspect configuration
 yaaml tasks        Inspect or manage daemon tasks
 yaaml memories     Inspect or rebuild stored memories
-yaaml path         Resolve the current session or project's recall file path
-yaaml recall       Print existing recall, or update it from user input
+yaaml path         Resolve the current session or project's explicit-recall cache path
+yaaml recall       Run explicit recall or historical replay
 yaaml remember     Store a concise durable memory
 ```
 
@@ -197,7 +197,7 @@ The main quality tradeoff metrics are:
 | `consolidation_dark_period_seconds` | `300` | Inactivity seconds before consolidation runs |
 | `recall_result_limit` | `2` | Max memories returned per recall query |
 | `recall_candidate_pool` | `16` | Vector candidates fetched before final selection |
-| `recall_live_turn_window` | `3` | Completed turns included in live recall query construction |
+| `recall_live_turn_window` | `3` | Completed turns included when reconstructing historical replay queries |
 | `recall_query_max_chars` | `12000` | Max characters in synthesized recall query text |
 | `recall_similarity_threshold` | `0.3` | Cosine similarity cutoff for vector search |
 | `recall_project_tiebreaker` | `true` | Enables same-project reranking bonus |
